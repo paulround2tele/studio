@@ -11,7 +11,7 @@ declare const process: NodeJS.Process;
 /**
  * Offline cache entry
  */
-interface CacheEntry<T = any> {
+interface CacheEntry<T = unknown> {
   key: string;
   data: T;
   timestamp: number;
@@ -38,7 +38,8 @@ export type DeferredActionType =
 export interface DeferredAction {
   id: string;
   type: DeferredActionType;
-  payload: any;
+  // Use unknown to enforce explicit narrowing at execution time
+  payload: unknown;
   createdAt: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
   retryCount: number;
@@ -59,7 +60,8 @@ export interface GovernanceEvent {
   resourceId: string;
   userId: string;
   timestamp: string;
-  payload: any;
+  // Governance event payload structure may vary; keep as Record<string, unknown> for now
+  payload: Record<string, unknown>;
   contextHash: string; // For replay safety
   sequenceNumber: number;
 }
@@ -646,8 +648,14 @@ class OfflineResilienceService {
   /**
    * Calculate checksum for data integrity
    */
-  private calculateChecksum(data: any): string {
-    const str = JSON.stringify(data);
+  private calculateChecksum(data: unknown): string {
+    // Safely stringify; for non-serializable values fall back to type tag
+    let str: string;
+    try {
+      str = JSON.stringify(data);
+    } catch {
+      str = Object.prototype.toString.call(data);
+    }
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
@@ -660,7 +668,7 @@ class OfflineResilienceService {
   /**
    * Calculate context hash for governance events
    */
-  private calculateContextHash(event: any): string {
+  private calculateContextHash(event: Pick<GovernanceEvent, 'eventType' | 'resourceType' | 'resourceId' | 'userId'>): string {
     const contextString = `${event.eventType}_${event.resourceType}_${event.resourceId}_${event.userId}`;
     return this.calculateChecksum(contextString);
   }

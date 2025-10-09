@@ -7,8 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Control } from 'react-hook-form';
 
+interface CampaignFormValues {
+  name: string;
+  description?: string;
+}
+
 interface CampaignDetailsSectionProps {
-  control: Control<any>;
+  control: Control<CampaignFormValues>;
   disabled?: boolean;
 }
 

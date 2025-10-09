@@ -45,7 +45,7 @@ export interface TelemetryEvent {
         'i18n_locale_loaded';
   timestamp: string;
   sessionId: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 /**
@@ -132,8 +132,8 @@ export interface GovernanceActionEvent {
   context: {
     campaignId?: string;
     metricKey?: string;
-    oldValue?: any;
-    newValue?: any;
+    oldValue?: unknown;
+    newValue?: unknown;
     userId?: string;
   };
 }
@@ -258,7 +258,7 @@ class TelemetryService {
    */
   public emitTelemetry(
     type: TelemetryEvent['type'],
-    data: Record<string, any>
+    data: Record<string, unknown>
   ): void {
     if (!isTelemetryEnabled() || !this.isInSample) {
       return;
@@ -285,7 +285,7 @@ class TelemetryService {
    */
   public emit(type: TelemetryEvent['type'], data: unknown): void {
     // Accept unknown and coerce to object map if needed
-    const payload: Record<string, any> = (data && typeof data === 'object') ? (data as Record<string, any>) : { value: data };
+  const payload: Record<string, unknown> = (data && typeof data === 'object') ? (data as Record<string, unknown>) : { value: data };
     this.emitTelemetry(type, payload);
   }
 
@@ -293,35 +293,35 @@ class TelemetryService {
    * Emit timeline hydration event
    */
   public emitTimelineHydrate(data: TimelineHydrateEvent): void {
-    this.emitTelemetry('timeline_hydrate', data);
+    this.emitTelemetry('timeline_hydrate', { ...data });
   }
 
   /**
    * Emit anomaly detection event
    */
   public emitAnomalyDetect(data: AnomalyDetectEvent): void {
-    this.emitTelemetry('anomaly_detect', data);
+    this.emitTelemetry('anomaly_detect', { ...data });
   }
 
   /**
    * Emit worker task event
    */
   public emitWorkerTask(data: WorkerTaskEvent): void {
-    this.emitTelemetry('worker_task', data);
+    this.emitTelemetry('worker_task', { ...data });
   }
 
   /**
    * Emit stream pool state event
    */
   public emitStreamPoolState(data: StreamPoolStateEvent): void {
-    this.emitTelemetry('stream_pool_state', data);
+    this.emitTelemetry('stream_pool_state', { ...data });
   }
 
   /**
    * Emit export generated event
    */
   public emitExportGenerated(data: ExportGeneratedEvent): void {
-    this.emitTelemetry('export_generated', data);
+    this.emitTelemetry('export_generated', { ...data });
   }
 
   /**

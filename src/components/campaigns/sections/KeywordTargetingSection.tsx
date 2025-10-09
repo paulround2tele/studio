@@ -7,8 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Globe } from 'lucide-react';
 import { Control } from 'react-hook-form';
 
+interface CampaignKeywordFormValues {
+  targetKeywordsInput: string;
+}
+
 interface KeywordTargetingSectionProps {
-  control: Control<any>;
+  control: Control<CampaignKeywordFormValues>;
   disabled?: boolean;
   needsKeywords?: boolean; // Backend-driven condition
 }

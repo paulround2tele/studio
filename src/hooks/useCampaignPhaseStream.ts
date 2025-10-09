@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { useSSE } from './useSSE';
+import { useSSE, type SSEEvent } from './useSSE';
 import type { PipelinePhase } from '@/components/refactor/campaign/PipelineBar';
 
 export interface PhaseUpdateEvent {
@@ -68,6 +68,12 @@ const DEFAULT_PHASES: PipelinePhase[] = [
  * Hook for real-time campaign phase updates via SSE
  * Connects to /api/v2/sse/campaigns/{id} and processes phaseUpdate events
  */
+// Stream event discriminated union for stronger typing
+type PhaseUpdateSSE = { type: 'phaseUpdate'; data: PhaseUpdateEvent };
+type HeartbeatSSE = { type: 'heartbeat'; serverTime?: string };
+type UnknownSSE = { type: string; [k: string]: unknown };
+export type CampaignStreamEvent = PhaseUpdateSSE | HeartbeatSSE | UnknownSSE;
+
 export function useCampaignPhaseStream(
   campaignId: string | null,
   options: UseCampaignPhaseStreamOptions = {}
@@ -78,10 +84,19 @@ export function useCampaignPhaseStream(
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
 
   // Handle SSE events
-  const handleSSEEvent = useCallback((event: any) => {
+  const handleSSEEvent = useCallback((raw: SSEEvent) => {
+    // Map generic SSEEvent to discriminated union if possible
+    let event: CampaignStreamEvent;
+    if (raw.event === 'phaseUpdate' && raw.data && typeof raw.data === 'object') {
+      event = { type: 'phaseUpdate', data: raw.data as PhaseUpdateEvent };
+    } else if (raw.event === 'heartbeat') {
+      event = { type: 'heartbeat', serverTime: (raw.data as any)?.serverTime };
+    } else {
+      event = { type: raw.event, ...raw } as UnknownSSE;
+    }
     try {
-      if (event.type === 'phaseUpdate' && event.data) {
-        const phaseEvent = event.data as PhaseUpdateEvent;
+      if (event.type === 'phaseUpdate' && (event as PhaseUpdateSSE).data) {
+        const phaseEvent = (event as PhaseUpdateSSE).data;
         
         // Update the specific phase
         setPhases(prevPhases => 
@@ -101,7 +116,7 @@ export function useCampaignPhaseStream(
         setLastUpdate(Date.now());
         onPhaseUpdate?.(phaseEvent);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to process phase update';
       onError?.(errorMessage);
     }

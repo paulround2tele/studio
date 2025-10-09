@@ -8,8 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Settings, Gauge, RotateCcw, IterationCw } from 'lucide-react';
 import { Control } from 'react-hook-form';
 
+interface PerformanceTuningFormValues {
+  processingSpeed?: string;
+  batchSize?: number;
+  rotationInterval?: number;
+  retryAttempts?: number;
+}
+
 interface PerformanceTuningSectionProps {
-  control: Control<any>;
+  control: Control<PerformanceTuningFormValues>;
   disabled?: boolean;
   // Backend-driven defaults and constraints
   defaultProcessingSpeed?: string;

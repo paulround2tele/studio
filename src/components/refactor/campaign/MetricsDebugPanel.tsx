@@ -14,11 +14,16 @@ import { getMemoryStats } from '@/services/campaignMetrics/historyStore';
 import { getStreamPoolStats } from '@/services/campaignMetrics/streamPool';
 import { getTelemetryStatus } from '@/services/campaignMetrics/telemetryService';
 import type { ConnectionState } from '@/services/campaignMetrics/progressChannel';
-import type { AggregateSnapshot } from '@/types/campaignMetrics';
+import type { AggregateSnapshot, DeltaMetrics as CoreDeltaMetrics, Mover as CoreMover } from '@/types/campaignMetrics';
 import type { Anomaly } from '@/services/campaignMetrics/anomalyService';
 import type { PortfolioSummary, PortfolioOutlier } from '@/services/campaignMetrics/portfolioMetricsService';
 
 // Feature flag
+// Local fallback types if not imported from campaignMetrics types
+// Use core campaign metrics types instead of local placeholders
+type DeltaMetrics = CoreDeltaMetrics;
+// Adapt mover display; core mover has domain/from/to. Keep local adapter if needed
+interface MoverDisplay { id: string; label: string; change: number; direction: 'up' | 'down'; domain?: string }
 const ENABLE_DEBUG_PANEL = process.env.NEXT_PUBLIC_DEBUG_METRICS_PANEL === 'true' || 
                           (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugMetrics') === '1');
 
@@ -26,7 +31,7 @@ interface MetricsDebugPanelProps {
   snapshots?: AggregateSnapshot[];
   connectionState?: ConnectionState;
   lastDeltas?: DeltaMetrics[];
-  topMovers?: Mover[];
+  topMovers?: MoverDisplay[];
   anomalies?: Anomaly[];
   portfolioSummary?: PortfolioSummary | null;
   portfolioOutliers?: PortfolioOutlier[];
@@ -54,9 +59,13 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [perfMetrics, setPerfMetrics] = useState<PerformanceMetric[]>([]);
-  const [memoryStats, setMemoryStats] = useState<any>(null);
-  const [streamStats, setStreamStats] = useState<any>(null);
-  const [telemetryStats, setTelemetryStats] = useState<any>(null);
+  // Replace untyped debug states with structured interfaces
+  interface MemoryStats { campaignCount: number; totalSnapshots: number; estimatedSizeKB: number }
+  interface StreamPoolStats { totalPools: number; totalConnections: number; pools: Array<{ url: string; refCount: number; missedHeartbeats: number; failureCount: number }> }
+  interface TelemetryStatus { enabled?: boolean; inSample: boolean; sessionId: string; queueSize: number; samplingRate: number; flushIntervalMs?: number; lastFlush?: string }
+  const [memoryStats, setMemoryStats] = useState<MemoryStats | null>(null);
+  const [streamStats, setStreamStats] = useState<StreamPoolStats | null>(null);
+  const [telemetryStats, setTelemetryStats] = useState<TelemetryStatus | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
   // Check if debug panel should be shown
@@ -229,12 +238,12 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
                   onClick={() => toggleSection(`delta-${index}`)}
                 >
                   <div className="flex items-center justify-between">
-                    <span>{delta.metric || 'Unknown'}</span>
+                    <span>{(delta as any).metric || delta.key || 'Unknown'}</span>
                     <Badge 
-                      variant={delta.direction === 'increase' ? 'default' : 'secondary'}
+                      variant={delta.direction === 'up' ? 'default' : delta.direction === 'down' ? 'destructive' : 'secondary'}
                       className="text-xs"
                     >
-                      {delta.direction} {delta.magnitude?.toFixed(2)}
+                      {delta.direction} {typeof (delta as any).magnitude === 'number' ? (delta as any).magnitude.toFixed(2) : ''}
                     </Badge>
                   </div>
                   
@@ -261,7 +270,7 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
               {topMovers.slice(0, 10).map((mover, index) => (
                 <div key={index} className="text-xs p-2 bg-gray-50 rounded border">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono">{mover.domain || 'Unknown'}</span>
+                    <span className="font-mono">{(mover as any).domain || mover.label || 'Unknown'}</span>
                     <span className={cn(
                       'font-medium',
                       mover.direction === 'up' ? 'text-green-600' : 'text-red-600'

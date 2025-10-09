@@ -6,6 +6,23 @@
 import { telemetryService } from './telemetryService';
 import type { ForecastPoint } from '@/lib/api-client/models';
 
+// Adapt loosely typed incoming point objects into a canonical internal shape
+interface RawForecastPointLike { timestamp: string; value?: number; predictedValue?: number; lower?: number; upper?: number }
+function adaptRawPoint(metricKey: string, p: RawForecastPointLike): ForecastPoint & { value: number; lower?: number; upper?: number } {
+  const predicted = (typeof p.predictedValue === 'number' ? p.predictedValue : p.value) ?? 0;
+  const lower = typeof p.lower === 'number' ? p.lower : predicted;
+  const upper = typeof p.upper === 'number' ? p.upper : predicted;
+  return {
+    metricKey,
+    timestamp: p.timestamp,
+    predictedValue: predicted,
+    // augmented fields retained for internal blending math
+    value: predicted,
+    lower,
+    upper
+  } as ForecastPoint & { value: number; lower?: number; upper?: number };
+}
+
 /**
  * Model registration info
  */
@@ -179,20 +196,9 @@ class ForecastBlendService {
     }>
   ): BlendedForecast {
     // Adapt raw point shape to ForecastPoint (add metricKey & predictedValue aliasing value)
-    const adaptedForecasts: Array<{ modelId: string; points: ForecastPoint[] }> = modelForecasts.map(f => ({
+    const adaptedForecasts: Array<{ modelId: string; points: (ForecastPoint & { value: number; lower?: number; upper?: number })[] }> = modelForecasts.map(f => ({
       modelId: f.modelId,
-      points: f.points.map(p => ({
-        metricKey,
-        timestamp: p.timestamp,
-        predictedValue: p.value,
-        // Carry raw values for lower/upper via augmentation for local calculations
-        // @ts-ignore - augmenting with optional fields not in ForecastPoint interface
-        value: p.value,
-        // @ts-ignore
-        lower: p.lower,
-        // @ts-ignore
-        upper: p.upper,
-      }))
+      points: f.points.map(p => adaptRawPoint(metricKey, p))
     }));
     const startTime = Date.now();
 
@@ -314,9 +320,9 @@ class ForecastBlendService {
         const weight = weights.get(forecast.modelId) || 0;
         
   // point may have predictedValue (canonical) plus augmented raw fields
-  const pv: any = (point as any).predictedValue ?? (point as any).value;
-  const lower: any = (point as any).lower ?? pv;
-  const upper: any = (point as any).upper ?? pv;
+    const pv = (point as { predictedValue?: number; value?: number }).predictedValue ?? (point as { value?: number }).value ?? 0;
+    const lower = (point as { lower?: number }).lower ?? pv;
+    const upper = (point as { upper?: number }).upper ?? pv;
   weightedValue += pv * weight;
   weightedLower += lower * weight;
   weightedUpper += upper * weight;
@@ -415,9 +421,9 @@ class ForecastBlendService {
     weights.set(bestModelId, 1.0);
 
     const blendedPoints: BlendedForecast['blendedPoints'] = bestForecast.points.map(point => {
-      const pv: any = (point as any).predictedValue ?? (point as any).value;
-      const lower: any = (point as any).lower ?? pv;
-      const upper: any = (point as any).upper ?? pv;
+  const pv = (point as { predictedValue?: number; value?: number }).predictedValue ?? (point as { value?: number }).value ?? 0;
+  const lower = (point as { lower?: number }).lower ?? pv;
+  const upper = (point as { upper?: number }).upper ?? pv;
       return {
         timestamp: String(point.timestamp),
         value: Number(pv) || 0,

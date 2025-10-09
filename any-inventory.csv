@@ -1,0 +1,157 @@
+file,line,pattern_kind,severity,bucket,code,suggested_replacement
+src/components/SSEDebugPanel.tsx,251,assertion,low,ui-component,{typeof (entry.event as any)?.campaign_id === 'string' && (,Eliminate assertion via type guard or pre-normalized adapter
+src/components/SSEDebugPanel.tsx,253,assertion,medium,ui-component,Campaign: {String((entry.event as any).campaign_id)},Eliminate assertion via type guard or pre-normalized adapter
+src/components/campaigns/sections/CampaignDetailsSection.tsx,11,angle-cast,low,ui-component,control: Control<any>;,Switch to generics or unknown + refinement
+src/components/campaigns/sections/KeywordTargetingSection.tsx,11,angle-cast,low,ui-component,control: Control<any>;,Switch to generics or unknown + refinement
+src/components/campaigns/sections/PerformanceTuningSection.tsx,12,angle-cast,low,ui-component,control: Control<any>;,Switch to generics or unknown + refinement
+src/components/campaigns/sections/PersonaAssignmentSection.tsx,19,angle-cast,low,ui-component,control: Control<any>;,Switch to generics or unknown + refinement
+src/components/refactor/campaign/CohortComparisonPanel.tsx,383,assertion,low,ui-component,const launchRaw: any = (campaign as any).launchDate;,Eliminate assertion via type guard or pre-normalized adapter
+src/components/refactor/campaign/CohortComparisonPanel.tsx,385,assertion,low,ui-component,const snapshots: any[] = Array.isArray((campaign as any).normalizedSnapshots) ? (campaign as any).normalizedSnapshots : [];,Eliminate assertion via type guard or pre-normalized adapter
+src/components/refactor/campaign/EnhancedCampaignOverview.tsx,50,angle-cast,low,ui-component,"const [memoryStats, setMemoryStats] = useState<any>(null);",Switch to generics or unknown + refinement
+src/components/refactor/campaign/MetricsDebugPanel.tsx,235,assertion,low,ui-component,<span>{(delta as any).metric || delta.key || 'Unknown'}</span>,Eliminate assertion via type guard or pre-normalized adapter
+src/components/refactor/campaign/MetricsDebugPanel.tsx,240,assertion,low,ui-component,{delta.direction} {typeof (delta as any).magnitude === 'number' ? (delta as any).magnitude.toFixed(2) : ''},Eliminate assertion via type guard or pre-normalized adapter
+src/components/refactor/campaign/MetricsDebugPanel.tsx,267,assertion,low,ui-component,"<span className=""font-mono"">{(mover as any).domain || mover.label || 'Unknown'}</span>",Eliminate assertion via type guard or pre-normalized adapter
+src/components/refactor/campaign/MetricsDebugPanel.tsx,60,angle-cast,low,ui-component,"const [memoryStats, setMemoryStats] = useState<any>(null);",Switch to generics or unknown + refinement
+src/components/refactor/campaign/MetricsDebugPanel.tsx,61,angle-cast,low,ui-component,"const [streamStats, setStreamStats] = useState<any>(null);",Switch to generics or unknown + refinement
+src/components/refactor/campaign/MetricsDebugPanel.tsx,62,angle-cast,low,ui-component,"const [telemetryStats, setTelemetryStats] = useState<any>(null);",Switch to generics or unknown + refinement
+src/hooks/useCampaignPhaseStream.ts,81,annotation,low,hooks,const handleSSEEvent = useCallback((event: any) => {,event: CampaignStreamEvent
+src/hooks/useCampaignPipeline.ts,83,assertion,low,hooks,const overview = useAppSelector(overviewSel as any) as ReturnType<typeof overviewSel>;,Eliminate assertion via type guard or pre-normalized adapter
+src/hooks/useCampaignPipeline.ts,84,assertion,low,hooks,const fullSequenceMode: boolean | undefined = (overview as any)?.mode?.autoAdvance ?? (overview as any)?.ui?.fullSequenceMode;,Eliminate assertion via type guard or pre-normalized adapter
+src/hooks/useCampaignServerMetrics.ts,189,array,low,hooks,"function convertUiBucketsToClassification(uiBuckets: any[]): Record<string, number> {",uiBuckets: UIBucket[]
+src/hooks/useClientTraceDebug.ts,276,annotation,low,hooks,"const endSpan = useCallback((finalStatus: 'completed' | 'error' = 'completed', error?: any) => {","Replace any with unknown and narrow, or introduce domain interface"
+src/hooks/useEnhancedMetricsContext.tsx,29,annotation,low,hooks,aggregates: any;,aggregates: AggregatedMetrics
+src/hooks/useEnhancedMetricsContext.tsx,30,annotation,low,hooks,classification: any;,classification: ClassificationSummary
+src/hooks/useEnhancedMetricsContext.tsx,31,array,low,hooks,uiBuckets: any[];,uiBuckets: UIBucket[]
+src/hooks/useEnhancedMetricsContext.tsx,63,array,low,hooks,recommendationGroups: any[];,recommendationGroups: RecommendationGroup[]
+src/hooks/useMetricsContext.tsx,17,annotation,low,hooks,aggregates: any; // AggregateMetrics,aggregates: AggregatedMetrics
+src/hooks/useMetricsContext.tsx,18,annotation,low,hooks,classification: any;,classification: ClassificationSummary
+src/hooks/useMetricsContext.tsx,19,array,low,hooks,uiBuckets: any[];,uiBuckets: UIBucket[]
+src/hooks/useMetricsContext.tsx,45,array,low,hooks,recommendations: any[]; // Recommendation[],recommendations: Recommendation[]
+src/hooks/useSemanticSummaries.ts,372,annotation,low,hooks,items: Array<{ id: string; type: 'anomaly_cluster' | 'causal_delta'; data: any }>,"Replace any with unknown and narrow, or introduce domain interface"
+src/hooks/useSemanticSummaries.ts,78,annotation,low,hooks,"const generateCacheKey = useCallback((type: string, data: any): string => {","Replace any with unknown and narrow, or introduce domain interface"
+src/hooks/useWorkerMetricsFallback.ts,16,array,low,hooks,domains?: any[];,"Replace any with unknown and narrow, or introduce domain interface"
+src/hooks/useWorkerMetricsFallback.ts,17,annotation,low,hooks,aggregates?: any;,aggregates: AggregatedMetrics
+src/hooks/useWorkerMetricsFallback.ts,18,annotation,low,hooks,classifiedCounts?: any;,"Replace any with unknown and narrow, or introduce domain interface"
+src/hooks/useWorkerMetricsFallback.ts,24,annotation,low,hooks,aggregates: any;,aggregates: AggregatedMetrics
+src/hooks/useWorkerMetricsFallback.ts,25,annotation,low,hooks,classifiedCounts: any;,"Replace any with unknown and narrow, or introduce domain interface"
+src/lib/security/csp.ts,276,assertion,low,infrastructure,(res as any).locals = (res as any).locals || {};,Eliminate assertion via type guard or pre-normalized adapter
+src/lib/security/csp.ts,277,assertion,low,infrastructure,(res as any).locals.nonce = policy.generateNonce();,Eliminate assertion via type guard or pre-normalized adapter
+src/lib/security/csp.ts,283,assertion,low,infrastructure,"try { (res as any).setHeader?.(key, value); } catch { /* noop */ }",Eliminate assertion via type guard or pre-normalized adapter
+src/lib/utils/array-operations.ts,264,array,low,infrastructure,array: readonly any[],"Replace any with unknown and narrow, or introduce domain interface"
+src/lib/utils/memoization.ts,118,array,low,infrastructure,"export function memoizeAsync<TArgs extends any[], TResult>(","Replace any with unknown and narrow, or introduce domain interface"
+src/lib/utils/memoization.ts,250,array,low,infrastructure,"export function createSelector<TState, TResult, TDeps extends any[]>(","Replace any with unknown and narrow, or introduce domain interface"
+src/lib/utils/memoization.ts,75,array,low,infrastructure,"export function memoize<TArgs extends any[], TResult>(","Replace any with unknown and narrow, or introduce domain interface"
+src/lib/utils/typeGuards.ts,3,other,low,infrastructure,* Replaces unsafe `as any` casts with proper runtime type checking,Review manually
+src/providers/RTKCampaignDataProvider.tsx,78,assertion,low,misc,const dataMsg = (data && (String((data as any).message) || String((data as any).error?.message))) || null;,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/auditLogService.ts,326,assertion,low,analytics-service,impact.estimatedDataPoints = typeof (context as any)?.newValue === 'number' ? (context as any).newValue : 7; // Forecast horizon,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/enhancedRecommendationService.ts,188,assertion,low,analytics-service,"confidence: typeof rec?.provenance?.confidence === 'number' ? rec.provenance.confidence : (typeof (rec as any)?.confidence === 'number' ? (rec as any).confidence : 0.9),",Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/enhancedRecommendationService.ts,191,assertion,low,analytics-service,reasoning: Array.isArray((rec as any)?.reasoning) ? (rec as any).reasoning as string[] : [],Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/enhancedRecommendationService.ts,232,assertion,low,analytics-service,"confidence: typeof rec?.provenance?.confidence === 'number' ? rec.provenance.confidence : (typeof (rec as any)?.confidence === 'number' ? (rec as any).confidence : 0.7),",Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/enhancedRecommendationService.ts,235,assertion,low,analytics-service,"reasoning: Array.isArray((rec as any)?.reasoning) ? (rec as any).reasoning as string[] : ['Generated by experimental ML model'],",Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/enhancedRecommendationService.ts,236,assertion,low,analytics-service,baselineComparison: (rec as any)?.baselineComparison as any,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/enhancedRecommendationService.ts,497,array,low,analytics-service,private async fetchServerRecommendations(campaignId: string): Promise<any[]> {,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/enhancedRecommendationService.ts,513,assertion,low,analytics-service,const title = typeof (rec as any)?.title === 'string' ? (rec as any).title.toLowerCase() : '';,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/enhancedRecommendationService.ts,524,assertion,low,analytics-service,const confidence = typeof (rec as any)?.confidence === 'number' ? (rec as any).confidence : 0;,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/enhancedRecommendationService.ts,538,assertion,low,analytics-service,"quickAction: typeof (rec as any)?.detail === 'string' ? (rec as any).detail : undefined,",Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/enhancedSecurityHardeningService.ts,550,assertion,low,analytics-service,const schemaAny: any = schema as any;,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/enhancedSecurityHardeningService.ts,561,assertion,low,analytics-service,if (!(data && typeof data === 'object' && field in (data as any))) {,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/exportService.ts,397,annotation,low,analytics-service,arms: optionsV6.experimentsData.arms?.map((a: any) => ({,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/exportService.ts,403,annotation,low,analytics-service,decisions: optionsV6.experimentsData.decisions?.map((d: any) => ({,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/exportService.ts,409,assertion,low,analytics-service,const rs: any = (optionsV6.experimentsData as any).rewardsSummary || {};,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/exportService.ts,423,annotation,low,analytics-service,anomalies: (optionsV6.semanticSummariesData.anomalies || []).map((a: any) => ({,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/exportService.ts,429,annotation,low,analytics-service,causalDeltas: (optionsV6.semanticSummariesData.causalDeltas || []).map((c: any) => ({,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/exportService.ts,446,annotation,low,analytics-service,spans: (optionsV6.perfTracesData.spans || []).map((s: any) => ({,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/exportV5EvolutionService.ts,12,array,low,analytics-service,// Generated API client model types replacing previous any[] placeholders,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/mlRecommendationsService.ts,144,assertion,low,analytics-service,const e = r.explainability as any;,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/normalizationService.ts,231,annotation,low,analytics-service,function validateBenchmarkData(data: any): data is BenchmarkMetrics {,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/offlineResilienceService.ts,41,annotation,medium,analytics-service,payload: any;,payload: TaskPayload
+src/services/campaignMetrics/offlineResilienceService.ts,62,annotation,medium,analytics-service,payload: any;,payload: TaskPayload
+src/services/campaignMetrics/offlineResilienceService.ts,649,annotation,low,analytics-service,private calculateChecksum(data: any): string {,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/offlineResilienceService.ts,663,annotation,low,analytics-service,private calculateContextHash(event: any): string {,event: CampaignStreamEvent
+src/services/campaignMetrics/performanceGuardrailsService.ts,165,angle-cast,low,analytics-service,"private gcFriendlyCollections = new Map<string, GCFriendlyCollection<any>>();",Switch to generics or unknown + refinement
+src/services/campaignMetrics/recommendationScoreService.ts,30,annotation,low,analytics-service,classification: any;,classification: ClassificationSummary
+src/services/campaignMetrics/rootCauseAnalyticsService.ts,215,annotation,medium,analytics-service,evidence: (incompleteness.evidence || []).map((e: any) => ({,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/rootCauseAnalyticsService.ts,235,annotation,medium,analytics-service,evidence: (accuracy.evidence || []).map((e: any) => ({,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/rootCauseAnalyticsService.ts,526,array,medium,analytics-service,): { significance: number; direction: string; evidence: any[] } {,evidence: RootCauseEvidenceValue[]
+src/services/campaignMetrics/rootCauseAnalyticsService.ts,553,array,medium,analytics-service,): { significance: number; evidence: any[] } {,evidence: RootCauseEvidenceValue[]
+src/services/campaignMetrics/rootCauseAnalyticsService.ts,580,array,medium,analytics-service,): { score: number; evidence: any[] } {,evidence: RootCauseEvidenceValue[]
+src/services/campaignMetrics/rootCauseAnalyticsService.ts,614,array,medium,analytics-service,private detectModelDrift(context: AnomalyContext): { score: number; evidence: any[] } {,evidence: RootCauseEvidenceValue[]
+src/services/campaignMetrics/rootCauseAnalyticsService.ts,632,array,medium,analytics-service,private detectSeasonalEffects(context: AnomalyContext): { score: number; evidence: any[] } {,evidence: RootCauseEvidenceValue[]
+src/services/campaignMetrics/rootCauseAnalyticsService.ts,738,annotation,low,analytics-service,template: any,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/securityHardeningService.ts,297,annotation,low,analytics-service,sanitizeMetricAggregates(aggregates: any): SanitizationResult<any> {,aggregates: AggregatedMetrics
+src/services/campaignMetrics/securityHardeningService.ts,313,annotation,low,analytics-service,"sanitizeString(input: any, maxLength: number = 1000): SanitizationResult<string> {","Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/securityHardeningService.ts,389,annotation,low,analytics-service,export function validateForecastHorizon(horizon: any): SanitizationResult<number> {,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/securityHardeningService.ts,410,annotation,low,analytics-service,"export function sanitizeString(input: any, maxLength?: number): SanitizationResult<string> {","Replace any with unknown and narrow, or introduce domain interface"
+src/services/campaignMetrics/snapshotCompactionService.ts,407,annotation,low,analytics-service,const aggregates: any = {};,aggregates: AggregatedMetrics
+src/services/campaignMetrics/streamPool.ts,294,assertion,low,analytics-service,if (messageData && typeof messageData === 'object' && (messageData as any).type === 'heartbeat') {,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/streamPool.ts,296,assertion,low,analytics-service,if ((messageData as any).serverTime) {,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/streamPool.ts,297,assertion,low,analytics-service,const latency = now - new Date((messageData as any).serverTime).getTime();,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/streamPool.ts,304,assertion,low,analytics-service,if (isDifferentialUpdatesEnabled() && messageData && typeof messageData === 'object' && (messageData as any).type === 'differential_update' && pool.patchProcessor) {,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/streamPool.ts,308,assertion,low,analytics-service,const patch: DifferentialPatch = (messageData as any).patch;,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/streamPool.ts,335,assertion,low,analytics-service,"...(messageData as any),",Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/streamPool.ts,363,assertion,low,analytics-service,if (messageData && typeof messageData === 'object' && (messageData as any).type === 'full_snapshot' && pool.patchProcessor) {,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/streamPool.ts,366,assertion,low,analytics-service,pool.patchProcessor.updateBaseSnapshot((messageData as any).snapshot);,Eliminate assertion via type guard or pre-normalized adapter
+src/services/campaignMetrics/workerCoordinator.ts,212,angle-cast,low,analytics-service,): Promise<any> {,Switch to generics or unknown + refinement
+src/services/i18n/i18nService.ts,435,annotation,low,misc,let current: any = obj;,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/i18n/i18nService.ts,750,annotation,low,misc,const countKeys = (obj: any): number => {,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/perf/taskSchedulerService.ts,159,annotation,medium,performance,"payload: any,",payload: TaskPayload
+src/services/perf/taskSchedulerService.ts,162,angle-cast,low,performance,): Promise<any> {,Switch to generics or unknown + refinement
+src/services/perf/taskSchedulerService.ts,176,angle-cast,low,performance,"return new Promise<any>((resolve, reject) => {",Switch to generics or unknown + refinement
+src/services/perf/taskSchedulerService.ts,418,annotation,medium,performance,"private async executeInline(kind: TaskKind, payload: any): Promise<any> {",payload: TaskPayload
+src/services/perf/taskSchedulerService.ts,434,annotation,medium,performance,private inlineCausalRecompute(payload: any): any {,payload: TaskPayload
+src/services/perf/taskSchedulerService.ts,448,annotation,medium,performance,private inlineForecastBlend(payload: any): any {,payload: TaskPayload
+src/services/perf/taskSchedulerService.ts,457,annotation,low,performance,const blendedPoints = firstForecast.points.map((point: any) => ({,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/perf/taskSchedulerService.ts,476,annotation,medium,performance,private inlineSimulationProjection(payload: any): any {,payload: TaskPayload
+src/services/perf/taskSchedulerService.ts,518,assertion,low,performance,(taskScheduler as any).processQueue();,Eliminate assertion via type guard or pre-normalized adapter
+src/services/perf/taskSchedulerService.ts,74,annotation,low,performance,result?: any;,result?: TaskResult
+src/services/perf/wasmAccelerationService.ts,16,annotation,low,performance,module?: any;,module?: WebAssembly.Module
+src/services/perf/wasmAccelerationService.ts,332,annotation,low,performance,private createMockWasmModule(name: string): any {,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/policy/policyEngine.ts,363,annotation,low,misc,"private getContextValue(context: PolicyEventContext, field: string): any {","Replace any with unknown and narrow, or introduce domain interface"
+src/services/policy/policyEngine.ts,365,annotation,low,misc,let value: any = context;,"Replace any with unknown and narrow, or introduce domain interface"
+src/services/policy/policyEngine.ts,59,annotation,low,misc,value: any;,value: unknown
+src/services/simulation/scenarioEngine.ts,77,annotation,low,misc,assumedCausalGraph?: any; // Reference to causal graph if available,"Replace any with unknown and narrow, or introduce domain interface"
+src/store/api/README.md,39,assertion,low,misc,if ('error' in res && res.error && (res.error as any).data?.error) {,Eliminate assertion via type guard or pre-normalized adapter
+src/store/api/README.md,40,assertion,low,misc,"const { error, requestId } = (res.error as any).data;",Eliminate assertion via type guard or pre-normalized adapter
+src/store/api/README.md,41,assertion,low,misc,"return { error: { status: (res.error as any).status, data: { code: error.code, message: error.message, requestId } } };",Eliminate assertion via type guard or pre-normalized adapter
+src/store/api/cleanCampaignApi.ts,57,other,low,misc,// - Type casting with 'as any',Review manually
+src/store/selectors/pipelineSelectors.ts,26,other,low,misc,// Access RTK Query slice with explicit indexing to avoid 'as any',Review manually
+src/tests/api/contract.personas.spec.ts,7,annotation,low,misc,let spec: any;,"Replace any with unknown and narrow, or introduce domain interface"
+src/tests/pagination/usePaginatedDomains.remove,10,array,low,misc,"let pages: Record<number, { items: any[]; total: number }> = {};","Replace any with unknown and narrow, or introduce domain interface"
+src/tests/pagination/usePaginatedDomains.remove,15,annotation,low,misc,"useGetCampaignDomainsQuery: ({ limit, offset }: any) => {","Replace any with unknown and narrow, or introduce domain interface"
+src/tests/pagination/usePaginatedDomains.remove,9,array,low,misc,const listeners: any[] = [];,"Replace any with unknown and narrow, or introduce domain interface"
+src/types/domainAnalysisFeatures.ts,28,annotation,low,misc,export function coerceFeatures(raw: any): DomainAnalysisFeatures | null {,"Replace any with unknown and narrow, or introduce domain interface"
+src/types/domainAnalysisFeatures.ts,30,annotation,low,misc,const safeNum = (v: any): number | null => (typeof v === 'number' ? v : v === null || v === undefined ? null : Number.isFinite(Number(v)) ? Number(v) : null);,"Replace any with unknown and narrow, or introduce domain interface"
+src/types/domainAnalysisFeatures.ts,31,annotation,low,misc,const top3 = Array.isArray(raw.keywords?.top3) ? raw.keywords.top3.filter((x: any) => typeof x === 'string') : [];,"Replace any with unknown and narrow, or introduce domain interface"
+src/types/forecasting/normalizers.ts,18,array,low,misc,export function normalizeForecastPoints(points: any[]): ForecastPoint[] {,"Replace any with unknown and narrow, or introduce domain interface"
+src/types/forecasting/normalizers.ts,35,annotation,low,misc,export function coerceModelScores(scores: any): ModelScore {,"Replace any with unknown and narrow, or introduce domain interface"
+src/types/forecasting/normalizers.ts,47,annotation,low,misc,export function normalizeBlendResult(result: any): BlendResult {,"Replace any with unknown and narrow, or introduce domain interface"
+src/types/forecasting/normalizers.ts,61,annotation,low,misc,export function normalizeQualityMetrics(metrics: any): QualityMetrics {,"Replace any with unknown and narrow, or introduce domain interface"
+src/types/forecasting/normalizers.ts,72,annotation,low,misc,export function normalizeModelInfo(info: any): ModelInfo {,"Replace any with unknown and narrow, or introduce domain interface"
+src/types/forecasting/normalizers.ts,77,annotation,low,misc,? info.alternativeModels.map((model: any) => ({,"Replace any with unknown and narrow, or introduce domain interface"
+src/types/forecasting/normalizers.ts,89,annotation,low,misc,export function normalizeForecastResult(result: any): NormalizedForecastResult {,"Replace any with unknown and narrow, or introduce domain interface"
+src/types/ui-proxy.ts,23,annotation,low,misc,export function isUiProxy(obj: any): obj is UiProxy {,"Replace any with unknown and narrow, or introduce domain interface"
+src/utils/phaseStatus.ts,30,assertion,low,misc,"phase: phase as any, // cast to align with generated type expecting string literal",Eliminate assertion via type guard or pre-normalized adapter
+src/utils/phaseStatus.ts,31,assertion,low,misc,"status: (status || 'not_started') as any,",Eliminate assertion via type guard or pre-normalized adapter
+src/workers/edgeProcessor.worker.ts,10,annotation,medium,worker,payload: any;,payload: TaskPayload
+src/workers/edgeProcessor.worker.ts,144,annotation,low,worker,}): any {,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/edgeProcessor.worker.ts,18,annotation,low,worker,result?: any;,result?: TaskResult
+src/workers/edgeProcessor.worker.ts,221,annotation,low,worker,}): any {,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/edgeProcessor.worker.ts,78,annotation,low,worker,existingGraph?: any;,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/edgeProcessor.worker.ts,79,annotation,low,worker,}): any {,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,111,annotation,low,worker,"function safeCalculateDeltas(current: any, previous?: any) {","Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,12,array,low,worker,domains?: any[];,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,13,array,low,worker,previousDomains?: any[];,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,15,annotation,low,worker,aggregates?: any;,aggregates: AggregatedMetrics
+src/workers/metricsWorker.ts,16,annotation,low,worker,classifiedCounts?: any;,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,17,annotation,low,worker,movers?: any;,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,18,annotation,low,worker,deltas?: any;,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,248,annotation,low,worker,options: any,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,47,array,low,worker,let classifyDomains: (domains: any[]) => any;,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,48,array,low,worker,let computeAggregates: (domains: any[]) => any;,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,49,annotation,low,worker,"let enrichAggregatesWithHighPotential: (aggregates: any, highPotentialCount: number) => any;",aggregates: AggregatedMetrics
+src/workers/metricsWorker.ts,50,array,low,worker,"let computeMovers: (domains: any[], previousDomains?: any[]) => any;","Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,51,annotation,low,worker,"let calculateDeltas: (current: any, previous?: any) => any;","Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,54,array,low,worker,function safeClassifyDomains(domains: any[]) {,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,69,array,low,worker,function safeComputeAggregates(domains: any[]) {,"Replace any with unknown and narrow, or introduce domain interface"
+src/workers/metricsWorker.ts,82,annotation,low,worker,"function safeEnrichAggregatesWithHighPotential(aggregates: any, highPotentialCount: number) {",aggregates: AggregatedMetrics
+src/workers/metricsWorker.ts,91,array,low,worker,"function safeComputeMovers(domains: any[], previousDomains?: any[]) {","Replace any with unknown and narrow, or introduce domain interface"

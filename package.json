@@ -10,7 +10,7 @@
     "build:turbo": "next build --turbo",
     "build:safe": "npm run typecheck && npm run build",
     "start": "next start",
-    "backend:dev": "cd backend && go run ./cmd/apiserver",
+    "backend:dev": "cd backend && go run ./bin/apiserver",
     "backend:build": "cd backend && go build -o bin/apiserver ./cmd/apiserver",
     "backend:start": "cd backend && ./bin/apiserver",
     "lint": "next lint",

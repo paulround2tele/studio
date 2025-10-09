@@ -15,87 +15,103 @@ import {
 /**
  * Normalize forecast points to ensure consistent structure
  */
-export function normalizeForecastPoints(points: any[]): ForecastPoint[] {
-  if (!Array.isArray(points)) {
-    return [];
-  }
-
-  return points.map(point => ({
-    timestamp: point.timestamp || new Date().toISOString(),
-    value: Number(point.value) || 0,
-    lower: Number(point.lower) || Number(point.value) || 0,
-    upper: Number(point.upper) || Number(point.value) || 0,
-    confidence: point.confidence ? Number(point.confidence) : undefined,
-  }));
+export function normalizeForecastPoints(points: unknown[]): ForecastPoint[] {
+  if (!Array.isArray(points)) return [];
+  return points.filter(p => p && typeof p === 'object').map(p => {
+    const point = p as Record<string, unknown>;
+    const value = typeof point.value === 'number' ? point.value : Number(point.value) || 0;
+    const lower = typeof point.lower === 'number' ? point.lower : (typeof point.value === 'number' ? point.value : value);
+    const upper = typeof point.upper === 'number' ? point.upper : (typeof point.value === 'number' ? point.value : value);
+    const confidence = typeof point.confidence === 'number' ? point.confidence : (point.confidence !== undefined ? Number(point.confidence) : undefined);
+    return {
+      timestamp: typeof point.timestamp === 'string' ? point.timestamp : new Date().toISOString(),
+      value,
+      lower,
+      upper,
+      confidence,
+    };
+  });
 }
 
 /**
  * Coerce model scores to standard format
  */
-export function coerceModelScores(scores: any): ModelScore {
+export function coerceModelScores(scores: unknown): ModelScore {
+  const rec = (scores && typeof scores === 'object') ? (scores as Record<string, unknown>) : {};
   return {
-    model: String(scores?.model || 'unknown'),
-    mae: Number(scores?.mae) || 0,
-    mape: Number(scores?.mape) || 0,
-    confidence: Number(scores?.confidence) || 0.5,
+    model: typeof rec.model === 'string' ? rec.model : 'unknown',
+    mae: typeof rec.mae === 'number' ? rec.mae : Number(rec.mae) || 0,
+    mape: typeof rec.mape === 'number' ? rec.mape : Number(rec.mape) || 0,
+    confidence: typeof rec.confidence === 'number' ? rec.confidence : Number(rec.confidence) || 0.5,
   };
 }
 
 /**
  * Normalize blend result structure
  */
-export function normalizeBlendResult(result: any): BlendResult {
+export function normalizeBlendResult(result: unknown): BlendResult {
+  const rec = (result && typeof result === 'object') ? (result as Record<string, unknown>) : {};
   return {
-    blendedPoints: normalizeForecastPoints(result?.blendedPoints || []),
-    weights: result?.weights || {},
-    metricKey: String(result?.metricKey || 'unknown'),
-    horizon: Number(result?.horizon) || 0,
-    fallback: Boolean(result?.fallback),
-    qualityScore: result?.qualityScore ? Number(result.qualityScore) : undefined,
+    blendedPoints: normalizeForecastPoints(Array.isArray(rec.blendedPoints) ? rec.blendedPoints : []),
+    weights: (rec.weights && typeof rec.weights === 'object') ? rec.weights as Record<string, number> : {},
+    metricKey: typeof rec.metricKey === 'string' ? rec.metricKey : 'unknown',
+    horizon: typeof rec.horizon === 'number' ? rec.horizon : Number(rec.horizon) || 0,
+    fallback: Boolean(rec.fallback),
+    qualityScore: typeof rec.qualityScore === 'number' ? rec.qualityScore : (rec.qualityScore !== undefined ? Number(rec.qualityScore) : undefined),
   };
 }
 
 /**
  * Normalize quality metrics with required fields
  */
-export function normalizeQualityMetrics(metrics: any): QualityMetrics {
+export function normalizeQualityMetrics(metrics: unknown): QualityMetrics {
+  const rec = (metrics && typeof metrics === 'object') ? (metrics as Record<string, unknown>) : {};
   return {
-    mae: Number(metrics?.mae) || 0,
-    mape: Number(metrics?.mape) || 0,
-    residualVariance: Number(metrics?.residualVariance) || 0,
+    mae: typeof rec.mae === 'number' ? rec.mae : Number(rec.mae) || 0,
+    mape: typeof rec.mape === 'number' ? rec.mape : Number(rec.mape) || 0,
+    residualVariance: typeof rec.residualVariance === 'number' ? rec.residualVariance : Number(rec.residualVariance) || 0,
   };
 }
 
 /**
  * Normalize model info structure
  */
-export function normalizeModelInfo(info: any): ModelInfo {
+export function normalizeModelInfo(info: unknown): ModelInfo {
+  const rec = (info && typeof info === 'object') ? (info as Record<string, unknown>) : {};
+  const alt = (rec.alternativeModels && Array.isArray(rec.alternativeModels)) ? rec.alternativeModels : [];
   return {
-    selectedModel: String(info?.selectedModel || 'unknown'),
-    arbitrationScores: info?.arbitrationScores ? coerceModelScores(info.arbitrationScores) : undefined,
-    alternativeModels: Array.isArray(info?.alternativeModels) 
-      ? info.alternativeModels.map((model: any) => ({
-          name: String(model?.name || 'unknown'),
-          mae: Number(model?.mae) || 0,
-          mape: Number(model?.mape) || 0,
-        }))
-      : [],
+    selectedModel: typeof rec.selectedModel === 'string' ? rec.selectedModel : 'unknown',
+    arbitrationScores: rec.arbitrationScores ? coerceModelScores(rec.arbitrationScores) : undefined,
+    alternativeModels: alt.filter(m => m && typeof m === 'object').map(m => {
+      const model = m as Record<string, unknown>;
+      return {
+        name: typeof model.name === 'string' ? model.name : 'unknown',
+        mae: typeof model.mae === 'number' ? model.mae : Number(model.mae) || 0,
+        mape: typeof model.mape === 'number' ? model.mape : Number(model.mape) || 0,
+      };
+    }),
   };
 }
 
 /**
  * Main forecast result normalizer
  */
-export function normalizeForecastResult(result: any): NormalizedForecastResult {
+export function normalizeForecastResult(result: unknown): NormalizedForecastResult {
+  const rec = (result && typeof result === 'object') ? (result as Record<string, unknown>) : {};
   return {
-    horizon: Number(result?.horizon) || 0,
-    generatedAt: result?.generatedAt || new Date().toISOString(),
-    method: result?.method || 'client',
-    points: normalizeForecastPoints(result?.points || []),
-    timingMs: Number(result?.timingMs) || 0,
-    error: result?.error ? String(result.error) : undefined,
-    modelInfo: normalizeModelInfo(result?.modelInfo || {}),
-    qualityMetrics: normalizeQualityMetrics(result?.qualityMetrics || {}),
+    horizon: typeof rec.horizon === 'number' ? rec.horizon : Number(rec.horizon) || 0,
+    generatedAt: typeof rec.generatedAt === 'string' ? rec.generatedAt : new Date().toISOString(),
+    method: ((): NormalizedForecastResult['method'] => {
+      const m = rec.method;
+      return m === 'client' || m === 'server' || m === 'insufficient-data' || m === 'skipped' || m === 'client-worker'
+        ? m
+        : 'client';
+    })(),
+    points: normalizeForecastPoints(Array.isArray(rec.points) ? rec.points : []),
+    timingMs: typeof rec.timingMs === 'number' ? rec.timingMs : Number(rec.timingMs) || 0,
+    error: rec.error ? String(rec.error) : undefined,
+    modelInfo: normalizeModelInfo(rec.modelInfo),
+    qualityMetrics: normalizeQualityMetrics(rec.qualityMetrics),
   };
 }
 

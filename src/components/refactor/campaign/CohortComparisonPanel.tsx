@@ -380,12 +380,29 @@ function CampaignSummaryCard({
   selectedMetric: keyof AggregateSnapshot['aggregates'];
   formatValue: (value: number) => string;
 }) {
-  const launchDate = new Date(campaign.launchDate).toLocaleDateString();
-  const dayCount = campaign.normalizedSnapshots.length;
-  
-  // Get latest value
-  const latestSnapshot = campaign.normalizedSnapshots[campaign.normalizedSnapshots.length - 1];
-  const latestValue = latestSnapshot?.snapshot.aggregates[selectedMetric];
+  interface NormalizedSnapshot {
+    dayIndex: number;
+    snapshot?: {
+      aggregates?: Record<string, number | undefined>;
+    };
+  }
+
+  const asRecord = (value: unknown): Record<string, unknown> | null => {
+    return value && typeof value === 'object' ? (value as Record<string, unknown>) : null;
+  };
+  const campaignRecord = asRecord(campaign as unknown);
+  const launchDate = (campaignRecord && typeof campaignRecord.launchDate === 'string')
+    ? new Date(campaignRecord.launchDate).toLocaleDateString()
+    : 'n/a';
+
+  const rawSnaps = campaignRecord ? campaignRecord.normalizedSnapshots : undefined;
+  const snapshots: NormalizedSnapshot[] = Array.isArray(rawSnaps)
+    ? rawSnaps.filter(s => s && typeof s === 'object').map(s => s as NormalizedSnapshot)
+    : [];
+
+  const dayCount = snapshots.length;
+  const latestSnapshot = snapshots[snapshots.length - 1];
+  const latestValue = latestSnapshot?.snapshot?.aggregates?.[selectedMetric as string];
 
   return (
     <div className="p-3 border rounded-lg">

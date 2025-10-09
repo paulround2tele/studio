@@ -104,7 +104,8 @@ class SecurityHardeningService {
     version: string,
     algorithm: 'sha256' | 'sha1' | 'md5' = this.config.defaultHashAlgorithm
   ): SchemaHash {
-    const schemaString = JSON.stringify(schema, Object.keys(schema).sort());
+  const base = (schema && typeof schema === 'object') ? schema as Record<string, unknown> : {};
+  const schemaString = JSON.stringify(base, Object.keys(base).sort());
     const hash = this.computeHash(schemaString, algorithm);
 
     const schemaHash: SchemaHash = {
@@ -156,7 +157,7 @@ class SecurityHardeningService {
       }
 
       // Generate current schema hash
-      const currentSchemaHash = this.generateSchemaHash(expectedSchema, schemaVersion);
+  const currentSchemaHash = this.generateSchemaHash(expectedSchema, schemaVersion);
       
       // Validate schema structure
       const schemaValidation = this.validateSchemaStructure(payload, expectedSchema);
@@ -546,29 +547,30 @@ class SecurityHardeningService {
 
     try {
       // Type validation
-      if (schema.type) {
+  const schemaAny: any = schema as any;
+  if (schemaAny && typeof schemaAny === 'object' && schemaAny.type) {
         const actualType = Array.isArray(data) ? 'array' : typeof data;
-        if (actualType !== schema.type) {
-          errors.push(`${path}: expected ${schema.type}, got ${actualType}`);
+  if (actualType !== schemaAny.type) {
+          errors.push(`${path}: expected ${schemaAny.type}, got ${actualType}`);
         }
       }
 
       // Required fields validation
-      if (schema.required && Array.isArray(schema.required)) {
-        for (const field of schema.required) {
-          if (!(field in data)) {
+  if (schemaAny && typeof schemaAny === 'object' && schemaAny.required && Array.isArray(schemaAny.required)) {
+  for (const field of schemaAny.required) {
+          if (!(data && typeof data === 'object' && field in (data as any))) {
             errors.push(`${path}: missing required field '${field}'`);
           }
         }
       }
 
       // Properties validation
-      if (schema.properties && typeof data === 'object' && data !== null) {
+  if (schemaAny && typeof schemaAny === 'object' && schemaAny.properties && typeof data === 'object' && data !== null) {
         for (const [key, value] of Object.entries(data)) {
-          if (schema.properties[key]) {
+          if (schemaAny.properties[key]) {
             const subValidation = this.validateSchemaStructure(
               value,
-              schema.properties[key],
+              schemaAny.properties[key],
               `${path}.${key}`
             );
             errors.push(...subValidation.errors);
@@ -577,11 +579,11 @@ class SecurityHardeningService {
       }
 
       // Array items validation
-      if (schema.items && Array.isArray(data)) {
+  if (schemaAny && typeof schemaAny === 'object' && schemaAny.items && Array.isArray(data)) {
         for (let i = 0; i < data.length; i++) {
           const itemValidation = this.validateSchemaStructure(
             data[i],
-            schema.items,
+            schemaAny.items,
             `${path}[${i}]`
           );
           errors.push(...itemValidation.errors);

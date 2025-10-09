@@ -392,11 +392,60 @@ export function exportSnapshotsJSONV6(
   }
 
   if (optionsV6?.includeExperiments && optionsV6.experimentsData) {
-    exportData.experiments = optionsV6.experimentsData;
+    if (optionsV6.experimentsData) {
+      exportData.experiments = {
+        arms: optionsV6.experimentsData.arms?.filter(a => a && typeof a === 'object').map(aRaw => {
+          const a = aRaw as unknown as Record<string, unknown>;
+          return {
+            id: String(a.id || a.armId || 'unknown'),
+            name: String(a.name || a.id || 'arm'),
+            pulls: Number(a.pulls || a.sampleCount || 0),
+            averageReward: Number(a.averageReward || a.meanReward || 0)
+          };
+        }) || [],
+        decisions: optionsV6.experimentsData.decisions?.filter(d => d && typeof d === 'object').map(dRaw => {
+          const d = dRaw as unknown as Record<string, unknown>;
+          return {
+            armId: String(d.armId || d.id || 'unknown'),
+            strategy: String(d.strategy || 'unknown'),
+            timestamp: String(d.timestamp || new Date().toISOString())
+          };
+        }) || [],
+        rewardsSummary: (() => {
+          const rs = (optionsV6.experimentsData as unknown as { rewardsSummary?: Record<string, unknown> }).rewardsSummary || {};
+          return {
+            totalRewards: Number(rs.totalRewards || 0),
+            averageReward: Number(rs.averageReward || 0),
+            bestArm: rs.bestArm ? String(rs.bestArm) : null
+          };
+        })()
+      };
+    }
   }
 
   if (optionsV6?.includeSemanticSummaries && optionsV6.semanticSummariesData) {
-    exportData.semanticSummaries = optionsV6.semanticSummariesData;
+    if (optionsV6.semanticSummariesData) {
+      exportData.semanticSummaries = {
+        anomalies: (optionsV6.semanticSummariesData.anomalies || []).filter(a => a && typeof a === 'object').map(aRaw => {
+          const a = aRaw as Record<string, unknown>;
+          return {
+            id: String(a.id || a.anomalyId || 'unknown'),
+            summary: String(a.summary || a.description || 'n/a'),
+            confidence: Number(a.confidence || 0),
+            method: String(a.method || 'unspecified')
+          };
+        }),
+        causalDeltas: (optionsV6.semanticSummariesData.causalDeltas || []).filter(c => c && typeof c === 'object').map(cRaw => {
+          const c = cRaw as Record<string, unknown>;
+          return {
+            id: String(c.id || c.deltaId || 'unknown'),
+            summary: String(c.summary || c.description || 'n/a'),
+            confidence: Number(c.confidence || 0),
+            method: String(c.method || 'unspecified')
+          };
+        })
+      };
+    }
   }
 
   if (optionsV6?.includePrivacyLedger && optionsV6.privacyLedgerData) {
@@ -404,7 +453,23 @@ export function exportSnapshotsJSONV6(
   }
 
   if (optionsV6?.includePerfTraces && optionsV6.perfTracesData) {
-    exportData.perfTraces = optionsV6.perfTracesData;
+    if (optionsV6.perfTracesData) {
+      exportData.perfTraces = {
+        spans: (optionsV6.perfTracesData.spans || []).filter(s => s && typeof s === 'object').map(sRaw => {
+          const s = sRaw as Record<string, unknown>;
+          return {
+            id: String(s.id || 'span'),
+            operation: String(s.operation || s.op || 'op'),
+            duration: Number(s.duration || 0),
+            status: String(s.status || 'unknown'),
+            startTime: Number(s.startTime || Date.now())
+          };
+        }),
+        totalSpans: Number(optionsV6.perfTracesData.totalSpans || (optionsV6.perfTracesData.spans || []).length || 0),
+        averageDuration: Number(optionsV6.perfTracesData.averageDuration || 0),
+        errorRate: Number(optionsV6.perfTracesData.errorRate || 0)
+      };
+    }
   }
 
   // Emit telemetry

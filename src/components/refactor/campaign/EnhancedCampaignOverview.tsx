@@ -47,7 +47,8 @@ export const EnhancedCampaignOverview: React.FC<EnhancedCampaignOverviewProps> =
   } = useEnhancedMetricsContext();
 
   const [showDebugPanel, setShowDebugPanel] = useState(false);
-  const [memoryStats, setMemoryStats] = useState<any>(null);
+  interface MemoryStats { campaignCount: number; totalSnapshots: number; estimatedSizeKB: number }
+  const [memoryStats, setMemoryStats] = useState<MemoryStats | null>(null);
 
   // Update memory stats periodically
   useEffect(() => {

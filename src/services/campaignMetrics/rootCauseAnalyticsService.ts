@@ -4,6 +4,30 @@
  */
 
 import { telemetryService } from './telemetryService';
+
+// Typed evidence item replacing previous implicit any[] usage
+export interface RootCauseEvidenceItem {
+  metric: string;
+  value: number;
+  baseline: number;
+  deviation: number;
+}
+
+function normalizeEvidenceEntry(e: unknown): RootCauseEvidenceItem {
+  if (!e || typeof e !== 'object') {
+    return { metric: 'unknown', value: 0, baseline: 0, deviation: 0 };
+  }
+  const obj = e as Record<string, unknown>;
+  const metric = typeof obj.metric === 'string'
+    ? obj.metric
+    : typeof obj.type === 'string'
+      ? obj.type
+      : 'unknown';
+  const value = typeof obj.value === 'number' ? obj.value : Number(obj.value) || 0;
+  const baseline = typeof obj.baseline === 'number' ? obj.baseline : Number(obj.baseline) || 0;
+  const deviation = typeof obj.deviation === 'number' ? obj.deviation : Number(obj.deviation) || (value - baseline);
+  return { metric, value, baseline, deviation };
+}
 // Simple AggregateSnapshot interface for Phase 9 compatibility
 interface AggregateSnapshot {
   id: string;
@@ -212,7 +236,7 @@ class RootCauseAnalyticsService {
         confidence: incompleteness.score,
         impact: this.estimateImpact(incompleteness.score, 'data_quality'),
         timeRange: affectedTimeRange,
-        evidence: incompleteness.evidence,
+        evidence: (incompleteness.evidence || []).map(normalizeEvidenceEntry),
         correlationScore: 0, // Will be calculated later
       });
     }
@@ -227,7 +251,7 @@ class RootCauseAnalyticsService {
         confidence: accuracy.score,
         impact: this.estimateImpact(accuracy.score, 'data_quality'),
         timeRange: affectedTimeRange,
-        evidence: accuracy.evidence,
+        evidence: (accuracy.evidence || []).map(normalizeEvidenceEntry),
         correlationScore: 0,
       });
     }
@@ -513,7 +537,7 @@ class RootCauseAnalyticsService {
   private detectVolumeChanges(
     snapshots: AggregateSnapshot[],
     timeRange: { start: string; end: string }
-  ): { significance: number; direction: string; evidence: any[] } {
+  ): { significance: number; direction: string; evidence: RootCauseEvidenceItem[] } {
     // Simplified volume change detection
     const relevantSnapshots = snapshots.filter(s => 
       s.timestamp >= timeRange.start && s.timestamp <= timeRange.end
@@ -540,7 +564,7 @@ class RootCauseAnalyticsService {
   private detectPatternChanges(
     snapshots: AggregateSnapshot[],
     timeRange: { start: string; end: string }
-  ): { significance: number; evidence: any[] } {
+  ): { significance: number; evidence: RootCauseEvidenceItem[] } {
     // Simplified pattern change detection
     const relevantSnapshots = snapshots.filter(s => 
       s.timestamp >= timeRange.start && s.timestamp <= timeRange.end
@@ -567,7 +591,7 @@ class RootCauseAnalyticsService {
   private detectResourceStress(
     snapshots: AggregateSnapshot[],
     timeRange: { start: string; end: string }
-  ): { score: number; evidence: any[] } {
+  ): { score: number; evidence: RootCauseEvidenceItem[] } {
     // Simplified resource stress detection based on DNS/HTTP success rates
     const relevantSnapshots = snapshots.filter(s => 
       s.timestamp >= timeRange.start && s.timestamp <= timeRange.end
@@ -601,7 +625,7 @@ class RootCauseAnalyticsService {
     };
   }
 
-  private detectModelDrift(context: AnomalyContext): { score: number; evidence: any[] } {
+  private detectModelDrift(context: AnomalyContext): { score: number; evidence: RootCauseEvidenceItem[] } {
     // Simplified model drift detection - would need actual prediction history
     const deviationMagnitude = Math.abs(context.deviation) / context.baselineValue;
     
@@ -619,7 +643,7 @@ class RootCauseAnalyticsService {
     };
   }
 
-  private detectSeasonalEffects(context: AnomalyContext): { score: number; evidence: any[] } {
+  private detectSeasonalEffects(context: AnomalyContext): { score: number; evidence: RootCauseEvidenceItem[] } {
     // Simplified seasonal detection based on time patterns
     const anomalyTime = new Date(context.detectedAt);
     const hour = anomalyTime.getHours();
@@ -725,7 +749,7 @@ class RootCauseAnalyticsService {
 
   private generateFactorInterventions(
     factor: ContributingFactor,
-    template: any
+    template: unknown
   ): InterventionRecommendation[] {
     const interventions: InterventionRecommendation[] = [];
 

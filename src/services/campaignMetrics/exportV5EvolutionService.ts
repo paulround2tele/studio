@@ -4,6 +4,7 @@
  */
 
 import { telemetryService } from './telemetryService';
+import type { RootCauseEvidenceValue } from '@/lib/api-client/models/root-cause-evidence-value';
 import { BlendedForecast } from './forecastBlendService';
 import { CausalChain } from './rootCauseAnalyticsService';
 import { DeferredAction, OfflineSyncStatus } from './offlineResilienceService';
@@ -13,7 +14,6 @@ import type { AnomalyRecord } from '@/lib/api-client/models/anomaly-record';
 import type { HealthFabricSnapshot } from '@/lib/api-client/models/health-fabric-snapshot';
 import type { PerformanceMetricRecord } from '@/lib/api-client/models/performance-metric-record';
 import type { ForecastPoint } from '@/lib/api-client/models/forecast-point';
-import type { RootCauseEvidence } from '@/lib/api-client/models/root-cause-evidence';
 import type { CampaignRecommendation } from '@/lib/api-client/models/campaign-recommendation';
 import type { components } from '@/lib/api-client/types';
 type TimelineEvent = components['schemas']['TimelineEvent'];
@@ -81,6 +81,15 @@ export interface BlendedForecastProvenance {
 /**
  * Root-cause trace for export
  */
+interface RootCauseEvidenceLite {
+  type: string;
+  description: string;
+  value?: RootCauseEvidenceValue;
+  confidence?: number;
+  source?: string;
+  collectedAt?: string;
+}
+
 export interface RootCauseTrace {
   anomalyId: string;
   analysisId: string;
@@ -101,7 +110,7 @@ export interface RootCauseTrace {
     confidence: number;
     impact: number;
     timeRange: { start: string; end: string };
-  evidence: RootCauseEvidence[];
+  evidence: RootCauseEvidenceLite[];
   }>;
   
   // Intervention history
@@ -629,44 +638,56 @@ class ExportV5EvolutionService {
    * Generate root-cause traces
    */
   private generateRootCauseTraces(causalChains: CausalChain[]): RootCauseTrace[] {
-    return causalChains.map(chain => ({
-      anomalyId: chain.anomalyId,
-      analysisId: chain.id,
-      detectedAt: new Date().toISOString(), // Would come from anomaly detection
-      analyzedAt: chain.generatedAt,
-      
-      primaryFactor: chain.primaryFactor ? {
-        type: chain.factors.find(f => f.id === chain.primaryFactor)?.type || 'unknown',
-        description: chain.factors.find(f => f.id === chain.primaryFactor)?.description || '',
-        confidence: chain.factors.find(f => f.id === chain.primaryFactor)?.confidence || 0,
-        impact: chain.factors.find(f => f.id === chain.primaryFactor)?.impact || 0,
-      } : undefined,
-      
-      contributingFactors: chain.factors.map(factor => ({
-        type: factor.type,
-        description: factor.description,
-        confidence: factor.confidence,
-        impact: factor.impact,
-        timeRange: factor.timeRange,
-        evidence: (factor.evidence || []).map(ev => ({
-          // Best-effort mapping of existing evidence structure to RootCauseEvidence
-            type: (ev as Record<string, unknown>).metric as string ?? 'metric',
-            description: `deviation ${(ev as Record<string, unknown>).deviation ?? ''}`.trim(),
-            value: (ev as Record<string, unknown>).value,
-            confidence: undefined,
-            source: 'generated',
-            collectedAt: new Date().toISOString(),
+  const mapEvidence = (items: unknown[]): RootCauseEvidenceLite[] => {
+      return (items || []).map(raw => {
+        const r = (raw && typeof raw === 'object') ? raw as Record<string, unknown> : {};
+        const val = r.value;
+        let castValue: RootCauseEvidenceValue | undefined;
+        if (typeof val === 'number' || typeof val === 'string' || typeof val === 'boolean') {
+          castValue = val as RootCauseEvidenceValue;
+        }
+        return {
+          type: typeof r.metric === 'string' ? r.metric : 'metric',
+          description: typeof r.description === 'string' ? r.description : (typeof r.deviation === 'number' ? `deviation ${r.deviation}` : ''),
+          value: castValue,
+          confidence: typeof r.confidence === 'number' ? r.confidence : undefined,
+          source: 'generated',
+          collectedAt: new Date().toISOString(),
+        };
+      });
+    };
+    return causalChains.map(chain => {
+      const pfFactor = chain.primaryFactor ? chain.factors.find(f => f.id === chain.primaryFactor) : undefined;
+      return {
+        anomalyId: chain.anomalyId,
+        analysisId: chain.id,
+        detectedAt: new Date().toISOString(),
+        analyzedAt: chain.generatedAt,
+        primaryFactor: pfFactor ? {
+          type: pfFactor.type || 'unknown',
+          description: pfFactor.description || '',
+          confidence: pfFactor.confidence || 0,
+          impact: pfFactor.impact || 0,
+          timeRange: pfFactor.timeRange,
+          evidence: mapEvidence(pfFactor.evidence || [])
+        } : undefined,
+        contributingFactors: chain.factors.filter(f => !pfFactor || f.id !== pfFactor.id).map(factor => ({
+          type: factor.type,
+          description: factor.description,
+          confidence: factor.confidence,
+          impact: factor.impact,
+          timeRange: factor.timeRange,
+          evidence: mapEvidence(factor.evidence || [])
         })),
-      })),
-      
-      recommendedInterventions: chain.interventions.map(intervention => ({
-        type: intervention.type,
-        priority: intervention.priority,
-        action: intervention.action,
-        estimatedImpact: intervention.estimatedImpact,
-        status: 'pending' as const, // Would be tracked separately
-      })),
-    }));
+        recommendedInterventions: chain.interventions.map(intervention => ({
+          type: intervention.type,
+          priority: intervention.priority,
+          action: intervention.action,
+          estimatedImpact: intervention.estimatedImpact,
+          status: 'pending' as const,
+        }))
+      };
+    });
   }
 
   /**

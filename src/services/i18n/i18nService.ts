@@ -432,16 +432,14 @@ class I18nService {
    */
   private getNestedValue(obj: MessageCatalog, path: string): string | undefined {
     const keys = path.split('.');
-    let current: any = obj;
-    
+    let current: unknown = obj;
     for (const key of keys) {
-      if (current && typeof current === 'object' && key in current) {
-        current = current[key];
+      if (current && typeof current === 'object' && key in (current as Record<string, unknown>)) {
+        current = (current as Record<string, unknown>)[key];
       } else {
         return undefined;
       }
     }
-    
     return typeof current === 'string' ? current : undefined;
   }
 
@@ -747,13 +745,16 @@ class I18nService {
     const catalog = this.catalogs.get(locale);
     if (!catalog) return 0;
     
-    const countKeys = (obj: any): number => {
+    const countKeys = (obj: unknown): number => {
+      if (!obj || typeof obj !== 'object') return 0;
       let count = 0;
-      for (const key in obj) {
-        if (typeof obj[key] === 'string') {
+      const rec = obj as Record<string, unknown>;
+      for (const key of Object.keys(rec)) {
+        const value = rec[key];
+        if (typeof value === 'string') {
           count++;
-        } else if (typeof obj[key] === 'object') {
-          count += countKeys(obj[key]);
+        } else if (value && typeof value === 'object') {
+          count += countKeys(value);
         }
       }
       return count;

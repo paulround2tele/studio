@@ -42,8 +42,8 @@ function convertDomains(apiDomains: DomainListItem[] | undefined | null): Campai
   return apiDomains.map(d => ({
     id: d.id || '',
     domain_name: d.domain || '',
-    dns_status: d.dnsStatus || 'pending',
-    http_status: d.httpStatus || 'pending',
+    dns_status: (d.dnsStatus === 'ok' || d.dnsStatus === 'pending' || d.dnsStatus === 'error' || d.dnsStatus === 'timeout') ? d.dnsStatus : 'pending',
+    http_status: (d.httpStatus === 'ok' || d.httpStatus === 'pending' || d.httpStatus === 'error' || d.httpStatus === 'timeout') ? d.httpStatus : 'pending',
     // lead score not provided directly by DomainListItem – default to 0 (could be enriched later)
     lead_score: 0,
     created_at: d.createdAt || new Date().toISOString(),

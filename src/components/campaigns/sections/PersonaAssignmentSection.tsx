@@ -15,8 +15,14 @@ interface Persona {
 
 interface Proxy { id?: string; name?: string; host?: string; port?: number }
 
+interface PersonaAssignmentFormValues {
+  assignedDnsPersonaId?: string;
+  assignedHttpPersonaId?: string;
+  assignedProxyId?: string;
+}
+
 interface PersonaAssignmentSectionProps {
-  control: Control<any>;
+  control: Control<PersonaAssignmentFormValues>;
   dnsPersonas?: PersonaResponse[] | Persona[];
   httpPersonas?: PersonaResponse[] | Persona[];
   proxies?: Proxy[];

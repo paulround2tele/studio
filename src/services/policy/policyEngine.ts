@@ -24,7 +24,7 @@ export interface PolicyEventContext {
   campaignId?: string;
   userId?: string;
   timestamp?: number;
-  additionalContext?: Record<string, any>;
+  additionalContext?: Record<string, unknown>;
 }
 
 /**
@@ -46,7 +46,7 @@ export interface PolicyAction {
   type: PolicyActionType;
   reason: string;
   severity?: 'low' | 'medium' | 'high';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   expireAfterMs?: number;
 }
 
@@ -56,7 +56,7 @@ export interface PolicyAction {
 export interface PolicyCondition {
   field: string;
   operator: '==' | '!=' | '>' | '<' | '>=' | '<=' | 'in' | 'contains' | 'any';
-  value: any;
+  value: unknown;
   and?: PolicyCondition[];
   or?: PolicyCondition[];
 }
@@ -338,17 +338,17 @@ class PolicyEngineService {
       case '!=':
         return contextValue !== condition.value;
       case '>':
-        return typeof contextValue === 'number' && contextValue > condition.value;
+        return typeof contextValue === 'number' && typeof condition.value === 'number' && contextValue > condition.value;
       case '<':
-        return typeof contextValue === 'number' && contextValue < condition.value;
+        return typeof contextValue === 'number' && typeof condition.value === 'number' && contextValue < condition.value;
       case '>=':
-        return typeof contextValue === 'number' && contextValue >= condition.value;
+        return typeof contextValue === 'number' && typeof condition.value === 'number' && contextValue >= condition.value;
       case '<=':
-        return typeof contextValue === 'number' && contextValue <= condition.value;
+        return typeof contextValue === 'number' && typeof condition.value === 'number' && contextValue <= condition.value;
       case 'in':
-        return Array.isArray(condition.value) && condition.value.includes(contextValue);
+        return Array.isArray(condition.value) && condition.value.includes(contextValue as never);
       case 'contains':
-        return typeof contextValue === 'string' && contextValue.includes(condition.value);
+        return typeof contextValue === 'string' && typeof condition.value === 'string' && contextValue.includes(condition.value);
       case 'any':
         return Array.isArray(contextValue) && contextValue.length > 0;
       default:
@@ -360,13 +360,13 @@ class PolicyEngineService {
   /**
    * Get value from context by field path
    */
-  private getContextValue(context: PolicyEventContext, field: string): any {
+  private getContextValue(context: PolicyEventContext, field: string): unknown {
     const fieldParts = field.split('.');
-    let value: any = context;
+    let value: unknown = context as Record<string, unknown>;
 
     for (const part of fieldParts) {
-      if (value && typeof value === 'object') {
-        value = value[part];
+      if (value && typeof value === 'object' && part in (value as Record<string, unknown>)) {
+        value = (value as Record<string, unknown>)[part];
       } else {
         return undefined;
       }

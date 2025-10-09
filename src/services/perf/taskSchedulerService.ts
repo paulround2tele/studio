@@ -21,6 +21,17 @@ export type TaskPriority = 'high' | 'medium' | 'low';
  */
 export type TaskKind = 'causal_recompute' | 'forecast_blend' | 'simulation_projection';
 
+// Strongly typed payloads per task kind
+interface CausalRecomputePayload { graphId?: string }
+interface ForecastBlendPayload { modelForecasts: Array<{ modelId: string; points: Array<{ timestamp: string; value: number; lower?: number; upper?: number }> }>; metricKey: string; horizon: number }
+interface SimulationProjectionPayload { baselineMetrics: Record<string, number> }
+type TaskPayloadMap = {
+  causal_recompute: CausalRecomputePayload;
+  forecast_blend: ForecastBlendPayload;
+  simulation_projection: SimulationProjectionPayload;
+};
+type AnyTaskPayload = TaskPayloadMap[TaskKind];
+
 /**
  * Timer handle for ownership tracking
  */
@@ -47,7 +58,7 @@ export type Result<T, E = Error> =
 export interface ScheduledTask {
   id: string;
   kind: TaskKind;
-  payload: TaskDescriptor['payload'];
+  payload: AnyTaskPayload;
   priority: TaskPriority;
   queuedAt: number;
   timeoutMs: number;
@@ -69,9 +80,9 @@ export interface WorkerStatus {
 /**
  * Task execution result
  */
-export interface TaskResult {
+export interface TaskResult<T = unknown> {
   success: boolean;
-  result?: any;
+  result?: T;
   error?: string;
   processingTimeMs: number;
   executedBy: 'worker' | 'fallback';
@@ -154,12 +165,12 @@ class TaskSchedulerService {
   /**
    * Queue a task for execution
    */
-  async queueTask(
-    kind: TaskKind,
-    payload: any,
+  async queueTask<K extends TaskKind>(
+    kind: K,
+    payload: TaskPayloadMap[K],
     priority: TaskPriority = 'medium',
     timeoutMs: number = 30000
-  ): Promise<any> {
+  ): Promise<unknown> {
     if (!isEdgeProcessingEnabled()) {
       // Fallback to inline execution
       return this.executeInline(kind, payload);
@@ -173,7 +184,7 @@ class TaskSchedulerService {
       queuedMs: Date.now()
     });
 
-    return new Promise<any>((resolve, reject) => {
+  return new Promise<unknown>((resolve, reject) => {
       const task: ScheduledTask = {
         id: taskId,
         kind,
@@ -368,7 +379,7 @@ class TaskSchedulerService {
     const workerTask = {
       id: task.id,
       kind: task.kind,
-      payload: task.payload,
+      payload: task.payload as Record<string, unknown>,
       priority: task.priority,
       timestamp: now
     };
@@ -415,23 +426,23 @@ class TaskSchedulerService {
   /**
    * Execute task inline (simplified implementations)
    */
-  private async executeInline(kind: TaskKind, payload: any): Promise<any> {
-    switch (kind) {
-      case 'causal_recompute':
-        return this.inlineCausalRecompute(payload);
-      case 'forecast_blend':
-        return this.inlineForecastBlend(payload);
-      case 'simulation_projection':
-        return this.inlineSimulationProjection(payload);
-      default:
-        throw new Error(`Unknown task kind: ${kind}`);
+  private async executeInline<K extends TaskKind>(kind: K, payload: TaskPayloadMap[K]): Promise<unknown> {
+    if (kind === 'causal_recompute') {
+      return this.inlineCausalRecompute(payload as CausalRecomputePayload);
     }
+    if (kind === 'forecast_blend') {
+      return this.inlineForecastBlend(payload as ForecastBlendPayload);
+    }
+    if (kind === 'simulation_projection') {
+      return this.inlineSimulationProjection(payload as SimulationProjectionPayload);
+    }
+    throw new Error(`Unknown task kind: ${kind}`);
   }
 
   /**
    * Inline causal recompute (simplified)
    */
-  private inlineCausalRecompute(payload: any): any {
+  private inlineCausalRecompute(_payload: CausalRecomputePayload): { correlations: []; nodeCount: number; edgeCount: number; computedAt: number; fallback: true } {
     // Simplified version of worker implementation
     return {
       correlations: [],
@@ -445,7 +456,9 @@ class TaskSchedulerService {
   /**
    * Inline forecast blend (simplified)
    */
-  private inlineForecastBlend(payload: any): any {
+  private inlineForecastBlend(payload: ForecastBlendPayload): {
+    blendedPoints: Array<{ timestamp: string; value: number; lower?: number; upper?: number }>; weights: Record<string, number>; metricKey: string; horizon: number; fallback: true
+  } {
     const { modelForecasts, metricKey, horizon } = payload;
     
     if (!modelForecasts || modelForecasts.length === 0) {
@@ -454,7 +467,10 @@ class TaskSchedulerService {
 
     // Simple average blend
     const firstForecast = modelForecasts[0];
-    const blendedPoints = firstForecast.points.map((point: any) => ({
+    if (!firstForecast) {
+      return { blendedPoints: [], weights: {}, metricKey, horizon, fallback: true };
+    }
+    const blendedPoints = firstForecast.points.map((point) => ({
       timestamp: point.timestamp,
       value: point.value,
       lower: point.lower,
@@ -463,7 +479,7 @@ class TaskSchedulerService {
 
     return {
       blendedPoints,
-      weights: { [firstForecast.modelId]: 1.0 },
+  weights: { [firstForecast.modelId]: 1.0 },
       metricKey,
       horizon,
       fallback: true
@@ -473,10 +489,12 @@ class TaskSchedulerService {
   /**
    * Inline simulation projection (simplified)
    */
-  private inlineSimulationProjection(payload: any): any {
-    const baselineMetrics = payload?.baselineMetrics || {};
-    const projectedMetrics: Record<string, any> = {};
-    for (const [key, value] of Object.entries(baselineMetrics as Record<string, any>)) {
+  private inlineSimulationProjection(payload: SimulationProjectionPayload): {
+    projectedMetrics: Record<string, { baseline: number; projected: number; confidence: number }>; interventionCount: number; seed: string; computedAt: number; fallback: true
+  } {
+    const baselineMetrics = payload.baselineMetrics || {};
+    const projectedMetrics: Record<string, { baseline: number; projected: number; confidence: number }> = {};
+    for (const [key, value] of Object.entries(baselineMetrics)) {
       projectedMetrics[key] = {
         baseline: value,
         projected: value, // No change in fallback
@@ -515,8 +533,9 @@ export const taskScheduler = new TaskSchedulerService();
 // Schedule queue processing asynchronously to allow health flag overrides in tests before execution
 setTimeout(() => {
   try {
-    (taskScheduler as any).processQueue();
-  } catch (e) {
-    // swallow in initialization
+    // Access private via bracket index to avoid any cast
+    (taskScheduler as unknown as { processQueue: () => void }).processQueue();
+  } catch {
+    // swallow
   }
 }, 0);

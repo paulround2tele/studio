@@ -294,8 +294,8 @@ class SecurityHardeningService {
   /**
    * Sanitize metric aggregates for display
    */
-  sanitizeMetricAggregates(aggregates: any): SanitizationResult<any> {
-    if (!aggregates || typeof aggregates !== 'object') {
+  sanitizeMetricAggregates<T extends Record<string, unknown>>(aggregates: unknown): SanitizationResult<T | Record<string, unknown>> {
+    if (!aggregates || typeof aggregates !== 'object' || Array.isArray(aggregates)) {
       return {
         value: {},
         wasModified: true,
@@ -303,14 +303,14 @@ class SecurityHardeningService {
         metadata: { sanitizedFields: ['aggregates'], securityLevel: 'medium' }
       };
     }
-    
-    return this.sanitizeNumericPayload(aggregates, DEFAULT_BOUNDS);
+    // Cast after validation; internal method returns SanitizationResult<T>
+    return this.sanitizeNumericPayload(aggregates as T, DEFAULT_BOUNDS);
   }
   
   /**
    * Validate string input for XSS prevention (basic)
    */
-  sanitizeString(input: any, maxLength: number = 1000): SanitizationResult<string> {
+  sanitizeString(input: unknown, maxLength: number = 1000): SanitizationResult<string> {
     let sanitizedValue: string;
     let wasModified = false;
     const violations: string[] = [];
@@ -376,7 +376,7 @@ export const securityHardeningService = new SecurityHardeningService();
 /**
  * Sanitize numeric payload before rendering (convenience function)
  */
-export function sanitizeNumericPayload<T extends Record<string, any>>(
+export function sanitizeNumericPayload<T extends Record<string, unknown>>(
   payload: T,
   customBounds?: Record<string, NumericBounds>
 ): SanitizationResult<T> {
@@ -386,7 +386,7 @@ export function sanitizeNumericPayload<T extends Record<string, any>>(
 /**
  * Validate forecast horizon (convenience function)
  */
-export function validateForecastHorizon(horizon: any): SanitizationResult<number> {
+export function validateForecastHorizon(horizon: unknown): SanitizationResult<number> {
   return securityHardeningService.validateForecastHorizon(horizon);
 }
 
@@ -407,6 +407,6 @@ export function isSecurityHardeningAvailable(): boolean {
 /**
  * Sanitize string input (convenience function)
  */
-export function sanitizeString(input: any, maxLength?: number): SanitizationResult<string> {
+export function sanitizeString(input: unknown, maxLength?: number): SanitizationResult<string> {
   return securityHardeningService.sanitizeString(input, maxLength);
 }
