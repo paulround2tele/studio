@@ -26,17 +26,9 @@ func (h *strictHandlers) BulkValidateHTTP(ctx context.Context, r gen.BulkValidat
 	resp := gen.BulkValidationResponse{
 		EstimatedDuration: ptrString("PT5M"),
 		OperationId:       opID,
-		Operations: map[string]struct {
-			CampaignId          *openapi_types.UUID `json:"campaignId,omitempty"`
-			EstimatedCompletion *time.Time          `json:"estimatedCompletion"`
-			Progress            *struct {
-				Processed *int `json:"processed,omitempty"`
-				Total     *int `json:"total,omitempty"`
-			} `json:"progress,omitempty"`
-			Status *gen.BulkValidationResponseOperationsStatus `json:"status,omitempty"`
-		}{},
-		Status:          gen.BulkValidationResponseStatusInitiated,
-		TotalOperations: len(r.Body.Operations),
+		Operations:        make(map[string]gen.ProxyOperationResult),
+		Status:            gen.BulkValidationResponseStatusInitiated,
+		TotalOperations:   len(r.Body.Operations),
 	}
 
 	if h.deps != nil && h.deps.Orchestrator != nil {
@@ -46,36 +38,45 @@ func (h *strictHandlers) BulkValidateHTTP(ctx context.Context, r gen.BulkValidat
 				"stealth_enabled": r.Body.Stealth != nil && (r.Body.Stealth.Enabled != nil && *r.Body.Stealth.Enabled),
 				"batch_size":      100,
 			}
-			status := gen.BulkValidationResponseOperationsStatusPending
+			success := true
+			errorMsg := ""
 			if err := h.deps.Orchestrator.ConfigurePhase(ctx, op.CampaignId, "http_validation", cfg); err == nil {
 				_ = h.deps.Orchestrator.StartPhase(ctx, op.CampaignId, "http_validation")
-				status = gen.BulkValidationResponseOperationsStatusRunning
+			} else {
+				success = false
+				errorMsg = err.Error()
 			}
-			processed := 0
-			total := 0
-			eta := time.Now().Add(5 * time.Minute)
-			resp.Operations[key] = struct {
-				CampaignId          *openapi_types.UUID `json:"campaignId,omitempty"`
-				EstimatedCompletion *time.Time          `json:"estimatedCompletion"`
-				Progress            *struct {
-					Processed *int `json:"processed,omitempty"`
-					Total     *int `json:"total,omitempty"`
-				} `json:"progress,omitempty"`
-				Status *gen.BulkValidationResponseOperationsStatus `json:"status,omitempty"`
-			}{
-				CampaignId:          &op.CampaignId,
-				EstimatedCompletion: &eta,
-				Progress: &struct {
-					Processed *int `json:"processed,omitempty"`
-					Total     *int `json:"total,omitempty"`
-				}{
-					Processed: &processed,
-					Total:     &total,
-				},
-				Status: &status,
+			
+			metadata := make(map[string]gen.FlexibleValue)
+			
+			// Create FlexiblePrimitive for campaign ID
+			var campaignIdPrim gen.FlexiblePrimitive
+			campaignIdPrim.FromFlexiblePrimitive0(op.CampaignId.String())
+			var campaignIdVal gen.FlexibleValue
+			campaignIdVal.FromFlexiblePrimitive(campaignIdPrim)
+			metadata["campaign_id"] = campaignIdVal
+			
+			// Create FlexiblePrimitive for status
+			var statusPrim gen.FlexiblePrimitive
+			statusPrim.FromFlexiblePrimitive0("pending")
+			var statusVal gen.FlexibleValue
+			statusVal.FromFlexiblePrimitive(statusPrim)
+			metadata["status"] = statusVal
+			
+			result := gen.ProxyOperationResult{
+				ProxyId:  op.CampaignId,
+				Success:  success,
+				Metadata: &metadata,
 			}
+			if !success {
+				result.Error = &errorMsg
+			}
+			
+			resp.Operations[key] = result
 		}
 	}
 
 	return gen.BulkValidateHTTP200JSONResponse(resp), nil
 }
+
+

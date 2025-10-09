@@ -92,3 +92,36 @@ func (h *strictHandlers) SseEventsStats(ctx context.Context, r gen.SseEventsStat
 	up := h.deps.SSE.GetUptime().Round(time.Second).String()
 	return gen.SseEventsStats200JSONResponse{ActiveConnections: &active, TotalEventsSent: &total, Uptime: &up}, nil
 }
+
+func (h *strictHandlers) SseEventsCampaignLatest(ctx context.Context, r gen.SseEventsCampaignLatestRequestObject) (gen.SseEventsCampaignLatestResponseObject, error) {
+	if h.deps == nil || h.deps.SSE == nil {
+		return gen.SseEventsCampaignLatest500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Return a mock event for now - this can be enhanced later to return actual latest event
+	event := gen.CampaignSseEvent{
+		EventType: "campaign_status_update",
+		CampaignId: uuid.UUID(r.CampaignId),
+		Timestamp: time.Now(),
+		Data: map[string]interface{}{
+			"phase": "discovery",
+			"status": "configured",
+		},
+	}
+	return gen.SseEventsCampaignLatest200JSONResponse(event), nil
+}
+
+func (h *strictHandlers) SseEventsCampaignSample(ctx context.Context, r gen.SseEventsCampaignSampleRequestObject) (gen.SseEventsCampaignSampleResponseObject, error) {
+	if h.deps == nil || h.deps.SSE == nil {
+		return gen.SseEventsCampaignSample500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Return a sample event - this can be enhanced later to return actual sample events
+	event := gen.CampaignSseEvent{
+		EventType: "sample_event",
+		CampaignId: uuid.UUID(r.CampaignId),
+		Timestamp: time.Now(),
+		Data: map[string]interface{}{
+			"sample": true,
+		},
+	}
+	return gen.SseEventsCampaignSample200JSONResponse(event), nil
+}
