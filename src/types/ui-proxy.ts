@@ -20,6 +20,10 @@ export interface UiProxy {
 }
 
 // Type guard (lightweight) – can be expanded if needed
-export function isUiProxy(obj: any): obj is UiProxy {
-  return obj && typeof obj === 'object' && ('address' in obj || 'protocol' in obj || 'id' in obj);
+export function isUiProxy(obj: unknown): obj is UiProxy {
+  return !!obj && typeof obj === 'object' && (
+    'address' in (obj as Record<string, unknown>) ||
+    'protocol' in (obj as Record<string, unknown>) ||
+    'id' in (obj as Record<string, unknown>)
+  );
 }

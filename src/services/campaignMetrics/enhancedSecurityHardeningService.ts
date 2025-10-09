@@ -546,50 +546,47 @@ class SecurityHardeningService {
     const errors: string[] = [];
 
     try {
-      // Type validation
-  const schemaAny: any = schema as any;
-  if (schemaAny && typeof schemaAny === 'object' && schemaAny.type) {
-        const actualType = Array.isArray(data) ? 'array' : typeof data;
-  if (actualType !== schemaAny.type) {
-          errors.push(`${path}: expected ${schemaAny.type}, got ${actualType}`);
-        }
-      }
+      if (schema && typeof schema === 'object') {
+        const sch = schema as Record<string, unknown>;
 
-      // Required fields validation
-  if (schemaAny && typeof schemaAny === 'object' && schemaAny.required && Array.isArray(schemaAny.required)) {
-  for (const field of schemaAny.required) {
-          if (!(data && typeof data === 'object' && field in (data as any))) {
-            errors.push(`${path}: missing required field '${field}'`);
+        // Type validation
+        if (typeof sch.type === 'string') {
+          const actualType = Array.isArray(data) ? 'array' : typeof data;
+          if (actualType !== sch.type) {
+            errors.push(`${path}: expected ${sch.type}, got ${actualType}`);
+          }
+        }
+
+        // Required fields
+        if (Array.isArray(sch.required) && data && typeof data === 'object') {
+          for (const field of sch.required as unknown[]) {
+            if (typeof field === 'string') {
+              if (!(field in (data as Record<string, unknown>))) {
+                errors.push(`${path}: missing required field '${field}'`);
+              }
+            }
+          }
+        }
+
+        // Properties
+        if (sch.properties && typeof sch.properties === 'object' && data && typeof data === 'object' && data !== null) {
+          const props = sch.properties as Record<string, unknown>;
+          for (const [key, value] of Object.entries(data)) {
+            if (key in props) {
+              const subValidation = this.validateSchemaStructure(value, props[key], `${path}.${key}`);
+              errors.push(...subValidation.errors);
+            }
+          }
+        }
+
+        // Array items
+        if (sch.items && Array.isArray(data)) {
+          for (let i = 0; i < data.length; i++) {
+            const itemValidation = this.validateSchemaStructure(data[i], sch.items, `${path}[${i}]`);
+            errors.push(...itemValidation.errors);
           }
         }
       }
-
-      // Properties validation
-  if (schemaAny && typeof schemaAny === 'object' && schemaAny.properties && typeof data === 'object' && data !== null) {
-        for (const [key, value] of Object.entries(data)) {
-          if (schemaAny.properties[key]) {
-            const subValidation = this.validateSchemaStructure(
-              value,
-              schemaAny.properties[key],
-              `${path}.${key}`
-            );
-            errors.push(...subValidation.errors);
-          }
-        }
-      }
-
-      // Array items validation
-  if (schemaAny && typeof schemaAny === 'object' && schemaAny.items && Array.isArray(data)) {
-        for (let i = 0; i < data.length; i++) {
-          const itemValidation = this.validateSchemaStructure(
-            data[i],
-            schemaAny.items,
-            `${path}[${i}]`
-          );
-          errors.push(...itemValidation.errors);
-        }
-      }
-
     } catch (error) {
       errors.push(`${path}: schema validation error - ${String(error)}`);
     }
