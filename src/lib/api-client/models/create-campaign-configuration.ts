@@ -54,7 +54,7 @@ export interface CreateCampaignConfiguration {
           
           Array<string>
     ;
-  [key: string]: unknown;
+  [key: string]: Record<string, unknown>;
 }
 
 

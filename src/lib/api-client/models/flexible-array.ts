@@ -22,7 +22,7 @@ import type { FlexibleArrayInner } from './flexible-array-inner';
  * @export
  * @interface FlexibleArray
  */
-export interface FlexibleArray extends Array<FlexibleArrayInner> {
+export interface FlexibleArray extends Array&lt;FlexibleArrayInner&gt; {
 }
 
 
