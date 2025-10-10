@@ -484,7 +484,7 @@ PersonaConfigHttp:
     rateLimitDps: { type: number, format: float, minimum: 0 }
     rateLimitBurst: { type: integer, minimum: 0 }
     notes: { type: string }
-  required: [userAgent]
+  required: [personaType, userAgent]
 PersonaConfigDns:
   type: object
   description: DNS persona configuration details
@@ -512,7 +512,7 @@ PersonaConfigDns:
     maxConcurrentGoroutines: { type: integer, minimum: 1 }
     rateLimitDps: { type: number, format: float, minimum: 0 }
     rateLimitBurst: { type: integer, minimum: 0 }
-  required: [resolvers, queryTimeoutSeconds, maxDomainsPerRequest, concurrentQueriesPerDomain]
+  required: [personaType, resolvers, queryTimeoutSeconds, maxDomainsPerRequest, concurrentQueriesPerDomain]
 PersonaConfigDetails:
   oneOf:
     - $ref: '#/PersonaConfigHttp'
@@ -1087,7 +1087,6 @@ BulkOperationStatusResponse:
     startedAt: { type: string, format: date-time, nullable: true }
     completedAt: { type: string, format: date-time, nullable: true }
   required: [operationId, status, progress]
-
 AnalysisReuseEnrichmentEvent:
   type: object
   description: Analysis phase reused existing feature vectors.

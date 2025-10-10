@@ -148,8 +148,8 @@ func (h *strictHandlers) ProxiesBulkDelete(ctx context.Context, r gen.ProxiesBul
 			success++
 		}
 	}
-	total := len(r.Body.ProxyIds)
-	return gen.ProxiesBulkDelete200JSONResponse(gen.BulkProxyOperationResponse{SuccessCount: &success, ErrorCount: &errors, TotalRequested: &total}), nil
+	resp := gen.BulkProxyOperationResponse{SuccessCount: success, ErrorCount: errors}
+	return gen.ProxiesBulkDelete200JSONResponse(resp), nil
 }
 
 func (h *strictHandlers) ProxiesBulkTest(ctx context.Context, r gen.ProxiesBulkTestRequestObject) (gen.ProxiesBulkTestResponseObject, error) {
@@ -208,7 +208,8 @@ func (h *strictHandlers) ProxiesBulkUpdate(ctx context.Context, r gen.ProxiesBul
 		}
 		success++
 	}
-	return gen.ProxiesBulkUpdate200JSONResponse(gen.BulkProxyOperationResponse{SuccessCount: &success, ErrorCount: &errors}), nil
+	resp := gen.BulkProxyOperationResponse{SuccessCount: success, ErrorCount: errors}
+	return gen.ProxiesBulkUpdate200JSONResponse(resp), nil
 }
 
 func (h *strictHandlers) ProxiesHealthCheckAll(ctx context.Context, r gen.ProxiesHealthCheckAllRequestObject) (gen.ProxiesHealthCheckAllResponseObject, error) {

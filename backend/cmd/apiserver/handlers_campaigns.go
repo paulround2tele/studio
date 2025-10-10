@@ -20,6 +20,7 @@ import (
 	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
 	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/phases"
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
@@ -1292,34 +1293,21 @@ func mapCampaignToResponse(c *models.LeadGenerationCampaign) gen.CampaignRespons
 }
 
 // ---- Phase helpers ----
-func mapAPIPhaseToModel(phase string) (models.PhaseTypeEnum, error) {
-	switch phase {
-	case "discovery":
-		return models.PhaseTypeDomainGeneration, nil
-	case "validation":
-		return models.PhaseTypeDNSValidation, nil
-	case "extraction":
-		return models.PhaseTypeHTTPKeywordValidation, nil
-	case "analysis":
-		return models.PhaseTypeAnalysis, nil
+// mapAPIPhaseToModel now delegates to the central phases translation utility.
+func mapAPIPhaseToModel(p string) (models.PhaseTypeEnum, error) {
+	internal := phases.ToInternal(p)
+	switch internal {
+	case string(models.PhaseTypeDomainGeneration), string(models.PhaseTypeDNSValidation), string(models.PhaseTypeHTTPKeywordValidation), string(models.PhaseTypeAnalysis):
+		return models.PhaseTypeEnum(internal), nil
 	default:
-		return "", fmt.Errorf("unknown phase: %s", phase)
+		return "", fmt.Errorf("unknown phase: %s", p)
 	}
 }
 
+// mapModelPhaseToAPI converts internal enum to API phase via phases utility.
 func mapModelPhaseToAPI(phase models.PhaseTypeEnum) gen.PhaseStatusResponsePhase {
-	switch phase {
-	case models.PhaseTypeDomainGeneration:
-		return gen.PhaseStatusResponsePhase("discovery")
-	case models.PhaseTypeDNSValidation:
-		return gen.PhaseStatusResponsePhase("validation")
-	case models.PhaseTypeHTTPKeywordValidation:
-		return gen.PhaseStatusResponsePhase("extraction")
-	case models.PhaseTypeAnalysis:
-		return gen.PhaseStatusResponsePhase("analysis")
-	default:
-		return gen.PhaseStatusResponsePhase("discovery")
-	}
+	api := phases.ToAPI(string(phase))
+	return gen.PhaseStatusResponsePhase(api)
 }
 
 func mapStatusToAPI(status *models.PhaseStatusEnum) gen.PhaseStatusResponseStatus {

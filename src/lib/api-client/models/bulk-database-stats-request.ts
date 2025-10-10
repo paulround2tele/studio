@@ -56,6 +56,7 @@ export interface BulkDatabaseStatsRequest {
           
           boolean
     ;
+  // Allow arbitrary extra properties from backend without strict shape enforcement
   [key: string]: unknown;
 }
 

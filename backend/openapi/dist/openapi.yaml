@@ -3429,12 +3429,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            enum:
-              - discovery
-              - validation
-              - extraction
-              - analysis
+            $ref: '#/components/schemas/CampaignPhaseEnum'
       responses:
         '200':
           description: Stopped
@@ -4961,6 +4956,7 @@ components:
         notes:
           type: string
       required:
+        - personaType
         - userAgent
     PersonaConfigDns:
       type: object
@@ -5019,6 +5015,7 @@ components:
           type: integer
           minimum: 0
       required:
+        - personaType
         - resolvers
         - queryTimeoutSeconds
         - maxDomainsPerRequest

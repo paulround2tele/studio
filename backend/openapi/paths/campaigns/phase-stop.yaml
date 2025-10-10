@@ -10,7 +10,7 @@ post:
     - name: phase
       in: path
       required: true
-      schema: { type: string, enum: [discovery, validation, extraction, analysis] }
+      schema: { $ref: '../../components/schemas/all.yaml#/CampaignPhaseEnum' }
   responses:
     '200':
       description: Stopped

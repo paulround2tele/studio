@@ -33,7 +33,7 @@ export interface PersonaConfigHttp {
    * 
    * @memberof PersonaConfigHttp
    */
-  'personaType'?: 
+  'personaType': 
       'http'
 ;
   /**

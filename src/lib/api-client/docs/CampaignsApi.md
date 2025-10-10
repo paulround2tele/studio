@@ -1049,7 +1049,7 @@ const { status, data } = await apiInstance.campaignsMetricsGet(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsModeUpdate**
-> CampaignsModeUpdate200Response campaignsModeUpdate(campaignsModeUpdateRequest)
+> CampaignModeUpdateResponse campaignsModeUpdate(campaignsModeUpdateRequest)
 
 
 ### Example
@@ -1083,7 +1083,7 @@ const { status, data } = await apiInstance.campaignsModeUpdate(
 
 ### Return type
 
-**CampaignsModeUpdate200Response**
+**CampaignModeUpdateResponse**
 
 ### Authorization
 
@@ -1229,7 +1229,7 @@ const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
-let phase: 'discovery' | 'validation' | 'extraction' | 'analysis'; // (default to undefined)
+let phase: CampaignPhaseEnum; // (default to undefined)
 let phaseConfigurationRequest: PhaseConfigurationRequest; //
 
 const { status, data } = await apiInstance.campaignsPhaseConfigure(
@@ -1245,7 +1245,7 @@ const { status, data } = await apiInstance.campaignsPhaseConfigure(
 |------------- | ------------- | ------------- | -------------|
 | **phaseConfigurationRequest** | **PhaseConfigurationRequest**|  | |
 | **campaignId** | [**string**] |  | defaults to undefined|
-| **phase** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
+| **phase** | **CampaignPhaseEnum** |  | defaults to undefined|
 
 
 ### Return type
@@ -1511,7 +1511,7 @@ const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
-let phase: 'discovery' | 'validation' | 'extraction' | 'analysis'; // (default to undefined)
+let phase: CampaignPhaseEnum; // (default to undefined)
 
 const { status, data } = await apiInstance.campaignsPhaseStart(
     campaignId,
@@ -1524,7 +1524,7 @@ const { status, data } = await apiInstance.campaignsPhaseStart(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **campaignId** | [**string**] |  | defaults to undefined|
-| **phase** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
+| **phase** | **CampaignPhaseEnum** |  | defaults to undefined|
 
 
 ### Return type
@@ -1569,7 +1569,7 @@ const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
-let phase: 'discovery' | 'validation' | 'extraction' | 'analysis'; // (default to undefined)
+let phase: CampaignPhaseEnum; // (default to undefined)
 
 const { status, data } = await apiInstance.campaignsPhaseStatus(
     campaignId,
@@ -1582,7 +1582,7 @@ const { status, data } = await apiInstance.campaignsPhaseStatus(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **campaignId** | [**string**] |  | defaults to undefined|
-| **phase** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
+| **phase** | **CampaignPhaseEnum** |  | defaults to undefined|
 
 
 ### Return type
@@ -1625,7 +1625,7 @@ const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
-let phase: 'discovery' | 'validation' | 'extraction' | 'analysis'; // (default to undefined)
+let phase: CampaignPhaseEnum; // (default to undefined)
 
 const { status, data } = await apiInstance.campaignsPhaseStop(
     campaignId,
@@ -1638,7 +1638,7 @@ const { status, data } = await apiInstance.campaignsPhaseStop(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **campaignId** | [**string**] |  | defaults to undefined|
-| **phase** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
+| **phase** | **CampaignPhaseEnum** |  | defaults to undefined|
 
 
 ### Return type

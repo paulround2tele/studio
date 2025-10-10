@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   useBulkGenerateDomainsMutation,
@@ -6,7 +6,8 @@ import {
   useBulkValidateHTTPMutation,
   useBulkAnalyzeDomainsMutation,
   useAllocateBulkResourcesMutation,
-  useListBulkOperationsQuery
+  useListBulkOperationsQuery,
+  useGetBulkOperationStatusQuery
 } from '@/store/api/bulkOperationsApi';
 import { 
   useGetResourceMetricsQuery,
@@ -25,6 +26,7 @@ import {
   type BulkOperationType,
   type BulkOperationState
 } from '@/store/slices/bulkOperationsSlice';
+import type { BulkOperationStatusResponse } from '@/lib/api-client/models/bulk-operation-status-response';
 import type {
   BulkDomainGenerationRequest,
   BulkDNSValidationRequest,
@@ -79,6 +81,20 @@ export const BulkOperationsDashboard: React.FC = () => {
   const [selectedOperationType, setSelectedOperationType] = useState<BulkOperationType>('domain_generation');
   const [_isConfiguring, _setIsConfiguring] = useState(false);
   const [realTimeUpdates, setRealTimeUpdates] = useState<SSEEvent[]>([]);
+  const [trackedOperationIds, setTrackedOperationIds] = useState<string[]>([]);
+  const [completedAges, setCompletedAges] = useState<Record<string, number>>({});
+
+  // Prune completed tracking IDs after a retention window
+  useEffect(() => {
+    const RETAIN_MS = 15000;
+    const interval = setInterval(() => {
+      setTrackedOperationIds(ids => ids.filter(id => {
+        const c = completedAges[id];
+        return !c || (Date.now() - c < RETAIN_MS);
+      }));
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [completedAges]);
 
   // SSE connection for real-time bulk operation updates
   const { readyState, lastEvent: _lastEvent } = useSSE(
@@ -224,11 +240,15 @@ export const BulkOperationsDashboard: React.FC = () => {
           throw new Error(`Unsupported operation type: ${operationType}`);
       }
       
-      // Update operation status with result
+      // If the API returns an operation tracking id use it, else keep synthetic
+      const operationResultId = (result as { operationId?: string })?.operationId || operationId;
+      if (!trackedOperationIds.includes(operationResultId)) {
+        setTrackedOperationIds(prev => [...prev, operationResultId]);
+      }
       dispatch(updateOperationStatus({
-        id: operationId,
-        status: 'completed',
-        progress: 100,
+        id: operationResultId,
+        status: 'running',
+        progress: 0,
         result: result as unknown as Record<string, unknown>
       }));
       
@@ -237,7 +257,7 @@ export const BulkOperationsDashboard: React.FC = () => {
       dispatch(updateOperationStatus({
         id: operationId,
         status: 'failed',
-    error: error instanceof Error ? error.message : 'Operation failed'
+        error: error instanceof Error ? error.message : 'Operation failed'
       }));
     }
   };
@@ -326,6 +346,8 @@ export const BulkOperationsDashboard: React.FC = () => {
     }
   };
   
+  // Legacy per-loop polling removed; replaced by Poller components below to respect hook rules
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
       <div className="mb-8">
@@ -446,6 +468,30 @@ export const BulkOperationsDashboard: React.FC = () => {
         </button>
       </div>
       
+      {/* Pollers (hook-safe components) */}
+      {useMemo(() => trackedOperationIds.slice(0,25).map(id => {
+        const Poller: React.FC = () => {
+          const { data } = useGetBulkOperationStatusQuery({ operationId: id }, { pollingInterval: 5000 });
+          useEffect(() => {
+            const status = data as unknown as BulkOperationStatusResponse | undefined;
+            if (!status) return;
+            const processed = status.progress?.processed ?? 0;
+            const total = status.progress?.total ?? 0;
+            const percent = total > 0 ? Math.min(100, Math.round((processed/total)*100)) : undefined;
+            dispatch(updateOperationStatus({
+              id: status.operationId,
+              status: status.status as BulkOperationState,
+              progress: percent,
+              result: { processed, total } as unknown as Record<string, unknown>,
+            }));
+            if (['completed','failed','cancelled'].includes(status.status)) {
+              setCompletedAges(prev => ({ ...prev, [status.operationId]: Date.now() }));
+            }
+          }, [data]);
+          return null;
+        };
+        return <Poller key={id} />;
+      }), [trackedOperationIds])}
       {/* Active Operations */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">Active Operations</h2>
@@ -454,41 +500,103 @@ export const BulkOperationsDashboard: React.FC = () => {
           <p className="text-gray-500">No active operations</p>
         ) : (
           <div className="space-y-4">
-            {Object.values(activeOperations).map((operation) => (
-              <div key={operation.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-semibold">{operation.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
-                    <p className="text-sm text-gray-600">{operation.id}</p>
+            {Object.values(activeOperations).map((operation) => {
+              const processed = (operation.result?.raw as unknown as { processed?: number })?.processed;
+              const total = (operation.result?.raw as unknown as { total?: number })?.total;
+              return (
+                <div key={operation.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="font-semibold">{operation.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
+                      <p className="text-sm text-gray-600">{operation.id}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      operation.status === 'running' ? 'bg-blue-100 text-blue-800' :
+                      operation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      operation.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      operation.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {operation.status}
+                    </span>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    operation.status === 'running' ? 'bg-blue-100 text-blue-800' :
-                    operation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    operation.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {operation.status}
-                  </span>
+                  {(processed !== undefined || total !== undefined) && (
+                    <div className="text-xs text-gray-500 mb-1">{processed ?? 0}/{total ?? 0} processed</div>
+                  )}
+                  {operation.progress !== undefined && (
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${operation.progress}%` }}
+                      ></div>
+                    </div>
+                  )}
+                  {operation.error && (
+                    <div className="mt-2 text-xs text-red-600 flex items-center gap-1">
+                      <span className="font-semibold">Error:</span>
+                      <span className="truncate" title={operation.error}>{operation.error}</span>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Started: {new Date(operation.startTime).toLocaleString()}
+                  </p>
                 </div>
-                
-                {operation.progress !== undefined && (
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                      style={{ width: `${operation.progress}%` }}
-                    ></div>
-                  </div>
-                )}
-                
-                <p className="text-xs text-gray-500">
-                  Started: {new Date(operation.startTime).toLocaleString()}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
       
+      {/* Recently Completed (last 5) */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold mb-4">Recently Completed</h2>
+        {recentOperations.filter(op => ['completed','failed','cancelled'].includes(op.status)).length === 0 ? (
+          <p className="text-gray-500 text-sm">No completed operations yet</p>
+        ) : (
+          <div className="space-y-3">
+            {recentOperations
+              .filter(op => ['completed','failed','cancelled'].includes(op.status))
+              .slice(0,5)
+              .map(op => {
+                const processed = (op.result?.raw as unknown as { processed?: number })?.processed ?? op.result?.data?.processedCount;
+                const total = (op.result?.raw as unknown as { total?: number })?.total ?? op.result?.data?.totalProcessed;
+                const percent = (processed !== undefined && total) ? Math.min(100, Math.round((processed/total)*100)) : undefined;
+                const durationMs = op.endTime ? (new Date(op.endTime).getTime() - new Date(op.startTime).getTime()) : undefined;
+                return (
+                  <div key={op.id} className="border rounded-md p-4">
+                    <div className="flex justify-between items-start mb-1">
+                      <div>
+                        <h3 className="font-medium text-sm">{op.type.replace('_',' ').replace(/\b\w/g,l=>l.toUpperCase())}</h3>
+                        <p className="text-[11px] text-gray-500">{op.id}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide ${
+                        op.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        op.status === 'failed' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {op.status}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-gray-600 mb-1">
+                      {processed !== undefined && (
+                        <span>{processed}/{total ?? '?'} processed{percent !== undefined && ` (${percent}%)`}</span>
+                      )}
+                      {durationMs !== undefined && (
+                        <span>Duration: {(durationMs/1000).toFixed(1)}s</span>
+                      )}
+                      <span>Started: {new Date(op.startTime).toLocaleTimeString()}</span>
+                      {op.endTime && <span>Ended: {new Date(op.endTime).toLocaleTimeString()}</span>}
+                    </div>
+                    {op.error && (
+                      <div className="text-[11px] text-red-600 truncate" title={op.error}>Error: {op.error}</div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </div>
+
       {/* Recent Operations */}
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-semibold mb-4">Recent Operations</h2>

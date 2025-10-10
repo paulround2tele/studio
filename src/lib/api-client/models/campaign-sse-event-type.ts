@@ -29,8 +29,7 @@ export enum CampaignSseEventType {
     domain_validated = 'domain_validated',
     phase_started = 'phase_started',
     phase_completed = 'phase_completed',
-    phase_failed = 'phase_failed',
-    campaign_completed = 'campaign_completed'
+    phase_failed = 'phase_failed'
 }
 
 

@@ -522,14 +522,6 @@ const (
 	CampaignsPhaseExecutionPutParamsPhaseTypeValidation CampaignsPhaseExecutionPutParamsPhaseType = "validation"
 )
 
-// Defines values for CampaignsPhaseStopParamsPhase.
-const (
-	Analysis   CampaignsPhaseStopParamsPhase = "analysis"
-	Discovery  CampaignsPhaseStopParamsPhase = "discovery"
-	Extraction CampaignsPhaseStopParamsPhase = "extraction"
-	Validation CampaignsPhaseStopParamsPhase = "validation"
-)
-
 // Defines values for DbBulkQueryParamsXRequestedWith.
 const (
 	DbBulkQueryParamsXRequestedWithXMLHttpRequest DbBulkQueryParamsXRequestedWith = "XMLHttpRequest"
@@ -1723,7 +1715,7 @@ type PersonaConfigDns struct {
 	ConcurrentQueriesPerDomain int                               `json:"concurrentQueriesPerDomain"`
 	MaxConcurrentGoroutines    *int                              `json:"maxConcurrentGoroutines,omitempty"`
 	MaxDomainsPerRequest       int                               `json:"maxDomainsPerRequest"`
-	PersonaType                *PersonaConfigDnsPersonaType      `json:"personaType,omitempty"`
+	PersonaType                PersonaConfigDnsPersonaType       `json:"personaType"`
 	QueryDelayMaxMs            *int                              `json:"queryDelayMaxMs,omitempty"`
 	QueryDelayMinMs            *int                              `json:"queryDelayMinMs,omitempty"`
 	QueryTimeoutSeconds        int                               `json:"queryTimeoutSeconds"`
@@ -1754,11 +1746,11 @@ type PersonaConfigHttp struct {
 	Http2Settings   *struct {
 		Enabled *bool `json:"enabled,omitempty"`
 	} `json:"http2Settings,omitempty"`
-	Notes                 *string                       `json:"notes,omitempty"`
-	PersonaType           *PersonaConfigHttpPersonaType `json:"personaType,omitempty"`
-	RateLimitBurst        *int                          `json:"rateLimitBurst,omitempty"`
-	RateLimitDps          *float32                      `json:"rateLimitDps,omitempty"`
-	RequestTimeoutSeconds *int                          `json:"requestTimeoutSeconds,omitempty"`
+	Notes                 *string                      `json:"notes,omitempty"`
+	PersonaType           PersonaConfigHttpPersonaType `json:"personaType"`
+	RateLimitBurst        *int                         `json:"rateLimitBurst,omitempty"`
+	RateLimitDps          *float32                     `json:"rateLimitDps,omitempty"`
+	RequestTimeoutSeconds *int                         `json:"requestTimeoutSeconds,omitempty"`
 	TlsClientHello        *struct {
 		CipherSuites     *[]string                                  `json:"cipherSuites,omitempty"`
 		CurvePreferences *[]string                                  `json:"curvePreferences,omitempty"`
@@ -2322,9 +2314,6 @@ type CampaignsPhaseExecutionGetParamsPhaseType string
 
 // CampaignsPhaseExecutionPutParamsPhaseType defines parameters for CampaignsPhaseExecutionPut.
 type CampaignsPhaseExecutionPutParamsPhaseType string
-
-// CampaignsPhaseStopParamsPhase defines parameters for CampaignsPhaseStop.
-type CampaignsPhaseStopParamsPhase string
 
 // ConfigUpdateHttpJSONBody defines parameters for ConfigUpdateHttp.
 type ConfigUpdateHttpJSONBody = map[string]interface{}
@@ -3401,8 +3390,7 @@ func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
 
 // FromPersonaConfigHttp overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error {
-	httpType := PersonaConfigHttpPersonaTypeHttp
-	v.PersonaType = &httpType
+	v.PersonaType = "http"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -3410,8 +3398,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error 
 
 // MergePersonaConfigHttp performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) MergePersonaConfigHttp(v PersonaConfigHttp) error {
-	httpType := PersonaConfigHttpPersonaTypeHttp
-	v.PersonaType = &httpType
+	v.PersonaType = "http"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -3431,8 +3418,7 @@ func (t PersonaConfigDetails) AsPersonaConfigDns() (PersonaConfigDns, error) {
 
 // FromPersonaConfigDns overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigDns
 func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
-	dnsType := PersonaConfigDnsPersonaTypeDns
-	v.PersonaType = &dnsType
+	v.PersonaType = "dns"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -3440,8 +3426,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
 
 // MergePersonaConfigDns performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigDns
 func (t *PersonaConfigDetails) MergePersonaConfigDns(v PersonaConfigDns) error {
-	dnsType := PersonaConfigDnsPersonaTypeDns
-	v.PersonaType = &dnsType
+	v.PersonaType = "dns"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -3717,7 +3702,7 @@ type ServerInterface interface {
 	CampaignsPhaseStatus(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
 	// Stop campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/stop)
-	CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseStopParamsPhase)
+	CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
 	// Get campaign progress
 	// (GET /campaigns/{campaignId}/progress)
 	CampaignsProgress(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
@@ -4239,7 +4224,7 @@ func (_ Unimplemented) CampaignsPhaseStatus(w http.ResponseWriter, r *http.Reque
 
 // Stop campaign phase
 // (POST /campaigns/{campaignId}/phases/{phase}/stop)
-func (_ Unimplemented) CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseStopParamsPhase) {
+func (_ Unimplemented) CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6058,7 +6043,7 @@ func (siw *ServerInterfaceWrapper) CampaignsPhaseStop(w http.ResponseWriter, r *
 	}
 
 	// ------------- Path parameter "phase" -------------
-	var phase CampaignsPhaseStopParamsPhase
+	var phase CampaignPhaseEnum
 
 	err = runtime.BindStyledParameterWithOptions("simple", "phase", chi.URLParam(r, "phase"), &phase, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -11141,8 +11126,8 @@ func (response CampaignsPhaseStatus500JSONResponse) VisitCampaignsPhaseStatusRes
 }
 
 type CampaignsPhaseStopRequestObject struct {
-	CampaignId openapi_types.UUID            `json:"campaignId"`
-	Phase      CampaignsPhaseStopParamsPhase `json:"phase"`
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Phase      CampaignPhaseEnum  `json:"phase"`
 }
 
 type CampaignsPhaseStopResponseObject interface {
@@ -18128,7 +18113,7 @@ func (sh *strictHandler) CampaignsPhaseStatus(w http.ResponseWriter, r *http.Req
 }
 
 // CampaignsPhaseStop operation middleware
-func (sh *strictHandler) CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseStopParamsPhase) {
+func (sh *strictHandler) CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
 	var request CampaignsPhaseStopRequestObject
 
 	request.CampaignId = campaignId

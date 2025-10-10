@@ -2935,6 +2935,11 @@ export interface components {
             state?: components["schemas"]["CampaignState"];
             phaseExecutions?: components["schemas"]["PhaseExecution"][];
         };
+        /**
+         * @description Canonical campaign phase identifier
+         * @enum {string}
+         */
+        CampaignPhaseEnum: "discovery" | "validation" | "extraction" | "analysis";
         PhaseStatusResponse: {
             /** @enum {string} */
             phase: "discovery" | "validation" | "extraction" | "analysis";
@@ -2976,6 +2981,14 @@ export interface components {
             proxyPoolId?: string | null;
             /** @description Keyword sets for extraction phase */
             keywordSetIds?: string[];
+        };
+        /** @description Response model for campaign mode update operation. */
+        CampaignModeUpdateResponse: {
+            mode: components["schemas"]["CampaignModeEnum"];
+            /** Format: uuid */
+            campaignId: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         /** @description Consolidated phase status list plus overall progress */
         CampaignPhasesStatusResponse: {
@@ -3390,7 +3403,46 @@ export interface components {
          * @description Enumerated server-sent campaign event names.
          * @enum {string}
          */
-        CampaignSseEventType: "analysis_reuse_enrichment" | "analysis_failed" | "campaign_progress" | "counters_reconciled" | "domain_generated" | "domain_validated" | "phase_started" | "phase_completed" | "phase_failed" | "campaign_completed";
+        CampaignSseEventType: "analysis_reuse_enrichment" | "analysis_failed" | "campaign_progress" | "counters_reconciled" | "domain_generated" | "domain_validated" | "phase_started" | "phase_completed" | "phase_failed";
+        /** @description Configuration fragment accepted at campaign creation time. */
+        CreateCampaignConfiguration: {
+            /** @enum {string} */
+            generationStrategy?: "pattern" | "list" | "seed_keywords";
+            pattern?: string;
+            initialDomains?: string[];
+            seedKeywords?: string[];
+        };
+        ProxyConfigurationRequest: {
+            /** Format: uuid */
+            poolId: string;
+            isEnabled?: boolean;
+            /** @enum {string} */
+            authMode?: "none" | "basic" | "bearer";
+            maxFailures?: number;
+            cooldownSeconds?: number;
+        };
+        ProxyConfigurationResponse: components["schemas"]["Proxy"] & {
+            configurationApplied?: boolean;
+        };
+        PersonaUpdateRequest: {
+            name?: string;
+            description?: string;
+            isEnabled?: boolean;
+            configDetails?: components["schemas"]["PersonaConfigDetails"];
+        };
+        BulkOperationStatusResponse: {
+            operationId: string;
+            /** @enum {string} */
+            status: "queued" | "running" | "completed" | "failed" | "cancelled";
+            progress: {
+                processed: number;
+                total: number;
+            };
+            /** Format: date-time */
+            startedAt?: string | null;
+            /** Format: date-time */
+            completedAt?: string | null;
+        };
         /** @description Union of possible JSON payload shapes emitted via campaign SSE stream. */
         CampaignSseEventPayload: components["schemas"]["AnalysisReuseEnrichmentEvent"] | components["schemas"]["AnalysisFailedEvent"] | components["schemas"]["CampaignProgressResponse"] | components["schemas"]["DomainStatusEvent"] | components["schemas"]["PhaseTransitionEvent"] | components["schemas"]["PhaseFailedEvent"] | components["schemas"]["CampaignCompletedEvent"];
         /** @description HTTP validator configuration */
@@ -6471,7 +6523,7 @@ export interface operations {
             header?: never;
             path: {
                 campaignId: string;
-                phase: "discovery" | "validation" | "extraction" | "analysis";
+                phase: components["schemas"]["CampaignPhaseEnum"];
             };
             cookie?: never;
         };
@@ -6497,7 +6549,7 @@ export interface operations {
             header?: never;
             path: {
                 campaignId: string;
-                phase: "discovery" | "validation" | "extraction" | "analysis";
+                phase: components["schemas"]["CampaignPhaseEnum"];
             };
             cookie?: never;
         };
@@ -6528,7 +6580,7 @@ export interface operations {
             header?: never;
             path: {
                 campaignId: string;
-                phase: "discovery" | "validation" | "extraction" | "analysis";
+                phase: components["schemas"]["CampaignPhaseEnum"];
             };
             cookie?: never;
         };
@@ -6584,9 +6636,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        mode?: components["schemas"]["CampaignModeEnum"];
-                    };
+                    "application/json": components["schemas"]["CampaignModeUpdateResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -6636,7 +6686,7 @@ export interface operations {
             header?: never;
             path: {
                 campaignId: string;
-                phase: "discovery" | "validation" | "extraction" | "analysis";
+                phase: components["schemas"]["CampaignPhaseEnum"];
             };
             cookie?: never;
         };
