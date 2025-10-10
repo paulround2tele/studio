@@ -8,15 +8,23 @@ import { Input } from '@/components/ui/input';
 import { Settings, Gauge, RotateCcw, IterationCw } from 'lucide-react';
 import { Control } from 'react-hook-form';
 
-interface PerformanceTuningFormValues {
+// Use the same type as the parent form for consistency
+type CampaignFormData = {
+  name: string;
+  description?: string;
+  targetKeywords?: string;
+  assignedHttpPersonaId?: string;
+  assignedDnsPersonaId?: string;
+  proxyAssignmentMode?: string;
+  assignedProxyId?: string;
   processingSpeed?: string;
   batchSize?: number;
   rotationInterval?: number;
   retryAttempts?: number;
-}
+};
 
 interface PerformanceTuningSectionProps {
-  control: Control<PerformanceTuningFormValues>;
+  control: Control<CampaignFormData>;
   disabled?: boolean;
   // Backend-driven defaults and constraints
   defaultProcessingSpeed?: string;

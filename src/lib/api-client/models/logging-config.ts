@@ -23,7 +23,6 @@ import type { FlexibleValue } from './flexible-value';
  * @interface LoggingConfig
  */
 export interface LoggingConfig {
-  [key: string]: Record<string, unknown>;
 }
 
 

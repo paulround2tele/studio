@@ -59,7 +59,6 @@ export interface PersonaUpdateRequest {
           
           PersonaConfigDetails
     ;
-  [key: string]: Record<string, unknown>;
 }
 
 

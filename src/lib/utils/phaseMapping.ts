@@ -75,7 +75,8 @@ export function getNextPhase(currentPhase: APIPhaseEnum): APIPhaseEnum | null {
   const phases = getPhaseSequence();
   const currentIndex = phases.indexOf(currentPhase);
   if (currentIndex >= 0 && currentIndex < phases.length - 1) {
-    return phases[currentIndex + 1];
+    const nextPhase = phases[currentIndex + 1];
+    return nextPhase || null;
   }
   return null; // No next phase or invalid phase
 }

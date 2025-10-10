@@ -20,7 +20,6 @@
  * @interface ActivityItem
  */
 export interface ActivityItem {
-  [key: string]: Record<string, unknown>;
 }
 
 

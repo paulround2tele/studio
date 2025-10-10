@@ -23,7 +23,6 @@ import type { FlexibleValue } from './flexible-value';
  * @interface ProxyManagerConfigJSON
  */
 export interface ProxyManagerConfigJSON {
-  [key: string]: Record<string, unknown>;
 }
 
 

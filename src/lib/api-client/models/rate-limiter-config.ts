@@ -23,7 +23,6 @@ import type { FlexibleValue } from './flexible-value';
  * @interface RateLimiterConfig
  */
 export interface RateLimiterConfig {
-  [key: string]: Record<string, unknown>;
 }
 
 

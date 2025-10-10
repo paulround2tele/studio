@@ -7,13 +7,23 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Control } from 'react-hook-form';
 
-interface CampaignFormValues {
+// Use the same type as the parent form for consistency
+type CampaignFormData = {
   name: string;
   description?: string;
-}
+  targetKeywords?: string;
+  assignedHttpPersonaId?: string;
+  assignedDnsPersonaId?: string;
+  proxyAssignmentMode?: string;
+  assignedProxyId?: string;
+  processingSpeed?: string;
+  batchSize?: number;
+  rotationInterval?: number;
+  retryAttempts?: number;
+};
 
 interface CampaignDetailsSectionProps {
-  control: Control<CampaignFormValues>;
+  control: Control<CampaignFormData>;
   disabled?: boolean;
 }
 

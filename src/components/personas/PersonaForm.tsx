@@ -170,6 +170,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
 
     try {
       const httpConfigDetails: HTTPConfigDetails = {
+        personaType: 'http' as const,
         userAgent: data.userAgent,
         headers: parseJsonOrUndefined<Record<string,string>>(data.headersJson || ""),
         headerOrder: parseStringToArray(data.headerOrderInput || ""),
@@ -427,6 +428,7 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
 
     try {
       const dnsConfigDetails: DNSConfigDetails = {
+        personaType: 'dns' as const,
         resolvers: parseStringToArray(data.config_resolversInput || ""),
         useSystemResolvers: data.config_useSystemResolvers,
         queryTimeoutSeconds: data.config_queryTimeoutSeconds,

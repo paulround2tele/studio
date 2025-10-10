@@ -23,7 +23,6 @@ import type { FlexibleValue } from './flexible-value';
  * @interface HTTPValidatorConfigJSON
  */
 export interface HTTPValidatorConfigJSON {
-  [key: string]: Record<string, unknown>;
 }
 
 

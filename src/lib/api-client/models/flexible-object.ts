@@ -23,7 +23,6 @@ import type { FlexibleArrayInner } from './flexible-array-inner';
  * @interface FlexibleObject
  */
 export interface FlexibleObject {
-  [key: string]: Record<string, unknown>;
 }
 
 

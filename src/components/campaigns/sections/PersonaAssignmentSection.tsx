@@ -15,14 +15,23 @@ interface Persona {
 
 interface Proxy { id?: string; name?: string; host?: string; port?: number }
 
-interface PersonaAssignmentFormValues {
-  assignedDnsPersonaId?: string;
+// Use the same type as the parent form for consistency
+type CampaignFormData = {
+  name: string;
+  description?: string;
+  targetKeywords?: string;
   assignedHttpPersonaId?: string;
+  assignedDnsPersonaId?: string;
+  proxyAssignmentMode?: string;
   assignedProxyId?: string;
-}
+  processingSpeed?: string;
+  batchSize?: number;
+  rotationInterval?: number;
+  retryAttempts?: number;
+};
 
 interface PersonaAssignmentSectionProps {
-  control: Control<PersonaAssignmentFormValues>;
+  control: Control<CampaignFormData>;
   dnsPersonas?: PersonaResponse[] | Persona[];
   httpPersonas?: PersonaResponse[] | Persona[];
   proxies?: Proxy[];

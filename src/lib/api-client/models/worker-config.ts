@@ -23,7 +23,6 @@ import type { FlexibleValue } from './flexible-value';
  * @interface WorkerConfig
  */
 export interface WorkerConfig {
-  [key: string]: Record<string, unknown>;
 }
 
 

@@ -23,7 +23,6 @@ import type { FlexibleValue } from './flexible-value';
  * @interface AuthConfig
  */
 export interface AuthConfig {
-  [key: string]: Record<string, unknown>;
 }
 
 

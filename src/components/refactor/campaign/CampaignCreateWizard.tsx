@@ -249,7 +249,7 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
           campaignId,
           phase: firstPhase,
           config: {
-            configuration: domainGenConfig
+            configuration: domainGenConfig as unknown as Record<string, unknown>
           }
         }).unwrap();
         
@@ -266,7 +266,7 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
           campaignId,
           phase: 'validation',
           config: {
-            configuration: dnsConfig
+            configuration: dnsConfig as unknown as Record<string, unknown>
           }
         }).unwrap();
         
@@ -280,7 +280,7 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
           campaignId,
           phase: 'extraction',
           config: {
-            configuration: httpConfig
+            configuration: httpConfig as unknown as Record<string, unknown>
           }
         }).unwrap();
         

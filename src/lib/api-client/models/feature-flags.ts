@@ -20,7 +20,6 @@
  * @interface FeatureFlags
  */
 export interface FeatureFlags {
-  [key: string]: Record<string, unknown>;
 }
 
 

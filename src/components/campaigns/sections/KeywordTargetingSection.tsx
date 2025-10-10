@@ -7,12 +7,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Globe } from 'lucide-react';
 import { Control } from 'react-hook-form';
 
-interface CampaignKeywordFormValues {
-  targetKeywordsInput: string;
-}
+// Use the same type as the parent form for consistency
+type CampaignFormData = {
+  name: string;
+  description?: string;
+  targetKeywords?: string;
+  assignedHttpPersonaId?: string;
+  assignedDnsPersonaId?: string;
+  proxyAssignmentMode?: string;
+  assignedProxyId?: string;
+  processingSpeed?: string;
+  batchSize?: number;
+  rotationInterval?: number;
+  retryAttempts?: number;
+};
 
 interface KeywordTargetingSectionProps {
-  control: Control<CampaignKeywordFormValues>;
+  control: Control<CampaignFormData>;
   disabled?: boolean;
   needsKeywords?: boolean; // Backend-driven condition
 }
@@ -38,7 +49,7 @@ export function KeywordTargetingSection({
       <CardContent>
         <FormField 
           control={control} 
-          name="targetKeywordsInput" 
+          name="targetKeywords" 
     render={({ field: _field }) => (
             <FormItem>
               <FormLabel>Target Keywords *</FormLabel>

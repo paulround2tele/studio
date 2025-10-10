@@ -23,7 +23,6 @@ import type { FlexibleValue } from './flexible-value';
  * @interface DNSValidatorConfigJSON
  */
 export interface DNSValidatorConfigJSON {
-  [key: string]: Record<string, unknown>;
 }
 
 
