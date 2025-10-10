@@ -92,3 +92,20 @@ func (h *strictHandlers) SseEventsStats(ctx context.Context, r gen.SseEventsStat
 	up := h.deps.SSE.GetUptime().Round(time.Second).String()
 	return gen.SseEventsStats200JSONResponse{ActiveConnections: &active, TotalEventsSent: &total, Uptime: &up}, nil
 }
+
+func (h *strictHandlers) SseEventsCampaignLatest(ctx context.Context, r gen.SseEventsCampaignLatestRequestObject) (gen.SseEventsCampaignLatestResponseObject, error) {
+	if h.deps == nil || h.deps.SSE == nil {
+		return gen.SseEventsCampaignLatest500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Minimal placeholder: return empty raw union (client-side adapter can ignore)
+	var ev gen.CampaignSseEvent
+	return gen.SseEventsCampaignLatest200JSONResponse(ev), nil
+}
+
+func (h *strictHandlers) SseEventsCampaignSample(ctx context.Context, r gen.SseEventsCampaignSampleRequestObject) (gen.SseEventsCampaignSampleResponseObject, error) {
+	if h.deps == nil || h.deps.SSE == nil {
+		return gen.SseEventsCampaignSample500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	var ev gen.CampaignSseEvent
+	return gen.SseEventsCampaignSample200JSONResponse{ev}, nil
+}

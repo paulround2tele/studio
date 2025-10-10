@@ -20,6 +20,7 @@ import (
 	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
 	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/phases"
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
@@ -91,7 +92,16 @@ func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.Campaig
 		if len(st.Configuration) > 0 {
 			var m map[string]interface{}
 			_ = json.Unmarshal(st.Configuration, &m)
-			s.Configuration = &m
+			// Convert to FlexibleValue map
+			flexMap := make(map[string]gen.FlexibleValue)
+			for k, v := range m {
+				var fv gen.FlexibleValue
+				if jsonBytes, err := json.Marshal(v); err == nil {
+					fv.UnmarshalJSON(jsonBytes)
+				}
+				flexMap[k] = fv
+			}
+			s.Configuration = &flexMap
 		}
 		apiState = &s
 	}
@@ -120,10 +130,15 @@ func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.Campaig
 				enriched.State = &st
 			}
 			if enriched.State.Configuration == nil {
-				m := map[string]interface{}{}
-				enriched.State.Configuration = &m
+				flexMap := make(map[string]gen.FlexibleValue)
+				enriched.State.Configuration = &flexMap
 			}
-			(*enriched.State.Configuration)["configsPresent"] = present
+			// Convert present map to FlexibleValue
+			var presentFV gen.FlexibleValue
+			if jsonBytes, err := json.Marshal(present); err == nil {
+				presentFV.UnmarshalJSON(jsonBytes)
+			}
+			(*enriched.State.Configuration)["configsPresent"] = presentFV
 		}
 	}
 	if apiState != nil {
@@ -833,7 +848,7 @@ func (h *strictHandlers) CampaignsModeUpdate(ctx context.Context, r gen.Campaign
 	// Successful response: data.mode per spec
 	// build mode pointer
 	modeEnum := gen.CampaignModeEnum(mode)
-	return gen.CampaignsModeUpdate200JSONResponse{Mode: &modeEnum}, nil
+	return gen.CampaignsModeUpdate200JSONResponse{Mode: modeEnum}, nil
 }
 
 // CampaignsDelete implements DELETE /campaigns/{campaignId}
@@ -1278,34 +1293,21 @@ func mapCampaignToResponse(c *models.LeadGenerationCampaign) gen.CampaignRespons
 }
 
 // ---- Phase helpers ----
-func mapAPIPhaseToModel(phase string) (models.PhaseTypeEnum, error) {
-	switch phase {
-	case "discovery":
-		return models.PhaseTypeDomainGeneration, nil
-	case "validation":
-		return models.PhaseTypeDNSValidation, nil
-	case "extraction":
-		return models.PhaseTypeHTTPKeywordValidation, nil
-	case "analysis":
-		return models.PhaseTypeAnalysis, nil
+// mapAPIPhaseToModel now delegates to the central phases translation utility.
+func mapAPIPhaseToModel(p string) (models.PhaseTypeEnum, error) {
+	internal := phases.ToInternal(p)
+	switch internal {
+	case string(models.PhaseTypeDomainGeneration), string(models.PhaseTypeDNSValidation), string(models.PhaseTypeHTTPKeywordValidation), string(models.PhaseTypeAnalysis):
+		return models.PhaseTypeEnum(internal), nil
 	default:
-		return "", fmt.Errorf("unknown phase: %s", phase)
+		return "", fmt.Errorf("unknown phase: %s", p)
 	}
 }
 
+// mapModelPhaseToAPI converts internal enum to API phase via phases utility.
 func mapModelPhaseToAPI(phase models.PhaseTypeEnum) gen.PhaseStatusResponsePhase {
-	switch phase {
-	case models.PhaseTypeDomainGeneration:
-		return gen.PhaseStatusResponsePhase("discovery")
-	case models.PhaseTypeDNSValidation:
-		return gen.PhaseStatusResponsePhase("validation")
-	case models.PhaseTypeHTTPKeywordValidation:
-		return gen.PhaseStatusResponsePhase("extraction")
-	case models.PhaseTypeAnalysis:
-		return gen.PhaseStatusResponsePhase("analysis")
-	default:
-		return gen.PhaseStatusResponsePhase("discovery")
-	}
+	api := phases.ToAPI(string(phase))
+	return gen.PhaseStatusResponsePhase(api)
 }
 
 func mapStatusToAPI(status *models.PhaseStatusEnum) gen.PhaseStatusResponseStatus {
@@ -1433,10 +1435,24 @@ func (h *strictHandlers) CampaignsProgress(ctx context.Context, r gen.CampaignsP
 		return gen.CampaignsProgress401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	resp := gen.CampaignProgressResponse{CampaignId: openapi_types.UUID(c.ID)}
-	// Minimal: only fill timeline
-	resp.Timeline.CreatedAt = &c.CreatedAt
-	resp.Timeline.EstimatedCompletionAt = c.EstimatedCompletionAt
-	resp.Timeline.CompletedAt = c.CompletedAt
+	// Initialize Timeline with basic events
+	resp.Timeline = []gen.TimelineEvent{
+		{
+			Type:        "campaign_created",
+			Timestamp:   c.CreatedAt,
+			Description: ptrString("Campaign created"),
+			Status:      (*gen.TimelineEventStatus)(ptrString("completed")),
+		},
+	}
+	// Add completion event if campaign is completed
+	if c.CompletedAt != nil {
+		resp.Timeline = append(resp.Timeline, gen.TimelineEvent{
+			Type:        "campaign_completed",
+			Timestamp:   *c.CompletedAt,
+			Description: ptrString("Campaign completed"),
+			Status:      (*gen.TimelineEventStatus)(ptrString("completed")),
+		})
+	}
 	return gen.CampaignsProgress200JSONResponse(resp), nil
 }
 
@@ -2047,7 +2063,16 @@ func (h *strictHandlers) CampaignsStateGet(ctx context.Context, r gen.CampaignsS
 	if len(st.Configuration) > 0 {
 		var m map[string]interface{}
 		if err := json.Unmarshal(st.Configuration, &m); err == nil {
-			api.Configuration = &m
+			// Convert to FlexibleValue map
+			flexMap := make(map[string]gen.FlexibleValue)
+			for k, v := range m {
+				var fv gen.FlexibleValue
+				if jsonBytes, err := json.Marshal(v); err == nil {
+					fv.UnmarshalJSON(jsonBytes)
+				}
+				flexMap[k] = fv
+			}
+			api.Configuration = &flexMap
 		}
 	}
 	return gen.CampaignsStateGet200JSONResponse(api), nil
@@ -2116,7 +2141,16 @@ func (h *strictHandlers) CampaignsStatePut(ctx context.Context, r gen.CampaignsS
 	if len(fresh.Configuration) > 0 {
 		var m map[string]interface{}
 		if err := json.Unmarshal(fresh.Configuration, &m); err == nil {
-			api.Configuration = &m
+			// Convert to FlexibleValue map
+			flexMap := make(map[string]gen.FlexibleValue)
+			for k, v := range m {
+				var fv gen.FlexibleValue
+				if jsonBytes, err := json.Marshal(v); err == nil {
+					fv.UnmarshalJSON(jsonBytes)
+				}
+				flexMap[k] = fv
+			}
+			api.Configuration = &flexMap
 		}
 	}
 	return gen.CampaignsStatePut200JSONResponse(api), nil
@@ -2156,7 +2190,16 @@ func (h *strictHandlers) CampaignsPhaseExecutionsList(ctx context.Context, r gen
 		if len(st.Configuration) > 0 {
 			var m map[string]interface{}
 			_ = json.Unmarshal(st.Configuration, &m)
-			apiState.Configuration = &m
+			// Convert to FlexibleValue map
+			flexMap := make(map[string]gen.FlexibleValue)
+			for k, v := range m {
+				var fv gen.FlexibleValue
+				if jsonBytes, err := json.Marshal(v); err == nil {
+					fv.UnmarshalJSON(jsonBytes)
+				}
+				flexMap[k] = fv
+			}
+			apiState.Configuration = &flexMap
 		}
 	}
 	execs := make([]gen.PhaseExecution, 0, len(list))
@@ -2369,13 +2412,31 @@ func mapPhaseExecutionToAPI(pe models.PhaseExecution) gen.PhaseExecution {
 	if pe.ErrorDetails != nil && len(*pe.ErrorDetails) > 0 {
 		var m map[string]interface{}
 		if err := json.Unmarshal(*pe.ErrorDetails, &m); err == nil {
-			api.ErrorDetails = &m
+			// Convert to FlexibleValue map
+			flexMap := make(map[string]gen.FlexibleValue)
+			for k, v := range m {
+				var fv gen.FlexibleValue
+				if jsonBytes, err := json.Marshal(v); err == nil {
+					fv.UnmarshalJSON(jsonBytes)
+				}
+				flexMap[k] = fv
+			}
+			api.ErrorDetails = &flexMap
 		}
 	}
 	if pe.Metrics != nil && len(*pe.Metrics) > 0 {
 		var m map[string]interface{}
 		if err := json.Unmarshal(*pe.Metrics, &m); err == nil {
-			api.Metrics = &m
+			// Convert to FlexibleValue map
+			flexMap := make(map[string]gen.FlexibleValue)
+			for k, v := range m {
+				var fv gen.FlexibleValue
+				if jsonBytes, err := json.Marshal(v); err == nil {
+					fv.UnmarshalJSON(jsonBytes)
+				}
+				flexMap[k] = fv
+			}
+			api.Metrics = &flexMap
 		}
 	}
 	return api

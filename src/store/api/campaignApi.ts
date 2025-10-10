@@ -6,11 +6,8 @@
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
-import {
-  CampaignsPhaseConfigurePhaseEnum,
-  CampaignsPhaseStartPhaseEnum,
-  CampaignsPhaseStatusPhaseEnum,
-} from '@/lib/api-client/apis/campaigns-api';
+// Updated phase enum – unified CampaignPhaseEnum replaces per-operation enums
+import type { CampaignPhaseEnum } from '@/lib/api-client/models/campaign-phase-enum';
 import { apiConfiguration } from '@/lib/api/config';
 import type { CreateCampaignRequest } from '@/lib/api-client/models/create-campaign-request';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
@@ -30,6 +27,7 @@ import type { CampaignClassificationsResponse } from '@/lib/api-client/models/ca
 import type { CampaignFunnelResponse } from '@/lib/api-client/models/campaign-funnel-response';
 import type { DomainScoreBreakdownResponse } from '@/lib/api-client/models/domain-score-breakdown-response';
 import type { CampaignsModeUpdateRequest } from '@/lib/api-client/models/campaigns-mode-update-request';
+import type { CampaignModeUpdateResponse } from '@/lib/api-client/models/campaign-mode-update-response';
 
 // Helper for axios/fetch hybrid responses (no any)
 const unwrap = <T>(resp: { data?: T } | T): T | undefined => {
@@ -146,8 +144,7 @@ export const campaignApi = createApi({
     >({
       queryFn: async ({ campaignId, phase, config }) => {
         try {
-          const phaseEnum: CampaignsPhaseConfigurePhaseEnum = (phase as CampaignsPhaseConfigurePhaseEnum);
-          const response = await campaignsApi.campaignsPhaseConfigure(campaignId, phaseEnum, config);
+          const response = await campaignsApi.campaignsPhaseConfigure(campaignId, phase as CampaignPhaseEnum, config);
           const data = unwrap<PhaseStatusResponse>(response);
           if (!data) return { error: { status: 500, data: { message: 'Empty phase configure response' } } };
           return { data };
@@ -159,7 +156,6 @@ export const campaignApi = createApi({
       invalidatesTags: (result, error, { campaignId, phase }) => [
         { type: 'Campaign', id: campaignId },
         { type: 'CampaignProgress', id: campaignId },
-        // Invalidate phase status cache so UI reflects configured state immediately
         { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
       ],
     }),
@@ -170,8 +166,7 @@ export const campaignApi = createApi({
     >({
       queryFn: async ({ campaignId, phase }) => {
         try {
-          const phaseEnum: CampaignsPhaseStartPhaseEnum = (phase as CampaignsPhaseStartPhaseEnum);
-          const response = await campaignsApi.campaignsPhaseStart(campaignId, phaseEnum);
+          const response = await campaignsApi.campaignsPhaseStart(campaignId, phase as CampaignPhaseEnum);
           const data = unwrap<PhaseStatusResponse>(response);
           if (!data) return { error: { status: 500, data: { message: 'Empty phase start response' } } };
           return { data };
@@ -183,9 +178,7 @@ export const campaignApi = createApi({
       invalidatesTags: (result, error, { campaignId, phase }) => [
         { type: 'Campaign', id: campaignId },
         { type: 'CampaignProgress', id: campaignId },
-        // Ensure domains list refreshes after discovery starts/completes
         { type: 'CampaignDomains', id: campaignId },
-        // Invalidate specific phase status as well
         { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
       ],
     }),
@@ -196,8 +189,7 @@ export const campaignApi = createApi({
     >({
       queryFn: async ({ campaignId, phase }) => {
         try {
-          const phaseEnum: CampaignsPhaseStatusPhaseEnum = (phase as CampaignsPhaseStatusPhaseEnum);
-          const response = await campaignsApi.campaignsPhaseStatus(campaignId, phaseEnum);
+          const response = await campaignsApi.campaignsPhaseStatus(campaignId, phase as CampaignPhaseEnum);
           const data = unwrap<PhaseStatusResponse>(response);
           if (!data) return { error: { status: 500, data: { message: 'Empty phase status response' } } };
           return { data };
@@ -262,14 +254,15 @@ export const campaignApi = createApi({
     }),
 
     // Update campaign execution mode (full_sequence vs step_by_step) - now using typed extraction
-    updateCampaignMode: builder.mutation<{ mode: CampaignsModeUpdateRequest['mode'] }, { campaignId: string; mode: CampaignsModeUpdateRequest['mode'] }>({
+    updateCampaignMode: builder.mutation<CampaignModeUpdateResponse, { campaignId: string; mode: CampaignsModeUpdateRequest['mode'] }>({
       queryFn: async ({ campaignId, mode }) => {
         try {
           const request: CampaignsModeUpdateRequest = { mode };
           const response = await campaignsApi.campaignsModeUpdate(campaignId, request);
-          // Response likely shape: { data: { mode: CampaignModeEnum } } or 200 model wrapper
-          const raw = (response as { data?: { mode?: CampaignsModeUpdateRequest['mode'] } }).data;
-          return { data: { mode: raw?.mode ?? request.mode } };
+          const data = unwrap<CampaignModeUpdateResponse>(response);
+          if (data) return { data };
+          // Fallback construction if unwrap failed (should not normally happen)
+          return { data: { campaignId, mode, updatedAt: new Date().toISOString() } };
         } catch (error) {
           const norm = toRtkError(error);
           return { error: { status: norm.status ?? 500, data: norm } };

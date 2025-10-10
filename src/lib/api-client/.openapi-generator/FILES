@@ -65,6 +65,8 @@ docs/BulkHTTPValidationRequestOperationsInnerValidationConfig.md
 docs/BulkHTTPValidationRequestStealth.md
 docs/BulkHealthCheckResponse.md
 docs/BulkOperationCancelStatus.md
+docs/BulkOperationStatusResponse.md
+docs/BulkOperationStatusResponseProgress.md
 docs/BulkProxyOperationResponse.md
 docs/BulkProxyOperationResponseFailedProxiesInner.md
 docs/BulkProxyOperationResponseResultsInner.md
@@ -89,8 +91,10 @@ docs/CampaignDomainsListResponseAggregatesLead.md
 docs/CampaignFunnelResponse.md
 docs/CampaignMetricsResponse.md
 docs/CampaignModeEnum.md
+docs/CampaignModeUpdateResponse.md
 docs/CampaignMomentumResponse.md
 docs/CampaignMomentumResponseMoversUpInner.md
+docs/CampaignPhaseEnum.md
 docs/CampaignPhasesStatusResponse.md
 docs/CampaignPhasesStatusResponsePhasesInner.md
 docs/CampaignProgressResponse.md
@@ -118,13 +122,13 @@ docs/CampaignStateUpdate.md
 docs/CampaignStateWithExecutions.md
 docs/CampaignsApi.md
 docs/CampaignsBulkOperationsList200ResponseInner.md
-docs/CampaignsModeUpdate200Response.md
 docs/CampaignsModeUpdateRequest.md
 docs/CampaignsPhaseConfigsList200Response.md
 docs/CampaignsPhaseStart409Response.md
 docs/CancelBulkOperation200Response.md
 docs/ConfigGetStealth200Response.md
 docs/ConfigUpdateStealthRequest.md
+docs/CreateCampaignConfiguration.md
 docs/CreateCampaignRequest.md
 docs/CreateCampaignRequestConfiguration.md
 docs/CreateCampaignRequestConfigurationPatternConfig.md
@@ -194,6 +198,7 @@ docs/PersonaDeleteResponse.md
 docs/PersonaResponse.md
 docs/PersonaTestResponse.md
 docs/PersonaType.md
+docs/PersonaUpdateRequest.md
 docs/PersonasApi.md
 docs/PhaseConfigurationRequest.md
 docs/PhaseConfigurationRequestPersonaIds.md
@@ -214,6 +219,8 @@ docs/ProxiesApi.md
 docs/ProxiesBulkTestRequest.md
 docs/ProxiesHealthCheckAllRequest.md
 docs/Proxy.md
+docs/ProxyConfigurationRequest.md
+docs/ProxyConfigurationResponse.md
 docs/ProxyHealthCheckResponse.md
 docs/ProxyManagerConfigJSON.md
 docs/ProxyOperationResult.md
@@ -301,6 +308,8 @@ models/bulk-httpvalidation-request-operations-inner.ts
 models/bulk-httpvalidation-request-stealth.ts
 models/bulk-httpvalidation-request.ts
 models/bulk-operation-cancel-status.ts
+models/bulk-operation-status-response-progress.ts
+models/bulk-operation-status-response.ts
 models/bulk-proxy-operation-response-failed-proxies-inner.ts
 models/bulk-proxy-operation-response-results-inner.ts
 models/bulk-proxy-operation-response.ts
@@ -325,8 +334,10 @@ models/campaign-domains-list-response.ts
 models/campaign-funnel-response.ts
 models/campaign-metrics-response.ts
 models/campaign-mode-enum.ts
+models/campaign-mode-update-response.ts
 models/campaign-momentum-response-movers-up-inner.ts
 models/campaign-momentum-response.ts
+models/campaign-phase-enum.ts
 models/campaign-phases-status-response-phases-inner.ts
 models/campaign-phases-status-response.ts
 models/campaign-progress-response-overall.ts
@@ -354,12 +365,12 @@ models/campaign-state-with-executions.ts
 models/campaign-state.ts
 models/campaigns-bulk-operations-list200-response-inner.ts
 models/campaigns-mode-update-request.ts
-models/campaigns-mode-update200-response.ts
 models/campaigns-phase-configs-list200-response.ts
 models/campaigns-phase-start409-response.ts
 models/cancel-bulk-operation200-response.ts
 models/config-get-stealth200-response.ts
 models/config-update-stealth-request.ts
+models/create-campaign-configuration.ts
 models/create-campaign-request-configuration-pattern-config.ts
 models/create-campaign-request-configuration-phases-analysis.ts
 models/create-campaign-request-configuration-phases-discovery.ts
@@ -424,6 +435,7 @@ models/persona-delete-response.ts
 models/persona-response.ts
 models/persona-test-response.ts
 models/persona-type.ts
+models/persona-update-request.ts
 models/phase-configuration-request-persona-ids.ts
 models/phase-configuration-request.ts
 models/phase-execution-update.ts
@@ -441,6 +453,8 @@ models/probabilistic-forecast-response-quality-metrics.ts
 models/probabilistic-forecast-response.ts
 models/proxies-bulk-test-request.ts
 models/proxies-health-check-all-request.ts
+models/proxy-configuration-request.ts
+models/proxy-configuration-response.ts
 models/proxy-health-check-response.ts
 models/proxy-manager-config-json.ts
 models/proxy-operation-result.ts

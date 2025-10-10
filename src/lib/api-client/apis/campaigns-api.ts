@@ -48,7 +48,11 @@ import type { CampaignFunnelResponse } from '../models';
 // @ts-ignore
 import type { CampaignMetricsResponse } from '../models';
 // @ts-ignore
+import type { CampaignModeUpdateResponse } from '../models';
+// @ts-ignore
 import type { CampaignMomentumResponse } from '../models';
+// @ts-ignore
+import type { CampaignPhaseEnum } from '../models';
 // @ts-ignore
 import type { CampaignPhasesStatusResponse } from '../models';
 // @ts-ignore
@@ -65,8 +69,6 @@ import type { CampaignStateUpdate } from '../models';
 import type { CampaignStateWithExecutions } from '../models';
 // @ts-ignore
 import type { CampaignsBulkOperationsList200ResponseInner } from '../models';
-// @ts-ignore
-import type { CampaignsModeUpdate200Response } from '../models';
 // @ts-ignore
 import type { CampaignsModeUpdateRequest } from '../models';
 // @ts-ignore
@@ -963,12 +965,12 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
          * 
          * @summary Configure campaign phase
          * @param {string} campaignId 
-         * @param {CampaignsPhaseConfigurePhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {PhaseConfigurationRequest} phaseConfigurationRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseConfigure: async (campaignId: string, phase: CampaignsPhaseConfigurePhaseEnum, phaseConfigurationRequest: PhaseConfigurationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsPhaseConfigure: async (campaignId: string, phase: CampaignPhaseEnum, phaseConfigurationRequest: PhaseConfigurationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsPhaseConfigure', 'campaignId', campaignId)
             // verify required parameter 'phase' is not null or undefined
@@ -1171,11 +1173,11 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
          * 
          * @summary Start campaign phase
          * @param {string} campaignId 
-         * @param {CampaignsPhaseStartPhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseStart: async (campaignId: string, phase: CampaignsPhaseStartPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsPhaseStart: async (campaignId: string, phase: CampaignPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsPhaseStart', 'campaignId', campaignId)
             // verify required parameter 'phase' is not null or undefined
@@ -1211,11 +1213,11 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
          * 
          * @summary Get phase status
          * @param {string} campaignId 
-         * @param {CampaignsPhaseStatusPhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseStatus: async (campaignId: string, phase: CampaignsPhaseStatusPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsPhaseStatus: async (campaignId: string, phase: CampaignPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsPhaseStatus', 'campaignId', campaignId)
             // verify required parameter 'phase' is not null or undefined
@@ -1251,11 +1253,11 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
          * 
          * @summary Stop campaign phase
          * @param {string} campaignId 
-         * @param {CampaignsPhaseStopPhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseStop: async (campaignId: string, phase: CampaignsPhaseStopPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsPhaseStop: async (campaignId: string, phase: CampaignPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsPhaseStop', 'campaignId', campaignId)
             // verify required parameter 'phase' is not null or undefined
@@ -1926,7 +1928,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsModeUpdate(campaignId: string, campaignsModeUpdateRequest: CampaignsModeUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsModeUpdate200Response>> {
+        async campaignsModeUpdate(campaignId: string, campaignsModeUpdateRequest: CampaignsModeUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignModeUpdateResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsModeUpdate(campaignId, campaignsModeUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsModeUpdate']?.[localVarOperationServerIndex]?.url;
@@ -1962,12 +1964,12 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * 
          * @summary Configure campaign phase
          * @param {string} campaignId 
-         * @param {CampaignsPhaseConfigurePhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {PhaseConfigurationRequest} phaseConfigurationRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsPhaseConfigure(campaignId: string, phase: CampaignsPhaseConfigurePhaseEnum, phaseConfigurationRequest: PhaseConfigurationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
+        async campaignsPhaseConfigure(campaignId: string, phase: CampaignPhaseEnum, phaseConfigurationRequest: PhaseConfigurationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseConfigure(campaignId, phase, phaseConfigurationRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseConfigure']?.[localVarOperationServerIndex]?.url;
@@ -2033,11 +2035,11 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * 
          * @summary Start campaign phase
          * @param {string} campaignId 
-         * @param {CampaignsPhaseStartPhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsPhaseStart(campaignId: string, phase: CampaignsPhaseStartPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
+        async campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseStart(campaignId, phase, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseStart']?.[localVarOperationServerIndex]?.url;
@@ -2047,11 +2049,11 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * 
          * @summary Get phase status
          * @param {string} campaignId 
-         * @param {CampaignsPhaseStatusPhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsPhaseStatus(campaignId: string, phase: CampaignsPhaseStatusPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
+        async campaignsPhaseStatus(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseStatus(campaignId, phase, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseStatus']?.[localVarOperationServerIndex]?.url;
@@ -2061,11 +2063,11 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * 
          * @summary Stop campaign phase
          * @param {string} campaignId 
-         * @param {CampaignsPhaseStopPhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsPhaseStop(campaignId: string, phase: CampaignsPhaseStopPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
+        async campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseStop(campaignId, phase, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseStop']?.[localVarOperationServerIndex]?.url;
@@ -2416,7 +2418,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsModeUpdate(campaignId: string, campaignsModeUpdateRequest: CampaignsModeUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsModeUpdate200Response> {
+        campaignsModeUpdate(campaignId: string, campaignsModeUpdateRequest: CampaignsModeUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<CampaignModeUpdateResponse> {
             return localVarFp.campaignsModeUpdate(campaignId, campaignsModeUpdateRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2443,12 +2445,12 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * 
          * @summary Configure campaign phase
          * @param {string} campaignId 
-         * @param {CampaignsPhaseConfigurePhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {PhaseConfigurationRequest} phaseConfigurationRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseConfigure(campaignId: string, phase: CampaignsPhaseConfigurePhaseEnum, phaseConfigurationRequest: PhaseConfigurationRequest, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
+        campaignsPhaseConfigure(campaignId: string, phase: CampaignPhaseEnum, phaseConfigurationRequest: PhaseConfigurationRequest, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
             return localVarFp.campaignsPhaseConfigure(campaignId, phase, phaseConfigurationRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2499,33 +2501,33 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * 
          * @summary Start campaign phase
          * @param {string} campaignId 
-         * @param {CampaignsPhaseStartPhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseStart(campaignId: string, phase: CampaignsPhaseStartPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
+        campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
             return localVarFp.campaignsPhaseStart(campaignId, phase, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Get phase status
          * @param {string} campaignId 
-         * @param {CampaignsPhaseStatusPhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseStatus(campaignId: string, phase: CampaignsPhaseStatusPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
+        campaignsPhaseStatus(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
             return localVarFp.campaignsPhaseStatus(campaignId, phase, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary Stop campaign phase
          * @param {string} campaignId 
-         * @param {CampaignsPhaseStopPhaseEnum} phase 
+         * @param {CampaignPhaseEnum} phase 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseStop(campaignId: string, phase: CampaignsPhaseStopPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
+        campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
             return localVarFp.campaignsPhaseStop(campaignId, phase, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2843,7 +2845,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsModeUpdate(campaignId: string, campaignsModeUpdateRequest: CampaignsModeUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsModeUpdate200Response>;
+    campaignsModeUpdate(campaignId: string, campaignsModeUpdateRequest: CampaignsModeUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<CampaignModeUpdateResponse>;
 
     /**
      * 
@@ -2869,13 +2871,13 @@ export interface CampaignsApiInterface {
      * 
      * @summary Configure campaign phase
      * @param {string} campaignId 
-     * @param {CampaignsPhaseConfigurePhaseEnum} phase 
+     * @param {CampaignPhaseEnum} phase 
      * @param {PhaseConfigurationRequest} phaseConfigurationRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsPhaseConfigure(campaignId: string, phase: CampaignsPhaseConfigurePhaseEnum, phaseConfigurationRequest: PhaseConfigurationRequest, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
+    campaignsPhaseConfigure(campaignId: string, phase: CampaignPhaseEnum, phaseConfigurationRequest: PhaseConfigurationRequest, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
 
     /**
      * 
@@ -2925,34 +2927,34 @@ export interface CampaignsApiInterface {
      * 
      * @summary Start campaign phase
      * @param {string} campaignId 
-     * @param {CampaignsPhaseStartPhaseEnum} phase 
+     * @param {CampaignPhaseEnum} phase 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsPhaseStart(campaignId: string, phase: CampaignsPhaseStartPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
+    campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
 
     /**
      * 
      * @summary Get phase status
      * @param {string} campaignId 
-     * @param {CampaignsPhaseStatusPhaseEnum} phase 
+     * @param {CampaignPhaseEnum} phase 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsPhaseStatus(campaignId: string, phase: CampaignsPhaseStatusPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
+    campaignsPhaseStatus(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
 
     /**
      * 
      * @summary Stop campaign phase
      * @param {string} campaignId 
-     * @param {CampaignsPhaseStopPhaseEnum} phase 
+     * @param {CampaignPhaseEnum} phase 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsPhaseStop(campaignId: string, phase: CampaignsPhaseStopPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
+    campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
 
     /**
      * 
@@ -3337,13 +3339,13 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      * 
      * @summary Configure campaign phase
      * @param {string} campaignId 
-     * @param {CampaignsPhaseConfigurePhaseEnum} phase 
+     * @param {CampaignPhaseEnum} phase 
      * @param {PhaseConfigurationRequest} phaseConfigurationRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsPhaseConfigure(campaignId: string, phase: CampaignsPhaseConfigurePhaseEnum, phaseConfigurationRequest: PhaseConfigurationRequest, options?: RawAxiosRequestConfig) {
+    public campaignsPhaseConfigure(campaignId: string, phase: CampaignPhaseEnum, phaseConfigurationRequest: PhaseConfigurationRequest, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).campaignsPhaseConfigure(campaignId, phase, phaseConfigurationRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -3403,12 +3405,12 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      * 
      * @summary Start campaign phase
      * @param {string} campaignId 
-     * @param {CampaignsPhaseStartPhaseEnum} phase 
+     * @param {CampaignPhaseEnum} phase 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsPhaseStart(campaignId: string, phase: CampaignsPhaseStartPhaseEnum, options?: RawAxiosRequestConfig) {
+    public campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).campaignsPhaseStart(campaignId, phase, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -3416,12 +3418,12 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      * 
      * @summary Get phase status
      * @param {string} campaignId 
-     * @param {CampaignsPhaseStatusPhaseEnum} phase 
+     * @param {CampaignPhaseEnum} phase 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsPhaseStatus(campaignId: string, phase: CampaignsPhaseStatusPhaseEnum, options?: RawAxiosRequestConfig) {
+    public campaignsPhaseStatus(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).campaignsPhaseStatus(campaignId, phase, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -3429,12 +3431,12 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      * 
      * @summary Stop campaign phase
      * @param {string} campaignId 
-     * @param {CampaignsPhaseStopPhaseEnum} phase 
+     * @param {CampaignPhaseEnum} phase 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsPhaseStop(campaignId: string, phase: CampaignsPhaseStopPhaseEnum, options?: RawAxiosRequestConfig) {
+    public campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).campaignsPhaseStop(campaignId, phase, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -3610,16 +3612,6 @@ export enum CampaignsDomainsListWarningsEnum {
   * @export
   * @enum {string}
   */
-export enum CampaignsPhaseConfigurePhaseEnum {
-    discovery = 'discovery',
-    validation = 'validation',
-    extraction = 'extraction',
-    analysis = 'analysis'
-}
-/**
-  * @export
-  * @enum {string}
-  */
 export enum CampaignsPhaseExecutionDeletePhaseTypeEnum {
     discovery = 'discovery',
     validation = 'validation',
@@ -3641,36 +3633,6 @@ export enum CampaignsPhaseExecutionGetPhaseTypeEnum {
   * @enum {string}
   */
 export enum CampaignsPhaseExecutionPutPhaseTypeEnum {
-    discovery = 'discovery',
-    validation = 'validation',
-    extraction = 'extraction',
-    analysis = 'analysis'
-}
-/**
-  * @export
-  * @enum {string}
-  */
-export enum CampaignsPhaseStartPhaseEnum {
-    discovery = 'discovery',
-    validation = 'validation',
-    extraction = 'extraction',
-    analysis = 'analysis'
-}
-/**
-  * @export
-  * @enum {string}
-  */
-export enum CampaignsPhaseStatusPhaseEnum {
-    discovery = 'discovery',
-    validation = 'validation',
-    extraction = 'extraction',
-    analysis = 'analysis'
-}
-/**
-  * @export
-  * @enum {string}
-  */
-export enum CampaignsPhaseStopPhaseEnum {
     discovery = 'discovery',
     validation = 'validation',
     extraction = 'extraction',

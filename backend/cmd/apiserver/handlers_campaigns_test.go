@@ -26,7 +26,7 @@ func TestCampaignsPhaseStop_DependencyGuard(t *testing.T) {
 	h := &strictHandlers{deps: &AppDeps{}}
 	ctx := context.Background()
 	id := openapi_types.UUID(uuid.New())
-	resp, err := h.CampaignsPhaseStop(ctx, gen.CampaignsPhaseStopRequestObject{CampaignId: id, Phase: gen.CampaignsPhaseStopParamsPhase("discovery")})
+	resp, err := h.CampaignsPhaseStop(ctx, gen.CampaignsPhaseStopRequestObject{CampaignId: id, Phase: gen.CampaignPhaseEnumDiscovery})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

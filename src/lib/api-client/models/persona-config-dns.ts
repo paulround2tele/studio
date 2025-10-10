@@ -24,7 +24,7 @@ export interface PersonaConfigDns {
    * 
    * @memberof PersonaConfigDns
    */
-  'personaType'?: 
+  'personaType': 
       'dns'
 ;
   /**

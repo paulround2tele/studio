@@ -1,4 +1,4 @@
-import { CampaignsPhaseConfigurePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
+import { CampaignPhaseEnum } from '@/lib/api-client/models/campaign-phase-enum';
 import { PIPELINE_PHASE_ORDER } from '@/store/selectors/pipelineSelectors';
 
 /**
@@ -8,7 +8,7 @@ import { PIPELINE_PHASE_ORDER } from '@/store/selectors/pipelineSelectors';
  */
 export function auditPhaseEnumDrift() {
   try {
-    const enumValues: string[] = Object.values(CampaignsPhaseConfigurePhaseEnum);
+  const enumValues: string[] = Object.values(CampaignPhaseEnum);
     // Normalize to lower-case for comparison resilience
     const enumSet = new Set(enumValues.map(v => v.toLowerCase()));
     const localSet = new Set(PIPELINE_PHASE_ORDER.map(v => v.toLowerCase()));

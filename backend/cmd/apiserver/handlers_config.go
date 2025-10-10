@@ -9,6 +9,15 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/config"
 )
 
+// helper to build FlexibleValue from primitive (string/int/bool/number)
+func flex(v interface{}) gen.FlexibleValue {
+	var fv gen.FlexibleValue
+	if b, err := json.Marshal(v); err == nil {
+		_ = fv.UnmarshalJSON(b)
+	}
+	return fv
+}
+
 // ConfigGetAuthentication returns sanitized auth configuration as a free-form object
 func (h *strictHandlers) ConfigGetAuthentication(ctx context.Context, r gen.ConfigGetAuthenticationRequestObject) (gen.ConfigGetAuthenticationResponseObject, error) {
 	var ac config.AuthConfig
@@ -17,22 +26,21 @@ func (h *strictHandlers) ConfigGetAuthentication(ctx context.Context, r gen.Conf
 	} else {
 		ac = config.GetDefaultAuthConfig()
 	}
-	m := map[string]interface{}{
-		"bcryptCost":                 ac.BcryptCost,
-		"passwordMinLength":          ac.PasswordMinLength,
-		"sessionDurationSeconds":     int(ac.SessionDuration / time.Second),
-		"sessionIdleTimeoutSeconds":  int(ac.SessionIdleTimeout / time.Second),
-		"sessionCookieName":          ac.SessionCookieName,
-		"sessionCookieDomain":        ac.SessionCookieDomain,
-		"sessionCookieSecure":        ac.SessionCookieSecure,
-		"resetTokenExpirySeconds":    int(ac.ResetTokenExpiry / time.Second),
-		"maxFailedAttempts":          ac.MaxFailedAttempts,
-		"accountLockDurationSeconds": int(ac.AccountLockDuration / time.Second),
-		"rateLimitWindowSeconds":     int(ac.RateLimitWindow / time.Second),
-		"maxLoginAttempts":           ac.MaxLoginAttempts,
-		"maxPasswordResetAttempts":   ac.MaxPasswordResetAttempts,
-		"captchaThreshold":           ac.CaptchaThreshold,
-	}
+	m := gen.AuthConfig{}
+	m["bcryptCost"] = flex(ac.BcryptCost)
+	m["passwordMinLength"] = flex(ac.PasswordMinLength)
+	m["sessionDurationSeconds"] = flex(int(ac.SessionDuration / time.Second))
+	m["sessionIdleTimeoutSeconds"] = flex(int(ac.SessionIdleTimeout / time.Second))
+	m["sessionCookieName"] = flex(ac.SessionCookieName)
+	m["sessionCookieDomain"] = flex(ac.SessionCookieDomain)
+	m["sessionCookieSecure"] = flex(ac.SessionCookieSecure)
+	m["resetTokenExpirySeconds"] = flex(int(ac.ResetTokenExpiry / time.Second))
+	m["maxFailedAttempts"] = flex(ac.MaxFailedAttempts)
+	m["accountLockDurationSeconds"] = flex(int(ac.AccountLockDuration / time.Second))
+	m["rateLimitWindowSeconds"] = flex(int(ac.RateLimitWindow / time.Second))
+	m["maxLoginAttempts"] = flex(ac.MaxLoginAttempts)
+	m["maxPasswordResetAttempts"] = flex(ac.MaxPasswordResetAttempts)
+	m["captchaThreshold"] = flex(ac.CaptchaThreshold)
 	return gen.ConfigGetAuthentication200JSONResponse(m), nil
 }
 
@@ -49,7 +57,15 @@ func (h *strictHandlers) ConfigUpdateAuthentication(ctx context.Context, r gen.C
 		h.deps.Config.Server.AuthConfig = &cfg
 	}
 	ac := h.deps.Config.Server.AuthConfig
-	body := map[string]interface{}(*r.Body)
+	// Convert flexible body to raw map[string]interface{}
+	body := map[string]interface{}{}
+	for k, v := range *r.Body {
+		var any interface{}
+		if b, err := json.Marshal(v); err == nil {
+			_ = json.Unmarshal(b, &any)
+		}
+		body[k] = any
+	}
 	// Update known fields if present
 	if v, ok := body["bcryptCost"].(float64); ok {
 		ac.BcryptCost = int(v)
@@ -103,22 +119,21 @@ func (h *strictHandlers) ConfigUpdateAuthentication(ctx context.Context, r gen.C
 		}
 	}
 	// Return updated snapshot
-	m := map[string]interface{}{
-		"bcryptCost":                 ac.BcryptCost,
-		"passwordMinLength":          ac.PasswordMinLength,
-		"sessionDurationSeconds":     int(ac.SessionDuration / time.Second),
-		"sessionIdleTimeoutSeconds":  int(ac.SessionIdleTimeout / time.Second),
-		"sessionCookieName":          ac.SessionCookieName,
-		"sessionCookieDomain":        ac.SessionCookieDomain,
-		"sessionCookieSecure":        ac.SessionCookieSecure,
-		"resetTokenExpirySeconds":    int(ac.ResetTokenExpiry / time.Second),
-		"maxFailedAttempts":          ac.MaxFailedAttempts,
-		"accountLockDurationSeconds": int(ac.AccountLockDuration / time.Second),
-		"rateLimitWindowSeconds":     int(ac.RateLimitWindow / time.Second),
-		"maxLoginAttempts":           ac.MaxLoginAttempts,
-		"maxPasswordResetAttempts":   ac.MaxPasswordResetAttempts,
-		"captchaThreshold":           ac.CaptchaThreshold,
-	}
+	m := gen.AuthConfig{}
+	m["bcryptCost"] = flex(ac.BcryptCost)
+	m["passwordMinLength"] = flex(ac.PasswordMinLength)
+	m["sessionDurationSeconds"] = flex(int(ac.SessionDuration / time.Second))
+	m["sessionIdleTimeoutSeconds"] = flex(int(ac.SessionIdleTimeout / time.Second))
+	m["sessionCookieName"] = flex(ac.SessionCookieName)
+	m["sessionCookieDomain"] = flex(ac.SessionCookieDomain)
+	m["sessionCookieSecure"] = flex(ac.SessionCookieSecure)
+	m["resetTokenExpirySeconds"] = flex(int(ac.ResetTokenExpiry / time.Second))
+	m["maxFailedAttempts"] = flex(ac.MaxFailedAttempts)
+	m["accountLockDurationSeconds"] = flex(int(ac.AccountLockDuration / time.Second))
+	m["rateLimitWindowSeconds"] = flex(int(ac.RateLimitWindow / time.Second))
+	m["maxLoginAttempts"] = flex(ac.MaxLoginAttempts)
+	m["maxPasswordResetAttempts"] = flex(ac.MaxPasswordResetAttempts)
+	m["captchaThreshold"] = flex(ac.CaptchaThreshold)
 	return gen.ConfigUpdateAuthentication200JSONResponse(m), nil
 }
 
@@ -128,7 +143,13 @@ func (h *strictHandlers) ConfigGetDnsValidator(ctx context.Context, r gen.Config
 		return gen.ConfigGetDnsValidator500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	dataJSON := config.ConvertDNSConfigToJSON(h.deps.Config.DNSValidator)
-	dm := gen.DNSValidatorConfigJSON(toMap(dataJSON))
+	// convert dns config JSON map[string]interface{} to map[string]FlexibleValue
+	base := toMap(dataJSON)
+	fm := gen.DNSValidatorConfigJSON{}
+	for k, v := range base {
+		fm[k] = flex(v)
+	}
+	dm := fm
 	return gen.ConfigGetDnsValidator200JSONResponse(dm), nil
 }
 
@@ -151,8 +172,12 @@ func (h *strictHandlers) ConfigUpdateDnsValidator(ctx context.Context, r gen.Con
 	if err := config.SaveAppConfig(h.deps.Config); err != nil {
 		return gen.ConfigUpdateDnsValidator500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	dm := gen.DNSValidatorConfigJSON(toMap(config.ConvertDNSConfigToJSON(updated)))
-	return gen.ConfigUpdateDnsValidator200JSONResponse(dm), nil
+	base := toMap(config.ConvertDNSConfigToJSON(updated))
+	fm := gen.DNSValidatorConfigJSON{}
+	for k, v := range base {
+		fm[k] = flex(v)
+	}
+	return gen.ConfigUpdateDnsValidator200JSONResponse(fm), nil
 }
 
 // ---- Config: HTTP ----
@@ -191,7 +216,11 @@ func (h *strictHandlers) ConfigGetLogging(ctx context.Context, r gen.ConfigGetLo
 	if h.deps == nil || h.deps.Config == nil {
 		return gen.ConfigGetLogging500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	lm := gen.LoggingConfig(toMap(h.deps.Config.Logging))
+	rawL := toMap(h.deps.Config.Logging)
+	lm := gen.LoggingConfig{}
+	for k, v := range rawL {
+		lm[k] = flex(v)
+	}
 	return gen.ConfigGetLogging200JSONResponse(lm), nil
 }
 
@@ -214,8 +243,12 @@ func (h *strictHandlers) ConfigUpdateLogging(ctx context.Context, r gen.ConfigUp
 	if err := config.SaveAppConfig(h.deps.Config); err != nil {
 		return gen.ConfigUpdateLogging500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	lm := gen.LoggingConfig(toMap(h.deps.Config.Logging))
-	return gen.ConfigUpdateLogging200JSONResponse(lm), nil
+	rawL2 := toMap(h.deps.Config.Logging)
+	lm2 := gen.LoggingConfig{}
+	for k, v := range rawL2 {
+		lm2[k] = flex(v)
+	}
+	return gen.ConfigUpdateLogging200JSONResponse(lm2), nil
 }
 
 // ---- Config: RateLimiter ----
@@ -223,7 +256,11 @@ func (h *strictHandlers) ConfigGetRateLimiter(ctx context.Context, r gen.ConfigG
 	if h.deps == nil || h.deps.Config == nil {
 		return gen.ConfigGetRateLimiter500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	rm := gen.RateLimiterConfig(toMap(h.deps.Config.RateLimiter))
+	rawR := toMap(h.deps.Config.RateLimiter)
+	rm := gen.RateLimiterConfig{}
+	for k, v := range rawR {
+		rm[k] = flex(v)
+	}
 	return gen.ConfigGetRateLimiter200JSONResponse(rm), nil
 }
 
@@ -242,8 +279,12 @@ func (h *strictHandlers) ConfigUpdateRateLimiter(ctx context.Context, r gen.Conf
 	if err := config.SaveAppConfig(h.deps.Config); err != nil {
 		return gen.ConfigUpdateRateLimiter500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	rm := gen.RateLimiterConfig(toMap(h.deps.Config.RateLimiter))
-	return gen.ConfigUpdateRateLimiter200JSONResponse(rm), nil
+	rawR2 := toMap(h.deps.Config.RateLimiter)
+	rm2 := gen.RateLimiterConfig{}
+	for k, v := range rawR2 {
+		rm2[k] = flex(v)
+	}
+	return gen.ConfigUpdateRateLimiter200JSONResponse(rm2), nil
 }
 
 // ---- Config: Server ----
@@ -294,7 +335,11 @@ func (h *strictHandlers) ConfigGetWorker(ctx context.Context, r gen.ConfigGetWor
 	if h.deps == nil || h.deps.Config == nil {
 		return gen.ConfigGetWorker500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	wm := gen.WorkerConfig(toMap(h.deps.Config.Worker))
+	rawW := toMap(h.deps.Config.Worker)
+	wm := gen.WorkerConfig{}
+	for k, v := range rawW {
+		wm[k] = flex(v)
+	}
 	return gen.ConfigGetWorker200JSONResponse(wm), nil
 }
 
@@ -313,6 +358,10 @@ func (h *strictHandlers) ConfigUpdateWorker(ctx context.Context, r gen.ConfigUpd
 	if err := config.SaveAppConfig(h.deps.Config); err != nil {
 		return gen.ConfigUpdateWorker500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	wm := gen.WorkerConfig(toMap(h.deps.Config.Worker))
-	return gen.ConfigUpdateWorker200JSONResponse(wm), nil
+	rawW2 := toMap(h.deps.Config.Worker)
+	wm2 := gen.WorkerConfig{}
+	for k, v := range rawW2 {
+		wm2[k] = flex(v)
+	}
+	return gen.ConfigUpdateWorker200JSONResponse(wm2), nil
 }

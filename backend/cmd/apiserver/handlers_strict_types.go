@@ -85,6 +85,7 @@ func containsLimitClause(lowerSQL string) bool {
 }
 
 func int64Ptr(v int64) *int64 { return &v }
+func ptrString(s string) *string { return &s }
 
 // mapDBValue converts driver/native scanned values into API DatabaseValue union fields.
 func mapDBValue(v interface{}) gen.DatabaseValue {
