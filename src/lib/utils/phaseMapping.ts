@@ -122,12 +122,12 @@ export function mapPatternToDomainGeneration(pattern: {
   characterSet?: string;
 }): DomainGenerationConfig {
   return {
-    patternType: 'variable', // Default pattern type
-    constantString: pattern.basePattern || '',
+    patternType: 'prefix', // Valid pattern types: prefix, suffix, both
+    constantString: pattern.basePattern || 'test',
     variableLength: pattern.variableLength || 6,
     characterSet: pattern.characterSet || 'alphanumeric',
     tld: pattern.tld?.startsWith('.') ? pattern.tld : `.${pattern.tld || 'com'}`,
-    numDomainsToGenerate: pattern.maxDomains || 1000,
+    numDomainsToGenerate: pattern.maxDomains || 100,
     batchSize: 1000,
     offsetStart: 0
   };
