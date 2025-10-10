@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"encoding/json"
+
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 )
 
