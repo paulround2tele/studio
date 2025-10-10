@@ -10,10 +10,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { useCreateCampaignMutation, useUpdateCampaignModeMutation, useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
+import { 
+  useCreateCampaignMutation, 
+  useUpdateCampaignModeMutation, 
+  useStartPhaseStandaloneMutation,
+  useConfigurePhaseStandaloneMutation 
+} from '@/store/api/campaignApi';
 import { formToApiRequest } from '@/components/campaigns/types/SimpleCampaignFormTypes';
 import { CampaignModeEnum } from '@/lib/api-client';
 import { AutoStartBanner, useAutoStartBanner } from './AutoStartBanner';
+import { 
+  getFirstPhase, 
+  mapPatternToDomainGeneration,
+  mapTargetingToDNSValidation,
+  mapTargetingToHTTPValidation,
+  type APIPhaseEnum
+} from '@/lib/utils/phaseMapping';
 
 import GoalStep from './steps/GoalStep';
 import PatternStep from './steps/PatternStep';
@@ -44,6 +56,7 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
   const [createCampaign, { isLoading: isCreating }] = useCreateCampaignMutation();
   const [updateCampaignMode, { isLoading: isUpdatingMode }] = useUpdateCampaignModeMutation();
   const [startPhase, { isLoading: isStartingPhase }] = useStartPhaseStandaloneMutation();
+  const [configurePhase, { isLoading: isConfiguringPhase }] = useConfigurePhaseStandaloneMutation();
   
   // Auto-start banner state management
   const {
@@ -86,7 +99,7 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
   };
 
   const canProceed = validateStep(wizardState.currentStep);
-  const isLoading = isCreating || isUpdatingMode || isStartingPhase;
+  const isLoading = isCreating || isUpdatingMode || isStartingPhase || isConfiguringPhase;
 
   const handleNext = () => {
     if (isLastStep) {
@@ -223,23 +236,66 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
         console.debug(`Auto-start attempt ${attempt} for campaign ${campaignId}`);
         
         if (attempt === 1) {
-          showStarting(`Starting discovery phase for "${campaignName}" automatically...`);
+          showStarting(`Configuring and starting campaign "${campaignName}" automatically...`);
         } else {
           showStarting(`Retrying auto-start (attempt ${attempt})...`);
         }
         
-        // Start the discovery phase automatically for full auto mode
+        // Step 1: Configure the discovery phase with domain generation config
+        const firstPhase: APIPhaseEnum = getFirstPhase();
+        const domainGenConfig = mapPatternToDomainGeneration(wizardState.pattern);
+        
+        await configurePhase({
+          campaignId,
+          phase: firstPhase,
+          config: {
+            configuration: domainGenConfig
+          }
+        }).unwrap();
+        
+        // Step 2: Configure subsequent phases with default personas for testing
+        // In a real implementation, these would come from persona selection in the wizard
+        
+        // Configure DNS validation with default persona
+        const dnsConfig = mapTargetingToDNSValidation({
+          keywords: wizardState.targeting.keywords || [],
+          dnsPersonas: ['aacabe7f-ba21-4a5b-9539-89d4bb2a9914'] // Test DNS persona ID
+        });
+        
+        await configurePhase({
+          campaignId,
+          phase: 'validation',
+          config: {
+            configuration: dnsConfig
+          }
+        }).unwrap();
+        
+        // Configure HTTP validation with default persona  
+        const httpConfig = mapTargetingToHTTPValidation({
+          keywords: wizardState.targeting.keywords || [],
+          httpPersonas: ['42480fd3-aa82-4c38-b2e6-7049c7b171ed'] // Test HTTP persona ID
+        });
+        
+        await configurePhase({
+          campaignId,
+          phase: 'extraction',
+          config: {
+            configuration: httpConfig
+          }
+        }).unwrap();
+        
+        // Step 3: Start the first phase (discovery/domain_generation) automatically
         await startPhase({
           campaignId,
-          phase: 'discovery'
+          phase: firstPhase
         }).unwrap();
         
         // Success!
-        showSuccess(`Campaign "${campaignName}" has been started automatically and is now running.`);
+        showSuccess(`Campaign "${campaignName}" has been configured and started automatically.`);
         
         toast({
           title: "Campaign Created & Started",
-          description: `Campaign "${campaignName}" has been created in auto mode and the discovery phase has started automatically.`,
+          description: `Campaign "${campaignName}" has been created in auto mode with phases configured and discovery started automatically.`,
         });
         
         return; // Success, exit retry loop
