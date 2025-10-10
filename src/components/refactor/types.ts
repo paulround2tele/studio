@@ -34,21 +34,27 @@ export type ExecutionMode = 'manual' | 'auto';
 
 // Wizard step data interfaces
 export interface WizardGoalStep {
-  campaignName: string;
+  campaignName?: string;
   description?: string;
-  executionMode: ExecutionMode;
+  executionMode?: ExecutionMode;
 }
 
 export interface WizardPatternStep {
-  basePattern: string;
-  variations: string[];
-  maxDomains: number;
+  basePattern?: string;
+  variations?: string[];
+  maxDomains?: number;
+  tld?: string;
+  variableLength?: number;
+  characterSet?: string;
 }
 
 export interface WizardTargetingStep {
-  excludeExtensions: string[];
-  includeKeywords: string[];
-  excludeKeywords: string[];
+  keywords?: string[];
+  dnsPersonas?: string[];
+  httpPersonas?: string[];
+  excludeExtensions?: string[];
+  includeKeywords?: string[];
+  excludeKeywords?: string[];
 }
 
 export interface WizardReviewStep {

@@ -4,68 +4,159 @@
  */
 
 // Use proper generated types from OpenAPI - SINGLE SOURCE OF TRUTH
-export type CampaignPhaseEnum = 'dns_validation' | 'http_keyword_validation' | 'analysis' | 'setup' | 'generation';
+import type { CampaignPhaseEnum as APICampaignPhaseEnum } from '@/lib/api-client/models/campaign-phase-enum';
 export type CampaignPhaseStatusEnum = 'not_started' | 'in_progress' | 'completed' | 'failed' | 'paused';
 export type PhaseConfigureRequest = import('@/lib/api-client/models/phase-configuration-request').PhaseConfigurationRequest;
-// Generated specific config model files not present; use structural helpers where needed in forms instead.
 
-// Backend CampaignPhaseEnum values (from models.go)
-export type BackendPhaseEnum = 
-  | 'setup' 
-  | 'generation' 
+// API phase names (what the frontend uses)
+export type APIPhaseEnum = 
+  | 'discovery'     // maps to domain_generation internally
+  | 'validation'    // maps to dns_validation internally  
+  | 'extraction'    // maps to http_keyword_validation internally
+  | 'analysis';     // maps to analysis internally
+
+// Internal backend phase names (what gets persisted)
+export type InternalPhaseEnum = 
+  | 'domain_generation'
   | 'dns_validation' 
-  | 'http_keyword_validation' 
+  | 'http_keyword_validation'
   | 'analysis';
 
-// Map backend CampaignPhaseEnum to frontend CampaignPhaseEnum for configuration
-export function mapPhaseToConfigurationType(backendPhase: string): CampaignPhaseEnum | null {
-  switch (backendPhase) {
-    case 'dns_validation':
-      return 'dns_validation';
-    case 'http_keyword_validation':
-      return 'http_keyword_validation';
-    case 'analysis':
-      return 'analysis';
-    // These phases don't require user configuration
-    case 'setup':
-    case 'generation':
-      return null;
-    default:
-      console.warn(`[PhaseMapping] Unknown backend phase: ${backendPhase}`);
-      return null;
-  }
+// Phase mapping constants (matching backend internal/phases/translate.go)
+const API_TO_INTERNAL: Record<APIPhaseEnum, InternalPhaseEnum> = {
+  'discovery': 'domain_generation',
+  'validation': 'dns_validation', 
+  'extraction': 'http_keyword_validation',
+  'analysis': 'analysis'
+};
+
+const INTERNAL_TO_API: Record<InternalPhaseEnum, APIPhaseEnum> = {
+  'domain_generation': 'discovery',
+  'dns_validation': 'validation',
+  'http_keyword_validation': 'extraction', 
+  'analysis': 'analysis'
+};
+
+// Convert API phase name to internal phase name
+export function apiPhaseToInternal(apiPhase: APIPhaseEnum): InternalPhaseEnum {
+  return API_TO_INTERNAL[apiPhase];
+}
+
+// Convert internal phase name to API phase name
+export function internalPhaseToAPI(internalPhase: InternalPhaseEnum): APIPhaseEnum {
+  return INTERNAL_TO_API[internalPhase];
 }
 
 // Check if a phase requires user configuration
-export function isConfigurablePhase(backendPhase: string): boolean {
-  return mapPhaseToConfigurationType(backendPhase) !== null;
+export function isConfigurablePhase(apiPhase: APIPhaseEnum): boolean {
+  // Discovery (domain_generation) uses wizard pattern config, all others need configuration
+  return apiPhase !== 'discovery';
 }
 
 // Get display name for any phase
-export function getPhaseDisplayName(phase: string): string {
-  const displayNames: Record<string, string> = {
-    setup: "Setup",
-    generation: "Domain Generation", 
-    dns_validation: "DNS Validation",
-    http_keyword_validation: "HTTP Keyword Validation",
-    analysis: "Analysis",
-    // Legacy support
-    domain_generation: "Domain Generation",
-    http_validation: "HTTP Keyword Validation",
+export function getPhaseDisplayName(phase: APIPhaseEnum): string {
+  const displayNames: Record<APIPhaseEnum, string> = {
+    discovery: "Domain Discovery", 
+    validation: "DNS Validation",
+    extraction: "HTTP Keyword Extraction",
+    analysis: "Analysis & Scoring",
   };
   
   return displayNames[phase] || phase;
 }
 
+// Get the ordered sequence of API phases
+export function getPhaseSequence(): APIPhaseEnum[] {
+  return ['discovery', 'validation', 'extraction', 'analysis'];
+}
+
 // Determine next phase in the workflow
-export function getNextPhase(currentPhase: string): string | null {
-  const phaseSequence: Record<string, string | null> = {
-    setup: 'generation',
-    generation: 'dns_validation',
-    dns_validation: 'http_keyword_validation',
-    http_keyword_validation: 'analysis',
-    analysis: null, // Final phase
+export function getNextPhase(currentPhase: APIPhaseEnum): APIPhaseEnum | null {
+  const phases = getPhaseSequence();
+  const currentIndex = phases.indexOf(currentPhase);
+  if (currentIndex >= 0 && currentIndex < phases.length - 1) {
+    return phases[currentIndex + 1];
+  }
+  return null; // No next phase or invalid phase
+}
+
+// Get first phase in the sequence
+export function getFirstPhase(): APIPhaseEnum {
+  return 'discovery';
+}
+
+// Configuration mapping types for wizard steps
+export interface DomainGenerationConfig {
+  patternType: string;
+  constantString?: string;
+  variableLength?: number;
+  characterSet?: string;
+  tld: string;
+  numDomainsToGenerate: number;
+  batchSize?: number;
+  offsetStart?: number;
+}
+
+export interface DNSValidationConfig {
+  personaIds: string[];
+  name?: string;
+}
+
+export interface HTTPValidationConfig {
+  personaIds: string[];
+  keywords?: string[];
+  adHocKeywords?: string[];
+  name?: string;
+  enrichmentEnabled?: boolean;
+  microCrawlEnabled?: boolean;
+  microCrawlMaxPages?: number;
+  microCrawlByteBudget?: number;
+}
+
+// Map wizard pattern step to domain generation configuration
+export function mapPatternToDomainGeneration(pattern: {
+  basePattern?: string;
+  maxDomains?: number;
+  tld?: string;
+  variableLength?: number;
+  characterSet?: string;
+}): DomainGenerationConfig {
+  return {
+    patternType: 'variable', // Default pattern type
+    constantString: pattern.basePattern || '',
+    variableLength: pattern.variableLength || 6,
+    characterSet: pattern.characterSet || 'alphanumeric',
+    tld: pattern.tld?.startsWith('.') ? pattern.tld : `.${pattern.tld || 'com'}`,
+    numDomainsToGenerate: pattern.maxDomains || 1000,
+    batchSize: 1000,
+    offsetStart: 0
   };
-  
-  return phaseSequence[currentPhase] || null;
+}
+
+// Map wizard targeting step to DNS validation configuration  
+export function mapTargetingToDNSValidation(targeting: {
+  keywords?: string[];
+  dnsPersonas?: string[];
+}): DNSValidationConfig {
+  return {
+    personaIds: targeting.dnsPersonas || [],
+    name: 'DNS Validation Phase'
+  };
+}
+
+// Map wizard targeting step to HTTP validation configuration
+export function mapTargetingToHTTPValidation(targeting: {
+  keywords?: string[];
+  httpPersonas?: string[];
+}): HTTPValidationConfig {
+  return {
+    personaIds: targeting.httpPersonas || [],
+    keywords: targeting.keywords || [],
+    adHocKeywords: [],
+    name: 'HTTP Keyword Extraction Phase',
+    enrichmentEnabled: true,
+    microCrawlEnabled: true,
+    microCrawlMaxPages: 5,
+    microCrawlByteBudget: 1024 * 1024 // 1MB
+  };
 }
