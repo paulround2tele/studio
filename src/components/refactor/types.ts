@@ -42,10 +42,20 @@ export interface WizardGoalStep {
 export interface WizardPatternStep {
   basePattern?: string;
   variations?: string[];
-  maxDomains?: number;
-  tld?: string;
-  variableLength?: number;
+  // Legacy / existing simple fields
+  maxDomains?: number; // alias of numDomainsToGenerate concept
+  tld?: string; // single tld convenience (first in tlds array)
+  variableLength?: number; // derived when prefix/suffix used; kept for backward compatibility
   characterSet?: string;
+  // New enhanced configuration fields
+  patternType?: 'prefix' | 'suffix' | 'both';
+  prefixLength?: number;
+  suffixLength?: number;
+  tlds?: string[]; // multi TLD selection
+  batchSize?: number;
+  offsetStart?: number;
+  charsetPreset?: string; // for UI highlighting of chosen preset
+  constantString?: string; // explicit constant segment if different from basePattern
 }
 
 export interface WizardTargetingStep {

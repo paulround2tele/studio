@@ -117,20 +117,39 @@ export interface HTTPValidationConfig {
 // Map wizard pattern step to domain generation configuration
 export function mapPatternToDomainGeneration(pattern: {
   basePattern?: string;
+  constantString?: string;
+  patternType?: 'prefix' | 'suffix' | 'both';
+  prefixLength?: number;
+  suffixLength?: number;
   maxDomains?: number;
   tld?: string;
-  variableLength?: number;
+  tlds?: string[];
+  variableLength?: number; // legacy fallback
   characterSet?: string;
+  batchSize?: number;
+  offsetStart?: number;
 }): DomainGenerationConfig {
+  const patternType = pattern.patternType || 'prefix';
+  // If user provided explicit prefix/suffix lengths compute; else fallback to variableLength
+  let computedVariable = pattern.variableLength || 0;
+  if (patternType === 'prefix' && typeof pattern.prefixLength === 'number') {
+    computedVariable = pattern.prefixLength;
+  } else if (patternType === 'suffix' && typeof pattern.suffixLength === 'number') {
+    computedVariable = pattern.suffixLength;
+  } else if (patternType === 'both') {
+    computedVariable = (pattern.prefixLength || 0) + (pattern.suffixLength || 0);
+  }
+  const firstTld = (pattern.tlds && pattern.tlds[0]) || pattern.tld || '.com';
+  const normalizedTld = firstTld.startsWith('.') ? firstTld : `.${firstTld}`;
   return {
-    patternType: 'prefix', // Valid pattern types: prefix, suffix, both
-    constantString: pattern.basePattern || 'test',
-    variableLength: pattern.variableLength || 6,
-    characterSet: pattern.characterSet || 'alphanumeric',
-    tld: pattern.tld?.startsWith('.') ? pattern.tld : `.${pattern.tld || 'com'}`,
+    patternType,
+    constantString: pattern.constantString || (pattern.basePattern ? pattern.basePattern.replace('{variation}', '') : 'brand'),
+    variableLength: computedVariable || 0,
+    characterSet: pattern.characterSet || 'abcdefghijklmnopqrstuvwxyz0123456789',
+    tld: normalizedTld,
     numDomainsToGenerate: pattern.maxDomains || 100,
-    batchSize: 1000,
-    offsetStart: 0
+    batchSize: pattern.batchSize || 100,
+    offsetStart: pattern.offsetStart || 0
   };
 }
 
