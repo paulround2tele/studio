@@ -175,7 +175,10 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
               <select
                 className="border rounded px-2 py-1 bg-background"
                 value={patternType}
-                onChange={(e) => update({ patternType: e.target.value as any })}
+                onChange={(e) => {
+                  const val = e.target.value as 'prefix' | 'suffix' | 'both';
+                  update({ patternType: val });
+                }}
               >
                 <option value="prefix">Prefix</option>
                 <option value="suffix">Suffix</option>
