@@ -13,14 +13,91 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { FlexibleValue } from './flexible-value';
 
 /**
- * Generic activity log / timeline record with free-form properties (server-defined).
+ * Generic activity / timeline record with standardized core fields and optional contextual data map.
  * @export
  * @interface ActivityItem
  */
 export interface ActivityItem {
-  [key: string]: Record<string, unknown>;
+  /**
+   * Unique activity identifier
+   * @memberof ActivityItem
+   */
+  'id': 
+        
+          
+          string
+    ;
+  /**
+   * Event creation timestamp (UTC)
+   * @memberof ActivityItem
+   */
+  'timestamp': 
+        
+          
+          string
+    ;
+  /**
+   * Origin actor classification (e.g. system, user, job)
+   * @memberof ActivityItem
+   */
+  'actorType': 
+      'system' | 'user' | 'job'
+;
+  /**
+   * Identifier of user/job/system component (when applicable)
+   * @memberof ActivityItem
+   */
+  'actorId'?: 
+        
+          
+          string
+    ;
+  /**
+   * High-level grouping (e.g. campaign, proxy, scoring, system)
+   * @memberof ActivityItem
+   */
+  'category': 
+        
+          
+          string
+    ;
+  /**
+   * Specific activity event type key
+   * @memberof ActivityItem
+   */
+  'type': 
+        
+          
+          string
+    ;
+  /**
+   * Human-readable summary
+   * @memberof ActivityItem
+   */
+  'message': 
+        
+          
+          string
+    ;
+  /**
+   * Severity classification
+   * @memberof ActivityItem
+   */
+  'severity'?: 
+      'info' | 'warning' | 'error'
+;
+  /**
+   * Additional contextual structured values (forward-compatible)
+   * @memberof ActivityItem
+   */
+  'data'?: 
+        Record<string, unknown>
+    ;
 }
 
 

@@ -7934,9 +7934,58 @@ components:
         - rules
         - ruleCount
     ActivityItem:
-      description: Generic activity log / timeline record with free-form properties (server-defined).
+      description: Generic activity / timeline record with standardized core fields and optional contextual data map.
       type: object
-      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique activity identifier
+        timestamp:
+          type: string
+          format: date-time
+          description: Event creation timestamp (UTC)
+        actorType:
+          type: string
+          description: Origin actor classification (e.g. system, user, job)
+          enum:
+            - system
+            - user
+            - job
+        actorId:
+          type: string
+          nullable: true
+          description: Identifier of user/job/system component (when applicable)
+        category:
+          type: string
+          description: High-level grouping (e.g. campaign, proxy, scoring, system)
+        type:
+          type: string
+          description: Specific activity event type key
+        message:
+          type: string
+          description: Human-readable summary
+        severity:
+          type: string
+          enum:
+            - info
+            - warning
+            - error
+          description: Severity classification
+          default: info
+        data:
+          type: object
+          description: Additional contextual structured values (forward-compatible)
+          additionalProperties:
+            $ref: '#/components/schemas/FlexibleValue'
+      required:
+        - id
+        - timestamp
+        - actorType
+        - category
+        - type
+        - message
+      additionalProperties: false
     CampaignSseEventType:
       type: string
       discriminator:

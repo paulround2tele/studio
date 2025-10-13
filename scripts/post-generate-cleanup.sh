@@ -52,6 +52,7 @@ if [ -d "$MODEL_DIR" ]; then
     bulk-database-stats-request.ts
     create-campaign-configuration.ts
     persona-update-request.ts
+    activity-item.ts
   )
   for f in "${STRIP_FILES[@]}"; do
     FILE_PATH="$MODEL_DIR/$f"
