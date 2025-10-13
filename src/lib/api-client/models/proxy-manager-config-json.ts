@@ -13,9 +13,6 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { FlexibleValue } from './flexible-value';
 
 /**
  * Proxy manager configuration
@@ -23,6 +20,56 @@ import type { FlexibleValue } from './flexible-value';
  * @interface ProxyManagerConfigJSON
  */
 export interface ProxyManagerConfigJSON {
+  /**
+   * Proxy rotation / selection strategy
+   * @memberof ProxyManagerConfigJSON
+   */
+  'strategy': 
+      'round_robin' | 'random' | 'geo' | 'sticky'
+;
+  /**
+   * Interval between proxy rotations
+   * @memberof ProxyManagerConfigJSON
+   */
+  'rotationIntervalSeconds': 
+        
+          
+          number
+    ;
+  /**
+   * Maximum size of proxy pool
+   * @memberof ProxyManagerConfigJSON
+   */
+  'poolSize'?: 
+        
+          
+          number
+    ;
+  /**
+   * Failure threshold before proxy eviction
+   * @memberof ProxyManagerConfigJSON
+   */
+  'failThreshold'?: 
+        
+          
+          number
+    ;
+  /**
+   * Fallback proxy endpoint
+   * @memberof ProxyManagerConfigJSON
+   */
+  'fallbackProxy'?: 
+        
+          
+          string
+    ;
+  /**
+   * Additional proxy manager options
+   * @memberof ProxyManagerConfigJSON
+   */
+  'extras'?: 
+        Record<string, unknown>
+    ;
 }
 
 

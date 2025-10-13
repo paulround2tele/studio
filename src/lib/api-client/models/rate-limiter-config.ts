@@ -13,9 +13,6 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { FlexibleValue } from './flexible-value';
 
 /**
  * Rate limiter configuration
@@ -23,6 +20,76 @@ import type { FlexibleValue } from './flexible-value';
  * @interface RateLimiterConfig
  */
 export interface RateLimiterConfig {
+  /**
+   * Enable request rate limiting
+   * @memberof RateLimiterConfig
+   */
+  'enabled': 
+        
+          
+          boolean
+    ;
+  /**
+   * Rate limiting algorithm
+   * @memberof RateLimiterConfig
+   */
+  'strategy': 
+      'fixed_window' | 'sliding_window' | 'token_bucket'
+;
+  /**
+   * Window size for fixed/sliding strategies
+   * @memberof RateLimiterConfig
+   */
+  'windowSeconds': 
+        
+          
+          number
+    ;
+  /**
+   * Maximum requests per window
+   * @memberof RateLimiterConfig
+   */
+  'maxRequests': 
+        
+          
+          number
+    ;
+  /**
+   * Additional burst capacity
+   * @memberof RateLimiterConfig
+   */
+  'burst'?: 
+        
+          
+          number
+    ;
+  /**
+   * Maximum concurrent in-flight requests
+   * @memberof RateLimiterConfig
+   */
+  'concurrentLimit'?: 
+        
+          
+          number
+    ;
+  /**
+   * Temporary ban duration when threshold exceeded
+   * @memberof RateLimiterConfig
+   */
+  'banDurationSeconds'?: 
+        
+          
+          number
+    ;
+  /**
+   * Use X-Forwarded-For for client identity
+   * @memberof RateLimiterConfig
+   */
+  'respectForwardedFor'?: 
+        
+          
+          boolean
+    ;
 }
 
 

@@ -13,9 +13,6 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { FlexibleValue } from './flexible-value';
 
 /**
  * Logging configuration
@@ -23,6 +20,54 @@ import type { FlexibleValue } from './flexible-value';
  * @interface LoggingConfig
  */
 export interface LoggingConfig {
+  /**
+   * Minimum log level
+   * @memberof LoggingConfig
+   */
+  'level': 
+      'debug' | 'info' | 'warn' | 'error'
+;
+  /**
+   * Log output format
+   * @memberof LoggingConfig
+   */
+  'format': 
+      'json' | 'text'
+;
+  /**
+   * Fraction of debug/trace events to keep (if applicable)
+   * @memberof LoggingConfig
+   */
+  'sampleRate'?: 
+        
+          
+          number
+    ;
+  /**
+   * Log destinations (e.g. stdout, file)
+   * @memberof LoggingConfig
+   */
+  'destinations'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * Enable structured HTTP access logging
+   * @memberof LoggingConfig
+   */
+  'enableHttpAccessLog'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * Forward-compatible logging extensions
+   * @memberof LoggingConfig
+   */
+  'extras'?: 
+        Record<string, unknown>
+    ;
 }
 
 

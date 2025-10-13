@@ -54,7 +54,6 @@ export interface CreateCampaignConfiguration {
           
           Array<string>
     ;
-
 }
 
 

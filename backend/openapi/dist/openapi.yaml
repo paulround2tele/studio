@@ -5806,28 +5806,265 @@ components:
     AuthConfig:
       type: object
       description: Authentication configuration
-      additionalProperties:
-        $ref: '#/components/schemas/FlexibleValue'
+      properties:
+        provider:
+          type: string
+          description: Authentication provider type
+          enum:
+            - none
+            - local
+            - oauth2
+            - saml
+          default: none
+        enabled:
+          type: boolean
+          description: Whether authentication is enforced
+          default: false
+        jwtIssuer:
+          type: string
+          nullable: true
+          description: JWT issuer claim value
+        jwtAudience:
+          type: string
+          nullable: true
+          description: JWT audience claim value
+        accessTokenTtlSeconds:
+          type: integer
+          format: int32
+          minimum: 60
+          maximum: 86400
+          description: Access token time-to-live in seconds
+          default: 3600
+        refreshTokenTtlSeconds:
+          type: integer
+          format: int32
+          minimum: 300
+          maximum: 2592000
+          description: Refresh token time-to-live in seconds
+          default: 1209600
+        allowedProviders:
+          type: array
+          description: Providers enabled system-wide
+          items:
+            type: string
+        passwordPolicy:
+          type: object
+          description: Password policy configuration
+          properties:
+            minLength:
+              type: integer
+              minimum: 6
+              maximum: 128
+              default: 12
+            requireNumbers:
+              type: boolean
+              default: true
+            requireSymbols:
+              type: boolean
+              default: false
+            requireUppercase:
+              type: boolean
+              default: true
+            requireLowercase:
+              type: boolean
+              default: true
+          additionalProperties: false
+      required:
+        - provider
+        - enabled
+        - accessTokenTtlSeconds
+        - refreshTokenTtlSeconds
+      additionalProperties: false
     DNSValidatorConfigJSON:
       type: object
       description: DNS validator configuration
-      additionalProperties:
-        $ref: '#/components/schemas/FlexibleValue'
+      properties:
+        resolvers:
+          type: array
+          items:
+            type: string
+          description: Custom DNS resolver endpoints
+        timeoutMs:
+          type: integer
+          format: int32
+          nullable: true
+          description: Query timeout in milliseconds
+        retries:
+          type: integer
+          format: int32
+          nullable: true
+          description: Number of retry attempts
+      additionalProperties: false
     LoggingConfig:
       type: object
       description: Logging configuration
-      additionalProperties:
-        $ref: '#/components/schemas/FlexibleValue'
+      properties:
+        level:
+          type: string
+          enum:
+            - debug
+            - info
+            - warn
+            - error
+          description: Minimum log level
+          default: info
+        format:
+          type: string
+          enum:
+            - json
+            - text
+          description: Log output format
+          default: json
+        sampleRate:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Fraction of debug/trace events to keep (if applicable)
+          nullable: true
+        destinations:
+          type: array
+          items:
+            type: string
+          description: Log destinations (e.g. stdout, file)
+        enableHttpAccessLog:
+          type: boolean
+          description: Enable structured HTTP access logging
+          default: true
+        extras:
+          type: object
+          description: Forward-compatible logging extensions
+          additionalProperties: true
+      required:
+        - level
+        - format
+      additionalProperties: false
     WorkerConfig:
       type: object
       description: Worker configuration
-      additionalProperties:
-        $ref: '#/components/schemas/FlexibleValue'
+      properties:
+        poolSize:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: Number of worker threads in the pool
+        maxJobs:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: Maximum number of jobs in queue
+        jobTimeout:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          description: Job execution timeout in seconds
+        idleTimeout:
+          type: integer
+          minimum: 1
+          maximum: 300
+          description: Worker idle timeout in seconds
+          nullable: true
+        retryAttempts:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: Number of retry attempts for failed jobs
+          nullable: true
+        retryDelay:
+          type: integer
+          minimum: 100
+          maximum: 60000
+          description: Delay between retries in milliseconds
+          nullable: true
+        enableMetrics:
+          type: boolean
+          description: Enable worker performance metrics collection
+          default: true
+        metricsInterval:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          description: Metrics collection interval in seconds
+          nullable: true
+        priority:
+          type: string
+          enum:
+            - low
+            - normal
+            - high
+            - critical
+          description: Worker pool priority level
+          default: normal
+        enableHealthChecks:
+          type: boolean
+          description: Enable worker health monitoring
+          default: true
+        healthCheckInterval:
+          type: integer
+          minimum: 5
+          maximum: 300
+          description: Health check interval in seconds
+          nullable: true
+      required:
+        - poolSize
+        - maxJobs
+        - jobTimeout
+      additionalProperties: false
     RateLimiterConfig:
       type: object
       description: Rate limiter configuration
-      additionalProperties:
-        $ref: '#/components/schemas/FlexibleValue'
+      properties:
+        enabled:
+          type: boolean
+          description: Enable request rate limiting
+          default: true
+        strategy:
+          type: string
+          enum:
+            - fixed_window
+            - sliding_window
+            - token_bucket
+          description: Rate limiting algorithm
+          default: token_bucket
+        windowSeconds:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          description: Window size for fixed/sliding strategies
+          default: 60
+        maxRequests:
+          type: integer
+          minimum: 1
+          maximum: 100000
+          description: Maximum requests per window
+          default: 1000
+        burst:
+          type: integer
+          minimum: 0
+          maximum: 100000
+          description: Additional burst capacity
+          default: 0
+        concurrentLimit:
+          type: integer
+          minimum: 0
+          maximum: 100000
+          description: Maximum concurrent in-flight requests
+          default: 0
+        banDurationSeconds:
+          type: integer
+          minimum: 0
+          maximum: 604800
+          description: Temporary ban duration when threshold exceeded
+          default: 0
+        respectForwardedFor:
+          type: boolean
+          description: Use X-Forwarded-For for client identity
+          default: false
+      required:
+        - enabled
+        - strategy
+        - windowSeconds
+        - maxRequests
+      additionalProperties: false
     FeatureFlags:
       type: object
       description: Feature flags map
@@ -7523,6 +7760,107 @@ components:
     RescoreCampaignRequest:
       type: object
       description: Optional body for future rescore parameters (currently unused)
+    ProxyManagerConfigJSON:
+      type: object
+      description: Proxy manager configuration
+      properties:
+        strategy:
+          type: string
+          enum:
+            - round_robin
+            - random
+            - geo
+            - sticky
+          description: Proxy rotation / selection strategy
+          default: round_robin
+        rotationIntervalSeconds:
+          type: integer
+          minimum: 0
+          maximum: 86400
+          description: Interval between proxy rotations
+          default: 0
+        poolSize:
+          type: integer
+          minimum: 0
+          maximum: 100000
+          description: Maximum size of proxy pool
+          nullable: true
+        failThreshold:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Failure threshold before proxy eviction
+          nullable: true
+        fallbackProxy:
+          type: string
+          description: Fallback proxy endpoint
+          nullable: true
+        extras:
+          type: object
+          description: Additional proxy manager options
+          additionalProperties: true
+      required:
+        - strategy
+        - rotationIntervalSeconds
+      additionalProperties: false
+    WorkerConfigUpdate:
+      type: object
+      description: Worker configuration update payload
+      properties:
+        poolSize:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: Number of worker threads in the pool
+        maxJobs:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: Maximum number of jobs in queue
+        jobTimeout:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          description: Job execution timeout in seconds
+        idleTimeout:
+          type: integer
+          minimum: 1
+          maximum: 300
+          description: Worker idle timeout in seconds
+        retryAttempts:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: Number of retry attempts for failed jobs
+        retryDelay:
+          type: integer
+          minimum: 100
+          maximum: 60000
+          description: Delay between retries in milliseconds
+        enableMetrics:
+          type: boolean
+          description: Enable worker performance metrics collection
+        metricsInterval:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          description: Metrics collection interval in seconds
+        priority:
+          type: string
+          enum:
+            - low
+            - normal
+            - high
+            - critical
+          description: Worker pool priority level
+        enableHealthChecks:
+          type: boolean
+          description: Enable worker health monitoring
+        healthCheckInterval:
+          type: integer
+          minimum: 5
+          maximum: 300
+          description: Health check interval in seconds
     ForecastProbabilisticPoint:
       type: object
       description: Forecast data point with optional probabilistic quantiles
@@ -7722,80 +8060,74 @@ components:
     HTTPValidatorConfigJSON:
       type: object
       description: HTTP validator configuration
-      additionalProperties:
-        $ref: '#/components/schemas/FlexibleValue'
-    WorkerConfigUpdate:
-      type: object
-      description: Worker configuration update payload
       properties:
-        poolSize:
-          type: integer
-          minimum: 1
-          maximum: 1000
-          description: Number of worker threads in the pool
-        maxJobs:
-          type: integer
-          minimum: 1
-          maximum: 10000
-          description: Maximum number of jobs in queue
-        jobTimeout:
-          type: integer
-          minimum: 1
-          maximum: 3600
-          description: Job execution timeout in seconds
-        idleTimeout:
-          type: integer
-          minimum: 1
-          maximum: 300
-          description: Worker idle timeout in seconds
-        retryAttempts:
-          type: integer
-          minimum: 0
-          maximum: 10
-          description: Number of retry attempts for failed jobs
-        retryDelay:
-          type: integer
-          minimum: 100
-          maximum: 60000
-          description: Delay between retries in milliseconds
-        enableMetrics:
-          type: boolean
-          description: Enable worker performance metrics collection
-        metricsInterval:
-          type: integer
-          minimum: 1
-          maximum: 3600
-          description: Metrics collection interval in seconds
-        priority:
+        userAgent:
           type: string
-          enum:
-            - low
-            - normal
-            - high
-            - critical
-          description: Worker pool priority level
-        enableHealthChecks:
+          nullable: true
+          description: Custom user agent string
+        followRedirects:
           type: boolean
-          description: Enable worker health monitoring
-        healthCheckInterval:
+          nullable: true
+          description: Follow HTTP redirects
+        timeoutMs:
           type: integer
-          minimum: 5
-          maximum: 300
-          description: Health check interval in seconds
-    ProxyManagerConfigJSON:
-      type: object
-      description: Proxy manager configuration
-      additionalProperties:
-        $ref: '#/components/schemas/FlexibleValue'
+          format: int32
+          nullable: true
+          description: Request timeout in milliseconds
+        keywords:
+          type: array
+          items:
+            type: string
+          description: Keywords to search for within HTTP responses
+      additionalProperties: false
     ServerConfigResponse:
       type: object
       description: Consolidated server configuration response
-      additionalProperties:
-        $ref: '#/components/schemas/FlexibleValue'
+      properties:
+        auth:
+          $ref: '#/components/schemas/AuthConfig'
+        logging:
+          $ref: '#/components/schemas/LoggingConfig'
+        rateLimiter:
+          $ref: '#/components/schemas/RateLimiterConfig'
+        proxyManager:
+          $ref: '#/components/schemas/ProxyManagerConfigJSON'
+        worker:
+          $ref: '#/components/schemas/WorkerConfig'
+        version:
+          type: string
+        buildHash:
+          type: string
+        extras:
+          type: object
+          description: Additional server configuration values
+          additionalProperties: true
+      required:
+        - auth
+        - logging
+        - rateLimiter
+        - proxyManager
+        - worker
+      additionalProperties: false
     ServerConfigUpdateRequest:
       type: object
       description: Server configuration update request
-      additionalProperties: true
+      properties:
+        auth:
+          $ref: '#/components/schemas/AuthConfig'
+        logging:
+          $ref: '#/components/schemas/LoggingConfig'
+        rateLimiter:
+          $ref: '#/components/schemas/RateLimiterConfig'
+        proxyManager:
+          $ref: '#/components/schemas/ProxyManagerConfigJSON'
+        worker:
+          $ref: '#/components/schemas/WorkerConfigUpdate'
+        extras:
+          type: object
+          description: Additional configuration overrides
+          additionalProperties: true
+      additionalProperties: false
     ProxyPoolProxyRef:
       description: Lightweight proxy reference entry for inclusion inside a pool listing.
       type: object

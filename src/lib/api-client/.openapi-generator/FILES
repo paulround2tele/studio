@@ -29,6 +29,7 @@ docs/AuthApi.md
 docs/AuthChangePassword200Response.md
 docs/AuthChangePasswordRequest.md
 docs/AuthConfig.md
+docs/AuthConfigPasswordPolicy.md
 docs/BatchKeywordExtractionRequest.md
 docs/BatchKeywordExtractionRequestItemsInner.md
 docs/BatchKeywordExtractionResponse.md
@@ -271,6 +272,7 @@ models/api-error.ts
 models/associate-scoring-profile-request.ts
 models/auth-change-password-request.ts
 models/auth-change-password200-response.ts
+models/auth-config-password-policy.ts
 models/auth-config.ts
 models/batch-keyword-extraction-request-items-inner.ts
 models/batch-keyword-extraction-request.ts

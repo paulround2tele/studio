@@ -13,9 +13,6 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { FlexibleValue } from './flexible-value';
 
 /**
  * HTTP validator configuration
@@ -23,6 +20,42 @@ import type { FlexibleValue } from './flexible-value';
  * @interface HTTPValidatorConfigJSON
  */
 export interface HTTPValidatorConfigJSON {
+  /**
+   * Custom user agent string
+   * @memberof HTTPValidatorConfigJSON
+   */
+  'userAgent'?: 
+        
+          
+          string
+    ;
+  /**
+   * Follow HTTP redirects
+   * @memberof HTTPValidatorConfigJSON
+   */
+  'followRedirects'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * Request timeout in milliseconds
+   * @memberof HTTPValidatorConfigJSON
+   */
+  'timeoutMs'?: 
+        
+          
+          number
+    ;
+  /**
+   * Keywords to search for within HTTP responses
+   * @memberof HTTPValidatorConfigJSON
+   */
+  'keywords'?: 
+        
+          
+          Array<string>
+    ;
 }
 
 

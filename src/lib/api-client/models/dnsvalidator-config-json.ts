@@ -13,9 +13,6 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { FlexibleValue } from './flexible-value';
 
 /**
  * DNS validator configuration
@@ -23,6 +20,33 @@ import type { FlexibleValue } from './flexible-value';
  * @interface DNSValidatorConfigJSON
  */
 export interface DNSValidatorConfigJSON {
+  /**
+   * Custom DNS resolver endpoints
+   * @memberof DNSValidatorConfigJSON
+   */
+  'resolvers'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * Query timeout in milliseconds
+   * @memberof DNSValidatorConfigJSON
+   */
+  'timeoutMs'?: 
+        
+          
+          number
+    ;
+  /**
+   * Number of retry attempts
+   * @memberof DNSValidatorConfigJSON
+   */
+  'retries'?: 
+        
+          
+          number
+    ;
 }
 
 

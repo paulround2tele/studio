@@ -15,7 +15,19 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { FlexibleValue } from './flexible-value';
+import type { AuthConfig } from './auth-config';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { LoggingConfig } from './logging-config';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ProxyManagerConfigJSON } from './proxy-manager-config-json';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { RateLimiterConfig } from './rate-limiter-config';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { WorkerConfig } from './worker-config';
 
 /**
  * Consolidated server configuration response
@@ -23,6 +35,76 @@ import type { FlexibleValue } from './flexible-value';
  * @interface ServerConfigResponse
  */
 export interface ServerConfigResponse {
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'auth': 
+        
+          
+          AuthConfig
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'logging': 
+        
+          
+          LoggingConfig
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'rateLimiter': 
+        
+          
+          RateLimiterConfig
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'proxyManager': 
+        
+          
+          ProxyManagerConfigJSON
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'worker': 
+        
+          
+          WorkerConfig
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'version'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'buildHash'?: 
+        
+          
+          string
+    ;
+  /**
+   * Additional server configuration values
+   * @memberof ServerConfigResponse
+   */
+  'extras'?: 
+        Record<string, unknown>
+    ;
 }
 
 

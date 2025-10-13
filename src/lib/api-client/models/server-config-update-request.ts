@@ -13,6 +13,21 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { AuthConfig } from './auth-config';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { LoggingConfig } from './logging-config';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ProxyManagerConfigJSON } from './proxy-manager-config-json';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { RateLimiterConfig } from './rate-limiter-config';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { WorkerConfigUpdate } from './worker-config-update';
 
 /**
  * Server configuration update request
@@ -20,6 +35,58 @@
  * @interface ServerConfigUpdateRequest
  */
 export interface ServerConfigUpdateRequest {
+  /**
+   * 
+   * @memberof ServerConfigUpdateRequest
+   */
+  'auth'?: 
+        
+          
+          AuthConfig
+    ;
+  /**
+   * 
+   * @memberof ServerConfigUpdateRequest
+   */
+  'logging'?: 
+        
+          
+          LoggingConfig
+    ;
+  /**
+   * 
+   * @memberof ServerConfigUpdateRequest
+   */
+  'rateLimiter'?: 
+        
+          
+          RateLimiterConfig
+    ;
+  /**
+   * 
+   * @memberof ServerConfigUpdateRequest
+   */
+  'proxyManager'?: 
+        
+          
+          ProxyManagerConfigJSON
+    ;
+  /**
+   * 
+   * @memberof ServerConfigUpdateRequest
+   */
+  'worker'?: 
+        
+          
+          WorkerConfigUpdate
+    ;
+  /**
+   * Additional configuration overrides
+   * @memberof ServerConfigUpdateRequest
+   */
+  'extras'?: 
+        Record<string, unknown>
+    ;
 }
 
 

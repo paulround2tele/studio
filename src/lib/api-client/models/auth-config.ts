@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { FlexibleValue } from './flexible-value';
+import type { AuthConfigPasswordPolicy } from './auth-config-password-policy';
 
 /**
  * Authentication configuration
@@ -23,6 +23,76 @@ import type { FlexibleValue } from './flexible-value';
  * @interface AuthConfig
  */
 export interface AuthConfig {
+  /**
+   * Authentication provider type
+   * @memberof AuthConfig
+   */
+  'provider': 
+      'none' | 'local' | 'oauth2' | 'saml'
+;
+  /**
+   * Whether authentication is enforced
+   * @memberof AuthConfig
+   */
+  'enabled': 
+        
+          
+          boolean
+    ;
+  /**
+   * JWT issuer claim value
+   * @memberof AuthConfig
+   */
+  'jwtIssuer'?: 
+        
+          
+          string
+    ;
+  /**
+   * JWT audience claim value
+   * @memberof AuthConfig
+   */
+  'jwtAudience'?: 
+        
+          
+          string
+    ;
+  /**
+   * Access token time-to-live in seconds
+   * @memberof AuthConfig
+   */
+  'accessTokenTtlSeconds': 
+        
+          
+          number
+    ;
+  /**
+   * Refresh token time-to-live in seconds
+   * @memberof AuthConfig
+   */
+  'refreshTokenTtlSeconds': 
+        
+          
+          number
+    ;
+  /**
+   * Providers enabled system-wide
+   * @memberof AuthConfig
+   */
+  'allowedProviders'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof AuthConfig
+   */
+  'passwordPolicy'?: 
+        
+          
+          AuthConfigPasswordPolicy
+    ;
 }
 
 

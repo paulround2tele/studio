@@ -8,6 +8,7 @@ export * from './associate-scoring-profile-request';
 export * from './auth-change-password200-response';
 export * from './auth-change-password-request';
 export * from './auth-config';
+export * from './auth-config-password-policy';
 export * from './batch-keyword-extraction-request';
 export * from './batch-keyword-extraction-request-items-inner';
 export * from './batch-keyword-extraction-response';

@@ -13,9 +13,6 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { FlexibleValue } from './flexible-value';
 
 /**
  * Worker configuration
@@ -23,6 +20,103 @@ import type { FlexibleValue } from './flexible-value';
  * @interface WorkerConfig
  */
 export interface WorkerConfig {
+  /**
+   * Number of worker threads in the pool
+   * @memberof WorkerConfig
+   */
+  'poolSize': 
+        
+          
+          number
+    ;
+  /**
+   * Maximum number of jobs in queue
+   * @memberof WorkerConfig
+   */
+  'maxJobs': 
+        
+          
+          number
+    ;
+  /**
+   * Job execution timeout in seconds
+   * @memberof WorkerConfig
+   */
+  'jobTimeout': 
+        
+          
+          number
+    ;
+  /**
+   * Worker idle timeout in seconds
+   * @memberof WorkerConfig
+   */
+  'idleTimeout'?: 
+        
+          
+          number
+    ;
+  /**
+   * Number of retry attempts for failed jobs
+   * @memberof WorkerConfig
+   */
+  'retryAttempts'?: 
+        
+          
+          number
+    ;
+  /**
+   * Delay between retries in milliseconds
+   * @memberof WorkerConfig
+   */
+  'retryDelay'?: 
+        
+          
+          number
+    ;
+  /**
+   * Enable worker performance metrics collection
+   * @memberof WorkerConfig
+   */
+  'enableMetrics'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * Metrics collection interval in seconds
+   * @memberof WorkerConfig
+   */
+  'metricsInterval'?: 
+        
+          
+          number
+    ;
+  /**
+   * Worker pool priority level
+   * @memberof WorkerConfig
+   */
+  'priority'?: 
+      'low' | 'normal' | 'high' | 'critical'
+;
+  /**
+   * Enable worker health monitoring
+   * @memberof WorkerConfig
+   */
+  'enableHealthChecks'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * Health check interval in seconds
+   * @memberof WorkerConfig
+   */
+  'healthCheckInterval'?: 
+        
+          
+          number
+    ;
 }
 
 

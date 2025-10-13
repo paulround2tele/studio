@@ -2566,23 +2566,170 @@ export interface components {
         };
         /** @description Authentication configuration */
         AuthConfig: {
-            [key: string]: components["schemas"]["FlexibleValue"];
+            /**
+             * @description Authentication provider type
+             * @default none
+             * @enum {string}
+             */
+            provider: "none" | "local" | "oauth2" | "saml";
+            /**
+             * @description Whether authentication is enforced
+             * @default false
+             */
+            enabled: boolean;
+            /** @description JWT issuer claim value */
+            jwtIssuer?: string | null;
+            /** @description JWT audience claim value */
+            jwtAudience?: string | null;
+            /**
+             * Format: int32
+             * @description Access token time-to-live in seconds
+             * @default 3600
+             */
+            accessTokenTtlSeconds: number;
+            /**
+             * Format: int32
+             * @description Refresh token time-to-live in seconds
+             * @default 1209600
+             */
+            refreshTokenTtlSeconds: number;
+            /** @description Providers enabled system-wide */
+            allowedProviders?: string[];
+            /** @description Password policy configuration */
+            passwordPolicy?: {
+                /** @default 12 */
+                minLength: number;
+                /** @default true */
+                requireNumbers: boolean;
+                /** @default false */
+                requireSymbols: boolean;
+                /** @default true */
+                requireUppercase: boolean;
+                /** @default true */
+                requireLowercase: boolean;
+            };
         };
         /** @description DNS validator configuration */
         DNSValidatorConfigJSON: {
-            [key: string]: components["schemas"]["FlexibleValue"];
+            /** @description Custom DNS resolver endpoints */
+            resolvers?: string[];
+            /**
+             * Format: int32
+             * @description Query timeout in milliseconds
+             */
+            timeoutMs?: number | null;
+            /**
+             * Format: int32
+             * @description Number of retry attempts
+             */
+            retries?: number | null;
         };
         /** @description Logging configuration */
         LoggingConfig: {
-            [key: string]: components["schemas"]["FlexibleValue"];
+            /**
+             * @description Minimum log level
+             * @default info
+             * @enum {string}
+             */
+            level: "debug" | "info" | "warn" | "error";
+            /**
+             * @description Log output format
+             * @default json
+             * @enum {string}
+             */
+            format: "json" | "text";
+            /** @description Fraction of debug/trace events to keep (if applicable) */
+            sampleRate?: number | null;
+            /** @description Log destinations (e.g. stdout, file) */
+            destinations?: string[];
+            /**
+             * @description Enable structured HTTP access logging
+             * @default true
+             */
+            enableHttpAccessLog: boolean;
+            /** @description Forward-compatible logging extensions */
+            extras?: {
+                [key: string]: unknown;
+            };
         };
         /** @description Worker configuration */
         WorkerConfig: {
-            [key: string]: components["schemas"]["FlexibleValue"];
+            /** @description Number of worker threads in the pool */
+            poolSize: number;
+            /** @description Maximum number of jobs in queue */
+            maxJobs: number;
+            /** @description Job execution timeout in seconds */
+            jobTimeout: number;
+            /** @description Worker idle timeout in seconds */
+            idleTimeout?: number | null;
+            /** @description Number of retry attempts for failed jobs */
+            retryAttempts?: number | null;
+            /** @description Delay between retries in milliseconds */
+            retryDelay?: number | null;
+            /**
+             * @description Enable worker performance metrics collection
+             * @default true
+             */
+            enableMetrics: boolean;
+            /** @description Metrics collection interval in seconds */
+            metricsInterval?: number | null;
+            /**
+             * @description Worker pool priority level
+             * @default normal
+             * @enum {string}
+             */
+            priority: "low" | "normal" | "high" | "critical";
+            /**
+             * @description Enable worker health monitoring
+             * @default true
+             */
+            enableHealthChecks: boolean;
+            /** @description Health check interval in seconds */
+            healthCheckInterval?: number | null;
         };
         /** @description Rate limiter configuration */
         RateLimiterConfig: {
-            [key: string]: components["schemas"]["FlexibleValue"];
+            /**
+             * @description Enable request rate limiting
+             * @default true
+             */
+            enabled: boolean;
+            /**
+             * @description Rate limiting algorithm
+             * @default token_bucket
+             * @enum {string}
+             */
+            strategy: "fixed_window" | "sliding_window" | "token_bucket";
+            /**
+             * @description Window size for fixed/sliding strategies
+             * @default 60
+             */
+            windowSeconds: number;
+            /**
+             * @description Maximum requests per window
+             * @default 1000
+             */
+            maxRequests: number;
+            /**
+             * @description Additional burst capacity
+             * @default 0
+             */
+            burst: number;
+            /**
+             * @description Maximum concurrent in-flight requests
+             * @default 0
+             */
+            concurrentLimit: number;
+            /**
+             * @description Temporary ban duration when threshold exceeded
+             * @default 0
+             */
+            banDurationSeconds: number;
+            /**
+             * @description Use X-Forwarded-For for client identity
+             * @default false
+             */
+            respectForwardedFor: boolean;
         };
         /** @description Feature flags map */
         FeatureFlags: {
@@ -3362,6 +3509,58 @@ export interface components {
         };
         /** @description Optional body for future rescore parameters (currently unused) */
         RescoreCampaignRequest: Record<string, never>;
+        /** @description Proxy manager configuration */
+        ProxyManagerConfigJSON: {
+            /**
+             * @description Proxy rotation / selection strategy
+             * @default round_robin
+             * @enum {string}
+             */
+            strategy: "round_robin" | "random" | "geo" | "sticky";
+            /**
+             * @description Interval between proxy rotations
+             * @default 0
+             */
+            rotationIntervalSeconds: number;
+            /** @description Maximum size of proxy pool */
+            poolSize?: number | null;
+            /** @description Failure threshold before proxy eviction */
+            failThreshold?: number | null;
+            /** @description Fallback proxy endpoint */
+            fallbackProxy?: string | null;
+            /** @description Additional proxy manager options */
+            extras?: {
+                [key: string]: unknown;
+            };
+        };
+        /** @description Worker configuration update payload */
+        WorkerConfigUpdate: {
+            /** @description Number of worker threads in the pool */
+            poolSize?: number;
+            /** @description Maximum number of jobs in queue */
+            maxJobs?: number;
+            /** @description Job execution timeout in seconds */
+            jobTimeout?: number;
+            /** @description Worker idle timeout in seconds */
+            idleTimeout?: number;
+            /** @description Number of retry attempts for failed jobs */
+            retryAttempts?: number;
+            /** @description Delay between retries in milliseconds */
+            retryDelay?: number;
+            /** @description Enable worker performance metrics collection */
+            enableMetrics?: boolean;
+            /** @description Metrics collection interval in seconds */
+            metricsInterval?: number;
+            /**
+             * @description Worker pool priority level
+             * @enum {string}
+             */
+            priority?: "low" | "normal" | "high" | "critical";
+            /** @description Enable worker health monitoring */
+            enableHealthChecks?: boolean;
+            /** @description Health check interval in seconds */
+            healthCheckInterval?: number;
+        };
         /** @description Forecast data point with optional probabilistic quantiles */
         ForecastProbabilisticPoint: {
             /** Format: date-time */
@@ -3447,47 +3646,43 @@ export interface components {
         CampaignSseEventPayload: components["schemas"]["AnalysisReuseEnrichmentEvent"] | components["schemas"]["AnalysisFailedEvent"] | components["schemas"]["CampaignProgressResponse"] | components["schemas"]["DomainStatusEvent"] | components["schemas"]["PhaseTransitionEvent"] | components["schemas"]["PhaseFailedEvent"] | components["schemas"]["CampaignCompletedEvent"];
         /** @description HTTP validator configuration */
         HTTPValidatorConfigJSON: {
-            [key: string]: components["schemas"]["FlexibleValue"];
-        };
-        /** @description Worker configuration update payload */
-        WorkerConfigUpdate: {
-            /** @description Number of worker threads in the pool */
-            poolSize?: number;
-            /** @description Maximum number of jobs in queue */
-            maxJobs?: number;
-            /** @description Job execution timeout in seconds */
-            jobTimeout?: number;
-            /** @description Worker idle timeout in seconds */
-            idleTimeout?: number;
-            /** @description Number of retry attempts for failed jobs */
-            retryAttempts?: number;
-            /** @description Delay between retries in milliseconds */
-            retryDelay?: number;
-            /** @description Enable worker performance metrics collection */
-            enableMetrics?: boolean;
-            /** @description Metrics collection interval in seconds */
-            metricsInterval?: number;
+            /** @description Custom user agent string */
+            userAgent?: string | null;
+            /** @description Follow HTTP redirects */
+            followRedirects?: boolean | null;
             /**
-             * @description Worker pool priority level
-             * @enum {string}
+             * Format: int32
+             * @description Request timeout in milliseconds
              */
-            priority?: "low" | "normal" | "high" | "critical";
-            /** @description Enable worker health monitoring */
-            enableHealthChecks?: boolean;
-            /** @description Health check interval in seconds */
-            healthCheckInterval?: number;
-        };
-        /** @description Proxy manager configuration */
-        ProxyManagerConfigJSON: {
-            [key: string]: components["schemas"]["FlexibleValue"];
+            timeoutMs?: number | null;
+            /** @description Keywords to search for within HTTP responses */
+            keywords?: string[];
         };
         /** @description Consolidated server configuration response */
         ServerConfigResponse: {
-            [key: string]: components["schemas"]["FlexibleValue"];
+            auth: components["schemas"]["AuthConfig"];
+            logging: components["schemas"]["LoggingConfig"];
+            rateLimiter: components["schemas"]["RateLimiterConfig"];
+            proxyManager: components["schemas"]["ProxyManagerConfigJSON"];
+            worker: components["schemas"]["WorkerConfig"];
+            version?: string;
+            buildHash?: string;
+            /** @description Additional server configuration values */
+            extras?: {
+                [key: string]: unknown;
+            };
         };
         /** @description Server configuration update request */
         ServerConfigUpdateRequest: {
-            [key: string]: unknown;
+            auth?: components["schemas"]["AuthConfig"];
+            logging?: components["schemas"]["LoggingConfig"];
+            rateLimiter?: components["schemas"]["RateLimiterConfig"];
+            proxyManager?: components["schemas"]["ProxyManagerConfigJSON"];
+            worker?: components["schemas"]["WorkerConfigUpdate"];
+            /** @description Additional configuration overrides */
+            extras?: {
+                [key: string]: unknown;
+            };
         };
         /** @description Lightweight proxy reference entry for inclusion inside a pool listing. */
         ProxyPoolProxyRef: {
