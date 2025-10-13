@@ -3594,9 +3594,41 @@ export interface components {
             rules: components["schemas"]["KeywordRuleDTO"][];
             ruleCount: number;
         };
-        /** @description Generic activity log / timeline record with free-form properties (server-defined). */
+        /** @description Generic activity / timeline record with standardized core fields and optional contextual data map. */
         ActivityItem: {
-            [key: string]: unknown;
+            /**
+             * Format: uuid
+             * @description Unique activity identifier
+             */
+            id: string;
+            /**
+             * Format: date-time
+             * @description Event creation timestamp (UTC)
+             */
+            timestamp: string;
+            /**
+             * @description Origin actor classification (e.g. system, user, job)
+             * @enum {string}
+             */
+            actorType: "system" | "user" | "job";
+            /** @description Identifier of user/job/system component (when applicable) */
+            actorId?: string | null;
+            /** @description High-level grouping (e.g. campaign, proxy, scoring, system) */
+            category: string;
+            /** @description Specific activity event type key */
+            type: string;
+            /** @description Human-readable summary */
+            message: string;
+            /**
+             * @description Severity classification
+             * @default info
+             * @enum {string}
+             */
+            severity: "info" | "warning" | "error";
+            /** @description Additional contextual structured values (forward-compatible) */
+            data?: {
+                [key: string]: components["schemas"]["FlexibleValue"];
+            };
         };
         /**
          * @description Enumerated server-sent campaign event names.
