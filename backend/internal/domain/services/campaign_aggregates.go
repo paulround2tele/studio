@@ -110,7 +110,7 @@ type MetricsDTO struct {
 
 // ClassificationsDTO mirrors CampaignClassificationsResponse schema
 type ClassificationsDTO struct {
-	Counts  ClassificationCounts  `json:"counts"`
+	Counts  ClassificationCounts   `json:"counts"`
 	Samples []ClassificationSample `json:"samples"`
 }
 
@@ -124,7 +124,7 @@ type ClassificationCounts struct {
 }
 
 type ClassificationSample struct {
-	Bucket  string                      `json:"bucket"`
+	Bucket  string                       `json:"bucket"`
 	Domains []ClassificationSampleDomain `json:"domains"`
 }
 
@@ -135,9 +135,9 @@ type ClassificationSampleDomain struct {
 
 // MomentumDTO mirrors CampaignMomentumResponse schema
 type MomentumDTO struct {
-	MoversUp    []MomentumMover     `json:"moversUp"`
-	MoversDown  []MomentumMover     `json:"moversDown"`
-	Histogram   []MomentumHistogram `json:"histogram"`
+	MoversUp   []MomentumMover     `json:"moversUp"`
+	MoversDown []MomentumMover     `json:"moversDown"`
+	Histogram  []MomentumHistogram `json:"histogram"`
 }
 
 type MomentumMover struct {
@@ -200,7 +200,20 @@ func GetCampaignFunnel(ctx context.Context, repo AggregatesRepository, cache *Ag
 		campaignAggregationCacheHits.WithLabelValues("funnel", "miss").Inc()
 	}
 
-	q := `SELECT
+	q := `WITH domain_data AS (
+	    SELECT
+	      gd.dns_status,
+	      gd.http_status,
+	      gd.http_keywords,
+	      COALESCE(def.feature_vector, gd.feature_vector, '{}'::jsonb) AS feature_vector,
+	      def.content_richness_score,
+	      gd.domain_score,
+	      gd.lead_status
+	    FROM generated_domains gd
+	    LEFT JOIN domain_extraction_features def ON def.domain_id = gd.id
+	    WHERE gd.campaign_id = $2
+	  )
+	  SELECT
 	    COUNT(*) AS generated,
 	    COUNT(*) FILTER (WHERE dns_status = 'ok') AS dns_valid,
 	    COUNT(*) FILTER (WHERE http_status = 'ok') AS http_valid,
@@ -209,8 +222,7 @@ func GetCampaignFunnel(ctx context.Context, repo AggregatesRepository, cache *Ag
 	    COUNT(*) FILTER (WHERE content_richness_score IS NOT NULL) AS analyzed,
 	    COUNT(*) FILTER (WHERE content_richness_score IS NOT NULL AND domain_score >= $1) AS high_potential,
 	    COUNT(*) FILTER (WHERE lead_status = 'match') AS leads
-	  FROM generated_domains
-	  WHERE campaign_id = $2`
+	  FROM domain_data`
 
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
@@ -244,20 +256,30 @@ func GetCampaignMetrics(ctx context.Context, repo AggregatesRepository, cache *A
 		campaignAggregationCacheHits.WithLabelValues("metrics", "miss").Inc()
 	}
 
-	q := `SELECT
+	q := `WITH domain_data AS (
+	    SELECT
+	      gd.domain_score,
+	      gd.lead_status,
+	      gd.http_keywords,
+	      COALESCE(def.feature_vector, gd.feature_vector, '{}'::jsonb) AS feature_vector,
+	      def.content_richness_score
+	    FROM generated_domains gd
+	    LEFT JOIN domain_extraction_features def ON def.domain_id = gd.id
+	    WHERE gd.campaign_id = $4
+	  )
+	  SELECT
 	    COUNT(*) FILTER (WHERE content_richness_score IS NOT NULL AND domain_score >= $1) AS high_potential,
 	    COUNT(*) FILTER (WHERE lead_status = 'match') AS leads,
 	    COUNT(*) FILTER (WHERE http_keywords IS NOT NULL
 	                     OR (feature_vector ? 'kw_top3' AND jsonb_array_length(feature_vector->'kw_top3') > 0)) AS keyword_hits,
 	    COUNT(*) FILTER (WHERE content_richness_score IS NOT NULL) AS analyzed,
 	    AVG(content_richness_score) AS avg_richness,
-	    COUNT(*) FILTER (WHERE content_richness_score IS NOT NULL AND (stuffing_penalty > 0 OR repetition_index > $2 OR anchor_share > $3)) AS warning_domains,
-	    COUNT(*) FILTER (WHERE stuffing_penalty > 0) AS stuffing_count,
-	    COUNT(*) FILTER (WHERE repetition_index > $2) AS repetition_count,
-	    COUNT(*) FILTER (WHERE anchor_share > $3) AS anchor_count,
-	    percentile_disc(0.5) WITHIN GROUP (ORDER BY microcrawl_gain_ratio) AS median_gain
-	  FROM generated_domains
-	  WHERE campaign_id = $4`
+	    COUNT(*) FILTER (WHERE content_richness_score IS NOT NULL AND ((feature_vector->>'stuffing_penalty')::double precision > 0 OR (feature_vector->>'repetition_index')::double precision > $2 OR (feature_vector->>'anchor_share')::double precision > $3)) AS warning_domains,
+	    COUNT(*) FILTER (WHERE (feature_vector->>'stuffing_penalty')::double precision > 0) AS stuffing_count,
+	    COUNT(*) FILTER (WHERE (feature_vector->>'repetition_index')::double precision > $2) AS repetition_count,
+	    COUNT(*) FILTER (WHERE (feature_vector->>'anchor_share')::double precision > $3) AS anchor_count,
+	    percentile_disc(0.5) WITHIN GROUP (ORDER BY (feature_vector->>'microcrawl_gain_ratio')::double precision) AS median_gain
+	  FROM domain_data`
 
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
@@ -369,7 +391,7 @@ func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *Ag
 	campaignAggregationCacheHits.WithLabelValues("status", "miss").Inc()
 
 	start := time.Now()
-	
+
 	// For now, return mock data until we implement the full phase status logic
 	// TODO: Implement real phase status tracking based on campaign state and executions
 	phases := []PhaseStatusItem{
@@ -447,7 +469,7 @@ func GetCampaignClassifications(ctx context.Context, repo AggregatesRepository, 
 	campaignAggregationCacheHits.WithLabelValues("classifications", "miss").Inc()
 
 	start := time.Now()
-	
+
 	// For now, return mock data until we implement the full classification logic
 	// TODO: Implement real classification logic based on domain analysis
 	dto := ClassificationsDTO{
@@ -494,7 +516,7 @@ func GetCampaignMomentum(ctx context.Context, repo AggregatesRepository, cache *
 	campaignAggregationCacheHits.WithLabelValues("momentum", "miss").Inc()
 
 	start := time.Now()
-	
+
 	// For now, return mock data until we implement the full momentum analysis
 	// TODO: Implement real momentum calculation based on richness score deltas
 	dto := MomentumDTO{
@@ -539,13 +561,13 @@ func GetCampaignRecommendations(ctx context.Context, repo AggregatesRepository, 
 	campaignAggregationCacheHits.WithLabelValues("recommendations", "miss").Inc()
 
 	start := time.Now()
-	
+
 	// Get funnel and metrics to generate recommendations
 	funnel, err := GetCampaignFunnel(ctx, repo, cache, campaignID)
 	if err != nil {
 		return RecommendationsDTO{}, err
 	}
-	
+
 	metrics, err := GetCampaignMetrics(ctx, repo, cache, campaignID)
 	if err != nil {
 		return RecommendationsDTO{}, err

@@ -3,7 +3,7 @@
  * Multi-step campaign creation: Goal → Pattern → Targeting → Review & Launch
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,8 +24,10 @@ import {
   mapPatternToDomainGeneration,
   mapTargetingToDNSValidation,
   mapTargetingToHTTPValidation,
+  mapTargetingToAnalysis,
   type APIPhaseEnum
 } from '@/lib/utils/phaseMapping';
+import { useCampaignFormData } from '@/lib/hooks/useCampaignFormData';
 
 import GoalStep from './steps/GoalStep';
 import PatternStep from './steps/PatternStep';
@@ -57,6 +59,36 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
   const [updateCampaignMode, { isLoading: isUpdatingMode }] = useUpdateCampaignModeMutation();
   const [startPhase, { isLoading: isStartingPhase }] = useStartPhaseStandaloneMutation();
   const [configurePhase, { isLoading: isConfiguringPhase }] = useConfigurePhaseStandaloneMutation();
+
+  const {
+    dnsPersonas: dnsPersonaList,
+    httpPersonas: httpPersonaList,
+    isLoading: isPersonaLoading,
+    error: personaError,
+    refetch: refetchPersonas,
+  } = useCampaignFormData(false);
+
+  const dnsPersonaOptions = useMemo(() =>
+    dnsPersonaList
+      .filter(persona => Boolean(persona.id))
+      .map(persona => ({
+        id: persona.id as string,
+        name: persona.name || persona.id || 'DNS Persona',
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [dnsPersonaList]
+  );
+
+  const httpPersonaOptions = useMemo(() =>
+    httpPersonaList
+      .filter(persona => Boolean(persona.id))
+      .map(persona => ({
+        id: persona.id as string,
+        name: persona.name || persona.id || 'HTTP Persona',
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [httpPersonaList]
+  );
   
   // Auto-start banner state management
   const {
@@ -72,9 +104,52 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
     currentStep: 0,
     goal: {},
     pattern: {},
-    targeting: {},
+    targeting: {
+      includeKeywords: [],
+      excludeKeywords: [],
+      excludeExtensions: [],
+      adHocKeywords: [],
+      dnsPersonas: [],
+      httpPersonas: [],
+      analysisPersonas: [],
+      dnsPersonaNames: [],
+      httpPersonaNames: [],
+      analysisPersonaNames: [],
+    },
     isValid: false
   });
+
+  useEffect(() => {
+    setWizardState(prev => {
+      const nextTargeting = { ...prev.targeting };
+      let changed = false;
+
+      const singleDnsPersona = dnsPersonaOptions.length === 1 ? dnsPersonaOptions[0] : undefined;
+      if ((nextTargeting?.dnsPersonas?.length || 0) === 0 && singleDnsPersona) {
+        nextTargeting.dnsPersonas = [singleDnsPersona.id];
+        nextTargeting.dnsPersonaNames = [singleDnsPersona.name];
+        changed = true;
+      }
+
+      const singleHttpPersona = httpPersonaOptions.length === 1 ? httpPersonaOptions[0] : undefined;
+      if ((nextTargeting?.httpPersonas?.length || 0) === 0 && singleHttpPersona) {
+        nextTargeting.httpPersonas = [singleHttpPersona.id];
+        nextTargeting.httpPersonaNames = [singleHttpPersona.name];
+        nextTargeting.analysisPersonas = [singleHttpPersona.id];
+        nextTargeting.analysisPersonaNames = [singleHttpPersona.name];
+        changed = true;
+      }
+
+      if (!changed) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        targeting: nextTargeting,
+      };
+    });
+  }, [dnsPersonaOptions, httpPersonaOptions]);
 
   const currentStep = WIZARD_STEPS[wizardState.currentStep];
   const isValidStep = currentStep !== undefined;
@@ -89,8 +164,15 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
         return !!(wizardState.goal.campaignName?.trim() && wizardState.goal.executionMode);
       case 1: // Pattern
         return !!(wizardState.pattern.basePattern?.trim() && wizardState.pattern.maxDomains && wizardState.pattern.maxDomains > 0);
-      case 2: // Targeting
-        return true; // Targeting is optional
+      case 2: { // Targeting
+        if (wizardState.goal.executionMode !== 'auto') {
+          return true;
+        }
+        const dnsCount = wizardState.targeting.dnsPersonas?.length || 0;
+        const httpCount = wizardState.targeting.httpPersonas?.length || 0;
+        const keywordCount = (wizardState.targeting.includeKeywords?.length || 0) + (wizardState.targeting.adHocKeywords?.length || 0);
+        return dnsCount > 0 && httpCount > 0 && keywordCount > 0;
+      }
       case 3: // Review
         return validateStep(0) && validateStep(1) && validateStep(2);
       default:
@@ -98,8 +180,23 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
     }
   };
 
-  const canProceed = validateStep(wizardState.currentStep);
+  const personasBlocking = wizardState.currentStep === 2 && wizardState.goal.executionMode === 'auto' && (isPersonaLoading || Boolean(personaError));
+  const canProceed = !personasBlocking && validateStep(wizardState.currentStep);
   const isLoading = isCreating || isUpdatingMode || isStartingPhase || isConfiguringPhase;
+
+  const validateAutoPhaseConfiguration = (): string | null => {
+    if ((wizardState.targeting.dnsPersonas?.length || 0) === 0) {
+      return 'Select at least one DNS persona before running auto mode.';
+    }
+    if ((wizardState.targeting.httpPersonas?.length || 0) === 0) {
+      return 'Select at least one HTTP persona before running auto mode.';
+    }
+    const keywordCount = (wizardState.targeting.includeKeywords?.length || 0) + (wizardState.targeting.adHocKeywords?.length || 0);
+    if (keywordCount === 0) {
+      return 'Provide at least one keyword for HTTP validation or add a custom keyword.';
+    }
+    return null;
+  };
 
   const handleNext = () => {
     if (isLastStep) {
@@ -149,6 +246,36 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
       
       // Show initializing banner for auto mode
       if (wizardState.goal.executionMode === 'auto') {
+        if (isPersonaLoading) {
+          toast({
+            title: 'Loading personas',
+            description: 'Please wait for personas to finish loading before launching auto mode.',
+            variant: 'default'
+          });
+          return;
+        }
+
+        if (personaError) {
+          toast({
+            title: 'Persona data unavailable',
+            description: 'Resolve persona load errors before running auto mode.',
+            variant: 'destructive'
+          });
+          setWizardState(prev => ({ ...prev, currentStep: 2 }));
+          return;
+        }
+
+        const autoValidationError = validateAutoPhaseConfiguration();
+        if (autoValidationError) {
+          toast({
+            title: 'Configuration required',
+            description: autoValidationError,
+            variant: 'destructive'
+          });
+          setWizardState(prev => ({ ...prev, currentStep: 2 }));
+          return;
+        }
+
         showInitializing(`Initializing campaign "${campaignName}" in auto mode...`);
       }
       
@@ -243,7 +370,7 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
         
         // Step 1: Configure the discovery phase with domain generation config
         const firstPhase: APIPhaseEnum = getFirstPhase();
-        const domainGenConfig = mapPatternToDomainGeneration(wizardState.pattern);
+  const domainGenConfig = mapPatternToDomainGeneration(wizardState.pattern);
         
         await configurePhase({
           campaignId,
@@ -253,14 +380,10 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
           }
         }).unwrap();
         
-        // Step 2: Configure subsequent phases with default personas for testing
-        // In a real implementation, these would come from persona selection in the wizard
+  // Step 2: Configure subsequent phases using selections from the targeting step
         
         // Configure DNS validation with default persona
-        const dnsConfig = mapTargetingToDNSValidation({
-          keywords: wizardState.targeting.keywords || [],
-          dnsPersonas: ['aacabe7f-ba21-4a5b-9539-89d4bb2a9914'] // Test DNS persona ID
-        });
+        const dnsConfig = mapTargetingToDNSValidation(wizardState.targeting);
         
         await configurePhase({
           campaignId,
@@ -271,10 +394,7 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
         }).unwrap();
         
         // Configure HTTP validation with default persona  
-        const httpConfig = mapTargetingToHTTPValidation({
-          keywords: wizardState.targeting.keywords || [],
-          httpPersonas: ['42480fd3-aa82-4c38-b2e6-7049c7b171ed'] // Test HTTP persona ID
-        });
+        const httpConfig = mapTargetingToHTTPValidation(wizardState.targeting);
         
         await configurePhase({
           campaignId,
@@ -283,6 +403,17 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
             configuration: httpConfig as unknown as Record<string, unknown>
           }
         }).unwrap();
+
+        const analysisConfig = mapTargetingToAnalysis(wizardState.targeting);
+        if (analysisConfig) {
+          await configurePhase({
+            campaignId,
+            phase: 'analysis',
+            config: {
+              configuration: analysisConfig as unknown as Record<string, unknown>
+            }
+          }).unwrap();
+        }
         
         // Step 3: Start the first phase (discovery/domain_generation) automatically
         await startPhase({
@@ -377,6 +508,12 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
           <TargetingStep 
             data={wizardState.targeting}
             onChange={updateTargeting}
+            dnsPersonas={dnsPersonaOptions}
+            httpPersonas={httpPersonaOptions}
+            personasLoading={isPersonaLoading}
+            personasError={personaError}
+            onRetryPersonas={refetchPersonas}
+            executionMode={wizardState.goal.executionMode}
           />
         );
       case 3:

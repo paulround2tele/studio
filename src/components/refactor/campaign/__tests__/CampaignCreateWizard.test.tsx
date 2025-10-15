@@ -3,13 +3,14 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { useRouter } from 'next/navigation';
 import { CampaignCreateWizard } from '../CampaignCreateWizard';
 import { campaignApi } from '@/store/api/campaignApi';
+import { useCampaignFormData } from '@/lib/hooks/useCampaignFormData';
 import { useToast } from '@/hooks/use-toast';
 
 // Mock dependencies
@@ -25,11 +26,13 @@ jest.mock('@/hooks/use-toast', () => ({
 const mockCreateCampaign = jest.fn();
 const mockUpdateCampaignMode = jest.fn();
 const mockStartPhase = jest.fn();
+const mockConfigurePhase = jest.fn();
 
 // Create proper mock implementations
 const mockUseCreateCampaignMutation = jest.fn();
 const mockUseUpdateCampaignModeMutation = jest.fn();
 const mockUseStartPhaseStandaloneMutation = jest.fn();
+const mockUseConfigurePhaseStandaloneMutation = jest.fn();
 
 jest.mock('@/store/api/campaignApi', () => ({
   campaignApi: {
@@ -40,6 +43,11 @@ jest.mock('@/store/api/campaignApi', () => ({
   useCreateCampaignMutation: () => mockUseCreateCampaignMutation(),
   useUpdateCampaignModeMutation: () => mockUseUpdateCampaignModeMutation(),
   useStartPhaseStandaloneMutation: () => mockUseStartPhaseStandaloneMutation(),
+  useConfigurePhaseStandaloneMutation: () => mockUseConfigurePhaseStandaloneMutation(),
+}));
+
+jest.mock('@/lib/hooks/useCampaignFormData', () => ({
+  useCampaignFormData: jest.fn(),
 }));
 
 const mockPush = jest.fn();
@@ -79,6 +87,25 @@ describe('CampaignCreateWizard', () => {
     mockUseCreateCampaignMutation.mockReturnValue([mockCreateCampaign, { isLoading: false }]);
     mockUseUpdateCampaignModeMutation.mockReturnValue([mockUpdateCampaignMode, { isLoading: false }]);
     mockUseStartPhaseStandaloneMutation.mockReturnValue([mockStartPhase, { isLoading: false }]);
+    mockUseConfigurePhaseStandaloneMutation.mockReturnValue([mockConfigurePhase, { isLoading: false }]);
+
+    mockConfigurePhase.mockImplementation(() => ({
+      unwrap: jest.fn().mockResolvedValue({ status: 'configured' }),
+    }));
+
+    (useCampaignFormData as jest.Mock).mockReturnValue({
+      dnsPersonas: [
+        { id: 'dns-persona-1', name: 'DNS Persona 1' },
+      ],
+      httpPersonas: [
+        { id: 'http-persona-1', name: 'HTTP Persona 1' },
+      ],
+      proxies: [],
+      sourceCampaigns: [],
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
   });
 
   describe('Auto-start Logic', () => {
@@ -121,8 +148,12 @@ describe('CampaignCreateWizard', () => {
       // Next to targeting step
       await user.click(nextButton);
 
-      // Step 3: Skip targeting (optional)
-      await user.click(nextButton);
+    // Step 3: Provide required targeting inputs for auto mode
+    const includeKeywordsInput = screen.getByLabelText(/Include Keywords/i);
+    await user.clear(includeKeywordsInput);
+    await user.type(includeKeywordsInput, 'growth');
+
+    await user.click(nextButton);
 
       // Step 4: Review and create
       const createButton = screen.getByRole('button', { name: /create campaign/i });
@@ -131,6 +162,22 @@ describe('CampaignCreateWizard', () => {
       await waitFor(() => {
         // Verify campaign creation was called
         expect(mockCreateCampaign).toHaveBeenCalled();
+
+        // Verify phases were configured before auto-start
+        expect(mockConfigurePhase).toHaveBeenCalledTimes(4);
+        expect(mockConfigurePhase).toHaveBeenNthCalledWith(1, expect.objectContaining({
+          campaignId: 'test-campaign-id',
+          phase: 'discovery',
+        }));
+        expect(mockConfigurePhase).toHaveBeenNthCalledWith(2, expect.objectContaining({
+          phase: 'validation',
+        }));
+        expect(mockConfigurePhase).toHaveBeenNthCalledWith(3, expect.objectContaining({
+          phase: 'extraction',
+        }));
+        expect(mockConfigurePhase).toHaveBeenNthCalledWith(4, expect.objectContaining({
+          phase: 'analysis',
+        }));
         
         // Verify mode was updated to full_sequence
         expect(mockUpdateCampaignMode).toHaveBeenCalledWith({
@@ -178,9 +225,9 @@ describe('CampaignCreateWizard', () => {
       const autoModeRadio = screen.getByLabelText(/Full Auto/i);
       await user.click(autoModeRadio);
 
-      // Navigate through steps
-      let nextButton = screen.getByRole('button', { name: /next/i });
-      await user.click(nextButton);
+    // Navigate through steps
+    let nextButton = screen.getByRole('button', { name: /next/i });
+    await user.click(nextButton);
 
       const patternInput = screen.getByPlaceholderText(/e\.g\., example-\{variation\}\.com/);
       await user.type(patternInput, 'test-{variation}.com');
@@ -190,8 +237,14 @@ describe('CampaignCreateWizard', () => {
       await user.type(maxDomainsInput, '100');
 
       nextButton = screen.getByRole('button', { name: /next/i });
-      await user.click(nextButton);
-      await user.click(nextButton);
+    await user.click(nextButton);
+
+    const includeKeywordsInput = screen.getByLabelText(/Include Keywords/i);
+    await user.clear(includeKeywordsInput);
+    await user.type(includeKeywordsInput, 'growth');
+
+    nextButton = screen.getByRole('button', { name: /next/i });
+    await user.click(nextButton);
 
       const createButton = screen.getByRole('button', { name: /create campaign/i });
       await user.click(createButton);
@@ -201,8 +254,9 @@ describe('CampaignCreateWizard', () => {
         expect(mockCreateCampaign).toHaveBeenCalled();
         expect(mockUpdateCampaignMode).toHaveBeenCalled();
         
-        // Verify auto-start was attempted
-        expect(mockStartPhase).toHaveBeenCalled();
+    // Verify phases were configured and auto-start was attempted
+    expect(mockConfigurePhase).toHaveBeenCalledTimes(4);
+    expect(mockStartPhase).toHaveBeenCalled();
         
         // Verify warning toast about auto-start failure
         expect(mockToast).toHaveBeenCalledWith({
@@ -266,6 +320,7 @@ describe('CampaignCreateWizard', () => {
         
         // Verify auto-start was NOT attempted
         expect(mockStartPhase).not.toHaveBeenCalled();
+  expect(mockConfigurePhase).not.toHaveBeenCalled();
         
         // Verify regular success toast
         expect(mockToast).toHaveBeenCalledWith({
@@ -297,13 +352,8 @@ describe('CampaignCreateWizard', () => {
         unwrap: jest.fn().mockReturnValue(startPhasePromise),
       });
 
-      // Mock isLoading states
-      jest.doMock('@/store/api/campaignApi', () => ({
-        ...jest.requireActual('@/store/api/campaignApi'),
-        useCreateCampaignMutation: () => [mockCreateCampaign, { isLoading: false }],
-        useUpdateCampaignModeMutation: () => [mockUpdateCampaignMode, { isLoading: false }],
-        useStartPhaseStandaloneMutation: () => [mockStartPhase, { isLoading: true }],
-      }));
+      // Force start phase hook to indicate loading state
+      mockUseStartPhaseStandaloneMutation.mockReturnValue([mockStartPhase, { isLoading: true }]);
 
       renderWithProviders(<CampaignCreateWizard />);
 
@@ -325,8 +375,13 @@ describe('CampaignCreateWizard', () => {
       await user.type(maxDomainsInput, '100');
 
       nextButton = screen.getByRole('button', { name: /next/i });
-      await user.click(nextButton);
-      await user.click(nextButton);
+  await user.click(nextButton);
+
+  const includeKeywordsInput = screen.getByLabelText(/Include Keywords/i);
+  await user.clear(includeKeywordsInput);
+  await user.type(includeKeywordsInput, 'growth');
+
+  await user.click(nextButton);
 
       const createButton = screen.getByRole('button', { name: /create campaign/i });
       await user.click(createButton);

@@ -90,14 +90,43 @@ export function ReviewStep({ goal, pattern, targeting }: ReviewStepProps) {
             <CardTitle className="text-lg">Targeting Options</CardTitle>
           </CardHeader>
           <CardContent>
-            {!targeting.includeKeywords?.length && 
-             !targeting.excludeKeywords?.length && 
-             !targeting.excludeExtensions?.length ? (
+            {!targeting.includeKeywords?.length &&
+             !targeting.excludeKeywords?.length &&
+             !targeting.excludeExtensions?.length &&
+             !targeting.adHocKeywords?.length &&
+             !targeting.dnsPersonaNames?.length &&
+             !targeting.httpPersonaNames?.length ? (
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 No targeting options configured. All generated domains will be included.
               </p>
             ) : (
               <div className="space-y-3">
+                {targeting.dnsPersonaNames && targeting.dnsPersonaNames.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">DNS Personas</p>
+                    <div className="flex flex-wrap gap-1">
+                      {targeting.dnsPersonaNames.map((name, index) => (
+                        <Badge key={name || index} variant="secondary" className="text-xs">
+                          {name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {targeting.httpPersonaNames && targeting.httpPersonaNames.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">HTTP Personas</p>
+                    <div className="flex flex-wrap gap-1">
+                      {targeting.httpPersonaNames.map((name, index) => (
+                        <Badge key={name || index} variant="secondary" className="text-xs">
+                          {name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {targeting.includeKeywords && targeting.includeKeywords.length > 0 && (
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Include Keywords</p>
@@ -118,6 +147,19 @@ export function ReviewStep({ goal, pattern, targeting }: ReviewStepProps) {
                       {targeting.excludeKeywords.map((keyword, index) => (
                         <Badge key={index} variant="destructive" className="text-xs">
                           -{keyword}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {targeting.adHocKeywords && targeting.adHocKeywords.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Custom Keywords</p>
+                    <div className="flex flex-wrap gap-1">
+                      {targeting.adHocKeywords.map((keyword, index) => (
+                        <Badge key={keyword || index} variant="outline" className="text-xs">
+                          {keyword}
                         </Badge>
                       ))}
                     </div>

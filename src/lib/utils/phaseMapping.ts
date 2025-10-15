@@ -100,6 +100,11 @@ export interface DomainGenerationConfig {
 
 export interface DNSValidationConfig {
   personaIds: string[];
+  batchSize: number;
+  timeout: number;
+  maxRetries: number;
+  validation_types?: string[];
+  required_records?: string[];
   name?: string;
 }
 
@@ -113,6 +118,21 @@ export interface HTTPValidationConfig {
   microCrawlMaxPages?: number;
   microCrawlByteBudget?: number;
 }
+
+export interface AnalysisConfig {
+  personaIds: string[];
+  keywordRules?: Array<{ pattern: string; ruleType: string }>;
+  includeExternal?: boolean;
+  name?: string;
+}
+
+const DEFAULT_DNS_BATCH_SIZE = 250;
+const DEFAULT_DNS_TIMEOUT_SECONDS = 30;
+const DEFAULT_DNS_MAX_RETRIES = 2;
+const DEFAULT_DNS_VALIDATION_TYPES = ['A', 'AAAA'];
+
+const DEFAULT_HTTP_MICRO_PAGES = 5;
+const DEFAULT_HTTP_MICRO_BUDGET = 1024 * 1024; // 1 MB
 
 // Map wizard pattern step to domain generation configuration
 export function mapPatternToDomainGeneration(pattern: {
@@ -141,25 +161,41 @@ export function mapPatternToDomainGeneration(pattern: {
   }
   const firstTld = (pattern.tlds && pattern.tlds[0]) || pattern.tld || '.com';
   const normalizedTld = firstTld.startsWith('.') ? firstTld : `.${firstTld}`;
+  const safeNumDomains = Math.max(1, pattern.maxDomains || 100);
+  const safeBatchSize = Math.max(1, pattern.batchSize || Math.min(100, safeNumDomains));
+  const safeOffset = Math.max(0, pattern.offsetStart || 0);
   return {
     patternType,
     constantString: pattern.constantString || (pattern.basePattern ? pattern.basePattern.replace('{variation}', '') : 'brand'),
-    variableLength: computedVariable || 0,
+    variableLength: Math.max(0, computedVariable || 0),
     characterSet: pattern.characterSet || 'abcdefghijklmnopqrstuvwxyz0123456789',
     tld: normalizedTld,
-    numDomainsToGenerate: pattern.maxDomains || 100,
-    batchSize: pattern.batchSize || 100,
-    offsetStart: pattern.offsetStart || 0
+    numDomainsToGenerate: safeNumDomains,
+    batchSize: safeBatchSize,
+    offsetStart: safeOffset
   };
 }
 
 // Map wizard targeting step to DNS validation configuration  
 export function mapTargetingToDNSValidation(targeting: {
-  keywords?: string[];
   dnsPersonas?: string[];
+  dnsBatchSize?: number;
+  dnsTimeout?: number;
+  dnsMaxRetries?: number;
+  validationTypes?: string[];
+  requiredRecords?: string[];
 }): DNSValidationConfig {
+  const personaIds = targeting.dnsPersonas || [];
+  const batchSize = Math.max(1, targeting.dnsBatchSize ?? DEFAULT_DNS_BATCH_SIZE);
+  const timeoutSeconds = Math.max(1, targeting.dnsTimeout ?? DEFAULT_DNS_TIMEOUT_SECONDS);
+  const maxRetries = Math.max(0, targeting.dnsMaxRetries ?? DEFAULT_DNS_MAX_RETRIES);
   return {
-    personaIds: targeting.dnsPersonas || [],
+    personaIds,
+    batchSize,
+    timeout: timeoutSeconds,
+    maxRetries,
+    validation_types: targeting.validationTypes && targeting.validationTypes.length > 0 ? targeting.validationTypes : [...DEFAULT_DNS_VALIDATION_TYPES],
+    required_records: targeting.requiredRecords && targeting.requiredRecords.length > 0 ? targeting.requiredRecords : undefined,
     name: 'DNS Validation Phase'
   };
 }
@@ -167,16 +203,63 @@ export function mapTargetingToDNSValidation(targeting: {
 // Map wizard targeting step to HTTP validation configuration
 export function mapTargetingToHTTPValidation(targeting: {
   keywords?: string[];
+  includeKeywords?: string[];
   httpPersonas?: string[];
+  adHocKeywords?: string[];
+  httpEnrichmentEnabled?: boolean;
+  httpMicroCrawlEnabled?: boolean;
+  httpMicroCrawlMaxPages?: number;
+  httpMicroCrawlByteBudget?: number;
 }): HTTPValidationConfig {
+  const keywords = targeting.keywords && targeting.keywords.length > 0
+    ? targeting.keywords
+    : (targeting.includeKeywords || []);
+  const enrichmentEnabled = targeting.httpEnrichmentEnabled ?? true;
+  const microEnabled = targeting.httpMicroCrawlEnabled ?? true;
+  const microPages = Math.max(1, targeting.httpMicroCrawlMaxPages ?? DEFAULT_HTTP_MICRO_PAGES);
+  const microBudget = Math.max(1024, targeting.httpMicroCrawlByteBudget ?? DEFAULT_HTTP_MICRO_BUDGET);
   return {
     personaIds: targeting.httpPersonas || [],
-    keywords: targeting.keywords || [],
-    adHocKeywords: [],
+    keywords,
+    adHocKeywords: targeting.adHocKeywords || [],
     name: 'HTTP Keyword Extraction Phase',
-    enrichmentEnabled: true,
-    microCrawlEnabled: true,
-    microCrawlMaxPages: 5,
-    microCrawlByteBudget: 1024 * 1024 // 1MB
+    enrichmentEnabled,
+    microCrawlEnabled: microEnabled,
+    microCrawlMaxPages: microPages,
+    microCrawlByteBudget: microBudget
+  };
+}
+
+// Map wizard targeting step to analysis configuration
+export function mapTargetingToAnalysis(targeting: {
+  analysisPersonas?: string[];
+  httpPersonas?: string[];
+  includeKeywords?: string[];
+  keywords?: string[];
+}): AnalysisConfig | null {
+  const personaIds = targeting.analysisPersonas && targeting.analysisPersonas.length > 0
+    ? targeting.analysisPersonas
+    : (targeting.httpPersonas || []);
+
+  if (personaIds.length === 0) {
+    return null;
+  }
+
+  const baseKeywords = targeting.keywords && targeting.keywords.length > 0
+    ? targeting.keywords
+    : (targeting.includeKeywords || []);
+
+  const keywordRules = baseKeywords.length === 0
+    ? undefined
+    : baseKeywords.map(pattern => ({
+        pattern,
+        ruleType: 'string',
+      }));
+
+  return {
+    personaIds,
+    keywordRules,
+    includeExternal: false,
+    name: 'Analysis Phase',
   };
 }

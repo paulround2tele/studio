@@ -60,11 +60,25 @@ export interface WizardPatternStep {
 
 export interface WizardTargetingStep {
   keywords?: string[];
+  adHocKeywords?: string[];
   dnsPersonas?: string[];
+  dnsPersonaNames?: string[];
   httpPersonas?: string[];
+  httpPersonaNames?: string[];
+  analysisPersonas?: string[];
+  analysisPersonaNames?: string[];
   excludeExtensions?: string[];
   includeKeywords?: string[];
   excludeKeywords?: string[];
+  dnsBatchSize?: number;
+  dnsTimeout?: number;
+  dnsMaxRetries?: number;
+  validationTypes?: string[];
+  requiredRecords?: string[];
+  httpEnrichmentEnabled?: boolean;
+  httpMicroCrawlEnabled?: boolean;
+  httpMicroCrawlMaxPages?: number;
+  httpMicroCrawlByteBudget?: number;
 }
 
 export interface WizardReviewStep {
