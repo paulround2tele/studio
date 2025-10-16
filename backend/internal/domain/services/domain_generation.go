@@ -3,8 +3,10 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,14 +19,80 @@ import (
 
 // DomainGenerationConfig represents the configuration for domain generation
 type DomainGenerationConfig struct {
-	PatternType    string `json:"pattern_type"` // prefix, suffix, both
-	VariableLength int    `json:"variable_length"`
-	CharacterSet   string `json:"character_set"`
-	ConstantString string `json:"constant_string"`
-	TLD            string `json:"tld"`
-	NumDomains     int64  `json:"num_domains"`
-	BatchSize      int    `json:"batch_size"`
-	OffsetStart    int64  `json:"offset_start"`
+	PatternType          string `json:"pattern_type"`
+	VariableLength       int    `json:"variable_length"`
+	PrefixVariableLength int    `json:"prefix_variable_length"`
+	SuffixVariableLength int    `json:"suffix_variable_length"`
+	CharacterSet         string `json:"character_set"`
+	ConstantString       string `json:"constant_string"`
+	TLD                  string `json:"tld"`
+	NumDomains           int64  `json:"num_domains"`
+	BatchSize            int    `json:"batch_size"`
+	OffsetStart          int64  `json:"offset_start"`
+}
+
+// Normalize standardizes pattern type casing and derives per-segment lengths from legacy fields.
+func (c *DomainGenerationConfig) Normalize() error {
+	pattern := strings.TrimSpace(strings.ToLower(c.PatternType))
+	switch pattern {
+	case "", "prefix", string(models.PatternTypePrefixVariable):
+		pattern = string(models.PatternTypePrefixVariable)
+	case "suffix", string(models.PatternTypeSuffixVariable):
+		pattern = string(models.PatternTypeSuffixVariable)
+	case "both", string(models.PatternTypeBothVariable):
+		pattern = string(models.PatternTypeBothVariable)
+	default:
+		return fmt.Errorf("unsupported pattern type: %s", c.PatternType)
+	}
+
+	if c.VariableLength < 0 {
+		return fmt.Errorf("variable length must be >= 0")
+	}
+
+	prefix := c.PrefixVariableLength
+	suffix := c.SuffixVariableLength
+	fallback := c.VariableLength
+
+	switch pattern {
+	case string(models.PatternTypePrefixVariable):
+		if prefix == 0 && fallback > 0 {
+			prefix = fallback
+		}
+		if prefix < 0 {
+			return fmt.Errorf("prefix variable length must be >= 0")
+		}
+		suffix = 0
+		c.VariableLength = prefix
+	case string(models.PatternTypeSuffixVariable):
+		if suffix == 0 && fallback > 0 {
+			suffix = fallback
+		}
+		if suffix < 0 {
+			return fmt.Errorf("suffix variable length must be >= 0")
+		}
+		prefix = 0
+		c.VariableLength = suffix
+	case string(models.PatternTypeBothVariable):
+		if prefix == 0 && fallback > 0 {
+			prefix = fallback
+		}
+		if suffix == 0 && fallback > 0 {
+			suffix = fallback
+		}
+		if prefix < 0 {
+			return fmt.Errorf("prefix variable length must be >= 0")
+		}
+		if suffix < 0 {
+			return fmt.Errorf("suffix variable length must be >= 0")
+		}
+		c.VariableLength = prefix + suffix
+	}
+
+	c.PatternType = pattern
+	c.PrefixVariableLength = prefix
+	c.SuffixVariableLength = suffix
+
+	return nil
 }
 
 // domainGenerationService implements DomainGenerationService
@@ -176,14 +244,16 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 		}
 
 		domainConfig = DomainGenerationConfig{
-			PatternType:    getString("patternType"),
-			VariableLength: getInt("variableLength"),
-			CharacterSet:   getString("characterSet"),
-			ConstantString: getString("constantString"),
-			TLD:            getTLD(),
-			NumDomains:     getInt64("numDomainsToGenerate"),
-			BatchSize:      getInt("batchSize"),
-			OffsetStart:    getInt64("offsetStart"),
+			PatternType:          getString("patternType"),
+			VariableLength:       getInt("variableLength"),
+			PrefixVariableLength: getInt("prefixVariableLength"),
+			SuffixVariableLength: getInt("suffixVariableLength"),
+			CharacterSet:         getString("characterSet"),
+			ConstantString:       getString("constantString"),
+			TLD:                  getTLD(),
+			NumDomains:           getInt64("numDomainsToGenerate"),
+			BatchSize:            getInt("batchSize"),
+			OffsetStart:          getInt64("offsetStart"),
 		}
 		// fallbacks for snake_case
 		if domainConfig.PatternType == "" {
@@ -191,6 +261,12 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 		}
 		if domainConfig.VariableLength == 0 {
 			domainConfig.VariableLength = getInt("variable_length")
+		}
+		if domainConfig.PrefixVariableLength == 0 {
+			domainConfig.PrefixVariableLength = getInt("prefix_variable_length")
+		}
+		if domainConfig.SuffixVariableLength == 0 {
+			domainConfig.SuffixVariableLength = getInt("suffix_variable_length")
 		}
 		if domainConfig.CharacterSet == "" {
 			domainConfig.CharacterSet = getString("character_set")
@@ -208,10 +284,14 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 			domainConfig.OffsetStart = getInt64("offset_start")
 		}
 		if domainConfig.PatternType == "" {
-			domainConfig.PatternType = "prefix"
+			domainConfig.PatternType = string(models.PatternTypePrefixVariable)
 		}
 	default:
 		return fmt.Errorf("invalid configuration type for domain generation")
+	}
+
+	if err := domainConfig.Normalize(); err != nil {
+		return fmt.Errorf("invalid domain generation configuration: %w", err)
 	}
 
 	// Validate configuration
@@ -222,7 +302,8 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 	// Create domain generator using existing domainexpert engine
 	generator, err := domainexpert.NewDomainGenerator(
 		domainexpert.CampaignPatternType(domainConfig.PatternType),
-		domainConfig.VariableLength,
+		domainConfig.PrefixVariableLength,
+		domainConfig.SuffixVariableLength,
 		domainConfig.CharacterSet,
 		domainConfig.ConstantString,
 		domainConfig.TLD,
@@ -238,12 +319,24 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 	if cs != "" {
 		csPtr = &cs
 	}
+	prefixNull := sql.NullInt32{}
+	suffixNull := sql.NullInt32{}
+	// Mark lengths as valid when the pattern uses the segment. Zero-length segments remain valid if explicitly configured.
+	if domainConfig.PatternType == string(models.PatternTypePrefixVariable) || domainConfig.PatternType == string(models.PatternTypeBothVariable) {
+		prefixNull = sql.NullInt32{Int32: int32(domainConfig.PrefixVariableLength), Valid: true}
+	}
+	if domainConfig.PatternType == string(models.PatternTypeSuffixVariable) || domainConfig.PatternType == string(models.PatternTypeBothVariable) {
+		suffixNull = sql.NullInt32{Int32: int32(domainConfig.SuffixVariableLength), Valid: true}
+	}
+
 	hashInput := models.DomainGenerationCampaignParams{
-		PatternType:    domainConfig.PatternType,
-		VariableLength: domainConfig.VariableLength,
-		CharacterSet:   domainConfig.CharacterSet,
-		ConstantString: csPtr,
-		TLD:            domainConfig.TLD,
+		PatternType:          domainConfig.PatternType,
+		VariableLength:       domainConfig.VariableLength,
+		PrefixVariableLength: prefixNull,
+		SuffixVariableLength: suffixNull,
+		CharacterSet:         domainConfig.CharacterSet,
+		ConstantString:       csPtr,
+		TLD:                  domainConfig.TLD,
 	}
 	hashRes, herr := domainexpert.GenerateDomainGenerationPhaseConfigHash(hashInput)
 	if herr != nil {
@@ -528,10 +621,6 @@ func (s *domainGenerationService) Validate(ctx context.Context, config interface
 		return fmt.Errorf("invalid configuration type")
 	}
 
-	if domainConfig.VariableLength <= 0 {
-		return fmt.Errorf("variable length must be positive")
-	}
-
 	if domainConfig.CharacterSet == "" {
 		return fmt.Errorf("character set cannot be empty")
 	}
@@ -544,13 +633,33 @@ func (s *domainGenerationService) Validate(ctx context.Context, config interface
 		return fmt.Errorf("number of domains must be positive")
 	}
 
-	// Use domainexpert engine to validate configuration
+	cfgCopy := domainConfig
+	if err := cfgCopy.Normalize(); err != nil {
+		return err
+	}
+
+	switch cfgCopy.PatternType {
+	case string(models.PatternTypePrefixVariable):
+		if cfgCopy.PrefixVariableLength <= 0 {
+			return fmt.Errorf("prefix pattern requires prefixVariableLength > 0")
+		}
+	case string(models.PatternTypeSuffixVariable):
+		if cfgCopy.SuffixVariableLength <= 0 {
+			return fmt.Errorf("suffix pattern requires suffixVariableLength > 0")
+		}
+	case string(models.PatternTypeBothVariable):
+		if cfgCopy.PrefixVariableLength <= 0 || cfgCopy.SuffixVariableLength <= 0 {
+			return fmt.Errorf("both pattern requires prefixVariableLength and suffixVariableLength > 0")
+		}
+	}
+
 	_, err := domainexpert.NewDomainGenerator(
-		domainexpert.CampaignPatternType(domainConfig.PatternType),
-		domainConfig.VariableLength,
-		domainConfig.CharacterSet,
-		domainConfig.ConstantString,
-		domainConfig.TLD,
+		domainexpert.CampaignPatternType(cfgCopy.PatternType),
+		cfgCopy.PrefixVariableLength,
+		cfgCopy.SuffixVariableLength,
+		cfgCopy.CharacterSet,
+		cfgCopy.ConstantString,
+		cfgCopy.TLD,
 	)
 
 	return err

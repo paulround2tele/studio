@@ -479,27 +479,30 @@ type LeadItem struct {
 
 // DomainGenerationCampaignParams holds parameters for a domain generation campaign
 type DomainGenerationCampaignParams struct {
-	CampaignID                uuid.UUID `db:"campaign_id" json:"-"`
-	PatternType               string    `db:"pattern_type" json:"patternType" validate:"required,oneof=prefix_variable suffix_variable both_variable"`
-	VariableLength            int       `db:"variable_length" json:"variableLength" validate:"gte=0"`
-	CharacterSet              string    `db:"character_set" json:"characterSet" validate:"required"`
-	ConstantString            *string   `db:"constant_string" json:"constantString,omitempty" validate:"omitempty"`
-	TLD                       string    `db:"tld" json:"tld" validate:"required"`
-	NumDomainsToGenerate      int       `db:"num_domains_to_generate" json:"numDomainsToGenerate" validate:"required,gt=0"`
-	TotalPossibleCombinations int64     `db:"total_possible_combinations" json:"totalPossibleCombinations" validate:"required,gt=0"`
-	CurrentOffset             int64     `db:"current_offset" json:"currentOffset" validate:"gte=0"`
-	CreatedAt                 time.Time `db:"created_at" json:"createdAt"`
-	UpdatedAt                 time.Time `db:"updated_at" json:"updatedAt"`
+	CampaignID                uuid.UUID     `db:"campaign_id" json:"-"`
+	PatternType               string        `db:"pattern_type" json:"patternType" validate:"required,oneof=prefix_variable suffix_variable both_variable"`
+	VariableLength            int           `db:"variable_length" json:"variableLength" validate:"gte=0"`
+	PrefixVariableLength      sql.NullInt32 `db:"prefix_variable_length" json:"prefixVariableLength,omitempty"`
+	SuffixVariableLength      sql.NullInt32 `db:"suffix_variable_length" json:"suffixVariableLength,omitempty"`
+	CharacterSet              string        `db:"character_set" json:"characterSet" validate:"required"`
+	ConstantString            *string       `db:"constant_string" json:"constantString,omitempty" validate:"omitempty"`
+	TLD                       string        `db:"tld" json:"tld" validate:"required"`
+	NumDomainsToGenerate      int           `db:"num_domains_to_generate" json:"numDomainsToGenerate" validate:"required,gt=0"`
+	TotalPossibleCombinations int64         `db:"total_possible_combinations" json:"totalPossibleCombinations" validate:"required,gt=0"`
+	CurrentOffset             int64         `db:"current_offset" json:"currentOffset" validate:"gte=0"`
+	CreatedAt                 time.Time     `db:"created_at" json:"createdAt"`
+	UpdatedAt                 time.Time     `db:"updated_at" json:"updatedAt"`
 }
 
 // NormalizedDomainGenerationParams holds the core, normalized parameters for domain generation hashing and storage.
 // These fields are extracted from DomainGenerationCampaignParams and normalized (e.g., sorted CharacterSet).
 type NormalizedDomainGenerationParams struct {
-	PatternType    string `json:"patternType"`
-	VariableLength int    `json:"variableLength"`
-	CharacterSet   string `json:"characterSet"` // Should be sorted for consistent hashing
-	ConstantString string `json:"constantString"`
-	TLD            string `json:"tld"`
+	PatternType          string `json:"patternType"`
+	PrefixVariableLength int    `json:"prefixVariableLength"`
+	SuffixVariableLength int    `json:"suffixVariableLength"`
+	CharacterSet         string `json:"characterSet"` // Should be sorted for consistent hashing
+	ConstantString       string `json:"constantString"`
+	TLD                  string `json:"tld"`
 }
 
 // DomainGenerationPhaseConfigState tracks the global last offset for a unique domain generation configuration.

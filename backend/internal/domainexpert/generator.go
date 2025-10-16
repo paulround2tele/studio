@@ -13,31 +13,34 @@ import (
 type CampaignPatternType string
 
 const (
-	PatternPrefix CampaignPatternType = "prefix" // [VARIABLE][CONSTANT][TLD]
-	PatternSuffix CampaignPatternType = "suffix" // [CONSTANT][VARIABLE][TLD]
-	PatternBoth   CampaignPatternType = "both"   // [VARIABLE][CONSTANT][VARIABLE][TLD]
+	PatternPrefix CampaignPatternType = "prefix_variable" // [VARIABLE][CONSTANT][TLD]
+	PatternSuffix CampaignPatternType = "suffix_variable" // [CONSTANT][VARIABLE][TLD]
+	PatternBoth   CampaignPatternType = "both_variable"   // [VARIABLE][CONSTANT][VARIABLE][TLD]
 )
 
 // DomainGenerator holds the configuration for a domain generation task.
 type DomainGenerator struct {
-	PatternType    CampaignPatternType
-	VariableLength int    // Length of EACH variable segment if PatternBoth
-	CharacterSet   []rune // The set of characters to use for variable parts
-	ConstantString string // The static part of the domain
-	TLD            string // Top-Level Domain, e.g., ".com"
+	PatternType          CampaignPatternType
+	PrefixVariableLength int    // Length of prefix variable segment
+	SuffixVariableLength int    // Length of suffix variable segment
+	CharacterSet         []rune // The set of characters to use for variable parts
+	ConstantString       string // The static part of the domain
+	TLD                  string // Top-Level Domain, e.g., ".com"
 
-	charsetSize          int
-	totalCombinations    int64
-	maxVariableStringLen int // For PatternBoth, this is VariableLength * 2
+	charsetSize       int
+	totalCombinations int64
 }
 
 // NewDomainGenerator initializes a new domain generator.
-func NewDomainGenerator(patternType CampaignPatternType, variableLength int, charSet string, constantStr string, tld string) (*DomainGenerator, error) {
-	log.Printf("DEBUG [NewDomainGenerator]: Input - PatternType=%s, VariableLength=%d, CharSet='%s' (len=%d), ConstantStr='%s', TLD='%s'",
-		patternType, variableLength, charSet, len(charSet), constantStr, tld)
+func NewDomainGenerator(patternType CampaignPatternType, prefixVariableLength int, suffixVariableLength int, charSet string, constantStr string, tld string) (*DomainGenerator, error) {
+	log.Printf("DEBUG [NewDomainGenerator]: Input - PatternType=%s, PrefixVariableLength=%d, SuffixVariableLength=%d, CharSet='%s' (len=%d), ConstantStr='%s', TLD='%s'",
+		patternType, prefixVariableLength, suffixVariableLength, charSet, len(charSet), constantStr, tld)
 
-	if variableLength < 0 { // allow 0 for constant-only domains
-		return nil, fmt.Errorf("variable length must be >= 0")
+	if prefixVariableLength < 0 {
+		return nil, fmt.Errorf("prefix variable length must be >= 0")
+	}
+	if suffixVariableLength < 0 {
+		return nil, fmt.Errorf("suffix variable length must be >= 0")
 	}
 	if charSet == "" {
 		return nil, fmt.Errorf("character set cannot be empty")
@@ -68,38 +71,40 @@ func NewDomainGenerator(patternType CampaignPatternType, variableLength int, cha
 	log.Printf("DEBUG [NewDomainGenerator]: Processed CharSet - DistinctRunes=%d", len(distinctRunes))
 
 	dg := &DomainGenerator{
-		PatternType:    patternType,
-		VariableLength: variableLength,
-		CharacterSet:   distinctRunes,
-		ConstantString: constantStr,
-		TLD:            tld,
-		charsetSize:    len(distinctRunes),
+		PatternType:          patternType,
+		PrefixVariableLength: prefixVariableLength,
+		SuffixVariableLength: suffixVariableLength,
+		CharacterSet:         distinctRunes,
+		ConstantString:       constantStr,
+		TLD:                  tld,
+		charsetSize:          len(distinctRunes),
 	}
 
 	switch patternType {
 	case PatternPrefix, PatternSuffix:
-		if variableLength == 0 {
+		effectiveLength := prefixVariableLength
+		if patternType == PatternSuffix {
+			effectiveLength = suffixVariableLength
+		}
+		if effectiveLength == 0 {
 			// Constant-only domain, exactly one combination
 			dg.totalCombinations = 1
-			dg.maxVariableStringLen = 0
 			log.Printf("DEBUG [NewDomainGenerator]: Prefix/Suffix constant-only - TotalCombinations=1")
 		} else {
-			dg.totalCombinations = power(int64(dg.charsetSize), int64(variableLength))
-			dg.maxVariableStringLen = variableLength
+			dg.totalCombinations = power(int64(dg.charsetSize), int64(effectiveLength))
 			log.Printf("DEBUG [NewDomainGenerator]: Prefix/Suffix - CharsetSize=%d, VariableLength=%d, TotalCombinations=%d",
-				dg.charsetSize, variableLength, dg.totalCombinations)
+				dg.charsetSize, effectiveLength, dg.totalCombinations)
 		}
 	case PatternBoth:
-		if variableLength == 0 {
+		totalLength := prefixVariableLength + suffixVariableLength
+		if totalLength == 0 {
 			// Treat both with 0 as just constant as well
 			dg.totalCombinations = 1
-			dg.maxVariableStringLen = 0
 			log.Printf("DEBUG [NewDomainGenerator]: Both constant-only - TotalCombinations=1")
 		} else {
-			dg.totalCombinations = power(int64(dg.charsetSize), int64(variableLength*2))
-			dg.maxVariableStringLen = variableLength * 2
-			log.Printf("DEBUG [NewDomainGenerator]: Both - CharsetSize=%d, VariableLength*2=%d, TotalCombinations=%d",
-				dg.charsetSize, variableLength*2, dg.totalCombinations)
+			dg.totalCombinations = power(int64(dg.charsetSize), int64(totalLength))
+			log.Printf("DEBUG [NewDomainGenerator]: Both - CharsetSize=%d, PrefixLength=%d, SuffixLength=%d, TotalCombinations=%d",
+				dg.charsetSize, prefixVariableLength, suffixVariableLength, dg.totalCombinations)
 		}
 	default:
 		return nil, fmt.Errorf("invalid pattern type: %s", patternType)
@@ -107,8 +112,8 @@ func NewDomainGenerator(patternType CampaignPatternType, variableLength int, cha
 
 	// CRITICAL: Validate that totalCombinations is positive
 	if dg.totalCombinations <= 0 {
-		return nil, fmt.Errorf("CRITICAL: totalCombinations calculated as %d, must be > 0. CharsetSize=%d, VariableLength=%d, PatternType=%s",
-			dg.totalCombinations, dg.charsetSize, variableLength, patternType)
+		return nil, fmt.Errorf("CRITICAL: totalCombinations calculated as %d, must be > 0. CharsetSize=%d, PrefixVariableLength=%d, SuffixVariableLength=%d, PatternType=%s",
+			dg.totalCombinations, dg.charsetSize, prefixVariableLength, suffixVariableLength, patternType)
 	}
 
 	log.Printf("DEBUG [NewDomainGenerator]: SUCCESS - Final TotalCombinations=%d", dg.totalCombinations)
@@ -116,12 +121,13 @@ func NewDomainGenerator(patternType CampaignPatternType, variableLength int, cha
 	// Check for overflow against int64 (MaxInt64 is approx 9e18)
 	// Our int64 totalCombinations can be larger. The user spec said "int64 range"
 	// This check might need to be against a specific max for the application.
-	if dg.totalCombinations > math.MaxInt64/2 && variableLength > 10 { // Heuristic for potential overflow if converted to signed later or if limit is int64.
+	totalVariableLength := prefixVariableLength + suffixVariableLength
+	if dg.totalCombinations > math.MaxInt64/2 && totalVariableLength > 10 { // Heuristic for potential overflow if converted to signed later or if limit is int64.
 		// For practical purposes, int64 is fine unless it needs to fit in a signed int64 DB field.
 		// The prompt said: "Total combinations must not exceed int64 range"
 		// If totalCombinations itself must fit int64, then: if dg.totalCombinations > int64(math.MaxInt64)
 		// For now, we use int64 internally for generation logic.
-		log.Printf("Warning: Large combination count %d with variable length %d may cause performance issues", dg.totalCombinations, variableLength)
+		log.Printf("Warning: Large combination count %d with total variable length %d may cause performance issues", dg.totalCombinations, totalVariableLength)
 	}
 
 	return dg, nil
@@ -178,28 +184,35 @@ func (dg *DomainGenerator) GenerateDomainAtOffset(offset int64) (string, error) 
 	switch dg.PatternType {
 	case PatternPrefix:
 		// Generate [VARIABLE][CONSTANT][TLD] (or constant-only if VariableLength=0)
-		if dg.VariableLength == 0 { // constant-only
+		if dg.PrefixVariableLength == 0 { // constant-only
 			return dg.ConstantString + dg.TLD, nil
 		}
-		generateVariableString(tempOffset, dg.VariableLength, dg.CharacterSet, dg.charsetSize, &varPart1)
+		generateVariableString(tempOffset, dg.PrefixVariableLength, dg.CharacterSet, dg.charsetSize, &varPart1)
 		return varPart1.String() + dg.ConstantString + dg.TLD, nil
 	case PatternSuffix:
 		// Generate [CONSTANT][VARIABLE][TLD] (or constant-only)
-		if dg.VariableLength == 0 {
+		if dg.SuffixVariableLength == 0 {
 			return dg.ConstantString + dg.TLD, nil
 		}
-		generateVariableString(tempOffset, dg.VariableLength, dg.CharacterSet, dg.charsetSize, &varPart1)
+		generateVariableString(tempOffset, dg.SuffixVariableLength, dg.CharacterSet, dg.charsetSize, &varPart1)
 		return dg.ConstantString + varPart1.String() + dg.TLD, nil
 	case PatternBoth:
 		// Generate [VARIABLE1][CONSTANT][VARIABLE2][TLD] or constant-only
-		if dg.VariableLength == 0 {
+		totalLen := dg.PrefixVariableLength + dg.SuffixVariableLength
+		if totalLen == 0 {
 			return dg.ConstantString + dg.TLD, nil
 		}
 		var varFull strings.Builder
-		generateVariableString(tempOffset, dg.VariableLength*2, dg.CharacterSet, dg.charsetSize, &varFull)
+		generateVariableString(tempOffset, totalLen, dg.CharacterSet, dg.charsetSize, &varFull)
 		fullVarStr := varFull.String()
-		var1Str := fullVarStr[:dg.VariableLength]
-		var2Str := fullVarStr[dg.VariableLength:]
+		var1Str := ""
+		var2Str := ""
+		if dg.PrefixVariableLength > 0 {
+			var1Str = fullVarStr[:dg.PrefixVariableLength]
+		}
+		if dg.SuffixVariableLength > 0 {
+			var2Str = fullVarStr[len(fullVarStr)-dg.SuffixVariableLength:]
+		}
 		return var1Str + dg.ConstantString + var2Str + dg.TLD, nil
 	default:
 		return "", fmt.Errorf("unknown pattern type: %s", dg.PatternType)

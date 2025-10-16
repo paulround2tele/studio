@@ -15,18 +15,19 @@ import (
 
 // GenerateDomainGenerationPhaseConfigHashInput is a subset of DomainGenerationCampaignParams used for hashing.
 // It is effectively the same as models.NormalizedDomainGenerationParams but defined here for clarity of input.
-type GenerateDomainGenerationPhaseConfigHashInput struct { // Corrected: 'type' keyword moved here
-	PatternType    string
-	VariableLength int
-	CharacterSet   string
-	ConstantString string
-	TLD            string
+type GenerateDomainGenerationPhaseConfigHashInput struct {
+	PatternType          string
+	PrefixVariableLength int
+	SuffixVariableLength int
+	CharacterSet         string
+	ConstantString       string
+	TLD                  string
 }
 
 // GenerateDomainGenerationPhaseConfigHashResult holds the generated hash and the normalized params used.
-type GenerateDomainGenerationPhaseConfigHashResult struct { // Corrected: 'type' keyword moved here
+type GenerateDomainGenerationPhaseConfigHashResult struct {
 	HashString       string
-	NormalizedParams models.NormalizedDomainGenerationParams // Assuming this type exists in models
+	NormalizedParams models.NormalizedDomainGenerationParams
 }
 
 // GenerateDomainGenerationPhaseConfigHash creates a stable hash for a given set of domain generation parameters.
@@ -34,10 +35,10 @@ type GenerateDomainGenerationPhaseConfigHashResult struct { // Corrected: 'type'
 // It returns the hex-encoded SHA256 hash string and the normalized parameters used for hashing.
 func GenerateDomainGenerationPhaseConfigHash(params models.DomainGenerationCampaignParams) (*GenerateDomainGenerationPhaseConfigHashResult, error) {
 	// Normalize CharacterSet: convert to lowercase and sort characters
-    charSetValue := params.CharacterSet
-    if charSetValue == "" {
-            slog.Warn("GenerateDomainGenerationPhaseConfigHash: CharacterSet is empty, using empty string for hashing.")
-    }
+	charSetValue := params.CharacterSet
+	if charSetValue == "" {
+		slog.Warn("GenerateDomainGenerationPhaseConfigHash: CharacterSet is empty, using empty string for hashing.")
+	}
 	charSet := strings.ToLower(charSetValue)
 	chars := strings.Split(charSet, "")
 	sort.Strings(chars)
@@ -49,18 +50,17 @@ func GenerateDomainGenerationPhaseConfigHash(params models.DomainGenerationCampa
 		normalizedTLD = "." + normalizedTLD
 	}
 
-	// Assuming models.NormalizedDomainGenerationParams is defined in your models package like this:
-	// type NormalizedDomainGenerationParams struct {
-	//     PatternType    string `json:"patternType"`
-	//     VariableLength int    `json:"variableLength"`
-	//     CharacterSet   string `json:"characterSet"`
-	//     ConstantString string `json:"constantString"`
-	//     TLD            string `json:"tld"`
-	// }
-    varLengthValue := params.VariableLength
-    if varLengthValue == 0 {
-            slog.Warn("GenerateDomainGenerationPhaseConfigHash: VariableLength is 0, using 0 for hashing.")
-    }
+	prefixLen := 0
+	if params.PrefixVariableLength.Valid {
+		prefixLen = int(params.PrefixVariableLength.Int32)
+	}
+	suffixLen := 0
+	if params.SuffixVariableLength.Valid {
+		suffixLen = int(params.SuffixVariableLength.Int32)
+	}
+	if prefixLen == 0 && suffixLen == 0 {
+		slog.Warn("GenerateDomainGenerationPhaseConfigHash: both prefix and suffix lengths are 0; hashing will treat as 0 values.")
+	}
 
 	var constStrValue string
 	if params.ConstantString != nil {
@@ -70,11 +70,12 @@ func GenerateDomainGenerationPhaseConfigHash(params models.DomainGenerationCampa
 	}
 
 	normalizedParams := models.NormalizedDomainGenerationParams{
-		PatternType:    strings.ToLower(params.PatternType), // Also normalize PatternType to lowercase for consistency
-		VariableLength: varLengthValue,
-		CharacterSet:   normalizedCharSet,
-		ConstantString: constStrValue, // Assuming ConstantString is case-sensitive as per generation logic
-		TLD:            normalizedTLD,
+		PatternType:          strings.ToLower(params.PatternType),
+		PrefixVariableLength: prefixLen,
+		SuffixVariableLength: suffixLen,
+		CharacterSet:         normalizedCharSet,
+		ConstantString:       constStrValue,
+		TLD:                  normalizedTLD,
 	}
 
 	// Marshal the normalized struct to JSON for hashing

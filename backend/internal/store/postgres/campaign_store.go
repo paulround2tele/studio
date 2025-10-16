@@ -1212,22 +1212,32 @@ func (s *campaignStorePostgres) CountCampaignsWithPatternHash(ctx context.Contex
 	}
 
 	query := `
-		SELECT COUNT(DISTINCT dgcp.campaign_id)
-		FROM domain_generation_campaign_params dgcp
-		INNER JOIN lead_generation_campaigns c ON c.id = dgcp.campaign_id
-		WHERE c.current_phase = 'generation'
-		AND (
-			-- Calculate hash from pattern params and compare
-			md5(
-				CONCAT(
-					COALESCE(dgcp.pattern_type, ''), '|',
-					COALESCE(dgcp.variable_length::text, ''), '|',
-					COALESCE(dgcp.character_set, ''), '|',
-					COALESCE(dgcp.constant_string, ''), '|',
-					COALESCE(dgcp.tld, '')
-				)
-			) = $1
+		WITH normalized AS (
+			SELECT
+				dgcp.campaign_id,
+				encode(
+					sha256(
+						json_build_object(
+							'patternType', lower(dgcp.pattern_type::text),
+							'prefixVariableLength', COALESCE(dgcp.prefix_variable_length, 0),
+							'suffixVariableLength', COALESCE(dgcp.suffix_variable_length, 0),
+							'characterSet', COALESCE((SELECT string_agg(ch, '' ORDER BY ch)
+								FROM regexp_split_to_table(lower(dgcp.character_set), '') AS ch), ''),
+							'constantString', COALESCE(dgcp.constant_string, ''),
+							'tld', CASE
+								WHEN dgcp.tld IS NULL OR dgcp.tld = '' THEN ''
+								ELSE '.' || trim(both '.' FROM lower(dgcp.tld))
+							END
+						)::text::bytea
+					), 'hex'
+				) AS computed_hash
+			FROM domain_generation_campaign_params dgcp
 		)
+		SELECT COUNT(DISTINCT n.campaign_id)
+		FROM normalized n
+		INNER JOIN lead_generation_campaigns c ON c.id = n.campaign_id
+		WHERE c.current_phase = 'generation'
+		AND n.computed_hash = $1
 	`
 
 	var count int

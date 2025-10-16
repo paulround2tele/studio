@@ -78,8 +78,11 @@ BEGIN
             FROM ranked
             WINDOW w AS (PARTITION BY campaign_id)
         ) sub
-        WHERE lgc.id = sub.campaign_id
-          AND (lgc.current_phase IS NULL OR lgc.current_phase = '');
+                WHERE lgc.id = sub.campaign_id
+                    AND (
+                            lgc.current_phase IS NULL
+                            OR (lgc.current_phase)::text = ''
+                    );
     ELSE
         RAISE NOTICE 'Skipping backfill of current_phase; campaign_phases table not found';
     END IF;

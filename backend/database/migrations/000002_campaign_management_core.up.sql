@@ -1,84 +1,137 @@
 -- Campaign Management Core Schema
 -- Based on Go models: LeadGenerationCampaign with phase-based architecture
 
--- Phase type enum for lead generation campaigns
-CREATE TYPE phase_type_enum AS ENUM (
-    'domain_generation',
-    'dns_validation', 
-    'http_keyword_validation',
-    'analysis'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'phase_type_enum') THEN
+        CREATE TYPE phase_type_enum AS ENUM (
+            'domain_generation',
+            'dns_validation', 
+            'http_keyword_validation',
+            'analysis'
+        );
+    END IF;
+END;
+$$;
 
 -- Phase status enum for tracking phase execution
-CREATE TYPE phase_status_enum AS ENUM (
-    'not_started',
-    'ready',
-    'configured', 
-    'in_progress',
-    'paused',
-    'completed',
-    'failed'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'phase_status_enum') THEN
+        CREATE TYPE phase_status_enum AS ENUM (
+            'not_started',
+            'ready',
+            'configured', 
+            'in_progress',
+            'paused',
+            'completed',
+            'failed'
+        );
+    END IF;
+END;
+$$;
 
 -- Job type enum for background processing
-CREATE TYPE job_type_enum AS ENUM (
-    'generation',
-    'dns_validation',
-    'http_keyword_validation', 
-    'analysis'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'job_type_enum') THEN
+        CREATE TYPE job_type_enum AS ENUM (
+            'generation',
+            'dns_validation',
+            'http_keyword_validation', 
+            'analysis'
+        );
+    END IF;
+END;
+$$;
 
 -- Campaign job status enum
-CREATE TYPE campaign_job_status_enum AS ENUM (
-    'pending',
-    'queued',
-    'running',
-    'completed',
-    'failed',
-    'cancelled'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'campaign_job_status_enum') THEN
+        CREATE TYPE campaign_job_status_enum AS ENUM (
+            'pending',
+            'queued',
+            'running',
+            'completed',
+            'failed',
+            'cancelled'
+        );
+    END IF;
+END;
+$$;
 
 -- Job business status enum
-CREATE TYPE job_business_status_enum AS ENUM (
-    'processing',
-    'retry',
-    'priority_queued',
-    'batch_optimized'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'job_business_status_enum') THEN
+        CREATE TYPE job_business_status_enum AS ENUM (
+            'processing',
+            'retry',
+            'priority_queued',
+            'batch_optimized'
+        );
+    END IF;
+END;
+$$;
 
 -- Validation status enum
-CREATE TYPE validation_status_enum AS ENUM (
-    'pending',
-    'valid',
-    'invalid', 
-    'error',
-    'skipped'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'validation_status_enum') THEN
+        CREATE TYPE validation_status_enum AS ENUM (
+            'pending',
+            'valid',
+            'invalid', 
+            'error',
+            'skipped'
+        );
+    END IF;
+END;
+$$;
 
 -- Domain DNS status enum
-CREATE TYPE domain_dns_status_enum AS ENUM (
-    'pending',
-    'ok',
-    'error',
-    'timeout'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'domain_dns_status_enum') THEN
+        CREATE TYPE domain_dns_status_enum AS ENUM (
+            'pending',
+            'ok',
+            'error',
+            'timeout'
+        );
+    END IF;
+END;
+$$;
 
 -- Domain HTTP status enum  
-CREATE TYPE domain_http_status_enum AS ENUM (
-    'pending',
-    'ok',
-    'error',
-    'timeout'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'domain_http_status_enum') THEN
+        CREATE TYPE domain_http_status_enum AS ENUM (
+            'pending',
+            'ok',
+            'error',
+            'timeout'
+        );
+    END IF;
+END;
+$$;
 
 -- Domain lead status enum
-CREATE TYPE domain_lead_status_enum AS ENUM (
-    'pending',
-    'match',
-    'no_match',
-    'error',
-    'timeout'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'domain_lead_status_enum') THEN
+        CREATE TYPE domain_lead_status_enum AS ENUM (
+            'pending',
+            'match',
+            'no_match',
+            'error',
+            'timeout'
+        );
+    END IF;
+END;
+$$;
 
 -- Lead generation campaigns table with phase-based architecture
 CREATE TABLE IF NOT EXISTS lead_generation_campaigns (

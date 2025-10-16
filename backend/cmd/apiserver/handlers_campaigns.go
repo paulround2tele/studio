@@ -556,6 +556,14 @@ func mapToDomainGenerationConfig(in map[string]interface{}) (domainservices.Doma
 	if cfg.VariableLength == 0 {
 		cfg.VariableLength = getInt("variable_length", 0)
 	}
+	cfg.PrefixVariableLength = getInt("prefixVariableLength", 0)
+	if cfg.PrefixVariableLength == 0 {
+		cfg.PrefixVariableLength = getInt("prefix_variable_length", 0)
+	}
+	cfg.SuffixVariableLength = getInt("suffixVariableLength", 0)
+	if cfg.SuffixVariableLength == 0 {
+		cfg.SuffixVariableLength = getInt("suffix_variable_length", 0)
+	}
 	cfg.CharacterSet = getString("characterSet")
 	if cfg.CharacterSet == "" {
 		cfg.CharacterSet = getString("character_set")
@@ -579,9 +587,6 @@ func mapToDomainGenerationConfig(in map[string]interface{}) (domainservices.Doma
 	}
 
 	// Basic required checks mirroring service.Validate (allow 0 to enable constant-only domain e.g. example.com)
-	if cfg.VariableLength < 0 {
-		return cfg, fmt.Errorf("variableLength must be >= 0")
-	}
 	if cfg.CharacterSet == "" {
 		return cfg, fmt.Errorf("characterSet cannot be empty")
 	}
@@ -592,8 +597,27 @@ func mapToDomainGenerationConfig(in map[string]interface{}) (domainservices.Doma
 		return cfg, fmt.Errorf("numDomains must be positive")
 	}
 	if cfg.PatternType == "" {
-		cfg.PatternType = "prefix"
+		cfg.PatternType = string(models.PatternTypePrefixVariable)
 	}
+	if err := cfg.Normalize(); err != nil {
+		return cfg, err
+	}
+
+	switch cfg.PatternType {
+	case string(models.PatternTypePrefixVariable):
+		if cfg.PrefixVariableLength <= 0 {
+			return cfg, fmt.Errorf("prefixVariableLength must be > 0 for prefix pattern")
+		}
+	case string(models.PatternTypeSuffixVariable):
+		if cfg.SuffixVariableLength <= 0 {
+			return cfg, fmt.Errorf("suffixVariableLength must be > 0 for suffix pattern")
+		}
+	case string(models.PatternTypeBothVariable):
+		if cfg.PrefixVariableLength <= 0 || cfg.SuffixVariableLength <= 0 {
+			return cfg, fmt.Errorf("both pattern requires prefixVariableLength and suffixVariableLength > 0")
+		}
+	}
+
 	return cfg, nil
 }
 
@@ -1866,12 +1890,33 @@ func (h *strictHandlers) CampaignsDomainGenerationPatternOffset(ctx context.Cont
 		tld = *r.Body.Tld
 		tld = strings.TrimPrefix(tld, ".")
 	}
+	var prefixNull sql.NullInt32
+	var suffixNull sql.NullInt32
+	variableLengthTotal := int(r.Body.VariableLength)
+	pattern := string(r.Body.PatternType)
+
+	switch r.Body.PatternType {
+	case gen.PatternOffsetRequestPatternTypePrefix:
+		prefixNull = sql.NullInt32{Int32: int32(r.Body.VariableLength), Valid: true}
+		pattern = string(models.PatternTypePrefixVariable)
+	case gen.PatternOffsetRequestPatternTypeSuffix:
+		suffixNull = sql.NullInt32{Int32: int32(r.Body.VariableLength), Valid: true}
+		pattern = string(models.PatternTypeSuffixVariable)
+	case gen.PatternOffsetRequestPatternTypeBoth:
+		prefixNull = sql.NullInt32{Int32: int32(r.Body.VariableLength), Valid: true}
+		suffixNull = sql.NullInt32{Int32: int32(r.Body.VariableLength), Valid: true}
+		variableLengthTotal = int(r.Body.VariableLength) * 2
+		pattern = string(models.PatternTypeBothVariable)
+	}
+
 	params := models.DomainGenerationCampaignParams{
-		PatternType:    string(r.Body.PatternType),
-		VariableLength: int(r.Body.VariableLength),
-		CharacterSet:   r.Body.CharacterSet,
-		ConstantString: models.StringPtr(*constant),
-		TLD:            tld,
+		PatternType:          pattern,
+		VariableLength:       variableLengthTotal,
+		PrefixVariableLength: prefixNull,
+		SuffixVariableLength: suffixNull,
+		CharacterSet:         r.Body.CharacterSet,
+		ConstantString:       models.StringPtr(*constant),
+		TLD:                  tld,
 	}
 	hashRes, err := domainexpert.GenerateDomainGenerationPhaseConfigHash(params)
 	if err != nil {

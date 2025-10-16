@@ -3844,6 +3844,8 @@ CREATE TABLE public.domain_generation_campaign_params (
     campaign_id uuid NOT NULL,
     pattern_type public.domain_pattern_type_enum NOT NULL,
     variable_length integer NOT NULL,
+    prefix_variable_length integer,
+    suffix_variable_length integer,
     character_set character varying(255) NOT NULL,
     constant_string character varying(255),
     tld character varying(50) NOT NULL,
@@ -3855,6 +3857,8 @@ CREATE TABLE public.domain_generation_campaign_params (
     CONSTRAINT domain_generation_campaign_pa_total_possible_combinations_check CHECK ((total_possible_combinations > 0)),
     CONSTRAINT domain_generation_campaign_params_current_offset_check CHECK ((current_offset >= 0)),
     CONSTRAINT domain_generation_campaign_params_num_domains_to_generate_check CHECK ((num_domains_to_generate > 0)),
+    CONSTRAINT domain_generation_campaign_params_prefix_length_non_negative CHECK ((prefix_variable_length IS NULL OR prefix_variable_length >= 0)),
+    CONSTRAINT domain_generation_campaign_params_suffix_length_non_negative CHECK ((suffix_variable_length IS NULL OR suffix_variable_length >= 0)),
     CONSTRAINT domain_generation_campaign_params_variable_length_check CHECK ((variable_length > 0))
 );
 
