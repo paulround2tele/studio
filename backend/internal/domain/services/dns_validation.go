@@ -197,13 +197,34 @@ func (s *dnsValidationService) Configure(ctx context.Context, campaignID uuid.UU
 		return fmt.Errorf("invalid DNS validation configuration: %w (personas=%d batch=%d timeout=%d maxRetries=%d)", err, len(dnsConfig.PersonaIDs), dnsConfig.BatchSize, dnsConfig.Timeout, dnsConfig.MaxRetries)
 	}
 
-	// Get domains to validate from previous phase (domain generation)
-	domains, err := s.getDomainsToValidate(ctx, campaignID)
-	if err != nil {
-		return fmt.Errorf("failed to get domains for validation: %w", err)
+	// Determine if domain generation has produced domains yet. When configuring in
+	// full auto mode we may run before discovery has generated anything; in that
+	// case we defer the domain fetch and mark the execution as pending so the
+	// execute path can reload domains later without failing configuration.
+	shouldDeferDomainFetch := false
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		if phaseRow, err := s.store.GetCampaignPhase(ctx, exec, campaignID, models.PhaseTypeDomainGeneration); err == nil && phaseRow != nil {
+			switch phaseRow.Status {
+			case models.PhaseStatusNotStarted, models.PhaseStatusConfigured:
+				shouldDeferDomainFetch = true
+			}
+		}
 	}
 
-	pendingDomainLoad := len(domains) == 0
+	var domains []string
+	if !shouldDeferDomainFetch {
+		var err error
+		domains, err = s.getDomainsToValidate(ctx, campaignID)
+		if err != nil {
+			return fmt.Errorf("failed to get domains for validation: %w", err)
+		}
+	}
+
+	pendingDomainLoad := shouldDeferDomainFetch || len(domains) == 0
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -223,8 +244,9 @@ func (s *dnsValidationService) Configure(ctx context.Context, campaignID uuid.UU
 
 	if pendingDomainLoad {
 		s.deps.Logger.Info(ctx, "DNS validation configuration stored without domains", map[string]interface{}{
-			"campaign_id":   campaignID,
-			"persona_count": len(dnsConfig.PersonaIDs),
+			"campaign_id":    campaignID,
+			"persona_count":  len(dnsConfig.PersonaIDs),
+			"deferred_fetch": shouldDeferDomainFetch,
 		})
 	} else {
 		s.deps.Logger.Info(ctx, "DNS validation phase configured successfully", map[string]interface{}{
