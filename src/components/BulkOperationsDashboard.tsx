@@ -274,6 +274,8 @@ export const BulkOperationsDashboard: React.FC = () => {
             campaignId: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-dg`) as UUID,
             config: {
               patternType: 'prefix',
+              prefixVariableLength: 8,
+              suffixVariableLength: 0,
               variableLength: 8,
               characterSet: 'abcdefghijklmnopqrstuvwxyz',
               constantString: 'bulk-test-',

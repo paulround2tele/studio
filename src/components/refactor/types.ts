@@ -45,12 +45,13 @@ export interface WizardPatternStep {
   // Legacy / existing simple fields
   maxDomains?: number; // alias of numDomainsToGenerate concept
   tld?: string; // single tld convenience (first in tlds array)
-  variableLength?: number; // derived when prefix/suffix used; kept for backward compatibility
+  /** @deprecated Use prefixVariableLength / suffixVariableLength */
+  variableLength?: number; // retained temporarily for compatibility with legacy utilities
   characterSet?: string;
   // New enhanced configuration fields
   patternType?: 'prefix' | 'suffix' | 'both';
-  prefixLength?: number;
-  suffixLength?: number;
+  prefixVariableLength?: number;
+  suffixVariableLength?: number;
   tlds?: string[]; // multi TLD selection
   batchSize?: number;
   offsetStart?: number;

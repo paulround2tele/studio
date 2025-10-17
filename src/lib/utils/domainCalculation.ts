@@ -25,23 +25,32 @@ export function calculateMaxTheoreticalDomains(config: DomainGenerationParamsExt
 
   const { patternType, characterSet, variableLength, prefixVariableLength, suffixVariableLength } = config;
   const charSetLength = characterSet?.length || 26;
+  const legacy = variableLength ?? 0;
+  const prefixLength = typeof prefixVariableLength === 'number'
+    ? Math.max(0, prefixVariableLength)
+    : patternType === 'prefix'
+    ? legacy
+    : patternType === 'both'
+    ? Math.floor(legacy / 2)
+    : 0;
+  const suffixLength = typeof suffixVariableLength === 'number'
+    ? Math.max(0, suffixVariableLength)
+    : patternType === 'suffix'
+    ? legacy
+    : patternType === 'both'
+    ? legacy - Math.floor(legacy / 2)
+    : 0;
 
   switch (patternType) {
     case 'prefix':
-      return variableLength ? Math.pow(charSetLength, variableLength) : 0;
+      return prefixLength > 0 ? Math.pow(charSetLength, prefixLength) : 1;
     case 'suffix':
-      return variableLength ? Math.pow(charSetLength, variableLength) : 0;
-    case 'both':
-      // If explicit side lengths provided, use them; otherwise derive equally from variableLength
-      const pvl = typeof prefixVariableLength === 'number' && prefixVariableLength >= 0
-        ? prefixVariableLength
-        : Math.floor((variableLength || 0) / 2);
-      const svl = typeof suffixVariableLength === 'number' && suffixVariableLength >= 0
-        ? suffixVariableLength
-        : Math.ceil((variableLength || 0) / 2);
-      const prefixCombos = pvl > 0 ? Math.pow(charSetLength, pvl) : 1;
-      const suffixCombos = svl > 0 ? Math.pow(charSetLength, svl) : 1;
+      return suffixLength > 0 ? Math.pow(charSetLength, suffixLength) : 1;
+    case 'both': {
+      const prefixCombos = prefixLength > 0 ? Math.pow(charSetLength, prefixLength) : 1;
+      const suffixCombos = suffixLength > 0 ? Math.pow(charSetLength, suffixLength) : 1;
       return prefixCombos * suffixCombos;
+    }
     default:
       return 0;
   }
@@ -76,14 +85,22 @@ export function validateDomainConfig(config: DomainGenerationParamsExtended): {
     errors.push('Character set is required');
   }
 
+  const legacy = config.variableLength ?? 0;
+  const prefixLength = typeof config.prefixVariableLength === 'number' ? config.prefixVariableLength : legacy;
+  const suffixLength = typeof config.suffixVariableLength === 'number' ? config.suffixVariableLength : legacy;
+
   if (config.patternType === 'both') {
-    const p = Number(config.prefixVariableLength ?? 0);
-    const s = Number(config.suffixVariableLength ?? 0);
-    if (p < 1 || s < 1) {
+    if ((config.prefixVariableLength ?? 0) < 1 || (config.suffixVariableLength ?? 0) < 1) {
       errors.push('Both prefix and suffix variable lengths must be at least 1');
     }
-  } else if (!config.variableLength || config.variableLength < 1) {
-    errors.push('Variable length must be at least 1');
+  } else if (config.patternType === 'prefix') {
+    if (prefixLength < 1) {
+      errors.push('Prefix variable length must be at least 1');
+    }
+  } else if (config.patternType === 'suffix') {
+    if (suffixLength < 1) {
+      errors.push('Suffix variable length must be at least 1');
+    }
   }
 
   if (!config.tlds?.length || !config.tlds.some((tld: string) => tld.trim())) {

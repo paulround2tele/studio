@@ -2840,7 +2840,14 @@ export interface components {
                     type: "constant" | "variable";
                     /** @description Constant pattern string when type=constant */
                     constant?: string;
-                    /** @description Desired variable length for generation */
+                    /** @description Desired variable length for the prefix segment when pattern type includes prefix variation */
+                    prefixVariableLength?: number;
+                    /** @description Desired variable length for the suffix segment when pattern type includes suffix variation */
+                    suffixVariableLength?: number;
+                    /**
+                     * @deprecated
+                     * @description Legacy combined variable length retained for backwards compatibility
+                     */
                     variableLength?: number;
                     /** @description Character set used for variable generation */
                     charset?: string;
@@ -3234,7 +3241,15 @@ export interface components {
                 config: {
                     /** @enum {string} */
                     patternType: "prefix" | "suffix" | "both";
-                    variableLength: number;
+                    /** @description Optional prefix-side variable length when patternType is prefix or both */
+                    prefixVariableLength?: number;
+                    /** @description Optional suffix-side variable length when patternType is suffix or both */
+                    suffixVariableLength?: number;
+                    /**
+                     * @deprecated
+                     * @description Legacy combined length retained for backwards compatibility
+                     */
+                    variableLength?: number;
                     characterSet: string;
                     constantString: string;
                     tlds: string[];
@@ -3462,7 +3477,15 @@ export interface components {
         PatternOffsetRequest: {
             /** @enum {string} */
             patternType: "prefix" | "suffix" | "both";
-            variableLength: number;
+            /** @description Optional prefix-side variable length when patternType is prefix or both */
+            prefixVariableLength?: number;
+            /** @description Optional suffix-side variable length when patternType is suffix or both */
+            suffixVariableLength?: number;
+            /**
+             * @deprecated
+             * @description Legacy combined length retained for backwards compatibility (prefix+suffix)
+             */
+            variableLength?: number;
             characterSet: string;
             constantString?: string;
             /** @description Single TLD including dot, e.g. .com or without dot */

@@ -37,7 +37,25 @@ export interface CreateCampaignRequestConfigurationPatternConfig {
           string
     ;
   /**
-   * Desired variable length for generation
+   * Desired variable length for the prefix segment when pattern type includes prefix variation
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'prefixVariableLength'?: 
+        
+          
+          number
+    ;
+  /**
+   * Desired variable length for the suffix segment when pattern type includes suffix variation
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'suffixVariableLength'?: 
+        
+          
+          number
+    ;
+  /**
+   * Legacy combined variable length retained for backwards compatibility
    * @memberof CreateCampaignRequestConfigurationPatternConfig
    */
   'variableLength'?: 

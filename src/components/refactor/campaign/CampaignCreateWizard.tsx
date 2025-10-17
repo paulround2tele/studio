@@ -353,7 +353,6 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
     }
   };
 
-  // Auto-start with retry logic for resilience
   const attemptAutoStartWithRetry = async (campaignId: string, campaignName: string) => {
     const MAX_RETRIES = 2;
     const BACKOFF_BASE = 1000; // 1 second
@@ -368,67 +367,56 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
           showStarting(`Retrying auto-start (attempt ${attempt})...`);
         }
         
-        // Step 1: Configure the discovery phase with domain generation config
         const firstPhase: APIPhaseEnum = getFirstPhase();
-  const domainGenConfig = mapPatternToDomainGeneration(wizardState.pattern);
-        
-        await configurePhase({
-          campaignId,
-          phase: firstPhase,
-          config: {
-            configuration: domainGenConfig as unknown as Record<string, unknown>
-          }
-        }).unwrap();
-        
-  // Step 2: Configure subsequent phases using selections from the targeting step
-        
-        // Configure DNS validation with default persona
+        const domainGenConfig = mapPatternToDomainGeneration(wizardState.pattern);
         const dnsConfig = mapTargetingToDNSValidation(wizardState.targeting);
-        
-        await configurePhase({
-          campaignId,
-          phase: 'validation',
-          config: {
-            configuration: dnsConfig as unknown as Record<string, unknown>
-          }
-        }).unwrap();
-        
-        // Configure HTTP validation with default persona  
         const httpConfig = mapTargetingToHTTPValidation(wizardState.targeting);
-        
-        await configurePhase({
-          campaignId,
-          phase: 'extraction',
-          config: {
-            configuration: httpConfig as unknown as Record<string, unknown>
-          }
-        }).unwrap();
-
         const analysisConfig = mapTargetingToAnalysis(wizardState.targeting);
+
+        const phaseConfigurations: Array<{ phase: APIPhaseEnum; configuration: Record<string, unknown> }> = [
+          {
+            phase: firstPhase,
+            configuration: domainGenConfig as unknown as Record<string, unknown>,
+          },
+          {
+            phase: 'validation',
+            configuration: dnsConfig as unknown as Record<string, unknown>,
+          },
+          {
+            phase: 'extraction',
+            configuration: httpConfig as unknown as Record<string, unknown>,
+          },
+        ];
+
         if (analysisConfig) {
+          phaseConfigurations.push({
+            phase: 'analysis',
+            configuration: analysisConfig as unknown as Record<string, unknown>,
+          });
+        }
+
+        for (const { phase, configuration } of phaseConfigurations) {
           await configurePhase({
             campaignId,
-            phase: 'analysis',
+            phase,
             config: {
-              configuration: analysisConfig as unknown as Record<string, unknown>
-            }
+              configuration,
+            },
           }).unwrap();
         }
-        
-        // Step 3: Start the first phase (discovery/domain_generation) automatically
+
         await startPhase({
           campaignId,
-          phase: firstPhase
+          phase: firstPhase,
         }).unwrap();
-        
-        // Success!
-        showSuccess(`Campaign "${campaignName}" has been configured and started automatically.`);
-        
+
+        showSuccess(`Campaign "${campaignName}" has been configured and discovery is now running.`);
+
         toast({
-          title: "Campaign Created & Started",
-          description: `Campaign "${campaignName}" has been created in auto mode with phases configured and discovery started automatically.`,
+          title: 'Campaign Created & Started',
+          description: `Campaign "${campaignName}" is running in auto mode with discovery started and downstream phases configured.`,
         });
-        
+
         return; // Success, exit retry loop
         
       } catch (startError: unknown) {

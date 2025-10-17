@@ -381,12 +381,28 @@ func (s *httpValidationService) Configure(ctx context.Context, campaignID uuid.U
 		"campaign_id": campaignID,
 	})
 
-	// Enforce phase order: DNS must be completed before HTTP can be configured
-	if err := s.ensureDNSCompleted(ctx, campaignID); err != nil {
-		s.deps.Logger.Warn(ctx, "HTTP configuration blocked: DNS not completed", map[string]interface{}{
-			"campaign_id": campaignID,
-		})
-		return fmt.Errorf("cannot configure HTTP validation before DNS validation completes: %w", err)
+	// Observe DNS phase status; allow configuration even if discovery/DNS still pending
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		phase, err := s.store.GetCampaignPhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation)
+		if err != nil {
+			return fmt.Errorf("failed to inspect DNS phase status: %w", err)
+		}
+		if phase == nil || phase.Status != models.PhaseStatusCompleted {
+			if s.deps.Logger != nil {
+				dnsStatus := "unknown"
+				if phase != nil {
+					dnsStatus = string(phase.Status)
+				}
+				s.deps.Logger.Info(ctx, "HTTP validation configuration stored while DNS phase pending", map[string]interface{}{
+					"campaign_id": campaignID,
+					"dns_status":  dnsStatus,
+				})
+			}
+		}
 	}
 
 	// Type assert the configuration

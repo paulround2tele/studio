@@ -28,10 +28,28 @@ export interface BulkDomainGenerationRequestOperationsInnerConfig {
       'prefix' | 'suffix' | 'both'
 ;
   /**
-   * 
+   * Optional prefix-side variable length when patternType is prefix or both
    * @memberof BulkDomainGenerationRequestOperationsInnerConfig
    */
-  'variableLength': 
+  'prefixVariableLength'?: 
+        
+          
+          number
+    ;
+  /**
+   * Optional suffix-side variable length when patternType is suffix or both
+   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+   */
+  'suffixVariableLength'?: 
+        
+          
+          number
+    ;
+  /**
+   * Legacy combined length retained for backwards compatibility
+   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+   */
+  'variableLength'?: 
         
           
           number

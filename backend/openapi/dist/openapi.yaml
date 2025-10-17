@@ -6282,11 +6282,22 @@ components:
                 constant:
                   type: string
                   description: Constant pattern string when type=constant
+                prefixVariableLength:
+                  type: integer
+                  minimum: 0
+                  maximum: 64
+                  description: Desired variable length for the prefix segment when pattern type includes prefix variation
+                suffixVariableLength:
+                  type: integer
+                  minimum: 0
+                  maximum: 64
+                  description: Desired variable length for the suffix segment when pattern type includes suffix variation
                 variableLength:
                   type: integer
-                  minimum: 1
+                  minimum: 0
                   maximum: 64
-                  description: Desired variable length for generation
+                  description: Legacy combined variable length retained for backwards compatibility
+                  deprecated: true
                 charset:
                   type: string
                   description: Character set used for variable generation
@@ -7130,10 +7141,22 @@ components:
                       - prefix
                       - suffix
                       - both
+                  prefixVariableLength:
+                    type: integer
+                    minimum: 0
+                    maximum: 20
+                    description: Optional prefix-side variable length when patternType is prefix or both
+                  suffixVariableLength:
+                    type: integer
+                    minimum: 0
+                    maximum: 20
+                    description: Optional suffix-side variable length when patternType is suffix or both
                   variableLength:
                     type: integer
                     minimum: 0
                     maximum: 20
+                    description: Legacy combined length retained for backwards compatibility
+                    deprecated: true
                   characterSet:
                     type: string
                   constantString:
@@ -7152,7 +7175,6 @@ components:
                     maximum: 10000
                 required:
                   - patternType
-                  - variableLength
                   - characterSet
                   - constantString
                   - tlds
@@ -7666,9 +7688,19 @@ components:
             - prefix
             - suffix
             - both
+        prefixVariableLength:
+          type: integer
+          minimum: 0
+          description: Optional prefix-side variable length when patternType is prefix or both
+        suffixVariableLength:
+          type: integer
+          minimum: 0
+          description: Optional suffix-side variable length when patternType is suffix or both
         variableLength:
           type: integer
           minimum: 0
+          description: Legacy combined length retained for backwards compatibility (prefix+suffix)
+          deprecated: true
         characterSet:
           type: string
         constantString:
@@ -7678,7 +7710,6 @@ components:
           description: Single TLD including dot, e.g. .com or without dot
       required:
         - patternType
-        - variableLength
         - characterSet
     PatternOffsetResponse:
       type: object

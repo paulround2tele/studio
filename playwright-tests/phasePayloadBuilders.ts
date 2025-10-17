@@ -8,23 +8,31 @@ export interface PhaseConfigPayload {
   keywordSetIds?: string[];
 }
 
-// Discovery minimal payload (variableLength derives from prefix when prefix pattern)
-export function buildDiscoveryConfig(options?: Partial<{ patternType: 'prefix'|'suffix'|'both'; constantString: string; characterSet: string; variableLength: number; tlds: string[]; numDomainsToGenerate: number; batchSize: number; prefixLength?: number; suffixLength?: number; }>): PhaseConfigPayload {
+// Discovery minimal payload (variableLength derives from prefix/suffix lengths)
+export function buildDiscoveryConfig(options?: Partial<{ patternType: 'prefix'|'suffix'|'both'; constantString: string; characterSet: string; variableLength: number; tlds: string[]; numDomainsToGenerate: number; batchSize: number; prefixVariableLength?: number; suffixVariableLength?: number; }>): PhaseConfigPayload {
   const base = {
     patternType: 'prefix',
     constantString: 'brand',
     characterSet: 'abcdefghijklmnopqrstuvwxyz0123456789',
     variableLength: 6,
+    prefixVariableLength: 6,
+    suffixVariableLength: 0,
     tlds: ['.com'],
     numDomainsToGenerate: 100,
     batchSize: 20,
     ...options,
   };
   // Align variableLength if prefix/suffix custom lengths supplied
-  if (base.patternType === 'prefix' && typeof base.prefixLength === 'number') base.variableLength = base.prefixLength;
-  if (base.patternType === 'suffix' && typeof base.suffixLength === 'number') base.variableLength = base.suffixLength;
+  if (base.patternType === 'prefix' && typeof base.prefixVariableLength === 'number') {
+    base.variableLength = base.prefixVariableLength;
+    base.suffixVariableLength = 0;
+  }
+  if (base.patternType === 'suffix' && typeof base.suffixVariableLength === 'number') {
+    base.variableLength = base.suffixVariableLength;
+    base.prefixVariableLength = 0;
+  }
   if (base.patternType === 'both') {
-    const total = (base.prefixLength||0)+(base.suffixLength||0);
+    const total = (base.prefixVariableLength||0)+(base.suffixVariableLength||0);
     if (total>0) base.variableLength = total;
   }
   return { configuration: { ...base } };

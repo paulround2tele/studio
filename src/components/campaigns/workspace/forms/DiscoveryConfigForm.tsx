@@ -24,8 +24,8 @@ interface DiscoveryFormValues extends DiscoveryConfigFormValues {
   characterSet?: string;
   constantString?: string;
   variableLength?: number;
-  prefixLength?: number;
-  suffixLength?: number;
+  prefixVariableLength?: number;
+  suffixVariableLength?: number;
   tlds?: string[];
   numDomainsToGenerate?: number;
   batchSize?: number;
@@ -45,8 +45,8 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
       characterSet: 'abcdefghijklmnopqrstuvwxyz0123456789',
       constantString: 'brand',
       variableLength: 6,
-      prefixLength: 6,
-      suffixLength: 6,
+      prefixVariableLength: 6,
+      suffixVariableLength: 6,
       tlds: ['.com', '.net'],
       numDomainsToGenerate: 1000,
       batchSize: 50,
@@ -59,14 +59,20 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
       const tld = firstTld && !firstTld.startsWith('.') ? `.${firstTld}` : firstTld;
       // Normalize variableLength based on pattern selection
       let variableLength = values.variableLength;
-      if (values.patternType === 'prefix' && values.prefixLength) variableLength = values.prefixLength;
-      if (values.patternType === 'suffix' && values.suffixLength) variableLength = values.suffixLength;
+      if (values.patternType === 'prefix' && values.prefixVariableLength) variableLength = values.prefixVariableLength;
+      if (values.patternType === 'suffix' && values.suffixVariableLength) variableLength = values.suffixVariableLength;
       if (values.patternType === 'both') {
         // for backend expecting single variableLength we can sum, while also pass explicit fields for future expansion
-        const total = (values.prefixLength||0) + (values.suffixLength||0);
+        const total = (values.prefixVariableLength||0) + (values.suffixVariableLength||0);
         if (total > 0) variableLength = total;
       }
-      const configuration: Record<string, unknown> = { ...values, variableLength, tld };
+      const configuration: Record<string, unknown> = {
+        ...values,
+        prefixVariableLength: values.prefixVariableLength,
+        suffixVariableLength: values.suffixVariableLength,
+        variableLength,
+        tld,
+      };
       const config: PhaseConfigurationRequest = { configuration };
       const result = await configurePhase({ campaignId, phase: 'discovery', config }).unwrap();
       // Optimistically ensure cache has status configured if backend responded
@@ -95,7 +101,7 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
       <div className="space-y-2 text-xs" data-testid="phase-discovery-readonly">
         <div data-testid="phase-discovery-readonly-pattern"><strong>Pattern:</strong> {values.patternType}</div>
         <div data-testid="phase-discovery-readonly-tlds"><strong>TLDs:</strong> {(values.tlds||[]).join(', ')}</div>
-        <div data-testid="phase-discovery-readonly-variable-length"><strong>Variable Length:</strong> {values.variableLength}</div>
+  <div data-testid="phase-discovery-readonly-variable-length"><strong>Total Variable Length:</strong> {(values.prefixVariableLength || 0) + (values.suffixVariableLength || 0) || values.variableLength}</div>
         <div data-testid="phase-discovery-readonly-count"><strong>Count:</strong> {values.numDomainsToGenerate}</div>
       </div>
     );
@@ -123,13 +129,13 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
             if (pt === 'prefix') return (
               <div className="flex flex-col gap-1" data-testid="phase-discovery-field-prefix-length">
                 <label className="font-medium">Prefix Variable Length</label>
-                <Input data-testid="phase-discovery-input-prefix-length" type="number" disabled={isLoading} {...form.register('prefixLength', { valueAsNumber: true })} />
+                <Input data-testid="phase-discovery-input-prefix-length" type="number" disabled={isLoading} {...form.register('prefixVariableLength', { valueAsNumber: true })} />
               </div>
             );
             if (pt === 'suffix') return (
               <div className="flex flex-col gap-1" data-testid="phase-discovery-field-suffix-length">
                 <label className="font-medium">Suffix Variable Length</label>
-                <Input data-testid="phase-discovery-input-suffix-length" type="number" disabled={isLoading} {...form.register('suffixLength', { valueAsNumber: true })} />
+                <Input data-testid="phase-discovery-input-suffix-length" type="number" disabled={isLoading} {...form.register('suffixVariableLength', { valueAsNumber: true })} />
               </div>
             );
             if (pt === 'both') return (
@@ -137,11 +143,11 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1" data-testid="phase-discovery-field-prefix-length">
                     <label className="font-medium">Prefix Variable Length</label>
-                    <Input data-testid="phase-discovery-input-prefix-length" type="number" disabled={isLoading} {...form.register('prefixLength', { valueAsNumber: true })} />
+                    <Input data-testid="phase-discovery-input-prefix-length" type="number" disabled={isLoading} {...form.register('prefixVariableLength', { valueAsNumber: true })} />
                   </div>
                   <div className="flex flex-col gap-1" data-testid="phase-discovery-field-suffix-length">
                     <label className="font-medium">Suffix Variable Length</label>
-                    <Input data-testid="phase-discovery-input-suffix-length" type="number" disabled={isLoading} {...form.register('suffixLength', { valueAsNumber: true })} />
+                    <Input data-testid="phase-discovery-input-suffix-length" type="number" disabled={isLoading} {...form.register('suffixVariableLength', { valueAsNumber: true })} />
                   </div>
                 </div>
               </div>

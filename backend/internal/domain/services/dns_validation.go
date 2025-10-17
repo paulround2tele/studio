@@ -64,6 +64,7 @@ type dnsExecution struct {
 	validDomains      []string
 	invalidDomains    []string
 	lastError         string
+	pendingDomainLoad bool
 }
 
 // NewDNSValidationService creates a new DNS validation service
@@ -202,9 +203,7 @@ func (s *dnsValidationService) Configure(ctx context.Context, campaignID uuid.UU
 		return fmt.Errorf("failed to get domains for validation: %w", err)
 	}
 
-	if len(domains) == 0 {
-		return fmt.Errorf("no domains found to validate for campaign %s", campaignID)
-	}
+	pendingDomainLoad := len(domains) == 0
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -219,13 +218,21 @@ func (s *dnsValidationService) Configure(ctx context.Context, campaignID uuid.UU
 		itemsProcessed:    0,
 		validDomains:      make([]string, 0),
 		invalidDomains:    make([]string, 0),
+		pendingDomainLoad: pendingDomainLoad,
 	}
 
-	s.deps.Logger.Info(ctx, "DNS validation phase configured successfully", map[string]interface{}{
-		"campaign_id":   campaignID,
-		"domains_count": len(domains),
-		"persona_count": len(dnsConfig.PersonaIDs),
-	})
+	if pendingDomainLoad {
+		s.deps.Logger.Info(ctx, "DNS validation configuration stored without domains", map[string]interface{}{
+			"campaign_id":   campaignID,
+			"persona_count": len(dnsConfig.PersonaIDs),
+		})
+	} else {
+		s.deps.Logger.Info(ctx, "DNS validation phase configured successfully", map[string]interface{}{
+			"campaign_id":   campaignID,
+			"domains_count": len(domains),
+			"persona_count": len(dnsConfig.PersonaIDs),
+		})
+	}
 
 	// Persist configuration in campaign phases
 	if s.store != nil {
@@ -244,35 +251,116 @@ func (s *dnsValidationService) Configure(ctx context.Context, campaignID uuid.UU
 // Execute runs the DNS validation phase
 func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID) (<-chan PhaseProgress, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	execution, exists := s.executions[campaignID]
 	if !exists {
+		s.mu.Unlock()
 		return nil, fmt.Errorf("DNS validation not configured for campaign %s", campaignID)
 	}
 
-	// Allow execute after configured; guard against double start
 	if execution.status == models.PhaseStatusInProgress {
+		s.mu.Unlock()
 		return nil, fmt.Errorf("DNS validation already in progress for campaign %s", campaignID)
 	}
 
-	// Create cancellable context for execution
+	needsReload := execution.pendingDomainLoad || len(execution.domainsToValidate) == 0
+	s.mu.Unlock()
+
+	if needsReload {
+		domains, err := s.getDomainsToValidate(ctx, campaignID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get domains for validation: %w", err)
+		}
+
+		s.mu.Lock()
+		execution, exists = s.executions[campaignID]
+		if !exists {
+			s.mu.Unlock()
+			return nil, fmt.Errorf("DNS validation not configured for campaign %s", campaignID)
+		}
+
+		if len(domains) == 0 {
+			execution.progressCh = make(chan PhaseProgress, 1)
+			execution.domainsToValidate = domains
+			execution.itemsTotal = 0
+			execution.itemsProcessed = 0
+			execution.pendingDomainLoad = false
+			execution.status = models.PhaseStatusCompleted
+			now := time.Now()
+			if execution.startedAt.IsZero() {
+				execution.startedAt = now
+			}
+			execution.completedAt = &now
+			progressCh := execution.progressCh
+			s.mu.Unlock()
+
+			// Mark phase started so downstream logic observes a completed phase
+			if s.store != nil {
+				var exec store.Querier
+				if q, ok := s.deps.DB.(store.Querier); ok {
+					exec = q
+				}
+				_ = s.store.StartPhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation)
+			}
+
+			s.updateExecutionStatus(campaignID, models.PhaseStatusCompleted, "no domains available for DNS validation")
+
+			progress := PhaseProgress{
+				CampaignID:     campaignID,
+				Phase:          models.PhaseTypeDNSValidation,
+				Status:         models.PhaseStatusCompleted,
+				ItemsTotal:     0,
+				ItemsProcessed: 0,
+				ProgressPct:    100,
+				Message:        "No domains available for DNS validation",
+				Timestamp:      time.Now(),
+			}
+			select {
+			case progressCh <- progress:
+			default:
+			}
+			close(progressCh)
+			return progressCh, nil
+		}
+
+		execution.domainsToValidate = domains
+		execution.itemsTotal = int64(len(domains))
+		execution.itemsProcessed = 0
+		execution.pendingDomainLoad = false
+		s.mu.Unlock()
+	}
+
+	s.mu.Lock()
+	execution, exists = s.executions[campaignID]
+	if !exists {
+		s.mu.Unlock()
+		return nil, fmt.Errorf("DNS validation not configured for campaign %s", campaignID)
+	}
+
+	if execution.status == models.PhaseStatusInProgress {
+		s.mu.Unlock()
+		return nil, fmt.Errorf("DNS validation already in progress for campaign %s", campaignID)
+	}
+
 	execution.cancelCtx, execution.cancelFunc = context.WithCancel(ctx)
 	execution.progressCh = make(chan PhaseProgress, 100)
 	execution.status = models.PhaseStatusInProgress
 	execution.startedAt = time.Now()
+	domainCount := len(execution.domainsToValidate)
+	config := execution.config
+	progressCh := execution.progressCh
+	s.mu.Unlock()
 
 	if s.deps.Logger != nil {
 		s.deps.Logger.Info(execution.cancelCtx, "Starting DNS validation execution", map[string]interface{}{
 			"campaign_id":   campaignID,
-			"domains_count": len(execution.domainsToValidate),
+			"domains_count": domainCount,
 			"sample_domains": func() []string {
-				if len(execution.domainsToValidate) > 5 {
+				if domainCount > 5 {
 					return execution.domainsToValidate[:5]
 				}
 				return execution.domainsToValidate
 			}(),
-			"configured_batch_size": execution.config.BatchSize,
+			"configured_batch_size": config.BatchSize,
 		})
 	}
 
@@ -288,7 +376,7 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 	// Start execution in goroutine
 	go s.executeValidation(execution)
 
-	return execution.progressCh, nil
+	return progressCh, nil
 }
 
 // executeValidation performs the actual DNS validation using dnsvalidator engine

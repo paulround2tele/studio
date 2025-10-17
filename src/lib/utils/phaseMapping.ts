@@ -91,6 +91,8 @@ export interface DomainGenerationConfig {
   patternType: string;
   constantString?: string;
   variableLength?: number;
+  prefixVariableLength?: number;
+  suffixVariableLength?: number;
   characterSet?: string;
   tld: string;
   numDomainsToGenerate: number;
@@ -138,9 +140,9 @@ const DEFAULT_HTTP_MICRO_BUDGET = 1024 * 1024; // 1 MB
 export function mapPatternToDomainGeneration(pattern: {
   basePattern?: string;
   constantString?: string;
-  patternType?: 'prefix' | 'suffix' | 'both';
-  prefixLength?: number;
-  suffixLength?: number;
+  patternType?: 'prefix' | 'suffix' | 'both' | 'prefix_variable' | 'suffix_variable' | 'both_variable';
+  prefixVariableLength?: number;
+  suffixVariableLength?: number;
   maxDomains?: number;
   tld?: string;
   tlds?: string[];
@@ -149,25 +151,91 @@ export function mapPatternToDomainGeneration(pattern: {
   batchSize?: number;
   offsetStart?: number;
 }): DomainGenerationConfig {
-  const patternType = pattern.patternType || 'prefix';
-  // If user provided explicit prefix/suffix lengths compute; else fallback to variableLength
-  let computedVariable = pattern.variableLength || 0;
-  if (patternType === 'prefix' && typeof pattern.prefixLength === 'number') {
-    computedVariable = pattern.prefixLength;
-  } else if (patternType === 'suffix' && typeof pattern.suffixLength === 'number') {
-    computedVariable = pattern.suffixLength;
-  } else if (patternType === 'both') {
-    computedVariable = (pattern.prefixLength || 0) + (pattern.suffixLength || 0);
-  }
+  const rawPatternType = pattern.patternType || 'prefix';
+  const wizardPatternType = (() => {
+    switch (rawPatternType) {
+      case 'prefix_variable':
+        return 'prefix';
+      case 'suffix_variable':
+        return 'suffix';
+      case 'both_variable':
+        return 'both';
+      default:
+        return rawPatternType;
+    }
+  })() as 'prefix' | 'suffix' | 'both';
+  const apiPatternType = (() => {
+    switch (wizardPatternType) {
+      case 'suffix':
+        return 'suffix_variable';
+      case 'both':
+        return 'both_variable';
+      case 'prefix':
+      default:
+        return 'prefix_variable';
+    }
+  })();
+
+  const legacyCombined = Math.max(0, pattern.variableLength || 0);
+  const DEFAULT_SINGLE_SIDE_LENGTH = 6;
+  const DEFAULT_SPLIT_LENGTH = 3;
+
+  const inferredPrefix = (() => {
+    if (typeof pattern.prefixVariableLength === 'number' && pattern.prefixVariableLength > 0) {
+      return pattern.prefixVariableLength;
+    }
+    if (wizardPatternType === 'prefix') {
+      if (legacyCombined > 0) return legacyCombined;
+      return DEFAULT_SINGLE_SIDE_LENGTH;
+    }
+    if (wizardPatternType === 'both') {
+      if (legacyCombined > 0) {
+        return Math.max(1, Math.floor(legacyCombined / 2));
+      }
+      return DEFAULT_SPLIT_LENGTH;
+    }
+    return 0;
+  })();
+  const inferredSuffix = (() => {
+    if (typeof pattern.suffixVariableLength === 'number' && pattern.suffixVariableLength > 0) {
+      return pattern.suffixVariableLength;
+    }
+    if (wizardPatternType === 'suffix') {
+      if (legacyCombined > 0) return legacyCombined;
+      return DEFAULT_SINGLE_SIDE_LENGTH;
+    }
+    if (wizardPatternType === 'both') {
+      if (legacyCombined > 0) {
+        const remaining = legacyCombined - inferredPrefix;
+        return Math.max(1, remaining > 0 ? remaining : Math.ceil(legacyCombined / 2));
+      }
+      return DEFAULT_SPLIT_LENGTH;
+    }
+    return 0;
+  })();
+  const computedVariable = (() => {
+    switch (wizardPatternType) {
+      case 'prefix':
+        return inferredPrefix;
+      case 'suffix':
+        return inferredSuffix;
+      case 'both':
+        return inferredPrefix + inferredSuffix;
+      default:
+        return legacyCombined;
+    }
+  })();
   const firstTld = (pattern.tlds && pattern.tlds[0]) || pattern.tld || '.com';
   const normalizedTld = firstTld.startsWith('.') ? firstTld : `.${firstTld}`;
   const safeNumDomains = Math.max(1, pattern.maxDomains || 100);
   const safeBatchSize = Math.max(1, pattern.batchSize || Math.min(100, safeNumDomains));
   const safeOffset = Math.max(0, pattern.offsetStart || 0);
   return {
-    patternType,
+    patternType: apiPatternType,
     constantString: pattern.constantString || (pattern.basePattern ? pattern.basePattern.replace('{variation}', '') : 'brand'),
     variableLength: Math.max(0, computedVariable || 0),
+    prefixVariableLength: wizardPatternType === 'prefix' || wizardPatternType === 'both' ? inferredPrefix : 0,
+    suffixVariableLength: wizardPatternType === 'suffix' || wizardPatternType === 'both' ? inferredSuffix : 0,
     characterSet: pattern.characterSet || 'abcdefghijklmnopqrstuvwxyz0123456789',
     tld: normalizedTld,
     numDomainsToGenerate: safeNumDomains,

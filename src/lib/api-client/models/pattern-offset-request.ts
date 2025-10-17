@@ -28,10 +28,28 @@ export interface PatternOffsetRequest {
       'prefix' | 'suffix' | 'both'
 ;
   /**
-   * 
+   * Optional prefix-side variable length when patternType is prefix or both
    * @memberof PatternOffsetRequest
    */
-  'variableLength': 
+  'prefixVariableLength'?: 
+        
+          
+          number
+    ;
+  /**
+   * Optional suffix-side variable length when patternType is suffix or both
+   * @memberof PatternOffsetRequest
+   */
+  'suffixVariableLength'?: 
+        
+          
+          number
+    ;
+  /**
+   * Legacy combined length retained for backwards compatibility (prefix+suffix)
+   * @memberof PatternOffsetRequest
+   */
+  'variableLength'?: 
         
           
           number

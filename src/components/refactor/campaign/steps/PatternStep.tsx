@@ -32,17 +32,24 @@ const DEFAULT_TLD_SUGGESTIONS = ['.com', '.net', '.org', '.io', '.co', '.ai', '.
 export function PatternStep({ data, onChange }: PatternStepProps) {
   const usingVariationsMode = !!data.basePattern && data.basePattern.includes('{variation}');
 
-  // Derived variableLength based on patternType and prefix/suffix lengths (stored temporarily in data.variableLength?)
-  const prefixLength = data.prefixLength ?? (data.patternType === 'prefix' ? (data.variableLength ?? 6) : 3);
-  const suffixLength = data.suffixLength ?? (data.patternType === 'suffix' ? (data.variableLength ?? 6) : 3);
   const patternType = data.patternType || 'prefix';
+  const legacyVariableLength = data.variableLength ?? 0;
+  const defaultLength = legacyVariableLength > 0 ? legacyVariableLength : 6;
+  const prefixVariableLength = data.prefixVariableLength ?? (patternType === 'suffix' ? 0 : defaultLength);
+  const suffixVariableLength = data.suffixVariableLength ?? (patternType === 'prefix' ? 0 : defaultLength);
 
-  const effectiveVariableLength = useMemo(() => {
-    if (patternType === 'prefix') return prefixLength;
-    if (patternType === 'suffix') return suffixLength;
-    if (patternType === 'both') return (prefixLength || 0) + (suffixLength || 0);
-    return data.variableLength || 0;
-  }, [patternType, prefixLength, suffixLength, data.variableLength]);
+  const totalVariableLength = useMemo(() => {
+    switch (patternType) {
+      case 'prefix':
+        return prefixVariableLength || 0;
+      case 'suffix':
+        return suffixVariableLength || 0;
+      case 'both':
+        return (prefixVariableLength || 0) + (suffixVariableLength || 0);
+      default:
+        return legacyVariableLength || 0;
+    }
+  }, [patternType, prefixVariableLength, suffixVariableLength, legacyVariableLength]);
 
   // Deduplicate charset and compute unique size
   const rawCharset = data.characterSet ?? CHARSET_PRESETS.alphanumeric;
@@ -51,12 +58,15 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
 
   // Combination estimation (simplified: prefix or suffix => size^length, both => size^(prefix)*size^(suffix))
   const combinationEstimate = useMemo(() => {
-    if (effectiveVariableLength <= 0 || uniqueSize === 0) return 1;
+    if (uniqueSize === 0) return 1;
     if (patternType === 'both') {
-      return Math.pow(uniqueSize, prefixLength || 0) * Math.pow(uniqueSize, suffixLength || 0);
+      const prefixCombos = Math.pow(uniqueSize, prefixVariableLength || 0);
+      const suffixCombos = Math.pow(uniqueSize, suffixVariableLength || 0);
+      return Math.max(1, prefixCombos * suffixCombos);
     }
-    return Math.pow(uniqueSize, effectiveVariableLength);
-  }, [effectiveVariableLength, uniqueSize, patternType, prefixLength, suffixLength]);
+    if (totalVariableLength <= 0) return 1;
+    return Math.pow(uniqueSize, totalVariableLength);
+  }, [uniqueSize, patternType, prefixVariableLength, suffixVariableLength, totalVariableLength]);
 
   const maxDomains = data.maxDomains || 100;
 
@@ -91,17 +101,18 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
     };
     for (let i = 0; i < 5; i++) {
       let sld = constant;
-      if (patternType === 'prefix') sld = gen(i, prefixLength) + constant;
-      else if (patternType === 'suffix') sld = constant + gen(i, suffixLength);
+      if (patternType === 'prefix') sld = gen(i, prefixVariableLength) + constant;
+      else if (patternType === 'suffix') sld = constant + gen(i, suffixVariableLength);
       else if (patternType === 'both') {
-        const half = prefixLength || 0; // using separate lengths
-        sld = gen(i, half) + constant + gen(i, suffixLength || 0);
+        const prefixLen = prefixVariableLength || 0;
+        const suffixLen = suffixVariableLength || 0;
+        sld = gen(i, prefixLen) + constant + gen(i, suffixLen);
       }
       const tld = (data.tlds && data.tlds[0]) || data.tld || '.com';
       results.push(sld + tld);
     }
     return results;
-  }, [usingVariationsMode, data.basePattern, data.variations, data.constantString, charsetUnique, patternType, prefixLength, suffixLength, data.tlds, data.tld]);
+  }, [usingVariationsMode, data.basePattern, data.variations, data.constantString, charsetUnique, patternType, prefixVariableLength, suffixVariableLength, data.tlds, data.tld]);
 
   return (
     <div className="space-y-8">
@@ -177,7 +188,19 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
                 value={patternType}
                 onChange={(e) => {
                   const val = e.target.value as 'prefix' | 'suffix' | 'both';
-                  update({ patternType: val });
+                  if (val === 'prefix') {
+                    const nextPrefix = prefixVariableLength || defaultLength;
+                    update({ patternType: val, prefixVariableLength: nextPrefix, suffixVariableLength: 0, variableLength: nextPrefix });
+                    return;
+                  }
+                  if (val === 'suffix') {
+                    const nextSuffix = suffixVariableLength || defaultLength;
+                    update({ patternType: val, prefixVariableLength: 0, suffixVariableLength: nextSuffix, variableLength: nextSuffix });
+                    return;
+                  }
+                  const inferredPrefix = prefixVariableLength || Math.max(1, Math.floor(defaultLength / 2));
+                  const inferredSuffix = suffixVariableLength || Math.max(1, Math.ceil(defaultLength / 2));
+                  update({ patternType: val, prefixVariableLength: inferredPrefix, suffixVariableLength: inferredSuffix, variableLength: inferredPrefix + inferredSuffix });
                 }}
               >
                 <option value="prefix">Prefix</option>
@@ -188,28 +211,60 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
             {patternType === 'prefix' && (
               <div className="space-y-1">
                 <Label>Prefix Variable Length</Label>
-                <Input type="number" min={0} max={32} value={prefixLength}
-                  onChange={(e) => update({ prefixLength: parseInt(e.target.value) || 0 })} />
+                <Input
+                  type="number"
+                  min={0}
+                  max={32}
+                  value={prefixVariableLength}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    update({ prefixVariableLength: val, variableLength: val });
+                  }}
+                />
               </div>
             )}
             {patternType === 'suffix' && (
               <div className="space-y-1">
                 <Label>Suffix Variable Length</Label>
-                <Input type="number" min={0} max={32} value={suffixLength}
-                  onChange={(e) => update({ suffixLength: parseInt(e.target.value) || 0 })} />
+                <Input
+                  type="number"
+                  min={0}
+                  max={32}
+                  value={suffixVariableLength}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    update({ suffixVariableLength: val, variableLength: val });
+                  }}
+                />
               </div>
             )}
             {patternType === 'both' && (
               <>
                 <div className="space-y-1">
-                  <Label>Prefix Length</Label>
-                  <Input type="number" min={0} max={16} value={prefixLength}
-                    onChange={(e) => update({ prefixLength: parseInt(e.target.value) || 0 })} />
+                  <Label>Prefix Variable Length</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={16}
+                    value={prefixVariableLength}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      update({ prefixVariableLength: val, variableLength: val + (suffixVariableLength || 0) });
+                    }}
+                  />
                 </div>
                 <div className="space-y-1">
-                  <Label>Suffix Length</Label>
-                  <Input type="number" min={0} max={16} value={suffixLength}
-                    onChange={(e) => update({ suffixLength: parseInt(e.target.value) || 0 })} />
+                  <Label>Suffix Variable Length</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={16}
+                    value={suffixVariableLength}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      update({ suffixVariableLength: val, variableLength: val + (prefixVariableLength || 0) });
+                    }}
+                  />
                 </div>
               </>
             )}
@@ -286,8 +341,8 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
 
       {/* Metrics & Preview */}
       <div className="space-y-3 text-sm">
-        <div className="flex flex-wrap gap-6">
-          <div><strong>Variable Length:</strong> {effectiveVariableLength}</div>
+          <div className="flex flex-wrap gap-6">
+          <div><strong>Total Variable Chars:</strong> {totalVariableLength}</div>
           <div><strong>Charset Size:</strong> {uniqueSize}</div>
           <div><strong>Est. Combos (single TLD):</strong> {combinationEstimate.toLocaleString()}</div>
           <div><strong>Requested:</strong> {maxDomains}</div>

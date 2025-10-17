@@ -11,6 +11,8 @@ interface DomainGenerationParams {
     characterSet?: string;
     tlds?: string[];
     variableLength?: number;
+    prefixVariableLength?: number;
+    suffixVariableLength?: number;
     numDomainsToGenerate?: number;
 }
 
@@ -25,14 +27,16 @@ const MIN_SLD_LENGTH = 1;
  * @returns A string hash.
  */
 export function getDomainGenerationPhaseConfigHash(config: DomainGenerationParams): string {
-  const normalizedConfig = {
-    pt: config.patternType,
-    cs: config.constantString,
-    charset: Array.from(new Set((config.characterSet || '').split(''))).sort().join(''),
-    tlds: config.tlds?.sort() || [],
-    vl: config.variableLength || 0,
-    ndtg: config.numDomainsToGenerate || 0
-  };
+        const normalizedConfig = {
+        pt: config.patternType,
+        cs: config.constantString,
+        charset: Array.from(new Set((config.characterSet || '').split(''))).sort().join(''),
+        tlds: config.tlds?.sort() || [],
+        vl: config.variableLength || 0,
+        pvl: config.prefixVariableLength || 0,
+        svl: config.suffixVariableLength || 0,
+        ndtg: config.numDomainsToGenerate || 0
+    };
   // A more robust hash would use a crypto library, but for mock, simple stringify is okay.
   return JSON.stringify(normalizedConfig);
 }
@@ -40,31 +44,31 @@ export function getDomainGenerationPhaseConfigHash(config: DomainGenerationParam
 // Removed generateCharsForNth as it's backend logic now
 
 export function calculateMaxSldCombinations(
-    config: Pick<DomainGenerationParams, 'patternType' | 'variableLength'>,
+    config: Pick<DomainGenerationParams, 'patternType' | 'variableLength' | 'prefixVariableLength' | 'suffixVariableLength'>,
     uniqueCharSetSize: number
 ): number {
-    const { patternType, variableLength = 0 } = config;
+    const { patternType } = config;
+    const legacy = config.variableLength ?? 0;
+    const prefixLength = config.prefixVariableLength ?? (patternType === 'prefix' ? legacy : patternType === 'both' ? Math.floor(legacy / 2) : 0);
+    const suffixLength = config.suffixVariableLength ?? (patternType === 'suffix' ? legacy : patternType === 'both' ? legacy - Math.floor(legacy / 2) : 0);
+    const totalLength = patternType === 'both' ? (prefixLength + suffixLength) : (patternType === 'prefix' ? prefixLength : suffixLength);
 
     if (uniqueCharSetSize === 0) {
-        if (patternType === "prefix" && variableLength > 0) return 0;
-        if (patternType === "suffix" && variableLength > 0) return 0;
-        if (patternType === "both" && variableLength > 0) return 0;
+        if (patternType === "prefix" && totalLength > 0) return 0;
+        if (patternType === "suffix" && totalLength > 0) return 0;
+        if (patternType === "both" && totalLength > 0) return 0;
         // If variable length is 0, it means only the constant part for SLD (1 combination)
         return 1;
     }
 
     let sldCombinations = 0;
     if (patternType === "prefix") {
-        sldCombinations = variableLength > 0 ? Math.pow(uniqueCharSetSize, variableLength) : 0;
-         if (variableLength === 0) sldCombinations = 1; // Only constant part
+        sldCombinations = prefixLength > 0 ? Math.pow(uniqueCharSetSize, prefixLength) : 1;
     } else if (patternType === "suffix") {
-        sldCombinations = variableLength > 0 ? Math.pow(uniqueCharSetSize, variableLength) : 0;
-        if (variableLength === 0) sldCombinations = 1; // Only constant part
+        sldCombinations = suffixLength > 0 ? Math.pow(uniqueCharSetSize, suffixLength) : 1;
     } else if (patternType === "both") {
-        // For 'both' pattern, split variable length between prefix and suffix
-        const halfLength = Math.floor(variableLength / 2);
-        const pCombos = halfLength > 0 ? Math.pow(uniqueCharSetSize, halfLength) : 1;
-        const sCombos = halfLength > 0 ? Math.pow(uniqueCharSetSize, halfLength) : 1;
+        const pCombos = prefixLength > 0 ? Math.pow(uniqueCharSetSize, prefixLength) : 1;
+        const sCombos = suffixLength > 0 ? Math.pow(uniqueCharSetSize, suffixLength) : 1;
         sldCombinations = pCombos * sCombos;
     }
     return sldCombinations;
@@ -114,46 +118,47 @@ export function generateCharsForNth(n: number, length: number, charSet: string[]
  */
 export function domainFromIndex(index: number, config: DomainGenerationParams): string | null {
     const { patternType, constantString, characterSet } = config;
-    const variableLength = config.variableLength ?? 0;
+    const legacy = config.variableLength ?? 0;
+    const prefixLength = config.prefixVariableLength ?? (patternType === 'prefix' ? legacy : patternType === 'both' ? Math.floor(legacy / 2) : 0);
+    const suffixLength = config.suffixVariableLength ?? (patternType === 'suffix' ? legacy : patternType === 'both' ? legacy - Math.floor(legacy / 2) : 0);
     const charSet = (characterSet || '').split('');
     
     let sld = '';
     
     if (patternType === 'prefix') {
-        if (variableLength > 0) {
-            const prefix = generateCharsForNth(index, variableLength, charSet);
+        if (prefixLength > 0) {
+            const prefix = generateCharsForNth(index, prefixLength, charSet);
             if (prefix === null) return null;
             sld = prefix + (constantString || '');
         } else {
             sld = constantString || '';
         }
     } else if (patternType === 'suffix') {
-        if (variableLength > 0) {
-            const suffix = generateCharsForNth(index, variableLength, charSet);
+        if (suffixLength > 0) {
+            const suffix = generateCharsForNth(index, suffixLength, charSet);
             if (suffix === null) return null;
             sld = (constantString || '') + suffix;
         } else {
             sld = constantString || '';
         }
     } else if (patternType === 'both') {
-        // Split variable length between prefix and suffix
-    const halfLength = Math.floor(variableLength / 2);
-        
+        const effectivePrefix = prefixLength;
+        const effectiveSuffix = suffixLength;
         let prefix = '';
         let suffix = '';
         
-        if (halfLength > 0) {
-            const suffixCombinations = halfLength > 0 ? Math.pow(charSet.length, halfLength) : 1;
+        if (effectivePrefix > 0) {
+            const suffixCombinations = effectiveSuffix > 0 ? Math.pow(charSet.length, effectiveSuffix) : 1;
             const prefixIndex = Math.floor(index / suffixCombinations);
-            const prefixResult = generateCharsForNth(prefixIndex, halfLength, charSet);
+            const prefixResult = generateCharsForNth(prefixIndex, effectivePrefix, charSet);
             if (prefixResult === null) return null;
             prefix = prefixResult;
         }
         
-        if (halfLength > 0) {
-            const suffixCombinations = Math.pow(charSet.length, halfLength);
-            const suffixIndex = index % suffixCombinations;
-            const suffixResult = generateCharsForNth(suffixIndex, halfLength, charSet);
+        if (effectiveSuffix > 0) {
+            const suffixCombinations = Math.pow(charSet.length, effectiveSuffix);
+            const suffixIndex = suffixCombinations > 0 ? index % suffixCombinations : 0;
+            const suffixResult = generateCharsForNth(suffixIndex, effectiveSuffix, charSet);
             if (suffixResult === null) return null;
             suffix = suffixResult;
         }
