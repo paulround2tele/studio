@@ -372,23 +372,14 @@ async function executeAllPhasesViaAPI(
     enrichmentEnabled: true,
   });
 
-  // NOTE: Analysis phase is skipped due to known issue
-  // The analysis phase requires HTTP enrichment/feature vectors to be populated
-  // during the extraction phase, but this is not currently working even with
-  // enrichmentEnabled=true flag and ENABLE_HTTP_ENRICHMENT environment variable.
-  // This is a backend issue that blocks analysis phase from completing.
-  // 
-  // Error: "E_ANALYSIS_MISSING_FEATURES: no feature vectors present"
-  // 
-  // TODO: Fix enrichment in HTTP validation to populate feature vectors
-  // Then uncomment this to test analysis phase:
-  //
-  // await runPhase('analysis', {
-  //   personaIds: [httpPersonaId],
-  //   includeExternal: false,
-  // });
+  // Run analysis phase now that enrichment is working
+  console.log('[E2E] Starting analysis phase...');
+  await runPhase('analysis', {
+    personaIds: [httpPersonaId],
+    includeExternal: false,
+  });
   
-  console.log('[E2E] ⚠️  Skipping analysis phase due to known enrichment issue');
+  console.log('[E2E] ✅ All phases including analysis completed successfully!');
 
   // Get SSE event summary (optional - SSE events may not be available)
   const sseEvents = await page.evaluate(() => (window as any).__sseEvents as Array<any>);

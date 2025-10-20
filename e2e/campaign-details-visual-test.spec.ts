@@ -208,6 +208,33 @@ test.describe('Campaign Details Visual Test', () => {
     await page.screenshot({ path: '/tmp/campaign-07-extraction-completed.png', fullPage: true });
     console.log('[VISUAL] Screenshot saved: campaign-07-extraction-completed.png');
 
+    // Step 8: Start analysis phase
+    console.log('[VISUAL] Starting analysis phase...');
+    await api('POST', `/campaigns/${campaignId}/phases/analysis/configure`, {
+      configuration: {
+        personaIds: [httpPersonaId],
+        includeExternal: false,
+      },
+    });
+    await api('POST', `/campaigns/${campaignId}/phases/analysis/start`, {});
+
+    // Wait a bit for analysis to start
+    await page.waitForTimeout(2000);
+    await page.reload();
+    await page.waitForTimeout(2000);
+    await page.screenshot({ path: '/tmp/campaign-08-analysis-running.png', fullPage: true });
+    console.log('[VISUAL] Screenshot saved: campaign-08-analysis-running.png');
+
+    // Wait for analysis to complete
+    await waitForPhaseCompletion(page, api, campaignId, 'analysis');
+
+    // Reload and screenshot - ANALYSIS COMPLETED (FINAL)
+    console.log('[VISUAL] Step 5: Analysis completed - Campaign fully completed!');
+    await page.reload();
+    await page.waitForTimeout(2000);
+    await page.screenshot({ path: '/tmp/campaign-09-analysis-completed.png', fullPage: true });
+    console.log('[VISUAL] Screenshot saved: campaign-09-analysis-completed.png');
+
     console.log('[VISUAL] ✅ All screenshots captured successfully!');
   });
 });
