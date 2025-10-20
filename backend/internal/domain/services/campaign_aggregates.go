@@ -517,24 +517,13 @@ func GetCampaignMomentum(ctx context.Context, repo AggregatesRepository, cache *
 
 	start := time.Now()
 
-	// For now, return mock data until we implement the full momentum analysis
+	// Return empty data until momentum analysis is implemented
 	// TODO: Implement real momentum calculation based on richness score deltas
+	// Momentum requires historical score snapshots which are not yet tracked
 	dto := MomentumDTO{
-		MoversUp: []MomentumMover{
-			{Domain: "rising1.com", Delta: 0.15},
-			{Domain: "rising2.com", Delta: 0.12},
-		},
-		MoversDown: []MomentumMover{
-			{Domain: "falling1.com", Delta: -0.08},
-			{Domain: "falling2.com", Delta: -0.05},
-		},
-		Histogram: []MomentumHistogram{
-			{Bucket: "-0.2 to -0.1", Count: 5},
-			{Bucket: "-0.1 to 0", Count: 15},
-			{Bucket: "0 to 0.1", Count: 45},
-			{Bucket: "0.1 to 0.2", Count: 25},
-			{Bucket: "0.2+", Count: 10},
-		},
+		MoversUp:   []MomentumMover{},
+		MoversDown: []MomentumMover{},
+		Histogram:  []MomentumHistogram{},
 	}
 
 	campaignAggregationLatency.WithLabelValues("momentum").Observe(time.Since(start).Seconds())
