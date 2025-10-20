@@ -166,14 +166,26 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
     if (!enrichedData?.campaign) return [];
     
     const campaign = enrichedData.campaign;
+    
+    // Extract target domains from funnel data or progress
+    const targetDomains = funnelData?.generated || campaign.progress?.totalDomains || 0;
+    
+    // Map backend status to display format
+    const statusDisplay = campaign.status === 'draft' ? 'Draft' :
+                          campaign.status === 'running' ? 'Running' :
+                          campaign.status === 'paused' ? 'Paused' :
+                          campaign.status === 'completed' ? 'Completed' :
+                          campaign.status === 'failed' ? 'Failed' :
+                          campaign.status === 'cancelled' ? 'Cancelled' : 'Unknown';
+    
     return [
-      { label: 'Campaign Type', value: 'Standard', type: 'badge' as const },
-      { label: 'Target Domains', value: 0, type: 'number' as const },
+      { label: 'Campaign Type', value: 'Lead Generation', type: 'badge' as const },
+      { label: 'Target Domains', value: targetDomains, type: 'number' as const },
       { label: 'Created', value: campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString() : 'Unknown', type: 'date' as const },
-      { label: 'Status', value: 'Active', type: 'badge' as const },
+      { label: 'Status', value: statusDisplay, type: 'badge' as const },
       { label: 'Name', value: campaign.name || 'N/A', type: 'text' as const }
     ];
-  }, [enrichedData]);
+  }, [enrichedData, funnelData]);
 
   // Handle loading states
   if (!campaignId) {
@@ -271,12 +283,7 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
           {/* Config Summary */}
           <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border">
             <ConfigSummary 
-              config={[
-                { label: 'Campaign Type', value: 'Lead Generation', type: 'badge' },
-                { label: 'Target Domains', value: '10,000', type: 'number' },
-                { label: 'Created', value: new Date().toISOString(), type: 'date' },
-                { label: 'Status', value: 'Active', type: 'badge' }
-              ]}
+              config={configItems}
               title="Campaign Configuration"
             />
           </div>
