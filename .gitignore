@@ -136,3 +136,4 @@ node_modules/
 /playwright/.cache/
 backend/coverage.out
 backend/.db_connection
+campaign-*.png
