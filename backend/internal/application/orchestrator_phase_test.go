@@ -107,10 +107,21 @@ func TestHTTPConfigureBlockedUntilDNSCompleted(t *testing.T) {
 	// Instantiate real HTTP validation service (httpValidator nil is fine for Configure path)
 	httpSvc := domainservices.NewHTTPValidationService(campaignStore, deps, nil, personaStore, proxyStore, keywordStore)
 
-	// Attempt to configure HTTP phase before DNS completed -> expect error
-	err := httpSvc.Configure(context.Background(), campID, nil)
+	cfg := &models.HTTPPhaseConfigRequest{
+		PersonaIDs: []string{"persona-placeholder"},
+		Keywords:   []string{"test"},
+	}
+
+	if err := httpSvc.Configure(context.Background(), campID, cfg); err != nil {
+		t.Fatalf("configure should succeed even when DNS pending, got %v", err)
+	}
+
+	ch, err := httpSvc.Execute(context.Background(), campID)
 	if err == nil {
-		t.Fatalf("expected error gating HTTP configure when DNS incomplete, got nil")
+		t.Fatalf("expected error gating HTTP execute when DNS incomplete, got nil")
+	}
+	if ch != nil {
+		t.Fatalf("expected nil progress channel on gating error")
 	}
 	if got := err.Error(); got == "" || !containsAll(got, []string{"DNS", "status"}) { // basic semantic check
 		t.Fatalf("unexpected error message: %v", got)
