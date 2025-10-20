@@ -1601,8 +1601,37 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 		// fallback per-domain
 		for domain, fv := range vectors {
 			raw, _ := json.Marshal(fv)
+			
+			// Convert parked_confidence to proper float64 or nil
+			var parkedConf interface{} = nil
+			if pc, ok := fv["parked_confidence"]; ok && pc != nil {
+				switch v := pc.(type) {
+				case float64:
+					parkedConf = v
+				case float32:
+					parkedConf = float64(v)
+				case int:
+					parkedConf = float64(v)
+				case string:
+					if f, err := strconv.ParseFloat(v, 64); err == nil {
+						parkedConf = f
+					}
+				}
+			}
+			
+			// Convert is_parked to proper boolean or nil
+			var isParked interface{} = nil
+			if ip, ok := fv["is_parked"]; ok && ip != nil {
+				switch v := ip.(type) {
+				case bool:
+					isParked = v
+				case string:
+					isParked = v == "true"
+				}
+			}
+			
 			if exec != nil {
-				_, err := exec.ExecContext(ctx, `UPDATE generated_domains SET feature_vector = $1, last_http_fetched_at = NOW(), parked_confidence = COALESCE($2, parked_confidence), is_parked = CASE WHEN $3::boolean IS TRUE THEN TRUE ELSE is_parked END WHERE campaign_id = $4 AND domain_name = $5`, raw, fv["parked_confidence"], fv["is_parked"], campaignID, domain)
+				_, err := exec.ExecContext(ctx, `UPDATE generated_domains SET feature_vector = $1, last_http_fetched_at = NOW(), parked_confidence = CASE WHEN $2 IS NOT NULL THEN $2::numeric ELSE parked_confidence END, is_parked = CASE WHEN $3::boolean IS TRUE THEN TRUE ELSE is_parked END WHERE campaign_id = $4 AND domain_name = $5`, raw, parkedConf, isParked, campaignID, domain)
 				if err != nil && s.deps.Logger != nil {
 					s.deps.Logger.Debug(ctx, "Feature vector update failed", map[string]interface{}{"domain": domain, "error": err.Error()})
 				}
@@ -1623,19 +1652,76 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 	for _, d := range domains {
 		fv := vectors[d]
 		raw, _ := json.Marshal(fv)
-		valueStrings = append(valueStrings, fmt.Sprintf("($%d,$%d,$%d,$%d)", idx, idx+1, idx+2, idx+3))
-		args = append(args, d, raw, fv["parked_confidence"], fv["is_parked"]) // domain, feature_vector, parked_confidence, is_parked
+		
+		// Convert parked_confidence to proper float64 or nil
+		var parkedConf interface{} = nil
+		if pc, ok := fv["parked_confidence"]; ok && pc != nil {
+			switch v := pc.(type) {
+			case float64:
+				parkedConf = v
+			case float32:
+				parkedConf = float64(v)
+			case int:
+				parkedConf = float64(v)
+			case string:
+				if f, err := strconv.ParseFloat(v, 64); err == nil {
+					parkedConf = f
+				}
+			}
+		}
+		
+		// Convert is_parked to proper boolean or nil
+		var isParked interface{} = nil
+		if ip, ok := fv["is_parked"]; ok && ip != nil {
+			switch v := ip.(type) {
+			case bool:
+				isParked = v
+			case string:
+				isParked = v == "true"
+			}
+		}
+		
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d)", idx, idx+1, idx+2, idx+3))
+		args = append(args, d, raw, parkedConf, isParked) // domain, feature_vector, parked_confidence, is_parked
 		idx += 4
 	}
-	query := fmt.Sprintf(`WITH incoming(domain_name,feature_vector,parked_confidence,is_parked) AS (VALUES %s)
+	query := fmt.Sprintf(`WITH incoming AS (
+		SELECT 
+			v.column1::text AS domain_name,
+			v.column2::jsonb AS feature_vector,
+			v.column3::numeric AS parked_confidence,
+			v.column4::boolean AS is_parked
+		FROM (VALUES %s) AS v
+	)
 UPDATE generated_domains gd
 SET feature_vector = incoming.feature_vector,
 	last_http_fetched_at = NOW(),
-	parked_confidence = COALESCE(incoming.parked_confidence, gd.parked_confidence),
+	parked_confidence = CASE WHEN incoming.parked_confidence IS NOT NULL THEN incoming.parked_confidence ELSE gd.parked_confidence END,
 	is_parked = CASE WHEN incoming.is_parked IS TRUE THEN TRUE ELSE gd.is_parked END
 FROM incoming
 WHERE gd.campaign_id = $1 AND gd.domain_name = incoming.domain_name`, strings.Join(valueStrings, ","))
+	
+	// Debug: Log the query and args
+	if s.deps.Logger != nil {
+		sampleLen := len(args)
+		if sampleLen > 5 {
+			sampleLen = 5
+		}
+		s.deps.Logger.Debug(ctx, "Feature vector bulk update query", map[string]interface{}{
+			"campaign_id": campaignID.String(),
+			"num_domains": len(domains),
+			"sample_args": fmt.Sprintf("%v", args[:sampleLen]),
+		})
+	}
+	
 	if _, err := sqlxDB.ExecContext(ctx, query, args...); err != nil {
+		if s.deps.Logger != nil {
+			s.deps.Logger.Warn(ctx, "Feature vector bulk update failed", map[string]interface{}{
+				"campaign_id": campaignID.String(),
+				"error": err.Error(),
+				"query": query,
+			})
+		}
 		return fmt.Errorf("bulk feature vector update failed: %w", err)
 	}
 	return nil
