@@ -127,18 +127,18 @@ export function useCampaignPhaseStream(
   }, [onError]);
 
   // Use the existing SSE hook
-  const { readyState, lastEvent } = useSSE(
+  const { readyState, lastEvent, error: sseHookError } = useSSE(
     campaignId ? `/api/v2/sse/campaigns/${campaignId}/events` : null,
     handleSSEEvent,
     {
       autoReconnect: true,
       maxReconnectAttempts: 5,
-      reconnectDelay: 3000
+      reconnectDelay: 3000,
     }
   );
 
   const isConnected = readyState === 1; // EventSource.OPEN
-  const error = readyState === 2 ? 'Connection failed' : null; // EventSource.CLOSED
+  const error = sseHookError;
 
   // Reset phases to default when connecting
   useEffect(() => {

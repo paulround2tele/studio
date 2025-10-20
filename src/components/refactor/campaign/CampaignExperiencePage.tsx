@@ -189,7 +189,12 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
   }
 
   const isLoading = metricsLoading || funnelLoading;
-  const hasError = metricsError || funnelError || sseError;
+  const hasError = metricsError || funnelError;
+  const sseStatusLabel = sseError
+    ? `Disconnected (${sseError})`
+    : isConnected
+      ? 'Live'
+      : 'Connecting…';
 
   if (hasError) {
     return (
@@ -198,10 +203,11 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
           <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
           <h2 className="text-lg font-semibold">Error Loading Campaign</h2>
           <p className="text-gray-600">
-            {typeof metricsError === 'string' ? metricsError : 
-             typeof funnelError === 'string' ? funnelError : 
-             typeof sseError === 'string' ? sseError : 
-             'Unknown error occurred'}
+            {typeof metricsError === 'string'
+              ? metricsError
+              : typeof funnelError === 'string'
+                ? funnelError
+                : 'Unknown error occurred'}
           </p>
         </div>
       </div>
@@ -216,9 +222,18 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
           Campaign Dashboard
         </h1>
         <div className="flex items-center gap-2 text-sm">
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <div
+            className={`w-2 h-2 rounded-full ${
+              isConnected && !sseError
+                ? 'bg-green-500'
+                : sseError
+                ? 'bg-red-500'
+                : 'bg-yellow-400'
+            }`}
+            aria-hidden="true"
+          />
           <span className="text-gray-600 dark:text-gray-400">
-            {isConnected ? 'Live' : 'Disconnected'}
+            {sseStatusLabel}
           </span>
         </div>
       </div>

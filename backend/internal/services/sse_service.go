@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -84,7 +85,7 @@ func NewSSEService() *SSEService {
 }
 
 // RegisterClient registers a new SSE client
-func (s *SSEService) RegisterClient(ctx context.Context, w http.ResponseWriter, userID uuid.UUID, campaignID *uuid.UUID) (*SSEClient, error) {
+func (s *SSEService) RegisterClient(ctx context.Context, w http.ResponseWriter, userID uuid.UUID, campaignID *uuid.UUID, allowedOrigin string) (*SSEClient, error) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		return nil, fmt.Errorf("streaming not supported by this response writer")
@@ -98,12 +99,22 @@ func (s *SSEService) RegisterClient(ctx context.Context, w http.ResponseWriter, 
 		return nil, fmt.Errorf("maximum number of SSE clients reached")
 	}
 
-	// Set SSE headers
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Cache-Control")
+	// Set SSE headers (copied to actual response by handler)
+	headers := w.Header()
+	headers.Set("Content-Type", "text/event-stream")
+	headers.Set("Cache-Control", "no-cache")
+	headers.Set("Connection", "keep-alive")
+	headers.Set("X-Accel-Buffering", "no")
+	headers.Set("Access-Control-Allow-Headers", "Cache-Control, Last-Event-ID")
+	headers.Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	if allowedOrigin != "" {
+		headers.Set("Access-Control-Allow-Origin", allowedOrigin)
+		headers.Set("Access-Control-Allow-Credentials", "true")
+		ensureHeaderValue(headers, "Vary", "Origin")
+	} else {
+		headers.Del("Access-Control-Allow-Origin")
+		headers.Del("Access-Control-Allow-Credentials")
+	}
 
 	clientCtx, cancel := context.WithCancel(ctx)
 	clientID := uuid.New().String()
@@ -121,8 +132,8 @@ func (s *SSEService) RegisterClient(ctx context.Context, w http.ResponseWriter, 
 
 	s.clients[clientID] = client
 
-	// Send initial connection event
-	s.sendEventToClient(client, SSEEvent{
+	// Send initial connection event asynchronously to avoid blocking registration on slow readers
+	go s.sendEventToClient(client, SSEEvent{
 		ID:        uuid.New().String(),
 		Event:     SSEEventKeepAlive,
 		Data:      map[string]interface{}{"message": "SSE connection established"},
@@ -134,6 +145,18 @@ func (s *SSEService) RegisterClient(ctx context.Context, w http.ResponseWriter, 
 	go s.clientKeepAlive(client)
 
 	return client, nil
+}
+
+func ensureHeaderValue(headers http.Header, key, value string) {
+	if headers == nil {
+		return
+	}
+	for _, existing := range headers.Values(key) {
+		if strings.EqualFold(existing, value) {
+			return
+		}
+	}
+	headers.Add(key, value)
 }
 
 // UnregisterClient removes a client from the service

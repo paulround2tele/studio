@@ -15,6 +15,12 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type contextKey string
+
+const (
+	contextKeyAllowedOrigin contextKey = "allowed_origin"
+)
+
 // startChiServer starts the Chi server on the configured port and blocks.
 func startChiServer() {
 	// Initialize shared dependencies for strict handlers
@@ -99,22 +105,23 @@ func startChiServer() {
 	}
 	corsWrapper := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			origin := r.Header.Get("Origin")
-			if origin != "" {
+			ctx := r.Context()
+			if origin := r.Header.Get("Origin"); origin != "" {
 				if _, ok := allowedOrigins[origin]; ok {
 					w.Header().Set("Access-Control-Allow-Origin", origin)
-					w.Header().Set("Vary", "Origin")
 					w.Header().Set("Access-Control-Allow-Credentials", "true")
 					w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PATCH,PUT,DELETE,OPTIONS")
 					w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Requested-With, Authorization")
 					w.Header().Set("Access-Control-Max-Age", "7200")
+					w.Header().Add("Vary", "Origin")
+					ctx = context.WithValue(ctx, contextKeyAllowedOrigin, origin)
 				}
 			}
 			if r.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusNoContent)
 				return
 			}
-			next.ServeHTTP(w, r)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 	r := corsWrapper(baseHandler)

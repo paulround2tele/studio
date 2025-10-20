@@ -43,12 +43,13 @@ func TestSSEAllStreamSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SseEventsAll error: %v", err)
 	}
-	r200, ok := resp.(gen.SseEventsAll200TexteventStreamResponse)
+	r200, ok := resp.(ssePipeResponse)
 	if !ok {
-		t.Fatalf("expected 200 event-stream, got %T", resp)
+		t.Fatalf("expected SSE pipe response, got %T", resp)
 	}
+	reader := r200.body
 	// Attempt to close if it's a ReadCloser
-	if rc, ok := r200.Body.(io.ReadCloser); ok {
+	if rc, ok := reader.(io.ReadCloser); ok {
 		defer func() { _ = rc.Close() }()
 	}
 
@@ -60,7 +61,7 @@ func TestSSEAllStreamSmoke(t *testing.T) {
 	}
 	ch := make(chan result, 1)
 	go func() {
-		n, err := r200.Body.Read(buf)
+		n, err := reader.Read(buf)
 		ch <- result{n: n, err: err}
 	}()
 	select {
