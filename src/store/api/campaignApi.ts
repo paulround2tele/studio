@@ -28,6 +28,7 @@ import type { CampaignFunnelResponse } from '@/lib/api-client/models/campaign-fu
 import type { DomainScoreBreakdownResponse } from '@/lib/api-client/models/domain-score-breakdown-response';
 import type { CampaignsModeUpdateRequest } from '@/lib/api-client/models/campaigns-mode-update-request';
 import type { CampaignModeUpdateResponse } from '@/lib/api-client/models/campaign-mode-update-response';
+import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campaign-phases-status-response';
 
 // Helper for axios/fetch hybrid responses (no any)
 const unwrap = <T>(resp: { data?: T } | T): T | undefined => {
@@ -384,11 +385,11 @@ export const campaignApi = createApi({
     }),
 
   // Status endpoint returns a CampaignResponse-like shape (spec may later add dedicated status model)
-  getCampaignStatus: builder.query<CampaignResponse, string>({
+  getCampaignStatus: builder.query<CampaignPhasesStatusResponse, string>({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsStatusGet(campaignId);
-          const data = unwrap<CampaignResponse | unknown>(response) as CampaignResponse | undefined;
+          const data = unwrap<CampaignPhasesStatusResponse>(response);
           if (!data) return { error: { status: 500, data: { message: 'Empty status response' } } };
           return { data };
         } catch (error) {

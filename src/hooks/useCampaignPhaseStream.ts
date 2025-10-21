@@ -31,7 +31,7 @@ interface UseCampaignPhaseStreamReturn {
 }
 
 // Default phase configuration matching the expected 5-phase pipeline
-const DEFAULT_PHASES: PipelinePhase[] = [
+export const DEFAULT_PHASES: PipelinePhase[] = [
   {
     key: 'generation',
     label: 'Generation',

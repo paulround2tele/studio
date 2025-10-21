@@ -22,6 +22,7 @@ import { WarningBar } from './WarningBar';
 import { WarningPills } from './WarningPills';
 import { MoverList } from './MoverList';
 import { Histogram } from './Histogram';
+import { mergeCampaignPhases } from './phaseStatusUtils';
 
 import { useCampaignPhaseStream } from '@/hooks/useCampaignPhaseStream';
 import { 
@@ -30,7 +31,8 @@ import {
   useGetCampaignRecommendationsQuery,
   useGetCampaignEnrichedQuery,
   useGetCampaignClassificationsQuery,
-  useGetCampaignMomentumQuery
+  useGetCampaignMomentumQuery,
+  useGetCampaignStatusQuery
 } from '@/store/api/campaignApi';
 
 import type { CampaignKpi } from '../types';
@@ -56,7 +58,7 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
   const { data: momentumData } = useGetCampaignMomentumQuery(campaignId);
 
   // Real-time phase updates
-  const { phases, isConnected, error: sseError } = useCampaignPhaseStream(campaignId, {
+  const { phases, isConnected, error: sseError, lastUpdate } = useCampaignPhaseStream(campaignId, {
     enabled: true,
     onPhaseUpdate: (event) => {
       console.log('Phase update:', event);
@@ -65,6 +67,15 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
       console.error('SSE error:', error);
     }
   });
+
+  const { data: statusSnapshot } = useGetCampaignStatusQuery(campaignId);
+
+  const pipelinePhases = React.useMemo(() => mergeCampaignPhases({
+    statusSnapshot,
+    funnelData,
+    ssePhases: phases,
+    sseLastUpdate: lastUpdate
+  }), [statusSnapshot, funnelData, phases, lastUpdate]);
 
   // Transform metrics data to KPI format
   const kpis: CampaignKpi[] = React.useMemo(() => {
@@ -253,7 +264,7 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
       {/* Pipeline Status Bar */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-3">Pipeline Status</h2>
-        <PipelineBar phases={phases} />
+        <PipelineBar phases={pipelinePhases} />
       </div>
 
       {/* KPI Grid */}
