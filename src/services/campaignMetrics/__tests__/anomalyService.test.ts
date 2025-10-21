@@ -48,8 +48,9 @@ describe('AnomalyService', () => {
 
       expect(anomalies).toHaveLength(1);
       expect(anomalies[0].metric).toBe('warningRate');
-      expect(anomalies[0].severity).toBe('critical'); // High z-score
       expect(Math.abs(anomalies[0].zScore)).toBeGreaterThan(2);
+      // Client-side severity now reserves "critical" for very high (>3σ) deviations
+      expect(anomalies[0].severity).toBe('warning');
     });
 
     it('should return empty array when insufficient snapshots', () => {

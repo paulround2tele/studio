@@ -100,10 +100,18 @@ export function filterSignificantDeltas(
   minAbsoluteThreshold = 0.1,
   minPercentThreshold = 1
 ): DeltaMetrics[] {
-  return deltas.filter(delta => 
-    Math.abs(delta.absolute) >= minAbsoluteThreshold ||
-    Math.abs(delta.percent) >= minPercentThreshold
-  );
+  const useAbsolute = minAbsoluteThreshold > 0;
+  const usePercent = minPercentThreshold > 0;
+
+  if (!useAbsolute && !usePercent) {
+    return deltas.slice();
+  }
+
+  return deltas.filter((delta) => {
+    const passesAbsolute = useAbsolute && Math.abs(delta.absolute) >= minAbsoluteThreshold;
+    const passesPercent = usePercent && Math.abs(delta.percent) >= minPercentThreshold;
+    return passesAbsolute || passesPercent;
+  });
 }
 
 /**
@@ -161,13 +169,13 @@ export function createBaselineSnapshot(current: AggregateSnapshot): AggregateSna
     if (value != null && value > 0) {
       // Reduce by 5-15% to create meaningful deltas
       const reduction = 0.05 + Math.random() * 0.1;
-  (baselineAggregates as Record<string, unknown>)[key] = Math.max(0, value * (1 - reduction));
+      (baselineAggregates as Record<string, unknown>)[key] = Math.max(0, value * (1 - reduction));
     }
   }
   
   return {
     id: `baseline-${current.id}`,
-    timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+    timestamp: new Date(new Date(current.timestamp).getTime() - 3600000).toISOString(), // 1 hour before current snapshot
     aggregates: baselineAggregates,
     classifiedCounts: current.classifiedCounts
   };

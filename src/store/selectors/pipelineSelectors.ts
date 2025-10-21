@@ -29,6 +29,17 @@ const selectCampaignUIById = (id: string) => createSelector(selectCampaignUiSlic
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const selectCampaignApiState = (s: RootState): unknown => (s as unknown as Record<string, unknown>)['campaignApi'];
 
+interface MinimalQuerySubstate {
+  queryCacheKey?: string;
+  endpointName?: string;
+  originalArgs?: unknown;
+  data?: { status?: BackendStatus } | undefined;
+}
+
+interface MinimalCampaignApiState {
+  queries?: Record<string, MinimalQuerySubstate>;
+}
+
 // Direct RTK Query data selectors per phase to avoid O(N) scans over query cache.
 // Each call to campaignApi.endpoints.getPhaseStatusStandalone.select(arg) returns a selector (RootState)=>QuerySubstate.
 // We wrap it to surface only the data/status field while maintaining memoization.
@@ -47,11 +58,24 @@ const selectPhaseStatusQuery = (campaignId: string, phase: PipelinePhaseKey) => 
   }
   const base = campaignApi.endpoints.getPhaseStatusStandalone?.select({ campaignId, phase });
   const selector = (state: RootState): { status?: BackendStatus } | undefined => {
-    // Fallback if endpoint missing (should not happen in normal runtime) to preserve safety.
-    if (!base) return undefined;
-    const sub = base(state);
-    const data = (sub as unknown as { data?: { status?: BackendStatus } }).data;
-    return data ? { status: data.status } : undefined;
+    // Prefer the generated endpoint selector when available (runtime path).
+    if (base) {
+      const sub = base(state);
+      const data = (sub as unknown as { data?: { status?: BackendStatus } }).data;
+      if (data) return data;
+    }
+
+    // Fallback for tests or legacy stores that construct queries manually.
+    const apiState = selectCampaignApiState(state) as MinimalCampaignApiState | undefined;
+    const queryMap = apiState?.queries;
+    if (!queryMap) return undefined;
+    const match = Object.values(queryMap).find((entry) => {
+      if (!entry) return false;
+      if (entry.endpointName !== 'getPhaseStatusStandalone') return false;
+      const args = entry.originalArgs as { campaignId?: string; phase?: string } | undefined;
+      return args?.campaignId === campaignId && args?.phase === phase;
+    });
+    return match?.data as { status?: BackendStatus } | undefined;
   };
   campaignCache.set(cacheKey, selector);
   return selector;

@@ -201,7 +201,7 @@ describe('deltasService', () => {
       const baseline = createBaselineSnapshot(mockCurrentSnapshot);
       
       expect(baseline.id).toContain('baseline-');
-      expect(baseline.timestamp).toBeLessThan(mockCurrentSnapshot.timestamp);
+      expect(Date.parse(baseline.timestamp)).toBeLessThan(Date.parse(mockCurrentSnapshot.timestamp));
       expect(baseline.classifiedCounts).toEqual(mockCurrentSnapshot.classifiedCounts);
       
       // Values should be reduced but positive
