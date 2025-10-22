@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Edit3, Trash2, TestTubeDiagonal, PowerOff, AlertCircle, CheckCircle, Clock, HelpCircle } from 'lucide-react';
+import { MoreVertical, Edit3, Trash2, TestTubeDiagonal, PowerOff, AlertCircle, CheckCircle, HelpCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 

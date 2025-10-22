@@ -7,47 +7,40 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, RefreshCw, Activity, Database, Globe, BarChart3 } from "lucide-react";
 import { useRTKCampaignsList } from "@/providers/RTKCampaignDataProvider";
 import type { CampaignLite } from "@/providers/RTKCampaignDataProvider";
-import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+
+type CampaignStatus = CampaignLite['metadata']['status'];
+type CampaignPhase = NonNullable<CampaignLite['metadata']['currentPhase']>;
 
 interface CampaignCardView {
   campaignId: string;
   name: string;
-  currentPhase: string;
-  phaseStatus: string;
-  totalItems: number;
-  createdAt: string;
-  updatedAt: string;
-  progress: number;
-  domains: number;
-  leads: number;
-  dnsValidatedDomains: number;
-  httpValidatedDomains: number;
-  leadsFound: number;
-  domainsData: DomainListItem[];
-  leadsData: unknown[]; // Replace with concrete Lead model when available
-  dnsResults?: unknown; // Placeholder for future typed DNS result aggregation
-  httpResults?: unknown; // Placeholder
-  analysisResults?: unknown; // Placeholder
+  currentPhase: CampaignPhase | 'discovery';
+  status: CampaignStatus;
+  totalDomains: number;
+  processedDomains: number;
+  successfulDomains: number;
+  progressPercent: number;
 }
 
-const PHASE_LABELS: Record<string, string> = {
-  setup: "Setup",
-  generation: "Domain Generation",
-  discovery: "Domain Generation",
-  dns_validation: "DNS Validation",
-  http_keyword_validation: "HTTP Validation",
+const PHASE_LABELS: Record<CampaignPhase, string> = {
+  discovery: "Discovery",
+  validation: "Validation",
+  extraction: "Extraction",
   analysis: "Analysis"
 };
 
-const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  not_started: "outline",
-  in_progress: "default",
+const STATUS_VARIANTS: Record<CampaignStatus, "default" | "secondary" | "destructive" | "outline"> = {
+  draft: "outline",
+  running: "default",
   paused: "secondary",
   completed: "secondary",
-  failed: "destructive"
+  failed: "destructive",
+  cancelled: "destructive"
 };
+
+const formatLabel = (value: string) => value.replace(/_/g, ' ').replace(/(^|\s)([a-z])/g, (_, space, letter) => `${space}${letter.toUpperCase()}`);
 
 export default function CampaignsPage() {
   const { toast: _toast } = useToast();
@@ -55,30 +48,20 @@ export default function CampaignsPage() {
   const { campaigns: enrichedCampaigns, loading, error, refetch } = useRTKCampaignsList();
   const campaigns: CampaignCardView[] = useMemo(() => {
     return enrichedCampaigns.map((campaign: CampaignLite): CampaignCardView => {
-      const domains = (campaign.domains || []) as DomainListItem[];
-      const leads = (campaign.leads || []) as unknown[];
-      const dnsValidatedCount = domains.filter((domain) => domain && typeof domain === 'object' && (domain as DomainListItem).dnsStatus === 'ok').length;
-      const httpValidatedCount = domains.filter((domain) => domain && typeof domain === 'object' && (domain as DomainListItem).httpStatus === 'ok').length;
-      const leadsFoundCount = domains.filter((domain) => domain && typeof domain === 'object' && (domain as DomainListItem).leadStatus === 'match').length;
+      const progress = campaign.metadata.progress ?? {};
+      const totalDomains = progress.totalDomains ?? 0;
+      const processedDomains = progress.processedDomains ?? 0;
+      const successfulDomains = progress.successfulDomains ?? 0;
+      const percentComplete = progress.percentComplete ?? 0;
       return {
         campaignId: campaign.id,
         name: campaign.name,
-        currentPhase: campaign.currentPhase || 'discovery',
-        phaseStatus: 'not_started',
-        totalItems: domains.length,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        progress: campaign.overallProgress || 0,
-        domains: domains.length,
-        leads: leads.length,
-        dnsValidatedDomains: dnsValidatedCount,
-        httpValidatedDomains: httpValidatedCount,
-        leadsFound: leadsFoundCount,
-        domainsData: domains,
-        leadsData: leads,
-        dnsResults: undefined,
-        httpResults: undefined,
-        analysisResults: undefined
+        currentPhase: campaign.currentPhase ?? 'discovery',
+        status: campaign.metadata.status,
+        totalDomains,
+        processedDomains,
+        successfulDomains,
+        progressPercent: percentComplete
       };
     });
   }, [enrichedCampaigns]);
@@ -86,9 +69,9 @@ export default function CampaignsPage() {
 
   const getBulkDataSummary = (campaign: CampaignCardView) => {
     const items: string[] = [];
-    if (campaign.domains) items.push(`${campaign.domains.toLocaleString()} domains`);
-    if (campaign.dnsValidatedDomains) items.push(`${campaign.dnsValidatedDomains.toLocaleString()} DNS validated`);
-    if (campaign.leads) items.push(`${campaign.leads.toLocaleString()} leads`);
+    if (campaign.totalDomains > 0) items.push(`${campaign.totalDomains.toLocaleString()} domains`);
+    if (campaign.processedDomains > 0) items.push(`${campaign.processedDomains.toLocaleString()} processed`);
+    if (campaign.successfulDomains > 0) items.push(`${campaign.successfulDomains.toLocaleString()} successful`);
     return items.join(' • ');
   };
 
@@ -186,10 +169,10 @@ export default function CampaignsPage() {
                   </CardTitle>
                   <div className="flex items-center gap-2" data-testid="campaign-card-badges">
                     <Badge variant={"outline"} data-testid="campaign-card-phase">
-                      {campaign.currentPhase}
+                      {formatLabel(PHASE_LABELS[campaign.currentPhase as CampaignPhase] ?? campaign.currentPhase)}
                     </Badge>
-                    <Badge variant="outline" data-testid="campaign-card-status">
-                      {campaign.phaseStatus?.replace('_', ' ')}
+                    <Badge variant={STATUS_VARIANTS[campaign.status]} data-testid="campaign-card-status">
+                      {formatLabel(campaign.status)}
                     </Badge>
                   </div>
                 </div>
@@ -198,15 +181,15 @@ export default function CampaignsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" data-testid="campaign-card-stats">
                   <div className="flex items-center gap-2" data-testid="campaign-card-stat-domains">
                     <Globe className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm text-muted-foreground">{campaign.domains || 0} domains</span>
+                    <span className="text-sm text-muted-foreground">{campaign.totalDomains.toLocaleString()} domains</span>
                   </div>
                   <div className="flex items-center gap-2" data-testid="campaign-card-stat-dns-validated">
                     <Database className="h-4 w-4 text-green-500" />
-                    <span className="text-sm text-muted-foreground">{campaign.dnsValidatedDomains || 0} validated</span>
+                    <span className="text-sm text-muted-foreground">{campaign.successfulDomains.toLocaleString()} successful</span>
                   </div>
                   <div className="flex items-center gap-2" data-testid="campaign-card-stat-progress">
                     <BarChart3 className="h-4 w-4 text-purple-500" />
-                    <span className="text-sm text-muted-foreground">{campaign.progress || 0}% complete</span>
+                    <span className="text-sm text-muted-foreground">{Math.round(campaign.progressPercent)}% complete</span>
                   </div>
                 </div>
 

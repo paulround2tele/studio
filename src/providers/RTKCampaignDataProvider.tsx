@@ -72,17 +72,29 @@ export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderPro
       if (error instanceof Error) return error.message;
       // Only use 'in' for non-null objects
       if (typeof error === 'object') {
-        const anyErr = error as Record<string, unknown>;
-        if ('status' in anyErr && 'data' in anyErr) {
-          const data = anyErr.data as Record<string, unknown> | undefined;
-          const dataMsg = (data && (String((data as any).message) || String((data as any).error?.message))) || null;
-          return dataMsg || `Request failed with status ${anyErr.status}`;
+        const errorRecord = error as Record<string, unknown>;
+        if ('status' in errorRecord && 'data' in errorRecord) {
+          const rawData = errorRecord.data;
+          if (typeof rawData === 'object' && rawData !== null) {
+            const responseData = rawData as Record<string, unknown>;
+            const message = typeof responseData.message === 'string' ? responseData.message : null;
+            const nestedError = (() => {
+              const nested = responseData.error;
+              if (typeof nested === 'object' && nested !== null && 'message' in nested && typeof (nested as { message?: unknown }).message === 'string') {
+                return (nested as { message: string }).message;
+              }
+              return null;
+            })();
+            if (message) return message;
+            if (nestedError) return nestedError;
+          }
+          return `Request failed with status ${String(errorRecord.status)}`;
         }
-        if ('message' in anyErr && typeof (anyErr as { message?: unknown }).message === 'string') {
-          return (anyErr as { message: string }).message;
+        if ('message' in errorRecord && typeof (errorRecord as { message?: unknown }).message === 'string') {
+          return (errorRecord as { message: string }).message;
         }
         try {
-          return JSON.stringify(anyErr);
+          return JSON.stringify(errorRecord);
   } catch (_e) {
           // JSON stringify failed; return generic message
           return 'Unknown error';

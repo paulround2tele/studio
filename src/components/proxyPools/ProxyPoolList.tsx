@@ -19,6 +19,7 @@ const proxyPoolsApi = {
   proxyPoolsDelete: async (_id: string) => ({})
 };
 import type { ProxyPool as ProxyPoolType, ProxyPool } from '@/lib/api-client/models';
+import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
 import {
   Dialog,
   DialogContent,
@@ -36,8 +37,7 @@ export default function ProxyPoolList() {
   const loadPools = async () => {
     try {
       const resp = await proxyPoolsApi.proxyPoolsList();
-      // API now returns direct array of ProxyPool objects
-      const data = resp.data || [];
+      const data = unwrapApiResponse<ProxyPool[]>(resp) || [];
       setPools(data.filter((pool: { id?: unknown }) => pool.id) as ProxyPoolType[]);
     } catch (error) {
       console.error('Failed to load proxy pools:', error);

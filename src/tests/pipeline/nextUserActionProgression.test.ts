@@ -1,19 +1,25 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, type Reducer } from '@reduxjs/toolkit';
 import campaignUIReducer, { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
-import { pipelineSelectors, PIPELINE_PHASE_ORDER } from '@/store/selectors/pipelineSelectors';
+import { pipelineSelectors, PIPELINE_PHASE_ORDER, type PipelinePhaseKey } from '@/store/selectors/pipelineSelectors';
+import type { RootState } from '@/store';
 
 // Minimal mock of RTK Query slice structure used by selectors
-interface QueryEntry { endpointName: string; originalArgs: any; data?: any; }
+interface QueryEntry {
+  endpointName: string;
+  originalArgs: { campaignId: string; phase: string };
+  data?: { status?: string };
+}
+
 interface MockApiState { queries: Record<string, QueryEntry>; }
 
 const makePhaseStatus = (status?: string) => ({ status });
 
 function makeStore(initialQueries: Record<string, QueryEntry>) {
+  const campaignApiReducer: Reducer<MockApiState> = (state = { queries: initialQueries }) => state;
   return configureStore({
     reducer: {
       campaignUI: campaignUIReducer,
-      // @ts-ignore - provide only what selectors read
-      campaignApi: (state: MockApiState = { queries: initialQueries }) => state,
+      campaignApi: campaignApiReducer,
     }
   });
 }
@@ -35,11 +41,11 @@ describe('nextUserAction selector progression', () => {
   it('guides configuration until a phase is runnable, then promotes execution before later configuration', () => {
     const store = makeStore(buildQueries({ discovery: undefined, validation: undefined, extraction: undefined, analysis: undefined }));
     const sel = pipelineSelectors.nextUserAction(campaignId);
-    expect(sel(store.getState() as any)).toEqual({ type: 'configure', phase: 'discovery', reason: 'Configuration required' });
+    expect(sel(store.getState() as RootState)).toEqual({ type: 'configure', phase: 'discovery', reason: 'Configuration required' });
 
     const reselect = (statuses: Record<string,string|undefined>) => {
       const newStore = makeStore(buildQueries(statuses));
-      return { state: newStore.getState() as any };
+      return { state: newStore.getState() as RootState };
     };
 
     // discovery configured -> we can immediately start it even though later phases lack config
@@ -76,7 +82,7 @@ describe('nextUserAction selector progression', () => {
     const store = makeStore(buildQueries({ discovery: 'configured', validation: undefined, extraction: undefined, analysis: undefined }));
     store.dispatch(pushGuidanceMessage({ campaignId, msg: { id: 'g1', message: 'Test guidance', severity: 'info' } }));
     const overviewSel = pipelineSelectors.overview(campaignId);
-    const ov = overviewSel(store.getState() as any);
+    const ov = overviewSel(store.getState() as RootState);
     expect(ov.guidance.count).toBe(1);
   });
 });

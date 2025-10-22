@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Briefcase, Loader2, ArrowLeft, Eye, EyeOff, RefreshCw, MessageSquare } from 'lucide-react';

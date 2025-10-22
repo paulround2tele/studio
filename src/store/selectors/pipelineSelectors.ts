@@ -26,8 +26,9 @@ const selectCampaignUIById = (id: string) => createSelector(selectCampaignUiSlic
 // Access RTK Query slice with explicit indexing to avoid 'as any'
 // RootState is declared in store; if campaignApi slice typing is missing, extend RootState accordingly instead of casting.
 // For now, treat unknown to keep zero 'any' usage and refine at call sites.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const selectCampaignApiState = (s: RootState): unknown => (s as unknown as Record<string, unknown>)['campaignApi'];
+type CampaignApiSliceState = RootState[typeof campaignApi.reducerPath];
+
+const selectCampaignApiState = (s: RootState): CampaignApiSliceState => s[campaignApi.reducerPath];
 
 interface MinimalQuerySubstate {
   queryCacheKey?: string;

@@ -3,15 +3,14 @@ import React from 'react';
 import { useAppSelector } from '@/store/hooks';
 import { pipelineSelectors, selectRetryEligiblePhases } from '@/store/selectors/pipelineSelectors';
 import { useAppDispatch } from '@/store/hooks';
-import { setFullSequenceMode, setSelectedPhase } from '@/store/ui/campaignUiSlice';
+import { setSelectedPhase } from '@/store/ui/campaignUiSlice';
 import DiscoveryConfigForm from '@/components/campaigns/workspace/forms/DiscoveryConfigForm';
 import DNSValidationConfigForm from '@/components/campaigns/workspace/forms/DNSValidationConfigForm';
 import HTTPValidationConfigForm from '@/components/campaigns/workspace/forms/HTTPValidationConfigForm';
 import AnalysisConfigForm from '@/components/campaigns/workspace/forms/AnalysisConfigForm';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { PhaseStepper, PhasePanelShell, StatusBadge, CampaignOverviewCard, AlertStack } from '@/components/campaigns/workspace';
-import { useStartPhaseStandaloneMutation, useGetPhaseStatusStandaloneQuery, campaignApi } from '@/store/api/campaignApi';
+import { useStartPhaseStandaloneMutation, useGetPhaseStatusStandaloneQuery } from '@/store/api/campaignApi';
 import computeAutoStartPhase from '@/store/selectors/autoAdvanceLogic';
 import type { PhaseStatusResponse } from '@/lib/api-client/models/phase-status-response';
 
@@ -21,14 +20,6 @@ interface PipelineWorkspaceProps { campaignId: string; }
 
 // Unified pipeline layout (legacy flag removed during final cleanup phase)
 
-const railColor = (p:any) => {
-  if (p.execState === 'failed') return 'border-red-500 bg-red-50';
-  if (p.execState === 'completed') return 'border-green-500 bg-green-50';
-  if (p.execState === 'running') return 'border-blue-500 bg-blue-50';
-  if (p.configState === 'valid') return 'border-gray-400 bg-gray-50';
-  return 'border-gray-300';
-};
-
 export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId }) => {
   // Actively subscribe to per-phase status so selectors receive data+invalidations
   useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'discovery' });
@@ -37,41 +28,27 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
   useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'analysis' });
   const selectOverview = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
   const ov = useAppSelector(selectOverview);
-  const { phases, config, exec, mode, guidance, failures, nextAction } = ov;
+  const { phases, mode, guidance, failures, nextAction } = ov;
   const selectedPhase = useAppSelector(React.useMemo(()=>pipelineSelectors.selectedPhase(campaignId),[campaignId]));
   const selectStartCTA = React.useMemo(()=>pipelineSelectors.startCTAState(campaignId),[campaignId]);
   const startCTA = useAppSelector(selectStartCTA);
   const retryEligible = useAppSelector(React.useMemo(()=>selectRetryEligiblePhases(campaignId),[campaignId]));
   const dispatch = useAppDispatch();
-  const [startPhase, { isLoading: startLoading }] = useStartPhaseStandaloneMutation();
+  const [startPhase] = useStartPhaseStandaloneMutation();
   const pendingAutoStarts = React.useRef<Set<string>>(new Set());
-
-  const toggleMode = (val: boolean) => {
-    dispatch(setFullSequenceMode({ campaignId, value: val }));
-  };
-
-  const handlePrimaryAction = async () => {
-    if (!nextAction) return;
-    if (nextAction.type === 'start') {
-  await startPhase({ campaignId, phase: nextAction.phase as CampaignPhase });
-      // Force immediate status refetch for the started phase
-  dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: nextAction.phase as CampaignPhase }));
-    }
-    // configure path will be handled in Phase 5 when inline forms introduced
-  };
 
   // Auto-advance effect: when in full sequence mode and a phase just completed, start next configured idle phase.
   React.useEffect(() => {
+    if (!mode.autoAdvance) return;
     const nextAuto = computeAutoStartPhase(phases, mode.autoAdvance);
-    if (nextAuto) {
-      if (pendingAutoStarts.current.has(nextAuto)) return; // suppression: already dispatched
-      pendingAutoStarts.current.add(nextAuto);
-  startPhase({ campaignId, phase: nextAuto as CampaignPhase }).finally(()=> {
-        // Allow retry only if phase failed later; removal when we detect phase started
-        setTimeout(()=>pendingAutoStarts.current.delete(nextAuto), 3000);
-      });
+    if (!nextAuto || pendingAutoStarts.current.has(nextAuto)) {
+      return;
     }
-  }, [phases.map(p=>p.execState).join(','), phases.map(p=>p.configState).join(','), mode.autoAdvance, campaignId]);
+    pendingAutoStarts.current.add(nextAuto);
+    startPhase({ campaignId, phase: nextAuto as CampaignPhase }).finally(() => {
+      setTimeout(() => pendingAutoStarts.current.delete(nextAuto), 3000);
+    });
+  }, [campaignId, mode.autoAdvance, phases, startPhase]);
 
   const handlePhaseClick = (phaseKey: string) => {
     dispatch(setSelectedPhase({ campaignId, phase: phaseKey }));

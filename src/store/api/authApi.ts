@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { AuthApi } from '@/lib/api-client/apis/auth-api';
 import { apiConfiguration } from '@/lib/api/config';
 import type { LoginRequest, SessionResponse, UserPublicResponse as User } from '@/lib/api-client/models';
+import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
 
 const authClient = new AuthApi(apiConfiguration);
 
@@ -14,8 +15,8 @@ export const authApi = createApi({
     login: builder.mutation<User, LoginRequest>({
       queryFn: async (credentials) => {
         try {
-          const resp = await authClient.authLogin(credentials); // AxiosResponse<SessionResponse>
-          const session: SessionResponse | undefined = resp?.data;
+          const resp = await authClient.authLogin(credentials);
+          const session = unwrapApiResponse<SessionResponse>(resp);
           const sessionUser = session?.user;
           const user: User = sessionUser ? {
             id: sessionUser.id ?? 'unknown',
@@ -51,9 +52,9 @@ export const authApi = createApi({
     me: builder.query<User | null, void>({
       queryFn: async () => {
         try {
-          const resp = await authClient.authMe(); // AxiosResponse<UserPublicResponse>
-          const body = resp?.data as User | undefined;
-            const user: User | null = body ? {
+          const resp = await authClient.authMe();
+          const body = unwrapApiResponse<User>(resp);
+          const user: User | null = body ? {
               id: body.id ?? 'unknown',
               email: body.email ?? 'unknown',
               username: body.username ?? body.email ?? 'unknown',

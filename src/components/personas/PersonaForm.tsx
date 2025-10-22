@@ -14,25 +14,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PersonasApi, Configuration } from '@/lib/api-client';
-import type { PersonaResponse as ApiPersonaResponse } from '@/lib/api-client/models/persona-response';
+import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { PersonaConfigHttp as HTTPConfigDetails } from '@/lib/api-client/models/persona-config-http';
 import type { PersonaConfigDns as DNSConfigDetails } from '@/lib/api-client/models/persona-config-dns';
 import type { PersonaConfigDetails } from '@/lib/api-client/models/persona-config-details';
 import { PersonaType as ApiCreatePersonaRequestPersonaTypeEnum } from '@/lib/api-client/models/persona-type';
 import type { CreatePersonaRequest } from '@/lib/api-client/models/create-persona-request';
 import type { UpdatePersonaRequest } from '@/lib/api-client/models/update-persona-request';
+import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
 const personasApi = new PersonasApi(new Configuration());
 
-// Type aliases for better readability
-type Persona = ApiPersonaResponse;
-
 // Narrowers
-function asHttpConfig(p: Persona | undefined): HTTPConfigDetails | undefined {
+function asHttpConfig(p: PersonaResponse | undefined): HTTPConfigDetails | undefined {
   const c = p?.configDetails as PersonaConfigDetails | undefined;
   if (c && 'userAgent' in c) return c as HTTPConfigDetails; // distinctive HTTP field
   return undefined;
 }
-function asDnsConfig(p: Persona | undefined): DNSConfigDetails | undefined {
+function asDnsConfig(p: PersonaResponse | undefined): DNSConfigDetails | undefined {
   const c = p?.configDetails as PersonaConfigDetails | undefined;
   if (c && 'resolvers' in c) return c as DNSConfigDetails; // distinctive DNS field
   return undefined;
@@ -108,13 +106,13 @@ type HttpPersonaFormValues = z.infer<typeof httpPersonaFormSchema>;
 type DnsPersonaFormValues = z.infer<typeof dnsPersonaFormSchema>;
 
 interface PersonaFormProps {
-  persona?: Persona;
+  persona?: PersonaResponse;
   isEditing?: boolean;
   personaType: 'http' | 'dns';
 }
 
 // HTTP Persona Form Component
-function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; isEditing?: boolean }) {
+function HttpPersonaForm({ persona, isEditing = false }: { persona?: PersonaResponse; isEditing?: boolean }) {
   const router = useRouter();
   const { toast } = useToast();
   // Authentication handled server-side; client form proceeds directly
@@ -205,8 +203,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
       }
 
       if (response.status >= 200 && response.status < 300) {
-        // Direct resource body already returned (no envelope) via axios client
-  const body = (response as { data?: Persona })?.data;
+        const body = unwrapApiResponse<PersonaResponse>(response);
   toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${body?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
@@ -260,7 +257,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
             <FormField control={form.control} name="headersJson" render={({ field }) => (
               <FormItem data-testid="persona-http-field-headers-json">
                 <FormLabel>HTTP Headers (JSON)</FormLabel>
-                <FormControl><Textarea data-testid="persona-http-input-headers-json" placeholder='{ "Accept-Language": "en-US,en;q=0.9", "X-Custom-Header": "Value" }' className="font-mono min-h-[120px]" {...field} /></FormControl>
+                <FormControl><Textarea data-testid="persona-http-input-headers-json" placeholder='{ &quot;Accept-Language&quot;: &quot;en-US,en;q=0.9&quot;, &quot;X-Custom-Header&quot;: &quot;Value&quot; }' className="font-mono min-h-[120px]" {...field} /></FormControl>
                 <FormDescription>Enter custom HTTP headers as a JSON object string.</FormDescription>
                 <FormMessage />
               </FormItem>
@@ -276,7 +273,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
             <FormField control={form.control} name="tlsClientHelloJson" render={({ field }) => (
               <FormItem data-testid="persona-http-field-tls-client-hello">
                 <FormLabel>TLS ClientHello Config (JSON, Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-http-input-tls-client-hello" placeholder='{ "minVersion": "TLS12", "cipherSuites": [...] }' className="font-mono min-h-[100px]" {...field} /></FormControl>
+                <FormControl><Textarea data-testid="persona-http-input-tls-client-hello" placeholder='{ &quot;minVersion&quot;: &quot;TLS12&quot;, &quot;cipherSuites&quot;: [...] }' className="font-mono min-h-[100px]" {...field} /></FormControl>
                 <FormDescription>Define TLS handshake parameters (e.g., JA3/JA4 related).</FormDescription>
                 <FormMessage />
               </FormItem>
@@ -284,7 +281,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
             <FormField control={form.control} name="http2SettingsJson" render={({ field }) => (
               <FormItem data-testid="persona-http-field-http2-settings">
                 <FormLabel>HTTP/2 Settings (JSON, Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-http-input-http2-settings" placeholder='{ "headerTableSize": 4096, "enablePush": false }' className="font-mono min-h-[80px]" {...field} /></FormControl>
+                <FormControl><Textarea data-testid="persona-http-input-http2-settings" placeholder='{ &quot;headerTableSize&quot;: 4096, &quot;enablePush&quot;: false }' className="font-mono min-h-[80px]" {...field} /></FormControl>
                 <FormDescription>Configure HTTP/2 protocol parameters.</FormDescription>
                 <FormMessage />
               </FormItem>
@@ -292,8 +289,8 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
             <FormField control={form.control} name="cookieHandlingJson" render={({ field }) => (
               <FormItem data-testid="persona-http-field-cookie-handling">
                 <FormLabel>Cookie Handling Config (JSON, Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-http-input-cookie-handling" placeholder='{ "mode": "session" }' className="font-mono min-h-[60px]" {...field} /></FormControl>
-                <FormDescription>Define how cookies are handled (e.g., "none", "session", "file").</FormDescription>
+                <FormControl><Textarea data-testid="persona-http-input-cookie-handling" placeholder='{ &quot;mode&quot;: &quot;session&quot; }' className="font-mono min-h-[60px]" {...field} /></FormControl>
+                <FormDescription>Define how cookies are handled (e.g., &quot;none&quot;, &quot;session&quot;, &quot;file&quot;).</FormDescription>
                 <FormMessage />
               </FormItem>
             )} />
@@ -368,7 +365,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
 }
 
 // DNS Persona Form Component
-function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isEditing?: boolean }) {
+function DnsPersonaForm({ persona, isEditing = false }: { persona?: PersonaResponse; isEditing?: boolean }) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -464,9 +461,8 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
       }
 
       if (response.status >= 200 && response.status < 300) {
-        // Direct resource body already returned (no envelope) via axios client
-  const body = (response as { data?: Persona })?.data;
-  toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${body?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
+        const body = unwrapApiResponse<PersonaResponse>(response);
+        toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${body?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
       } else {
@@ -556,7 +552,7 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
             <FormField control={form.control} name="config_resolversWeightedJson" render={({ field }) => (
               <FormItem data-testid="persona-dns-field-resolvers-weighted-json">
                 <FormLabel>Weighted Resolvers (JSON Object - Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-dns-input-resolvers-weighted-json" placeholder='{"8.8.8.8": 10, "1.1.1.1": 5}' className="font-mono min-h-[80px]" {...field} /></FormControl>
+                <FormControl><Textarea data-testid="persona-dns-input-resolvers-weighted-json" placeholder='{&quot;8.8.8.8&quot;: 10, &quot;1.1.1.1&quot;: 5}' className="font-mono min-h-[80px]" {...field} /></FormControl>
                 <FormDescription>For &apos;Weighted Rotation&apos; strategy. Object with resolver as key and weight as value.</FormDescription>
                 <FormMessage />
               </FormItem>
