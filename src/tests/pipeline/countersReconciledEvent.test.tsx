@@ -11,8 +11,8 @@ jest.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: jest.fn() }) }
 jest.mock('@/lib/api/config', () => ({ apiConfiguration: {}, createApiConfiguration: () => ({}) }));
 // Mock generic SSE hook to manually emit events
 jest.mock('@/hooks/useSSE', () => ({
-  useSSE: (_url: string | null, onEvent: (evt: any) => void) => {
-    (global as any).__emit = onEvent; // expose emitter for test
+  useSSE: (_url: string | null, onEvent: (evt: unknown) => void) => {
+    (global as unknown).__emit = onEvent; // expose emitter for test
     return { isConnected: true };
   }
 }));
@@ -25,7 +25,7 @@ describe('useCampaignPhaseEvents counters_reconciled', () => {
     const uiReducer = (s = { byId: { [campaignId]: {} }}) => s;
     // Spy invalidateTags
     const spyInvalidate = jest.fn();
-    (campaignApi.util as any).invalidateTags = (tags: any) => { spyInvalidate(tags); return { type: '__TEST__/INVALIDATE', payload: tags }; };
+    (campaignApi.util as unknown).invalidateTags = (tags: unknown) => { spyInvalidate(tags); return { type: '__TEST__/INVALIDATE', payload: tags }; };
     const store = configureStore({ reducer: { pipelineExec: pipelineExecReducer, campaignUI: uiReducer, campaignApi: (s = {}) => s } });
     return { store, spyInvalidate };
   }
@@ -33,7 +33,7 @@ describe('useCampaignPhaseEvents counters_reconciled', () => {
   it('invalidates relevant tags when counters_reconciled event received', () => {
     const { store, spyInvalidate } = makeStore();
     renderHook(() => useCampaignPhaseEvents(campaignId), { wrapper: ({ children }) => <Provider store={store}>{children}</Provider> });
-    const emit = (global as any).__emit as (e: any) => void;
+    const emit = (global as unknown).__emit as (e: unknown) => void;
     emit({ event: 'counters_reconciled', data: { campaign_id: campaignId, adjusted: true } });
     expect(spyInvalidate).toHaveBeenCalled();
     // Flatten calls to verify tags include domains & progress

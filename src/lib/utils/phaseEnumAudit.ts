@@ -18,7 +18,6 @@ export function auditPhaseEnumDrift() {
 
     if (missingInLocal.length || extraneousLocal.length) {
       // Structured warning for easy grep in logs
-      // eslint-disable-next-line no-console
       console.warn('[PhaseEnumAudit] Drift detected', {
         generatedEnumValues: enumValues,
         localPhaseOrder: PIPELINE_PHASE_ORDER,
@@ -27,7 +26,6 @@ export function auditPhaseEnumDrift() {
       });
     }
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.warn('[PhaseEnumAudit] audit failed', e);
   }
 }

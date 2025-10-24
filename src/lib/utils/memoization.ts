@@ -10,7 +10,6 @@ import React, { DependencyList, useRef, useCallback } from 'react';
 /**
  * Deep comparison of two values
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   
@@ -60,7 +59,6 @@ export function useDeepMemo<T>(factory: () => T, deps: DependencyList): T {
  * Custom hook for deep callback memoization
  * Unlike useCallback, this performs deep comparison of dependencies
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useDeepCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   deps: DependencyList

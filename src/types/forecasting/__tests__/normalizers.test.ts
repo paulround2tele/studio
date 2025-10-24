@@ -18,7 +18,7 @@ describe('Forecasting Normalizers', () => {
   describe('normalizeForecastPoints', () => {
     it('should handle empty input', () => {
       expect(normalizeForecastPoints([])).toEqual([]);
-      expect(normalizeForecastPoints(null as any)).toEqual([]);
+      expect(normalizeForecastPoints(null as unknown)).toEqual([]);
     });
 
     it('should normalize valid points', () => {

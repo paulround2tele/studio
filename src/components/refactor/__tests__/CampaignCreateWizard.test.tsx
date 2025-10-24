@@ -30,7 +30,7 @@ jest.mock('@/store/api/campaignApi', () => ({
   campaignApi: {
     reducerPath: 'campaignApi',
     reducer: jest.fn(),
-    middleware: jest.fn(() => () => (next: any) => (action: any) => next(action))
+    middleware: jest.fn(() => () => (next: unknown) => (action: unknown) => next(action))
   }
 }));
 
@@ -52,7 +52,7 @@ const createMockStore = () => {
       [campaignApi.reducerPath]: (state = {}) => state
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(campaignApi.middleware as any)
+      getDefaultMiddleware().concat(campaignApi.middleware as unknown)
   });
 };
 
@@ -303,7 +303,7 @@ describe('CampaignCreateWizard Component', () => {
   });
 
   describe('Campaign Submission', () => {
-    const setupCompleteWizard = async (user: any) => {
+    const setupCompleteWizard = async (user: unknown) => {
       render(
         <TestWrapper>
           <CampaignCreateWizard />

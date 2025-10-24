@@ -1,6 +1,6 @@
 // File: src/hooks/useSSE.ts
 import { useEffect, useRef, useCallback, useState } from 'react';
-import type { CampaignSseEvent } from '@/lib/api-client/models/campaign-sse-event';
+import type { CampaignSseEvent as _CampaignSseEvent } from '@/lib/api-client/models';
 
 // Narrowed runtime event shape used by consumers. `data` will be strongly typed when
 // the event name matches a known CampaignSseEvent discriminator; otherwise unknown.

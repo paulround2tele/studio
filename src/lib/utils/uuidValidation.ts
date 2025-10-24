@@ -289,7 +289,7 @@ export function validateCampaignId(campaignId: string | null | undefined): UuidV
  * Pre-validates API request before sending to prevent 400 errors
  * Returns true if validation passes, false if it fails (with toast notification)
  */
-export function validateBeforeApiCall<T extends Record<string, any>>(
+export function validateBeforeApiCall<T extends Record<string, unknown>>(
   payload: T,
   validationRules: Array<{
     field: keyof T;

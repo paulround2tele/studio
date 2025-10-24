@@ -48,10 +48,18 @@ interface RawMessage { type: 'raw'; data: string }
 type StructuredMessage = HeartbeatMessage | DifferentialUpdateMessage | FullSnapshotMessage | RawMessage;
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
-const hasType = (v: unknown): v is { type: string } => isRecord(v) && typeof (v as { type?: unknown }).type === 'string';
+const hasType = (v: unknown): v is Record<string, unknown> & { type: string } => isRecord(v) && typeof (v as { type?: unknown }).type === 'string';
 const isHeartbeatMessage = (v: unknown): v is HeartbeatMessage => hasType(v) && v.type === 'heartbeat';
-const isDifferentialUpdateMessage = (v: unknown): v is DifferentialUpdateMessage => hasType(v) && v.type === 'differential_update' && isRecord((v as any).patch);
-const isFullSnapshotMessage = (v: unknown): v is FullSnapshotMessage => hasType(v) && v.type === 'full_snapshot' && isRecord((v as any).snapshot);
+const isDifferentialUpdateMessage = (v: unknown): v is DifferentialUpdateMessage => {
+  if (!hasType(v) || v.type !== 'differential_update') return false;
+  const candidate = v as Record<string, unknown> & { patch?: unknown };
+  return isRecord(candidate.patch);
+};
+const isFullSnapshotMessage = (v: unknown): v is FullSnapshotMessage => {
+  if (!hasType(v) || v.type !== 'full_snapshot') return false;
+  const candidate = v as Record<string, unknown> & { snapshot?: unknown };
+  return isRecord(candidate.snapshot);
+};
 
 // Pooled stream entry
 interface PooledStream {

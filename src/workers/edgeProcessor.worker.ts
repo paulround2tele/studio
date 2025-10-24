@@ -7,7 +7,7 @@
 export interface WorkerTask {
   id: string;
   kind: 'causal_recompute' | 'forecast_blend' | 'simulation_projection';
-  payload: any;
+  payload: unknown;
   priority: 'high' | 'medium' | 'low';
   timestamp: number;
 }
@@ -15,16 +15,16 @@ export interface WorkerTask {
 export interface WorkerResponse {
   taskId: string;
   success: boolean;
-  result?: any;
+  result?: unknown;
   error?: string;
   processingTimeMs: number;
 }
 
 // Worker message handlers
-const taskHandlers = {
-  causal_recompute: handleCausalRecompute,
-  forecast_blend: handleForecastBlend,
-  simulation_projection: handleSimulationProjection
+const taskHandlers: Record<WorkerTask['kind'], (payload: unknown) => unknown> = {
+  causal_recompute: (payload) => handleCausalRecompute(payload as Parameters<typeof handleCausalRecompute>[0]),
+  forecast_blend: (payload) => handleForecastBlend(payload as Parameters<typeof handleForecastBlend>[0]),
+  simulation_projection: (payload) => handleSimulationProjection(payload as Parameters<typeof handleSimulationProjection>[0])
 };
 
 /**
@@ -73,10 +73,10 @@ function handleCausalRecompute(payload: {
     metricKey: string;
     value: number;
     timestamp: number;
-    features: Record<string, any>;
+    features: Record<string, unknown>;
   }>;
-  existingGraph?: any;
-}): any {
+  existingGraph?: unknown;
+}): unknown {
   // Simplified causal inference computation
   const { observations, existingGraph } = payload;
   
@@ -141,7 +141,7 @@ function handleForecastBlend(payload: {
   }>;
   metricKey: string;
   horizon: number;
-}): any {
+}): unknown {
   const { modelForecasts, metricKey, horizon } = payload;
   
   if (modelForecasts.length === 0) {
@@ -218,7 +218,7 @@ function handleSimulationProjection(payload: {
     adjustmentType?: string;
   }>;
   seed: string;
-}): any {
+}): unknown {
   const { baselineMetrics, interventions, seed } = payload;
   
   // Deterministic random based on seed

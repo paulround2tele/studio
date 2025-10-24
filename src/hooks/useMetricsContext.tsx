@@ -14,9 +14,9 @@ import { getRecommendations } from '@/services/campaignMetrics/recommendationSer
 export interface MetricsContextValue {
   // Core metrics data
   currentSnapshot: AggregateSnapshot | null;
-  aggregates: any; // AggregateMetrics
-  classification: any;
-  uiBuckets: any[];
+  aggregates: unknown; // AggregateMetrics
+  classification: unknown;
+  uiBuckets: unknown[];
   
   // Delta analysis
   deltas: DeltaMetrics[];
@@ -42,7 +42,7 @@ export interface MetricsContextValue {
   };
   
   // Recommendations with delta awareness
-  recommendations: any[]; // Recommendation[]
+  recommendations: unknown[]; // Recommendation[]
   
   // Loading and error states
   isLoading: boolean;

@@ -11,7 +11,7 @@ class MockWorker {
   onmessage: ((event: MessageEvent) => void) | null = null;
   onerror: ((error: ErrorEvent) => void) | null = null;
   
-  postMessage(message: any) {
+  postMessage(message: unknown) {
     // Simulate async worker response
     setTimeout(() => {
       if (this.onmessage) {
@@ -45,10 +45,10 @@ class MockWorker {
 }
 
 // Mock Worker constructor
-(global as any).Worker = jest.fn().mockImplementation(() => new MockWorker());
+(global as unknown).Worker = jest.fn().mockImplementation(() => new MockWorker());
 
 // Mock URL.createObjectURL
-(global as any).URL = {
+(global as unknown).URL = {
   createObjectURL: jest.fn(() => 'mock-url')
 };
 
@@ -149,7 +149,7 @@ describe('useWorkerMetricsFallback', () => {
   describe('error handling', () => {
     it('should handle worker initialization failure', () => {
       // Mock Worker to throw on construction
-      (global as any).Worker = jest.fn().mockImplementation(() => {
+      (global as unknown).Worker = jest.fn().mockImplementation(() => {
         throw new Error('Worker not supported');
       });
 
@@ -167,7 +167,7 @@ describe('useWorkerMetricsFallback', () => {
     it('should handle worker computation errors', async () => {
       // Mock worker that returns errors
       class ErrorWorker extends MockWorker {
-        postMessage(message: any) {
+        postMessage(message: unknown) {
           setTimeout(() => {
             if (this.onmessage) {
               const response = {
@@ -183,7 +183,7 @@ describe('useWorkerMetricsFallback', () => {
         }
       }
 
-      (global as any).Worker = jest.fn().mockImplementation(() => new ErrorWorker());
+      (global as unknown).Worker = jest.fn().mockImplementation(() => new ErrorWorker());
 
       const domains = createMockDomains(5000);
       
@@ -249,7 +249,7 @@ describe('useWorkerMetricsFallback', () => {
       const domains = createMockDomains(5000);
       const mockTerminate = jest.fn();
       
-      (global as any).Worker = jest.fn().mockImplementation(() => ({
+      (global as unknown).Worker = jest.fn().mockImplementation(() => ({
         ...new MockWorker(),
         terminate: mockTerminate
       }));

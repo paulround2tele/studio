@@ -66,18 +66,17 @@ const variantConfig = {
   }
 };
 
-export function RetryHint({ 
-  variant, 
-  campaignId,
+export function RetryHint({
+  campaignId: _campaignId,
+  variant,
   phaseName,
   errorCode,
   errorMessage,
   onRetry,
   onManualStart,
   onRefreshStatus,
-  className 
-}: RetryHintProps) {
-  const config = variantConfig[variant];
+  className
+}: RetryHintProps) {  const config = variantConfig[variant];
   const Icon = config.icon;
 
   const getDescription = () => {

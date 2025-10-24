@@ -253,7 +253,7 @@ class CausalGraphService {
   private consolidateGraph(): void {
     if (this.observations.length < 10) return;
 
-    const startTime = Date.now();
+    const _startTime = Date.now();
     let edgesUpdated = 0;
     let edgesPruned = 0;
 

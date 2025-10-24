@@ -9,7 +9,7 @@ import { AggregateSnapshot, DomainMetricsInput } from '@/types/campaignMetrics';
 import { 
   transformServerResponse, 
   validateServerResponse, 
-  createDefaultSnapshot, 
+  createDefaultSnapshot as _createDefaultSnapshot, 
   logServerWarning,
   ServerMetricsResponse 
 } from '@/services/campaignMetrics/serverAdapter';
@@ -186,11 +186,12 @@ function convertClassificationToUiBuckets(classifiedCounts: Record<string, numbe
 /**
  * Convert UI buckets back to classification counts format
  */
-function convertUiBucketsToClassification(uiBuckets: any[]): Record<string, number> {
+function convertUiBucketsToClassification(uiBuckets: unknown[]): Record<string, number> {
   const classification: Record<string, number> = {};
   
   uiBuckets.forEach(bucket => {
-    classification[bucket.label] = bucket.count;
+    const b = bucket as { label: string; count: number };
+    classification[b.label] = b.count;
   });
   
   return classification;

@@ -14,7 +14,7 @@ import { getMemoryStats } from '@/services/campaignMetrics/historyStore';
 import { getStreamPoolStats } from '@/services/campaignMetrics/streamPool';
 import { getTelemetryStatus } from '@/services/campaignMetrics/telemetryService';
 import type { ConnectionState } from '@/services/campaignMetrics/progressChannel';
-import type { AggregateSnapshot, DeltaMetrics as CoreDeltaMetrics, Mover as CoreMover } from '@/types/campaignMetrics';
+import type { AggregateSnapshot, DeltaMetrics as CoreDeltaMetrics, Mover as _CoreMover } from '@/types/campaignMetrics';
 import type { Anomaly } from '@/services/campaignMetrics/anomalyService';
 import type { PortfolioSummary, PortfolioOutlier } from '@/services/campaignMetrics/portfolioMetricsService';
 
@@ -198,7 +198,7 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
             </div>
             
             <div className="space-y-1 max-h-40 overflow-y-auto">
-              {snapshots.slice(-10).reverse().map((snapshot, index) => (
+              {snapshots.slice(-10).reverse().map((snapshot, _index) => (
                 <div
                   key={snapshot.id}
                   className="text-xs p-2 bg-gray-50 rounded border cursor-pointer hover:bg-gray-100"
@@ -238,12 +238,12 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
                   onClick={() => toggleSection(`delta-${index}`)}
                 >
                   <div className="flex items-center justify-between">
-                    <span>{(delta as any).metric || delta.key || 'Unknown'}</span>
+                    <span>{(delta as unknown as {metric?: string}).metric || delta.key || 'Unknown'}</span>
                     <Badge 
                       variant={delta.direction === 'up' ? 'default' : delta.direction === 'down' ? 'destructive' : 'secondary'}
                       className="text-xs"
                     >
-                      {delta.direction} {typeof (delta as any).magnitude === 'number' ? (delta as any).magnitude.toFixed(2) : ''}
+                      {delta.direction} {typeof (delta as unknown as {magnitude?: number}).magnitude === 'number' ? (delta as unknown as {magnitude: number}).magnitude.toFixed(2) : ''}
                     </Badge>
                   </div>
                   
@@ -270,7 +270,7 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
               {topMovers.slice(0, 10).map((mover, index) => (
                 <div key={index} className="text-xs p-2 bg-gray-50 rounded border">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono">{(mover as any).domain || mover.label || 'Unknown'}</span>
+                    <span className="font-mono">{(mover as unknown as {domain?: string}).domain || mover.label || 'Unknown'}</span>
                     <span className={cn(
                       'font-medium',
                       mover.direction === 'up' ? 'text-green-600' : 'text-red-600'

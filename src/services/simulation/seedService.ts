@@ -3,20 +3,20 @@
  * Deterministic pseudo-random seeds for reproducible scenario simulations
  */
 
-import { useScenarioSimulation } from '../../lib/feature-flags-simple';
+import { isScenarioSimulationEnabled } from '../../lib/feature-flags-simple';
 import { telemetryService } from '../campaignMetrics/telemetryService';
 
 // Feature flag check
 const isSeedServiceEnabled = (): boolean => {
-  return useScenarioSimulation();
+  return isScenarioSimulationEnabled();
 };
 
 /**
- * Pseudo-random number generator state
+ * Pseudo-random number generator _state
  */
 interface PRNGState {
   seed: string;
-  state: number;
+  _state: number;
   sequence: number;
 }
 
@@ -61,16 +61,16 @@ class SeedService {
       return Math.random; // Fall back to system random
     }
 
-    // Initialize PRNG state
-    const state = this.initializePRNG(seed);
-    this.rngStates.set(seed, state);
+    // Initialize PRNG _state
+    const _state = this.initializePRNG(seed);
+    this.rngStates.set(seed, _state);
 
     telemetryService.emitTelemetry('determinism_seed_used', {
       seedHash: this.hashSeed(seed)
     });
 
     // Return generator function
-    return () => this.nextRandom(state);
+    return () => this.nextRandom(_state);
   }
 
   /**
@@ -138,7 +138,7 @@ class SeedService {
     this.scenarioSeeds.delete(scenarioId);
     
     // Clean up related RNG states
-    for (const [seed, state] of this.rngStates) {
+    for (const [seed, _state] of this.rngStates) {
       if (seed.includes(scenarioId)) {
         this.rngStates.delete(seed);
       }
@@ -186,10 +186,10 @@ class SeedService {
   }
 
   /**
-   * Initialize PRNG state using SplitMix64-like algorithm
+   * Initialize PRNG _state using SplitMix64-like algorithm
    */
   private initializePRNG(seed: string): PRNGState {
-    // Convert seed string to initial state
+    // Convert seed string to initial _state
     let seedHash = 0;
     for (let i = 0; i < seed.length; i++) {
       const char = seed.charCodeAt(i);
@@ -199,7 +199,7 @@ class SeedService {
 
     return {
       seed,
-      state: Math.abs(seedHash) || 1, // Ensure non-zero state
+      _state: Math.abs(seedHash) || 1, // Ensure non-zero _state
       sequence: 0
     };
   }
@@ -213,12 +213,12 @@ class SeedService {
     const c = 1013904223;
     const m = 0x100000000; // 2^32
 
-    // Update state
-    prngState.state = (a * prngState.state + c) % m;
+    // Update _state
+    prngState._state = (a * prngState._state + c) % m;
     prngState.sequence++;
 
     // Convert to 0-1 range
-    return (prngState.state & 0x7fffffff) / 0x7fffffff;
+    return (prngState._state & 0x7fffffff) / 0x7fffffff;
   }
 
   /**

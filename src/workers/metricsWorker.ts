@@ -9,13 +9,13 @@ import { safeAt, safeFirst, safeLast, hasMinElements, isNonEmptyArray } from '@/
 interface WorkerMessage {
   type: 'compute' | 'computeAll' | 'forecastCompute' | 'forecastBulk' | 'result' | 'error' | 'cancel';
   id?: string;
-  domains?: any[];
-  previousDomains?: any[];
+  domains?: unknown[];
+  previousDomains?: unknown[];
   includeMovers?: boolean;
-  aggregates?: any;
-  classifiedCounts?: any;
-  movers?: any;
-  deltas?: any;
+  aggregates?: unknown;
+  classifiedCounts?: unknown;
+  movers?: unknown;
+  deltas?: unknown;
   error?: string;
   timingMs?: number;
   // Phase 6: Forecast computation fields
@@ -38,25 +38,59 @@ interface WorkerMessage {
   // Phase 7: Bulk forecast computation
   series?: Array<{ key: string; points: Array<{ t: number; v: number }> }>;
   method?: 'holtWinters' | 'simpleExp';
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
   forecasts?: Array<{ key: string; points: Array<{ timestamp: string; metricKey: string; value: number; lower: number; upper: number }> }>;
 }
 
 // Import the pure functions used for computation
 // Note: These need to be worker-safe (no DOM dependencies)
-let classifyDomains: (domains: any[]) => any;
-let computeAggregates: (domains: any[]) => any;
-let enrichAggregatesWithHighPotential: (aggregates: any, highPotentialCount: number) => any;
-let computeMovers: (domains: any[], previousDomains?: any[]) => any;
-let calculateDeltas: (current: any, previous?: any) => any;
+let classifyDomains: (domains: unknown[]) => any;
+let computeAggregates: (domains: unknown[]) => any;
+let enrichAggregatesWithHighPotential: (aggregates: unknown, highPotentialCount: number) => any;
+let computeMovers: (domains: unknown[], previousDomains?: unknown[]) => any;
+let calculateDeltas: (current: unknown, previous?: unknown) => any;
+
+const extractScore = (domain: unknown): number | undefined => {
+  if (!domain || typeof domain !== 'object') return undefined;
+  const value = (domain as { score?: unknown }).score;
+  return typeof value === 'number' ? value : undefined;
+};
+
+const extractId = (domain: unknown): string | undefined => {
+  if (!domain || typeof domain !== 'object') return undefined;
+  const value = (domain as { id?: unknown }).id;
+  return typeof value === 'string' ? value : undefined;
+};
+
+const extractDomainName = (domain: unknown): string | undefined => {
+  if (!domain || typeof domain !== 'object') return undefined;
+  const candidate = (domain as { domain?: unknown }).domain;
+  if (typeof candidate === 'string' && candidate.length > 0) {
+    return candidate;
+  }
+  return extractId(domain);
+};
+
+const toRecord = (value: unknown): Record<string, unknown> => {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+};
 
 // Fallback implementations for worker environment
-function safeClassifyDomains(domains: any[]) {
+function safeClassifyDomains(domains: unknown[]) {
   // Simplified classification logic for worker
   const total = domains.length;
-  const highQuality = domains.filter(d => d.score && d.score > 80);
-  const mediumQuality = domains.filter(d => d.score && d.score > 60 && d.score <= 80);
-  const lowQuality = domains.filter(d => d.score && d.score <= 60);
+  const highQuality = domains.filter(domain => {
+    const score = extractScore(domain);
+    return typeof score === 'number' && score > 80;
+  });
+  const mediumQuality = domains.filter(domain => {
+    const score = extractScore(domain);
+    return typeof score === 'number' && score > 60 && score <= 80;
+  });
+  const lowQuality = domains.filter(domain => {
+    const score = extractScore(domain);
+    return typeof score === 'number' && score <= 60;
+  });
   
   return {
     highPotential: highQuality,
@@ -66,41 +100,61 @@ function safeClassifyDomains(domains: any[]) {
   };
 }
 
-function safeComputeAggregates(domains: any[]) {
+function safeComputeAggregates(domains: unknown[]) {
   const total = domains.length;
-  const scores = domains.map(d => d.score || 0).filter(s => s > 0);
+  const scores = domains
+    .map(domain => extractScore(domain))
+    .filter((score): score is number => typeof score === 'number' && score > 0);
   const averageScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
   
   return {
     totalDomains: total,
     averageScore,
     scoredDomains: scores.length,
-    validDomains: domains.filter(d => d.domain && d.domain.length > 0).length
+    validDomains: domains.filter(domain => {
+      const name = extractDomainName(domain);
+      return typeof name === 'string' && name.length > 0;
+    }).length
   };
 }
 
-function safeEnrichAggregatesWithHighPotential(aggregates: any, highPotentialCount: number) {
+function safeEnrichAggregatesWithHighPotential(aggregates: unknown, highPotentialCount: number) {
+  const aggregateRecord = toRecord(aggregates);
+  const totalDomains = typeof aggregateRecord.totalDomains === 'number' ? aggregateRecord.totalDomains : 0;
   return {
-    ...aggregates,
+    ...aggregateRecord,
     highPotentialCount,
-    highPotentialPercentage: aggregates.totalDomains > 0 ? 
-      (highPotentialCount / aggregates.totalDomains) * 100 : 0
+    highPotentialPercentage: totalDomains > 0 ? 
+      (highPotentialCount / totalDomains) * 100 : 0
   };
 }
 
-function safeComputeMovers(domains: any[], previousDomains?: any[]) {
+function safeComputeMovers(domains: unknown[], previousDomains?: unknown[]) {
   if (!previousDomains || previousDomains.length === 0) {
     return { gainers: [], decliners: [] };
   }
   
   // Simple movers computation
-  const previousMap = new Map(previousDomains.map(d => [d.id, d.score || 0]));
-  const movers = domains.map(d => ({
-    domain: d.domain || d.id,
-    current: d.score || 0,
-    previous: previousMap.get(d.id) || 0,
-    delta: (d.score || 0) - (previousMap.get(d.id) || 0)
-  })).filter(m => Math.abs(m.delta) > 0.1);
+  const previousMap = new Map<string, number>();
+  previousDomains.forEach(domain => {
+    const key = extractId(domain) || extractDomainName(domain);
+    if (!key) return;
+    const score = extractScore(domain) ?? 0;
+    previousMap.set(key, score);
+  });
+
+  const movers = domains.map(domain => {
+    const key = extractId(domain) || extractDomainName(domain) || 'unknown';
+    const currentScore = extractScore(domain) ?? 0;
+    const previousScore = previousMap.get(key) ?? 0;
+
+    return {
+      domain: key,
+      current: currentScore,
+      previous: previousScore,
+      delta: currentScore - previousScore
+    };
+  }).filter(m => Math.abs(m.delta) > 0.1);
   
   return {
     gainers: movers.filter(m => m.delta > 0).slice(0, 5),
@@ -108,20 +162,29 @@ function safeComputeMovers(domains: any[], previousDomains?: any[]) {
   };
 }
 
-function safeCalculateDeltas(current: any, previous?: any) {
+function safeCalculateDeltas(current: unknown, previous?: unknown) {
   if (!previous) {
     return [];
   }
   
   // Simple delta calculation
   const metrics = ['totalDomains', 'averageScore', 'validDomains'];
-  return metrics.map(metric => ({
-    key: metric,
-    absolute: (current[metric] || 0) - (previous[metric] || 0),
-    percent: previous[metric] > 0 ? 
-      ((current[metric] || 0) - (previous[metric] || 0)) / (previous[metric] || 0) * 100 : 0,
-    direction: (current[metric] || 0) > (previous[metric] || 0) ? 'up' : 'down'
-  }));
+  const currentRecord = toRecord(current);
+  const previousRecord = toRecord(previous);
+  return metrics.map(metric => {
+    const currentValue = typeof currentRecord[metric] === 'number' ? (currentRecord[metric] as number) : 0;
+    const previousValue = typeof previousRecord[metric] === 'number' ? (previousRecord[metric] as number) : 0;
+    const absolute = currentValue - previousValue;
+    const percent = previousValue > 0 ? (absolute / previousValue) * 100 : 0;
+    const direction = currentValue > previousValue ? 'up' : 'down';
+
+    return {
+      key: metric,
+      absolute,
+      percent,
+      direction
+    };
+  });
 }
 
 /**
@@ -245,12 +308,14 @@ function computeSimpleExpSmoothingInWorker(
 function computeHoltWintersInWorker(
   series: Array<{ timestamp: number; value: number }>,
   horizon: number,
-  options: any
+  options: unknown
 ): Array<{ timestamp: string; metricKey: string; value: number; lower: number; upper: number }> {
-  const alpha = options.alpha || 0.3;
-  const beta = options.beta || 0.1;
-  const gamma = options.gamma || 0.1;
-  const seasonLength = options.seasonLength || 7;
+  const opts = toRecord(options);
+  const alpha = typeof opts.alpha === 'number' ? opts.alpha : 0.3;
+  const beta = typeof opts.beta === 'number' ? opts.beta : 0.1;
+  const gamma = typeof opts.gamma === 'number' ? opts.gamma : 0.1;
+  const seasonLengthRaw = typeof opts.seasonLength === 'number' ? opts.seasonLength : 7;
+  const seasonLength = Math.max(1, Math.floor(seasonLengthRaw));
   
   // Early return for insufficient data
   if (!hasMinElements(series, seasonLength * 2)) {
@@ -445,19 +510,20 @@ self.onmessage = function(event: MessageEvent<WorkerMessage>) {
     
     try {
       const { series, method = 'simpleExp', params = {} } = event.data;
+      const paramsRecord = toRecord(params);
       const forecasts: Array<{ key: string; points: Array<{ timestamp: string; metricKey: string; value: number; lower: number; upper: number }> }> = [];
       
       // Process each series
       for (const seriesItem of series) {
         const timeSeries = seriesItem.points.map(p => ({ timestamp: p.t, value: p.v }));
-        const horizon = params.horizon || 7;
+        const horizon = typeof paramsRecord.horizon === 'number' ? paramsRecord.horizon : 7;
         
         const forecastOptions = {
           method: method as 'holtWinters' | 'simpleExp',
-          alpha: params.alpha || 0.3,
-          beta: params.beta || 0.1,
-          gamma: params.gamma || 0.1,
-          seasonLength: params.seasonLength || 7,
+          alpha: typeof paramsRecord.alpha === 'number' ? paramsRecord.alpha : 0.3,
+          beta: typeof paramsRecord.beta === 'number' ? paramsRecord.beta : 0.1,
+          gamma: typeof paramsRecord.gamma === 'number' ? paramsRecord.gamma : 0.1,
+          seasonLength: typeof paramsRecord.seasonLength === 'number' ? paramsRecord.seasonLength : 7,
         };
         
         // Compute forecast for this series

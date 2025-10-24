@@ -2,7 +2,7 @@ import reducer, { setFullSequenceMode, hydrateCampaignUI, resetCampaignUI } from
 
 describe('campaignUiSlice', () => {
   it('should handle initial state', () => {
-    const state = reducer(undefined, { type: '@@INIT' } as any);
+    const state = reducer(undefined, { type: '@@INIT' } as unknown);
     expect(state).toEqual({ byId: {} });
   });
 

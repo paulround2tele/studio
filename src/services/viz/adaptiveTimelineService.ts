@@ -3,13 +3,13 @@
  * Dynamic downsampling with focus+context rendering and semantic emphasis
  */
 
-import { useAdaptiveVisualization } from '../../lib/feature-flags-simple';
+import { useAdaptiveVisualization as adaptiveVisualizationEnabled } from '../../lib/feature-flags-simple';
 import { telemetryService } from '../campaignMetrics/telemetryService';
 import { safeAt, safeFirst, safeLast, hasMinElements, isNonEmptyArray } from '@/lib/utils/arrayUtils';
 
 // Feature flag check
 const isAdaptiveVizEnabled = (): boolean => {
-  return useAdaptiveVisualization();
+  return adaptiveVisualizationEnabled();
 };
 
 /**
@@ -19,7 +19,7 @@ export interface TimeSeriesPoint {
   timestamp: number;
   value: number;
   metricKey: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -55,7 +55,7 @@ export interface SemanticHighlight {
   severity: 'low' | 'medium' | 'high';
   label: string;
   description?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -328,7 +328,7 @@ class AdaptiveTimelineService {
     }
 
     telemetryService.emitTelemetry('viz_resolution_selected', {
-      metricKey: series.metricKey,
+        metricKey: series.metricKey,
       targetPoints: optimalPointCount,
       selectedLevel: bestResolution,
       actualPoints: result.length,

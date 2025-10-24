@@ -14,7 +14,7 @@ jest.mock('@/hooks/useCampaignSSE', () => ({ useCampaignSSE: () => {} }));
 
 // Mock pagination hook to supply static items
 jest.mock('@/lib/hooks/usePaginatedDomains', () => ({
-  usePaginatedDomains: (_cid: string, _opts: any) => ([{
+  usePaginatedDomains: (_cid: string, _opts: unknown) => ([{
     items: [
       { domain: 'a.com', features: { richness: { score: 0.4 }, microcrawl: { gain_ratio: 0.1 }, keywords: { unique_count: 2 } } },
       { domain: 'b.com', features: { richness: { score: 0.9 }, microcrawl: { gain_ratio: 0.3 }, keywords: { unique_count: 5 } } },

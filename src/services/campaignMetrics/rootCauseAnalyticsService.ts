@@ -193,7 +193,7 @@ class RootCauseAnalyticsService {
    */
   private async identifyContributingFactors(context: AnomalyContext): Promise<ContributingFactor[]> {
     const factors: ContributingFactor[] = [];
-    const { snapshots, anomalyValue, baselineValue, affectedTimeRange } = context;
+    const { snapshots, anomalyValue, baselineValue: _baselineValue, affectedTimeRange } = context;
 
     // Analyze data quality factors
     const dataQualityFactors = this.analyzeDataQualityFactors(context);

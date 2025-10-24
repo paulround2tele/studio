@@ -272,15 +272,30 @@ export function cspMiddleware(generateNonce = true) {
     });
 
     if (generateNonce) {
-      // Store nonce in res.locals for use in templates
-  (res as any).locals = (res as any).locals || {};
-  (res as any).locals.nonce = policy.generateNonce();
+      // Store nonce when the response surface supports locals (e.g. Express adapter)
+      const responseWithLocals = res as NextResponse & { locals?: Record<string, unknown> };
+      responseWithLocals.locals = responseWithLocals.locals ?? {};
+      responseWithLocals.locals.nonce = policy.generateNonce();
     }
 
     // Set CSP headers
     const headers = policy.getHeaders();
+    const responseWithHeaders = res as NextResponse & { setHeader?: (name: string, value: string | string[]) => void };
     Object.entries(headers).forEach(([key, value]) => {
-  try { (res as any).setHeader?.(key, value); } catch { /* noop */ }
+      if (typeof responseWithHeaders.setHeader === 'function') {
+        try {
+          responseWithHeaders.setHeader(key, value);
+          return;
+        } catch {
+          // fall back to the Fetch headers API when setHeader is unavailable
+        }
+      }
+
+      try {
+        responseWithHeaders.headers.set(key, value);
+      } catch {
+        // noop: response may be immutable in some runtimes
+      }
     });
 
     next();

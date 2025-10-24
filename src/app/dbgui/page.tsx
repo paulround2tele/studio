@@ -109,8 +109,8 @@ export default function DatabaseGUI() {
     setError(null);
     
     try {
-      const cryptoObj: Crypto | undefined =
-        typeof globalThis !== 'undefined' && 'crypto' in globalThis ? (globalThis as unknown as { crypto?: Crypto }).crypto : undefined;
+      const cryptoObj = 
+        typeof globalThis !== 'undefined' && 'crypto' in globalThis ? (globalThis as { crypto?: { randomUUID?: () => string } }).crypto : undefined;
       const queryId = (cryptoObj && typeof cryptoObj.randomUUID === 'function')
         ? cryptoObj.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;

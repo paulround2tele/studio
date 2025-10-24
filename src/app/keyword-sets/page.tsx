@@ -12,10 +12,10 @@ const keywordSetsApi = new KeywordSetsApi(new Configuration());
 import type { KeywordSetResponse as ApiKeywordSetResponse } from '@/lib/api-client/models';
 import { useSSE } from '@/hooks/useSSE';
 
-type KeywordSet = ApiKeywordSetResponse;
+type LocalKeywordSet = ApiKeywordSetResponse;
 
 export default function KeywordSetsPage() {
-  const [sets, setSets] = useState<KeywordSet[]>([]);
+  const [sets, setSets] = useState<LocalKeywordSet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

@@ -1,4 +1,4 @@
-import { redirect, permanentRedirect } from 'next/navigation';
+import { redirect as _redirect, permanentRedirect } from 'next/navigation';
 
 export default function HomePage() {
   // If the request made it here, either:

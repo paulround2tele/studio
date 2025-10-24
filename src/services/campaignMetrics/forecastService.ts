@@ -10,12 +10,12 @@ import { telemetryService } from './telemetryService';
 import { forecastBlendService } from './forecastBlendService';
 import { fetchWithPolicy } from '@/lib/utils/fetchWithPolicy';
 // Alias feature flag functions so they are not treated as React hooks in this plain service module
-import { useBackendCanonical as backendCanonicalEnabled, useForecastCustomHorizon as forecastCustomHorizonEnabled } from '@/lib/feature-flags-simple';
+import { isBackendCanonical as backendCanonicalEnabled, useForecastCustomHorizon as forecastCustomHorizonEnabled } from '@/lib/feature-flags-simple';
 import { safeAt, safeLast, safeFirst, hasMinElements } from '@/lib/utils/arrayUtils';
 import { 
   ForecastPoint, 
-  NormalizedForecastResult,
-  normalizeForecastResult,
+  NormalizedForecastResult as _NormalizedForecastResult,
+  normalizeForecastResult as _normalizeForecastResult,
   createForecastPoint 
 } from '@/types/forecasting';
 
@@ -934,10 +934,10 @@ export async function getMultiModelForecast(
   if (options.enableArbitration !== false) {
     try {
       modelArbitration = await performModelArbitration(
-        timeSeries, 
-        horizon, 
-        metricKey, 
-        campaignId, 
+        timeSeries,
+        horizon,
+        metricKey,
+        campaignId,
         options
       );
     } catch (error) {
@@ -1082,7 +1082,8 @@ export async function getEnhancedMultiModelForecast(
     }).catch(() => false);
 
   if (useBayesianBlending) {
-    return getBlendedForecast(campaignId, timeSeries, horizon, metricKey, options);
+    const metricKeyString = String(metricKey);
+    return getBlendedForecast(campaignId, timeSeries, horizon, metricKeyString, options);
   } else {
     // Fall back to Phase 8 multi-model approach
     return getMultiModelForecast(campaignId, snapshots, metricKey, customHorizon, options);

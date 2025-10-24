@@ -116,7 +116,7 @@ describe('Forecast Service', () => {
           aggregates: { totalDomains: 0, successRate: 0, avgLeadScore: 70.0, dnsSuccessRate: 0, httpSuccessRate: 0 },
           classifiedCounts: { highQuality: 0, mediumQuality: 0, lowQuality: 0, total: 0 },
           forecast: { value: 70.0, lower: 65.0, upper: 75.0, isForecast: true }
-        } as any
+        } as unknown
       ];
 
       const timeSeries = extractTimeSeriesFromSnapshots(snapshotsWithForecast, 'avgLeadScore');

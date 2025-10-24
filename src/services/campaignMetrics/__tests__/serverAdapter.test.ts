@@ -179,7 +179,7 @@ describe('serverAdapter', () => {
       
       expect(snapshot.aggregates.avgRichness).toBe(42.5);
       expect(snapshot.aggregates.warningRate).toBe(8.2);
-      expect((snapshot.aggregates as any).customField).toBeUndefined();
+      expect((snapshot.aggregates as unknown).customField).toBeUndefined();
     });
 
     it('should handle numeric field type safety', () => {
@@ -191,7 +191,7 @@ describe('serverAdapter', () => {
         }
       };
       
-      const snapshot = transformServerResponse(responseWithBadTypes as any);
+      const snapshot = transformServerResponse(responseWithBadTypes as unknown);
       
       // Should convert/default appropriately
       expect(snapshot.aggregates.totalDomains).toBe('100'); // Preserved as-is (could be enhanced)

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { useCausalGraph, useFilteredCausalGraph, useCausalGraphStats } from '@/hooks/useCausalGraph';
+import { useCausalGraph as _useCausalGraph, useFilteredCausalGraph, useCausalGraphStats } from '@/hooks/useCausalGraph';
 import type { CausalNode, CausalEdge } from '@/services/analytics/causalGraphService';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

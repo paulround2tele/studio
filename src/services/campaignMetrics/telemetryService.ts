@@ -469,7 +469,7 @@ export function initTelemetry(): void {
  */
 export function emitTelemetry(
   type: TelemetryEvent['type'],
-  data: Record<string, any>
+  data: Record<string, unknown>
 ): void {
   telemetryService.emitTelemetry(type, data);
 }

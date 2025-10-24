@@ -1,4 +1,4 @@
-import { NonEmptyArray, selectRandom, normalizeArmStats } from '@/lib/utils/typeSafetyPrimitives';
+import { NonEmptyArray as _NonEmptyArray, selectRandom, normalizeArmStats } from '@/lib/utils/typeSafetyPrimitives';
 
 /**
  * Adaptive Experimentation Service (Phase 10)
@@ -176,12 +176,12 @@ class BanditService {
       throw new Error('No arms available for selection');
     }
 
-    const armIds = Array.from(this.arms.keys());
+    const _armIds = Array.from(this.arms.keys());
 
     // Use deterministic cycle if insufficient samples
     if (this.totalPulls < this.config.minSampleSize * this.arms.size) {
-      const armIds = Array.from(this.arms.keys());
-      const selectedArmId = armIds[this.totalPulls % armIds.length];
+      const _armIds = Array.from(this.arms.keys());
+      const selectedArmId = _armIds[this.totalPulls % _armIds.length];
       if (!selectedArmId) {
         throw new Error('No arms available in deterministic cycle');
       }

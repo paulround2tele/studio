@@ -7,7 +7,7 @@ import { AggregateSnapshot } from '@/types/campaignMetrics';
 import { capabilitiesService } from './capabilitiesService';
 import { telemetryService } from './telemetryService';
 import { fetchWithPolicy } from '@/lib/utils/fetchWithPolicy';
-import { useBackendCanonical } from '@/lib/feature-flags-simple';
+import { isBackendCanonical } from '@/lib/feature-flags-simple';
 
 // Feature flag
 const isNormalizationEnabled = () => 
@@ -228,25 +228,41 @@ async function fetchBenchmarksFromServer(isRevalidation: boolean = false): Promi
 /**
  * Validate benchmark data structure
  */
-function validateBenchmarkData(data: any): data is BenchmarkMetrics {
-  return (
-    data &&
-    typeof data.version === 'string' &&
-    typeof data.generatedAt === 'string' &&
-    data.metrics &&
-    typeof data.metrics === 'object' &&
-    Object.keys(data.metrics).every(key => {
-      const metric = data.metrics[key];
-      return (
-        metric &&
-        typeof metric.baseline === 'number' &&
-        typeof metric.p25 === 'number' &&
-        typeof metric.p75 === 'number' &&
-        typeof metric.p90 === 'number' &&
-        typeof metric.sampleSize === 'number'
-      );
-    })
-  );
+function validateBenchmarkData(data: unknown): data is BenchmarkMetrics {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+
+  const candidate = data as {
+    version?: unknown;
+    generatedAt?: unknown;
+    metrics?: Record<string, unknown> | undefined;
+  };
+
+  if (typeof candidate.version !== 'string') return false;
+  if (typeof candidate.generatedAt !== 'string') return false;
+
+  const metrics = candidate.metrics;
+  if (!metrics || typeof metrics !== 'object') return false;
+
+  return Object.keys(metrics).every(key => {
+    const metric = metrics[key] as {
+      baseline?: unknown;
+      p25?: unknown;
+      p75?: unknown;
+      p90?: unknown;
+      sampleSize?: unknown;
+    } | undefined;
+
+    return (
+      metric !== undefined &&
+      typeof metric.baseline === 'number' &&
+      typeof metric.p25 === 'number' &&
+      typeof metric.p75 === 'number' &&
+      typeof metric.p90 === 'number' &&
+      typeof metric.sampleSize === 'number'
+    );
+  });
 }
 
 /**
@@ -338,7 +354,7 @@ export async function applyNormalization(
   // Phase 7: Use domain resolution for server vs client decision
   let resolution: 'server' | 'client-fallback' | 'skip' = 'client-fallback';
   
-  if (useBackendCanonical()) {
+  if (isBackendCanonical()) {
     try {
       await capabilitiesService.initialize();
       resolution = capabilitiesService.resolveDomain('benchmarks');

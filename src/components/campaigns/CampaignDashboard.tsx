@@ -34,12 +34,12 @@ type CampaignFormData = {
   retryAttempts?: number;
 };
 
-interface Persona {
+interface LocalPersona {
   id: string;
   name: string;
 }
 
-interface Proxy {
+interface LocalProxy {
   id: string;
   name?: string;
   host?: string;
@@ -50,9 +50,9 @@ interface CampaignDashboardProps {
   // Existing campaign data (if editing)
   campaign?: Campaign;
   // Backend-driven data
-  httpPersonas: Persona[];
-  dnsPersonas: Persona[];
-  proxies: Proxy[];
+  httpPersonas: LocalPersona[];
+  dnsPersonas: LocalPersona[];
+  proxies: LocalProxy[];
   // Backend-driven conditions
   needsKeywords?: boolean;
   needsHttpPersona?: boolean;

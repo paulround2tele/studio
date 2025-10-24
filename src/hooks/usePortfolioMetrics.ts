@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { AggregateSnapshot } from '@/types/campaignMetrics';
+import type { AggregateSnapshot as _AggregateSnapshot } from '@/types/campaignMetrics';
 import { 
   computePortfolioAggregate,
   detectPortfolioOutliers,

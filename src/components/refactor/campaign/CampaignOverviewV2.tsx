@@ -6,6 +6,9 @@
 import React from 'react';
 import { useGetCampaignEnrichedQuery, useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
 import type { DomainListItem } from '@/lib/api-client/models';
+import type { ClassificationBucket } from '../types';
+import type { Mover, Recommendation } from '@/types/campaignMetrics';
+import type { EnhancedRecommendation } from '@/services/campaignMetrics/recommendationsV3Pipeline';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -17,7 +20,7 @@ import PipelineBarContainer from './PipelineBarContainer';
 import RecommendationPanel from './RecommendationPanel';
 
 // Phase 3 Components
-import DeltaBadge, { CompactDeltaBadge } from './DeltaBadge';
+import _DeltaBadge, { CompactDeltaBadge } from './DeltaBadge';
 import MoversPanel from './MoversPanel';
 import LiveProgressStatus from './LiveProgressStatus';
 
@@ -74,25 +77,29 @@ function CampaignOverviewV2Inner({ className }: { className?: string }) {
   const warnings: never[] = []; // Remove mock warnings for now - should come from metrics context
   const config: never[] = []; // Remove mock config for now - should come from actual campaign data
   
+  // Type assertion for aggregates
+  const aggregates = (metrics.aggregates || {}) as Record<string, number>;
+  const deltas = metrics.deltas || [];
+  
   // Generate KPIs from Phase 3 aggregates with delta badges
   const kpisWithDeltas: (CampaignKpi & { delta?: DeltaMetrics })[] = [
     {
       label: 'Total Domains',
-      value: metrics.aggregates.totalDomains,
+      value: aggregates.totalDomains ?? 0,
       format: 'number',
       trend: { direction: 'up', percentage: 12 },
-      delta: metrics.deltas.find(d => d.key === 'totalDomains')
+      delta: deltas.find(d => d.key === 'totalDomains')
     },
     {
       label: 'Success Rate',
-      value: metrics.aggregates.successRate,
+      value: aggregates.successRate ?? 0,
       format: 'percentage', 
       trend: { direction: 'up', percentage: 5 },
-      delta: metrics.deltas.find(d => d.key === 'successRate')
+      delta: deltas.find(d => d.key === 'successRate')
     },
     {
       label: 'Avg Lead Score',
-      value: metrics.aggregates.avgLeadScore,
+      value: aggregates.avgLeadScore ?? 0,
       format: 'number',
       trend: { direction: 'stable', percentage: 0 },
       delta: metrics.deltas.find(d => d.key === 'avgLeadScore')
@@ -140,12 +147,12 @@ function CampaignOverviewV2Inner({ className }: { className?: string }) {
         {/* Left Column */}
         <div className="space-y-6">
           <PipelineBarContainer domains={[]} />
-          <ClassificationBuckets buckets={metrics.uiBuckets} />
+          <ClassificationBuckets buckets={(metrics.uiBuckets as unknown) as ClassificationBucket[]} />
           
           {/* Phase 3: Movers Panel */}
           {metrics.features.enableMoversPanel && metrics.hasMovers && (
             <MoversPanel 
-              movers={metrics.movers}
+              movers={(metrics.movers as unknown) as Mover[]}
               title="Top Domain Movers"
               isSynthetic={!metrics.hasPreviousData}
               maxDisplay={5}
@@ -161,7 +168,7 @@ function CampaignOverviewV2Inner({ className }: { className?: string }) {
       </div>
 
       {/* Enhanced Recommendations Panel with Delta Awareness */}
-      <RecommendationPanel recommendations={metrics.recommendations} />
+      <RecommendationPanel recommendations={(metrics.recommendations as unknown) as (Recommendation | EnhancedRecommendation)[]} />
 
       {/* Phase 3: Debug Info (Development Only) */}
       {process.env.NODE_ENV === 'development' && (
@@ -230,7 +237,7 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
   }
 
   // Prefer domains from dedicated list endpoint; fall back to enriched domains if present
-  const enrichedObj = enriched as EnrichedCampaignResponse | undefined;
+  const _enrichedObj = enriched as EnrichedCampaignResponse | undefined;
   const listObj = domainsList as CampaignDomainsListResponse | undefined;
   const rawDomains = listObj?.items || [];
   const domains = convertDomains(rawDomains);

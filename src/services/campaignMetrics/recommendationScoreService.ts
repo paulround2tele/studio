@@ -27,7 +27,7 @@ export interface RecommendationGroup {
 
 interface ScoringInput {
   aggregates: AggregateMetrics;
-  classification: any;
+  classification: unknown;
   deltas?: DeltaMetrics[];
   warningRate?: number;
   targetDomains?: number;
@@ -125,9 +125,16 @@ function calculateRawScore(recommendation: Recommendation, input: ScoringInput):
   // Score based on recommendation type and context
   switch (recommendation.id) {
     case 'low-high-quality':
-      if (input.classification?.highQuality?.count !== undefined) {
-        const ratio = input.classification.highQuality.count / input.aggregates.totalDomains;
+      if (input.classification && typeof input.classification === 'object') {
+        const classification = input.classification as {
+          highQuality?: { count?: number };
+        };
+        const highQualityCount = classification.highQuality?.count;
+        if (typeof highQualityCount === 'number') {
+        const totalDomains = input.aggregates.totalDomains || 0;
+        const ratio = totalDomains > 0 ? highQualityCount / totalDomains : 0;
         score = Math.max(0.2, 1.0 - ratio * 2); // Higher score for lower ratios
+        }
       }
       break;
 
@@ -328,7 +335,7 @@ export function explainScoring(recommendation: ScoredRecommendation): {
   const breakdown = [
     `Raw Score: ${recommendation.rawScore.toFixed(3)} (impact and confidence)`,
     `Severity Weight: ${recommendation.severityWeight.toFixed(3)} (${
-      Object.entries(SEVERITY_WEIGHTS).find(([k, v]) => v === recommendation.severityWeight)?.[0] || 'unknown'
+      Object.entries(SEVERITY_WEIGHTS).find(([_k, v]) => v === recommendation.severityWeight)?.[0] || 'unknown'
     })`,
     `Recency Factor: ${recommendation.recencyFactor.toFixed(3)} (timing relevance)`,
     `Composite Priority: ${recommendation.compositePriority.toFixed(3)} (final score)`

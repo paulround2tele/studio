@@ -1,219 +1,739 @@
 
-> domainflow-frontend@1.0.0 api:lint
-> spectral lint backend/openapi/dist/openapi.yaml
+> domainflow-frontend@1.0.0 lint
+> next lint
 
 
-/home/runner/work/studio/studio/backend/openapi/dist/openapi.yaml
-   2:6    warning  info-contact                         Info object must have "contact" object.                        info
-   2:6    warning  info-description                     Info "description" must be present and non-empty string.       info
-   36:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./health.get
-   62:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./ping.get
-   88:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./health/ready.get
-  114:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./health/live.get
-  140:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./sse/events.get
-  169:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./sse/campaigns/{campaignId}/events.get
-  205:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./sse/events/stats.get
-  238:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas.get
-  267:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas.post
-  300:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/{id}.get
-  331:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/{id}.put
-  374:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/{id}.delete
-  388:17  warning  delete-operations-should-return-204  DELETE operations should return 204 No Content                 paths./personas/{id}.delete.responses
-  408:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/{id}/test.post
-  444:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/http/{id}.get
-  476:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/dns/{id}.get
-  508:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies.get
-  539:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies.post
-  574:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/{proxyId}.put
-  611:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/{proxyId}.delete
-  637:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/{proxyId}/test.post
-  673:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/status.get
-  698:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/{proxyId}/health-check.post
-  726:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/health-check.post
-  757:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/bulk/update.put
-  782:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/bulk/delete.delete
-  795:17  warning  delete-operations-should-return-204  DELETE operations should return 204 No Content                 paths./proxies/bulk/delete.delete.responses
-  807:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/bulk/test.post
-  840:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools.get
-  862:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools.post
-  887:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools/{poolId}.put
-  920:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools/{poolId}.delete
-  934:17  warning  delete-operations-should-return-204  DELETE operations should return 204 No Content                 paths./proxy-pools/{poolId}.delete.responses
-  948:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools/{poolId}/proxies.post
-  988:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools/{poolId}/proxies/{proxyId}.delete
- 1008:17  warning  delete-operations-should-return-204  DELETE operations should return 204 No Content                 paths./proxy-pools/{poolId}/proxies/{proxyId}.delete.responses
-  1022:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets.get
- 1051:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets.post
-  1086:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets/{setId}.get
-  1117:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets/{setId}.put
- 1158:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets/{setId}.delete
-  1186:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets/{setId}/rules.get
-  1220:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-rules.get
- 1222:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./keyword-rules.get.tags[0]
- 1277:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./database/query.post
- 1348:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./extract/keywords.post
- 1350:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./extract/keywords.post.tags[0]
- 1383:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./extract/keywords/stream.get.tags[0]
-  1447:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/auth.get
-  1469:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/auth.put
-  1504:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/dns.get
-  1526:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/dns.put
-  1561:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/http.get
-  1584:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/http.put
-  1621:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/logging.get
-  1643:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/logging.put
-  1678:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/worker.get
-  1700:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/worker.put
-  1735:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/proxy-manager.get
-  1758:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/proxy-manager.put
-  1795:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/rate-limit.get
-  1817:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/rate-limit.put
-  1852:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/server.get
-  1875:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/server.put
-  1912:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/features.get
-  1941:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/stealth.get
-  1962:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/stealth.put
-  2005:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/performance/summary.get
- 2007:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/performance/summary.get.tags[0]
-  2023:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/performance/slow.get
- 2025:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/performance/slow.get.tags[0]
-  2040:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/performance/metrics.get
- 2042:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/performance/metrics.get.tags[0]
-  2057:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/performance/active.get
- 2059:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/performance/active.get.tags[0]
-  2075:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/performance/failed.get
- 2077:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/performance/failed.get.tags[0]
-  2092:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/campaigns/{campaignId}/resources.get
- 2094:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/campaigns/{campaignId}/resources.get.tags[0]
-  2118:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/campaigns/{campaignId}/performance.get
- 2120:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/campaigns/{campaignId}/performance.get.tags[0]
-  2144:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/campaigns/{campaignId}/health.get
- 2146:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/campaigns/{campaignId}/health.get.tags[0]
- 2170:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/campaigns/{campaignId}/limits.post
- 2172:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/campaigns/{campaignId}/limits.post.tags[0]
-  2200:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/cleanup/stats.get
- 2202:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/cleanup/stats.get.tags[0]
-  2218:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/cleanup/campaigns/{campaignId}.get
- 2220:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/cleanup/campaigns/{campaignId}.get.tags[0]
- 2244:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/cleanup/campaigns/{campaignId}/force.post
- 2246:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/cleanup/campaigns/{campaignId}/force.post.tags[0]
-  2266:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/resources/system.get
- 2268:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/resources/system.get.tags[0]
-  2283:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/resources/history.get
- 2285:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/resources/history.get.tags[0]
-  2300:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/resources/alerts.get
- 2302:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/resources/alerts.get.tags[0]
-  2317:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/dashboard/summary.get
- 2319:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/dashboard/summary.get.tags[0]
-  2335:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/dashboard/trends.get
- 2337:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/dashboard/trends.get.tags[0]
-  2352:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/health.get
- 2354:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/health.get.tags[0]
-  2369:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/stats.get
- 2371:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/stats.get.tags[0]
- 2386:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./auth/login.post
- 2388:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./auth/login.post.tags[0]
- 2413:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./auth/logout.post
- 2415:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./auth/logout.post.tags[0]
- 2426:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./auth/refresh.post
- 2428:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./auth/refresh.post.tags[0]
-  2443:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./auth/me.get
- 2445:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./auth/me.get.tags[0]
- 2460:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./auth/change-password.post
- 2462:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./auth/change-password.post.tags[0]
-  2498:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns.get
- 2500:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns.get.tags[0]
- 2521:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns.post
- 2523:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns.post.tags[0]
-  2555:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}.get
- 2557:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}.get.tags[0]
-  2585:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}.put
- 2587:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}.put.tags[0]
- 2618:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}.delete
- 2620:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}.delete.tags[0]
-  2640:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/progress.get
- 2642:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/progress.get.tags[0]
-  2666:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/domains.get
- 2668:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/domains.get.tags[0]
-  2808:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/domains/{domain}/score-breakdown.get
- 2810:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/domains/{domain}/score-breakdown.get.tags[0]
-  2841:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/state.get
- 2843:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/state.get.tags[0]
-  2864:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/state.put
- 2866:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/state.put.tags[0]
- 2895:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/state.delete
- 2897:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/state.delete.tags[0]
-  2915:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phase-executions.get
- 2917:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phase-executions.get.tags[0]
-  2939:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phase-executions/{phaseType}.get
- 2941:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phase-executions/{phaseType}.get.tags[0]
-  2972:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phase-executions/{phaseType}.put
- 2974:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phase-executions/{phaseType}.put.tags[0]
- 3013:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phase-executions/{phaseType}.delete
- 3015:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phase-executions/{phaseType}.delete.tags[0]
- 3045:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/enriched.get.tags[0]
-  3068:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phases/{phase}/status.get
- 3070:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phases/{phase}/status.get.tags[0]
- 3104:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phases/{phase}/configure.post
- 3106:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phases/{phase}/configure.post.tags[0]
- 3148:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phases/{phase}/start.post
- 3150:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phases/{phase}/start.post.tags[0]
-  3200:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/mode.put
- 3202:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/mode.put.tags[0]
-  3242:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/configs.get
- 3244:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/configs.get.tags[0]
- 3282:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phases/{phase}/stop.post
- 3284:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phases/{phase}/stop.post.tags[0]
-  3320:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/status.get
- 3322:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/status.get.tags[0]
-  3344:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/funnel.get
- 3346:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/funnel.get.tags[0]
-  3368:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/metrics.get
- 3370:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/metrics.get.tags[0]
-  3392:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/classifications.get
- 3394:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/classifications.get.tags[0]
-  3424:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/momentum.get
- 3426:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/momentum.get.tags[0]
-  3448:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/insights/recommendations.get
- 3450:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/insights/recommendations.get.tags[0]
- 3472:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/duplicate.post
- 3474:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/duplicate.post.tags[0]
-  3498:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/operations.get
- 3500:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/operations.get.tags[0]
-  3529:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/operations/{operationId}/status.get
- 3531:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/operations/{operationId}/status.get.tags[0]
- 3577:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/domains/generate.post
- 3579:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/domains/generate.post.tags[0]
- 3604:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/domains/analyze.post
- 3606:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/domains/analyze.post.tags[0]
- 3631:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/domains/validate-dns.post
- 3633:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/domains/validate-dns.post.tags[0]
- 3658:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/domains/validate-http.post
- 3660:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/domains/validate-http.post.tags[0]
-  3685:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/resources/status/{allocationId}.get
- 3687:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/resources/status/{allocationId}.get.tags[0]
- 3719:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/resources/allocate.post
- 3721:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/resources/allocate.post.tags[0]
- 3746:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/operations/{operationId}/cancel.post
- 3748:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/operations/{operationId}/cancel.post.tags[0]
- 3780:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/domain-generation/pattern-offset.post
- 3782:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/domain-generation/pattern-offset.post.tags[0]
-  3807:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./scoring-profiles.get
- 3832:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./scoring-profiles.post
-  3865:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./scoring-profiles/{profileId}.get
-  3894:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./scoring-profiles/{profileId}.put
- 3935:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./scoring-profiles/{profileId}.delete
- 3961:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/scoring-profile.post
- 3997:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/rescore.post
- 4156:17  warning  oas3-unused-component                Potentially unused component has been detected.                components.parameters.PersonaType
- 4175:13  warning  oas3-unused-component                Potentially unused component has been detected.                components.examples.message
- 4180:15  warning  oas3-unused-component                Potentially unused component has been detected.                components.examples.heartbeat
- 4185:11  warning  oas3-unused-component                Potentially unused component has been detected.                components.examples.retry
- 7045:33  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.KeywordSetWithRulesResponse
- 7077:29  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.HTTPValidatorConfigJSON
- 7081:24  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.WorkerConfigUpdate
- 7139:28  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.ProxyManagerConfigJSON
- 7143:26  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.ServerConfigResponse
- 7147:31  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.ServerConfigUpdateRequest
+ ⚠ The Next.js plugin was not detected in your ESLint configuration. See https://nextjs.org/docs/app/api-reference/config/eslint#migrating-existing-config
 
-✖ 211 problems (0 errors, 211 warnings, 0 infos, 0 hints)
+./src/api/normalizeResponse.ts
+16:11  Error: 'ErrorEnvelope' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dbgui/page.tsx
+112:24  Error: 'Crypto' is not defined.  no-undef
+113:108  Error: 'Crypto' is not defined.  no-undef
+
+./src/app/keyword-sets/[id]/edit/page.tsx
+39:25  Error: 'resp.data' is restricted from being used. Direct resp.data access with casts discouraged; use unwrapApiResponse<T>(resp).  no-restricted-properties
+
+./src/app/keyword-sets/page.tsx
+15:1  Error: Manual type aliases for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local type, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+29:20  Error: 'resp.data' is restricted from being used. Direct resp.data access with casts discouraged; use unwrapApiResponse<T>(resp).  no-restricted-properties
+49:23  Error: React Hook "useSSE" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function.  react-hooks/rules-of-hooks
+
+./src/app/login/page.tsx
+13:10  Error: 'LoginPageFallback' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/page.tsx
+1:10  Error: 'redirect' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/personas/page.tsx
+13:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/consistent-type-imports').
+18:1  Error: Manual type aliases for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local type, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+
+./src/components/BulkOperationsDashboard.tsx
+496:11  Warning: React Hook useMemo has a missing dependency: 'dispatch'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/SSEDebugPanel.tsx
+251:43  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+251:43  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+253:57  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+253:57  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/components/analysis/RichnessContributionBar.tsx
+73:39  Error: 'totalPositive' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/CampaignDashboard.tsx
+37:1  Error: Manual interface definitions for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local interface, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+42:1  Error: Manual interface definitions for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local interface, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+
+./src/components/campaigns/CampaignFormV2.tsx
+3:10  Error: 'useState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/CampaignProgress.tsx
+60:63  Error: 'state' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/ConversionCTA.tsx
+7:15  Error: 'PipelineRelatedRootState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/DomainStreamingTable.tsx
+9:26  Error: 'LifecycleState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+92:7  Warning: 'DomainRow' is already defined.  no-redeclare
+92:7  Error: 'DomainRow' is read-only.  no-import-assign
+194:9  Warning: The 'apiDomains' logical expression could make the dependencies of useMemo Hook (at line 221) change on every render. To fix this, wrap the initialization of 'apiDomains' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+194:9  Warning: The 'apiDomains' logical expression could make the dependencies of useMemo Hook (at line 261) change on every render. To fix this, wrap the initialization of 'apiDomains' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./src/components/campaigns/DomainsList.tsx
+18:41  Error: 'MetricValue' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+51:183  Error: Empty block statement.  no-empty
+56:166  Error: Empty block statement.  no-empty
+59:164  Error: Empty block statement.  no-empty
+69:163  Error: Empty block statement.  no-empty
+74:75  Error: Empty block statement.  no-empty
+146:9  Error: 'aggregates' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/__tests__/DomainsList.features.test.tsx
+23:87  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+87:14  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/components/campaigns/__tests__/DomainsList.sorting.test.tsx
+17:46  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/components/campaigns/controls/CampaignModeToggle.tsx
+12:15  Error: 'PipelineRelatedRootState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/sections/PersonaAssignmentSection.tsx
+11:1  Error: Manual interface definitions for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local interface, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+16:1  Error: Manual interface definitions for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local interface, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+
+./src/components/campaigns/workspace/forms/DNSValidationConfigForm.tsx
+11:23  Error: 'ProxiesApi' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+17:15  Error: 'Proxy' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+18:15  Error: 'ProxyPool' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+76:169  Warning: React Hook useEffect has a missing dependency: 'form'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/campaigns/workspace/forms/HTTPValidationConfigForm.tsx
+17:15  Error: 'ProxyPool' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+18:37  Error: 'ApiKeywordSet' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/config/StealthToggle.tsx
+19:9  Warning: The 'api' object construction makes the dependencies of useCallback Hook (at line 33) change on every render. To fix this, wrap the initialization of 'api' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+28:14  Error: 'e' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+44:14  Error: 'e' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/dashboard/LatestActivityTable.tsx
+87:9  Warning: The 'domainsByCampaign' object construction makes the dependencies of useMemo Hook (at line 176) change on every render. To fix this, wrap the initialization of 'domainsByCampaign' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./src/components/debug/ForecastQualityDebugPanel.tsx
+112:3  Error: 'snapshots' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+216:6  Warning: React Hook useEffect has a missing dependency: 'loadAuditDebug'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/domains/__tests__/RichnessBreakdownModal.test.tsx
+28:6  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/components/layout/AdvancedConditionalLayout.tsx
+55:9  Error: 'isPublicPath' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/refactor/__tests__/CampaignCreateWizard.test.tsx
+33:44  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+33:61  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+55:63  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+306:46  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/components/refactor/__tests__/CampaignOverviewV2.test.tsx
+21:44  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+21:61  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+32:63  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/components/refactor/analytics/CausalGraphPanel.tsx
+7:10  Error: 'useCausalGraph' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+54:21  Error: React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render.  react-hooks/rules-of-hooks
+
+./src/components/refactor/campaign/CampaignCreateWizard.tsx
+55:40  Error: 'className' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/refactor/campaign/CampaignExperiencePage.tsx
+17:10  Error: 'ConfigSummaryPanel' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+18:10  Error: 'MomentumPanel' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+19:10  Error: 'ClassificationBuckets' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+21:10  Error: 'WarningBar' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+22:10  Error: 'WarningPills' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+48:53  Error: 'role' is assigned a value but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+57:17  Error: 'classificationsData' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+162:9  Error: 'warningBarData' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+169:9  Error: 'warningPillData' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/refactor/campaign/CampaignOverviewV2.tsx
+20:8  Error: 'DeltaBadge' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+233:9  Error: 'enrichedObj' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/refactor/campaign/CohortComparisonPanel.tsx
+16:31  Error: 'TrendingUp' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+16:43  Error: 'TrendingDown' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+16:80  Error: 'Settings' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+259:3  Error: 'maxDays' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/refactor/campaign/ConfigSummaryPanel.tsx
+68:3  Error: 'campaignId' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/refactor/campaign/DeltaBadge.tsx
+70:27  Error: 'percent' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+128:36  Error: 'absolute' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/refactor/campaign/EnhancedCampaignOverview.tsx
+15:10  Error: 'getPerformanceStats' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+45:5  Error: 'progress' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+246:54  Error: 'index' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/refactor/campaign/MetricsDebugPanel.tsx
+17:77  Error: 'CoreMover' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+201:62  Error: 'index' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+241:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+241:38  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+246:59  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+246:59  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+246:99  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+246:99  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+273:60  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+273:60  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/components/refactor/campaign/RetryHint.tsx
+71:3  Error: 'campaignId' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/refactor/campaign/steps/GoalStep.tsx
+9:22  Error: 'RadioGroupItem' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+54:37  Warning: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+123:53  Warning: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/refactor/campaign/steps/ReviewStep.tsx
+25:78  Warning: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/refactor/experiments/BanditPanel.tsx
+14:27  Error: 'TrendingUp' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/refactor/viz/AdaptiveTimeline.tsx
+215:9  Error: 'handlePointClick' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+315:42  Error: 'label' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/hooks/__tests__/useWorkerMetricsFallback.test.ts
+14:24  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+48:12  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+51:12  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+152:18  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+170:30  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+186:18  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+252:18  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/hooks/useBandit.ts
+310:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+332:10  Error: 'state' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+347:18  Error: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+377:14  Error: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+409:3  Error: Unreachable code.  no-unreachable
+
+./src/hooks/useCampaignPhaseStream.ts
+81:11  Error: 'enabled' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+93:61  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+93:61  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+125:9  Error: 'handleSSEError' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+130:23  Error: 'lastEvent' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/hooks/useCampaignPipeline.ts
+11:15  Error: 'PipelineRelatedRootState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+83:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:50  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+84:62  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+84:62  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+84:102  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+84:102  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/hooks/useCampaignProgress.ts
+125:27  Error: 'setConnectionState' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+126:26  Error: 'setReconnectCount' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+127:25  Error: 'setLastHeartbeat' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/hooks/useCampaignSSE.ts
+8:44  Error: 'PhaseRunStatus' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+11:3  Error: 'CampaignSSEEventHandlers' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+12:3  Error: 'RawSSEData' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+79:10  Error: 'mapRawToCampaignSSE' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+413:6  Warning: React Hook useCallback has a missing dependency: 'dispatch'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/hooks/useCampaignServerMetrics.ts
+12:3  Error: 'createDefaultSnapshot' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+101:6  Warning: React Hook useMemo has an unnecessary dependency: 'USE_SERVER_METRICS'. Either exclude it or remove the dependency array. Outer scope values like 'USE_SERVER_METRICS' aren't valid dependencies because mutating them doesn't re-render the component.  react-hooks/exhaustive-deps
+189:54  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/hooks/useCausalGraph.ts
+52:5  Error: 'confidenceThreshold' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/hooks/useClientTraceDebug.ts
+261:79  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+276:90  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+276:90  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+295:68  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+305:116  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/hooks/useCohortComparison.ts
+16:3  Error: 'CohortCampaign' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/hooks/useEnhancedMetricsContext.tsx
+29:15  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+29:15  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+30:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:19  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+31:14  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+63:25  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/hooks/useMetricsContext.tsx
+17:15  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:15  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+18:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:19  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+19:14  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+45:20  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/hooks/usePortfolioMetrics.ts
+7:10  Error: 'AggregateSnapshot' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/hooks/useSSE.ts
+3:15  Error: 'CampaignSseEvent' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/hooks/useSSEFallback.ts
+70:6  Warning: React Hook useCallback has a missing dependency: 'triggerFallback'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+96:6  Warning: React Hook useCallback has a missing dependency: 'startFallbackPolling'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/hooks/useSemanticSummaries.ts
+78:61  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+78:61  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+297:13  Error: 'now' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+331:13  Error: 'now' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+372:80  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+372:80  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+374:11  Error: 'batchId' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+455:12  Error: 'actions' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/hooks/useWorkerMetricsFallback.ts
+16:13  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:16  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:16  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+18:22  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:22  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+24:15  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+24:15  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+25:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+25:21  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/lib/hooks/useCachedAuth.tsx
+147:6  Warning: React Hook useCallback has a missing dependency: 'authApi'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+280:6  Warning: React Hook useCallback has a missing dependency: 'authApi'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+300:6  Warning: React Hook useCallback has missing dependencies: 'authApi' and 'router'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/lib/hooks/useInfiniteScroll.ts
+85:6  Warning: React Hook useCallback has a missing dependency: 'data.length'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/lib/hooks/usePaginatedDomains.ts
+52:10  Error: 'version' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+72:9  Warning: The 'currentItems' logical expression could make the dependencies of useCallback Hook (at line 144) change on every render. To fix this, wrap the initialization of 'currentItems' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./src/lib/security/csp.ts
+276:11  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+276:11  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+276:33  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+276:33  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+277:11  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+277:11  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+283:17  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+283:17  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/lib/utils/__tests__/typeSafetyPrimitives.test.ts
+50:35  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+134:22  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+147:70  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/lib/utils/fetchWithPolicy.ts
+220:20  Error: 'e' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/utils/memoization.ts
+13:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any').
+63:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any').
+
+./src/lib/utils/phaseEnumAudit.ts
+21:7  Warning: Unused eslint-disable directive (no problems were reported from 'no-console').
+30:5  Warning: Unused eslint-disable directive (no problems were reported from 'no-console').
+
+./src/lib/utils/phaseMapping.ts
+7:36  Error: 'APICampaignPhaseEnum' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/utils/sqlNullTransformers.ts
+278:17  Warning: 'transformSqlNullValue' is already defined.  no-redeclare
+279:17  Warning: 'transformSqlNullValue' is already defined.  no-redeclare
+280:17  Warning: 'transformSqlNullValue' is already defined.  no-redeclare
+281:17  Warning: 'transformSqlNullValue' is already defined.  no-redeclare
+282:17  Warning: 'transformSqlNullValue' is already defined.  no-redeclare
+283:17  Warning: 'transformSqlNullValue' is already defined.  no-redeclare
+284:17  Warning: 'transformSqlNullValue' is already defined.  no-redeclare
+285:17  Warning: 'transformSqlNullValue' is already defined.  no-redeclare
+286:17  Warning: 'transformSqlNullValue' is already defined.  no-redeclare
+
+./src/lib/utils/statusMapping.ts
+15:13  Warning: 'CampaignStatus' is already defined.  no-redeclare
+
+./src/lib/utils/typeGuards.test.ts
+93:60  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+96:66  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+174:60  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+188:60  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+203:60  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+293:46  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/lib/utils/typeGuards.ts
+9:15  Error: 'EnrichedCampaignResponse' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/utils/uuidValidation.ts
+292:64  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/server/authCookieCache.ts
+3:6  Error: 'CacheStore' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+9:3  Warning: Unused eslint-disable directive (no problems were reported from 'no-var').
+22:70  Error: 'ttlMs' is assigned a value but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/analytics/causalGraphService.ts
+256:11  Error: 'startTime' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+305:13  Error: 'edgesUpdated' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/__tests__/forecastService.test.ts
+119:14  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/services/campaignMetrics/__tests__/serverAdapter.test.ts
+182:38  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+194:72  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/services/campaignMetrics/auditLogService.ts
+326:59  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+326:59  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+326:101  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+326:101  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/services/campaignMetrics/capabilitiesService.ts
+484:19  Error: 'key' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+493:19  Error: 'key' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/dataQualityValidationService.ts
+668:5  Error: 'metrics' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/degradationEvaluatorService.ts
+335:12  Error: React Hook "useBackendCanonical" cannot be called in a class component. React Hooks must be called in a React function component or a custom React Hook function.  react-hooks/rules-of-hooks
+393:34  Error: 'domain' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/dynamicCohortService.ts
+69:32  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/services/campaignMetrics/enhancedRecommendationService.ts
+110:11  Error: 'startTime' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+161:5  Error: 'snapshots' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+230:59  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:59  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+304:5  Error: 'context' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+486:44  Error: 'campaignId' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+486:73  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+492:5  Error: 'campaignId' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+493:5  Error: 'snapshots' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+494:5  Error: 'config' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+519:26  Error: 'rec' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/enhancedSecurityHardeningService.ts
+37:39  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/services/campaignMetrics/forecastBlendService.ts
+465:11  Error: 'predictions' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/forecastService.ts
+17:3  Error: 'NormalizedForecastResult' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+18:3  Error: 'normalizeForecastResult' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+19:3  Error: 'createForecastPoint' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+665:3  Error: 'metricKey' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/healthFabricService.ts
+371:47  Error: 'currentScore' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/historyStore.ts
+306:15  Error: 'campaignId' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/metricsPerf.ts
+66:14  Error: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+133:14  Error: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+283:14  Error: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/mlRecommendationsService.ts
+144:35  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+144:35  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/services/campaignMetrics/moversService.ts
+217:31  Error: 'index' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/normalizationService.ts
+231:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+231:38  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+341:7  Error: React Hook "useBackendCanonical" is called in function "applyNormalization" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
+
+./src/services/campaignMetrics/performanceGuardrailsService.ts
+165:72  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/services/campaignMetrics/progressStream.ts
+7:15  Error: 'CampaignSseEventPayload' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+7:66  Error: 'CampaignSseEvent' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+135:37  Error: 'error' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/recommendationAttributionService.ts
+31:28  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/services/campaignMetrics/recommendationScoreService.ts
+30:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:19  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+164:65  Error: 'input' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+331:47  Error: 'k' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/rootCauseAnalyticsService.ts
+196:24  Error: 'anomalyValue' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+196:38  Error: 'baselineValue' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+741:5  Error: 'context' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+752:5  Error: 'template' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/serverAdapter.ts
+6:47  Error: 'ClassificationBuckets' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/snapshotCompactionService.ts
+8:39  Error: 'hasMinElements' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+8:55  Error: 'isNonEmptyArray' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+383:5  Error: 'startIndex' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+384:5  Error: 'endIndex' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+407:23  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+407:23  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+434:5  Error: 'preservedIndices' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/streamPool.ts
+48:6  Error: 'StructuredMessage' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+53:150  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+53:150  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+54:132  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+54:132  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/services/campaignMetrics/telemetryService.ts
+472:24  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/services/campaignMetrics/workerCoordinator.ts
+49:6  Error: 'WorkerResult' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+212:14  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/services/experimentation/banditService.ts
+1:10  Error: 'NonEmptyArray' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+1:39  Error: 'normalizeArmStats' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+179:11  Error: 'armIds' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+314:24  Error: 'context' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+354:29  Error: 'context' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+393:34  Error: 'context' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/observability/tracingService.ts
+20:30  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+34:27  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+85:54  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+144:64  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+170:97  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+295:88  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+320:78  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+401:11  Error: 'stats' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+456:79  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+466:83  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+476:71  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+486:69  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/services/perf/__tests__/taskSchedulerService.test.ts
+20:12  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+33:5  Error: Do not assign to the variable `module`. See: https://nextjs.org/docs/messages/no-assign-module-variable  @next/next/no-assign-module-variable
+42:25  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+86:18  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+92:9  Error: Do not assign to the variable `module`. See: https://nextjs.org/docs/messages/no-assign-module-variable  @next/next/no-assign-module-variable
+98:41  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+120:41  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+131:41  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/services/perf/memoryPressureService.ts
+37:24  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:47  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:54  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+94:24  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+94:47  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+94:54  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/services/perf/taskSchedulerService.ts
+11:10  Error: React Hook "useEdgeProcessing" is called in function "isEdgeProcessingEnabled" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
+
+./src/services/perf/wasmAccelerationService.ts
+16:12  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+16:12  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+332:47  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+332:47  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/services/phase10IntegrationTest.js
+18:9  Error: 'differentialPrivacyModule' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+23:9  Error: 'memoryModule' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/privacy/differentialPrivacyService.ts
+197:5  Error: 'domain' is assigned a value but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/simulation/scenarioEngine.ts
+77:24  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+77:24  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/services/simulation/seedService.ts
+11:10  Error: React Hook "useScenarioSimulation" is called in function "isSeedServiceEnabled" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
+141:23  Error: 'state' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/summarization/summarizationService.ts
+227:32  Error: 'data' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/viz/adaptiveTimelineService.ts
+8:55  Error: 'isNonEmptyArray' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+12:10  Error: React Hook "useAdaptiveVisualization" is called in function "isAdaptiveVizEnabled" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
+22:29  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+58:29  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+442:5  Error: 'metricKey' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/store/ui/__tests__/campaignUiSlice.test.ts
+5:60  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/store/ui/__tests__/pipelineSelectors.test.ts
+7:60  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+7:72  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+26:4  Error: Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free.  @typescript-eslint/ban-ts-comment
+39:5  Error: Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free.  @typescript-eslint/ban-ts-comment
+44:41  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+45:42  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+54:40  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+55:46  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/tests/api/contract.personas.spec.ts
+7:13  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/tests/pagination/usePaginatedDomains.test.tsx
+13:53  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/tests/pipeline/countersReconciledEvent.test.tsx
+14:48  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+15:16  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+28:26  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+28:55  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+36:29  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+36:48  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/tests/pipeline/domainOptimisticEvents.test.ts
+5:60  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+5:72  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+37:49  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+37:72  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+46:70  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+65:7  Error: Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free.  @typescript-eslint/ban-ts-comment
+75:84  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+79:132  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+81:160  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+82:67  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+92:44  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+93:21  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+93:78  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+93:100  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+109:32  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+109:117  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+121:18  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+123:34  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+126:19  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/tests/pipeline/overviewScoringDisplay.test.tsx
+10:19  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+23:26  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+27:31  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/tests/pipeline/phaseSelectorsRefactor.test.ts
+12:81  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+36:62  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+39:31  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+40:60  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+58:47  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+71:49  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/tests/pipeline/reconciliationHook.test.tsx
+17:19  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+18:16  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+21:31  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+25:24  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+25:53  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/tests/pipeline/toRtkError.test.ts
+3:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-empty-function').
+4:23  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+4:67  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+4:99  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+9:16  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+16:16  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/types/__tests__/domainAnalysisFeatures.test.ts
+41:35  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+42:40  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+43:36  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/types/forecasting/__tests__/normalizers.test.ts
+21:46  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/types/react-window.d.ts
+3:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+8:43  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:34  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/utils/phaseStatus.ts
+30:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:21  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+31:42  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+31:42  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/workers/edgeProcessor.worker.ts
+10:12  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:12  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+18:12  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:12  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+76:30  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+78:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+78:19  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+79:5  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:5  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+81:25  Error: 'existingGraph' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+144:5  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+144:5  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+221:5  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+221:5  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/workers/metricsWorker.ts
+6:55  Error: 'isNonEmptyArray' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+12:13  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+13:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:16  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:16  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+16:22  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+16:22  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+17:12  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:12  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+18:12  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:12  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+41:27  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+47:32  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+47:42  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+47:42  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+48:34  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:44  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:44  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+49:53  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+49:53  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+49:89  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+49:89  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+50:30  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+50:55  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+50:65  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+50:65  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+51:32  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+51:32  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+51:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+51:48  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+51:56  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+51:56  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+54:39  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+69:41  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+82:60  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+82:60  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+91:37  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+91:62  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+111:39  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+111:39  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+111:55  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+111:55  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+248:12  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+248:12  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules

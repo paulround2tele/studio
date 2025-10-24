@@ -10,14 +10,13 @@ import { PersonaType } from '@/lib/api-client/models/persona-type';
 // Adapt to actual generated request model (fallback to generic payload shape if missing)
 // The generated client may expose a CreatePersonaRequest; if not present we rely on PersonasCreateRequest type below.
 // Using type-only import inside try-catch pattern is unnecessary; adjust path if generator updates.
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import type { CreatePersonaRequest } from '@/lib/api-client/models/create-persona-request';
 import { PersonaType as PersonaTypeEnum } from '@/lib/api-client/models/persona-type';
 
 // OpenAPI persona type (personaType already 'http' | 'dns')
-type Persona = ApiPersonaResponse & { status?: 'Active' | 'Disabled' | 'Testing' | 'Failed'; tags?: string[] };
-type HttpPersona = Persona & { personaType: 'http' };
-type DnsPersona = Persona & { personaType: 'dns' };
+type LocalPersona = ApiPersonaResponse & { status?: 'Active' | 'Disabled' | 'Testing' | 'Failed'; tags?: string[] };
+type HttpPersona = LocalPersona & { personaType: 'http' };
+type DnsPersona = LocalPersona & { personaType: 'dns' };
 
 // Define proper create persona payload types
 interface BaseCreatePersonaRequest {
@@ -396,7 +395,7 @@ function PersonasPageContent() {
     reader.readAsText(file);
   };
 
-  const filterPersonas = (personas: Persona[], searchTerm: string): Persona[] => {
+  const filterPersonas = (personas: LocalPersona[], searchTerm: string): LocalPersona[] => {
     if (!searchTerm.trim()) return personas;
     const lowerSearchTerm = searchTerm.toLowerCase();
     return personas.filter(p =>
@@ -408,7 +407,7 @@ function PersonasPageContent() {
   const filteredHttpPersonas = useMemo(() => filterPersonas(httpPersonas, searchTermHttp), [httpPersonas, searchTermHttp]);
   const filteredDnsPersonas = useMemo(() => filterPersonas(dnsPersonas, searchTermDns), [dnsPersonas, searchTermDns]);
 
-  const renderPersonaList = (personas: Persona[], isLoading: boolean, type: 'http' | 'dns', searchTerm: string, setSearchTerm: (term: string) => void) => {
+  const renderPersonaList = (personas: LocalPersona[], isLoading: boolean, type: 'http' | 'dns', searchTerm: string, setSearchTerm: (term: string) => void) => {
     return (
       <>
         <div className="my-4 relative">

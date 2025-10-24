@@ -9,7 +9,7 @@ jest.mock('@/lib/api/config', () => ({ apiConfiguration: {} }));
 // getPhaseStatusStandalone uses args { campaignId, phase }
 
 type PhaseArgs = { campaignId: string; phase: string };
-interface QuerySubstate { endpointName: string; originalArgs: PhaseArgs; data?: any }
+interface QuerySubstate { endpointName: string; originalArgs: PhaseArgs; data?: unknown }
 
 function buildPhaseQuery(campaignId: string, phase: string, status: string | undefined): QuerySubstate {
   return { endpointName: 'getPhaseStatusStandalone', originalArgs: { campaignId, phase }, data: { status } };
@@ -33,11 +33,11 @@ describe('pipelineSelectors makeSelectPipelinePhases (refactored)', () => {
     const sliceState = { queries };
 
     // Reducer just returns fixed state (read-only for this test)
-    const campaignApiReducer = (state = sliceState, _action: any) => state;
+    const campaignApiReducer = (state = sliceState, _action: unknown) => state;
 
     // Patch endpoint select to read from our stored queries by reconstructing key
-    (campaignApi.endpoints as any).getPhaseStatusStandalone = {
-      select: ({ campaignId, phase }: PhaseArgs) => (root: any) => {
+    (campaignApi.endpoints as unknown).getPhaseStatusStandalone = {
+      select: ({ campaignId, phase }: PhaseArgs) => (root: unknown) => {
         return root.campaignApi.queries[`getPhaseStatusStandalone-${campaignId}-${phase}`];
       }
     };
@@ -55,8 +55,8 @@ describe('pipelineSelectors makeSelectPipelinePhases (refactored)', () => {
       analysis: undefined,
     });
     const select = pipelineSelectors.phases(campaignId);
-    const phases = select(store.getState() as any);
-    const map: Record<string, any> = Object.fromEntries(phases.map(p => [p.key, p]));
+    const phases = select(store.getState() as unknown);
+    const map: Record<string, unknown> = Object.fromEntries(phases.map(p => [p.key, p]));
     expect(map.discovery.execState).toBe('completed');
     expect(map.validation.execState).toBe('running');
     expect(map.extraction.execState).toBe('idle');
@@ -68,6 +68,6 @@ describe('pipelineSelectors makeSelectPipelinePhases (refactored)', () => {
   it('derives allConfigured correctly', () => {
     const store = makeStore({ discovery: 'completed', validation: 'completed', extraction: 'completed', analysis: 'completed' });
     const allConfiguredSel = pipelineSelectors.allConfigured(campaignId);
-    expect(allConfiguredSel(store.getState() as any)).toBe(true);
+    expect(allConfiguredSel(store.getState() as unknown)).toBe(true);
   });
 });

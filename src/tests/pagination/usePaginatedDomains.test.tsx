@@ -6,11 +6,11 @@ import { usePaginatedDomains } from '@/lib/hooks/usePaginatedDomains';
 
 // Mock campaignApi slice endpoint selector & hook
 jest.mock('@/store/api/campaignApi', () => {
-  let pages: Record<number, { items: any[]; total: number }> = {};
+  let pages: Record<number, { items: unknown[]; total: number }> = {};
   return {
     __esModule: true,
     __setPages: (p: typeof pages) => { pages = p; },
-    useGetCampaignDomainsQuery: ({ limit, offset }: any) => {
+    useGetCampaignDomainsQuery: ({ limit, offset }: unknown) => {
       const page = Math.floor(offset / limit) + 1;
       const data = pages[page];
       return { data: data ? { items: data.items, total: data.total } : { items: [], total: Object.values(pages)[0]?.total || 0 }, isFetching: false, error: undefined, refetch: () => {} };

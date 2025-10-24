@@ -67,7 +67,7 @@ export function DeltaBadge({
   className,
   ariaLabel
 }: DeltaBadgeProps) {
-  const { direction, key, percent } = delta;
+  const { direction, key, percent: _percent } = delta;
   const styles = sizeStyles[size];
   const color = getDeltaColor(delta);
   const formattedValue = formatDeltaValue(delta);
@@ -125,7 +125,7 @@ export function DeltaBadge({
  * Generate accessible label for screen readers
  */
 function generateAccessibleLabel(delta: DeltaMetrics): string {
-  const { key, direction, percent, absolute } = delta;
+  const { key, direction, percent, absolute: _absolute } = delta;
   const metricName = formatMetricName(key);
   
   let changeDescription: string;

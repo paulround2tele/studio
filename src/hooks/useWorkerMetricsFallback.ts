@@ -13,16 +13,16 @@ const DEFAULT_THRESHOLD = 4000;
 interface WorkerMessage {
   type: 'compute' | 'result' | 'error';
   id?: string;
-  domains?: any[];
-  aggregates?: any;
-  classifiedCounts?: any;
+  domains?: unknown[];
+  aggregates?: unknown;
+  classifiedCounts?: unknown;
   error?: string;
   timingMs?: number;
 }
 
 interface WorkerResult {
-  aggregates: any;
-  classifiedCounts: any;
+  aggregates: unknown;
+  classifiedCounts: unknown;
   timingMs: number;
 }
 

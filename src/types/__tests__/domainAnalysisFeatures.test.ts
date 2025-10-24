@@ -38,8 +38,8 @@ describe('coerceFeatures', () => {
   });
 
   it('returns null on invalid input', () => {
-    expect(coerceFeatures(null as any)).toBeNull();
-    expect(coerceFeatures(undefined as any)).toBeNull();
-    expect(coerceFeatures('str' as any)).toBeNull();
+    expect(coerceFeatures(null as unknown)).toBeNull();
+    expect(coerceFeatures(undefined as unknown)).toBeNull();
+    expect(coerceFeatures('str' as unknown)).toBeNull();
   });
 });

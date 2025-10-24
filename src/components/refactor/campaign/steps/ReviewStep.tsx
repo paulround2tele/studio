@@ -21,8 +21,7 @@ export function ReviewStep({ goal, pattern, targeting }: ReviewStepProps) {
     <div className="space-y-6">
       <Alert>
         <Info className="h-4 w-4" />
-        <AlertDescription>
-          <strong>Review your campaign settings.</strong> After creation, you'll be redirected to the campaign dashboard 
+        <AlertDescription>\n          <strong>Review your campaign settings.</strong> After creation, you&apos;ll be redirected to the campaign dashboard 
           where you can configure detailed domain generation and phase execution settings.
         </AlertDescription>
       </Alert>

@@ -1,12 +1,11 @@
 type CacheEntry = { value: boolean; expiresAt: number };
 
-type CacheStore = {
+type _CacheStore = {
   get: (key: string) => CacheEntry | undefined;
   set: (key: string, entry: CacheEntry) => void;
 };
 
 declare global {
-  // eslint-disable-next-line no-var
   var __authCookieCache: Map<string, CacheEntry> | undefined;
 }
 

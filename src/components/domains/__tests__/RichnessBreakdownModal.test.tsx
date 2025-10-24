@@ -25,7 +25,7 @@ const features = {
     signal_distribution: { a:3, b:2 }
   },
   microcrawl: { gain_ratio: 0.24 }
-} as any;
+} as unknown;
 
 describe('RichnessBreakdownModal', () => {
   test('renders bars and toggles JSON', () => {

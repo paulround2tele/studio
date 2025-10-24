@@ -14,15 +14,15 @@ describe('usePhaseReconciliation', () => {
   const campaignId = 'cmp-rec';
 
   // Provide global fetch stub to silence warnings from any accidental fetch usage
-  if (!(global as any).fetch) {
-    (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+  if (!(global as unknown).fetch) {
+    (global as unknown).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
   }
 
-  function makeStore(runtime: any) {
+  function makeStore(runtime: unknown) {
     const pipelineExecReducer = (state = { byCampaign: { [campaignId]: runtime } }) => state;
     const uiReducer = (state = { byId: { [campaignId]: {} } }) => state;
     const spyInvalidate = jest.fn();
-  (campaignApi.util as any).invalidateTags = (tags: any) => { spyInvalidate(tags); return { type: '__TEST__/INVALIDATE', payload: tags }; };
+  (campaignApi.util as unknown).invalidateTags = (tags: unknown) => { spyInvalidate(tags); return { type: '__TEST__/INVALIDATE', payload: tags }; };
     const store = configureStore({ reducer: { pipelineExec: pipelineExecReducer, campaignUI: uiReducer, campaignApi: (s = {}) => s } });
     return { store, spyInvalidate };
   }

@@ -52,7 +52,7 @@ interface CampaignCreateWizardProps {
   className?: string;
 }
 
-export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
+export function CampaignCreateWizard({ className: _className }: CampaignCreateWizardProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [createCampaign, { isLoading: isCreating }] = useCreateCampaignMutation();

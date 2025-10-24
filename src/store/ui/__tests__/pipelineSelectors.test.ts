@@ -4,7 +4,7 @@ import pipelineExecReducer, { phaseStarted, phaseCompleted } from '@/store/slice
 import { pipelineSelectors, PIPELINE_PHASE_ORDER } from '@/store/selectors/pipelineSelectors';
 
 // Mock RTK Query slice with minimal shape used by selectors
-interface QueryEntry { endpointName: string; originalArgs: any; data?: any }
+interface QueryEntry { endpointName: string; originalArgs: unknown; data?: unknown }
 
 const makeQueries = (campaignId: string, statuses: Record<string,string|undefined>) => {
 	const queries: Record<string, QueryEntry> = {};
@@ -23,7 +23,7 @@ function makeStore(campaignId: string, statuses: Record<string,string|undefined>
 		reducer: {
 			campaignUI: campaignUIReducer,
 			pipelineExec: pipelineExecReducer,
-			// @ts-ignore
+			// @ts-expect-error
 			campaignApi: (s = { queries: makeQueries(campaignId, statuses) }) => s,
 		}
 	});
@@ -36,13 +36,13 @@ describe('pipeline overview selector', () => {
 			reducer: {
 				campaignUI: campaignUIReducer,
 				// omit pipelineExec intentionally
-				// @ts-ignore
+				// @ts-expect-error
 				campaignApi: (s = { queries: makeQueries(campaignId, { discovery: undefined, validation: undefined, extraction: undefined, analysis: undefined }) }) => s,
 			}
 		});
 		const sel = pipelineSelectors.overview(campaignId);
-		const first = sel(store.getState() as any);
-		const second = sel(store.getState() as any);
+		const first = sel(store.getState() as unknown);
+		const second = sel(store.getState() as unknown);
 		expect(second.exec.summary).toEqual(first.exec.summary);
 	});
 
@@ -51,8 +51,8 @@ describe('pipeline overview selector', () => {
 		const ovSel = pipelineSelectors.overview(campaignId);
 		store.dispatch(phaseStarted({ campaignId, phase: 'discovery', ts: 1000 }));
 		store.dispatch(phaseCompleted({ campaignId, phase: 'discovery', ts: 1500 }));
-		const ov = ovSel(store.getState() as any);
-		const enriched = ov.phasesEnriched.find((p:any) => p.key === 'discovery');
+		const ov = ovSel(store.getState() as unknown);
+		const enriched = ov.phasesEnriched.find((p: unknown) => p.key === 'discovery');
 		expect(enriched?.durationMs).toBe(500);
 	});
 });

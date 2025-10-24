@@ -28,7 +28,7 @@ export interface InfluenceSignal {
   timestamp: string;
   confidence: number; // 0-1
   magnitude: number; // 0-1, strength of the signal
-  metadata: Record<string, any>; // Signal-specific data
+  metadata: Record<string, unknown>; // Signal-specific data
   description: string;
 }
 
@@ -435,10 +435,18 @@ class RecommendationAttributionService {
     }
 
     if (context?.metricKey) {
-      relevantSignals = relevantSignals.filter(signal => 
-        signal.metadata.metricKey === context.metricKey ||
-        signal.metadata.affectedMetrics?.includes(context.metricKey)
-      );
+      relevantSignals = relevantSignals.filter(signal => {
+        if (signal.metadata.metricKey === context.metricKey) {
+          return true;
+        }
+
+        const affectedMetrics = signal.metadata.affectedMetrics;
+        if (Array.isArray(affectedMetrics)) {
+          return affectedMetrics.includes(context.metricKey as string);
+        }
+
+        return false;
+      });
     }
 
     return relevantSignals;

@@ -4,6 +4,7 @@
  */
 
 // Local status literals (API may not export an enum—use string union)
+/* eslint-disable no-redeclare */
 export const CampaignStatus = {
   draft: 'draft',
   running: 'running',
@@ -13,6 +14,7 @@ export const CampaignStatus = {
   cancelled: 'cancelled'
 } as const;
 export type CampaignStatus = typeof CampaignStatus[keyof typeof CampaignStatus];
+/* eslint-enable no-redeclare */
 
 // Define the actual status values used by the system (aligned with API)
 export const CAMPAIGN_STATUSES = {

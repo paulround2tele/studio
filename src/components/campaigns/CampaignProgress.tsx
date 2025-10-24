@@ -57,7 +57,7 @@ const PhaseStatusIcon = memo(({ status }: { status: PhaseStatus }) => {
 
 PhaseStatusIcon.displayName = 'PhaseStatusIcon';
 
-export function CampaignProgress({ campaign, phaseExecutions, state }: CampaignProgressProps) {
+export function CampaignProgress({ campaign, phaseExecutions, state: _state }: CampaignProgressProps) {
   const { currentPhase, status } = campaign;
 
   // Derive a per-phase status from overall status for UI continuity

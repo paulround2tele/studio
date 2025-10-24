@@ -47,7 +47,7 @@ describe('Type Safety Primitives', () => {
       const obj = {};
       const result = ensurePath(obj, ['a', 'b', 'c']);
       expect(obj).toEqual({ a: { b: { c: {} } } });
-      expect(result).toBe((obj as any).a.b.c);
+      expect(result).toBe((obj as unknown).a.b.c);
     });
 
     it('should work with existing paths', () => {
@@ -131,7 +131,7 @@ describe('Type Safety Primitives', () => {
       const result = applyPatchOp(obj, op);
       
       expect(result.ok).toBe(true);
-      expect((obj as any).newList).toEqual(['first']);
+      expect((obj as unknown).newList).toEqual(['first']);
     });
 
     it('should handle invalid paths', () => {
@@ -144,7 +144,7 @@ describe('Type Safety Primitives', () => {
 
     it('should handle unknown operations', () => {
       const obj = {};
-      const op = { type: 'unknown', path: 'test', value: 'test' } as any;
+      const op = { type: 'unknown', path: 'test', value: 'test' } as unknown;
       const result = applyPatchOp(obj, op);
       
       expect(result.ok).toBe(false);

@@ -7,8 +7,8 @@ import { configureStore } from '@reduxjs/toolkit';
 jest.mock('@/lib/api/config', () => ({ apiConfiguration: {} }));
 
 // Module-level mutable vars for mock data
-let mockEnriched: any = {};
-let mockProfiles: any[] = [];
+let mockEnriched: unknown = {};
+let mockProfiles: unknown[] = [];
 
 // Mock campaignApi BEFORE component import
 jest.mock('@/store/api/campaignApi', () => {
@@ -20,11 +20,11 @@ jest.mock('@/store/api/campaignApi', () => {
   };
   return {
     __esModule: true,
-    setMockEnriched: (d: any) => { mockEnriched = d; },
+    setMockEnriched: (d: unknown) => { mockEnriched = d; },
     campaignApi: {
       endpoints: {
         getPhaseStatusStandalone: {
-          select: ({ phase }: any) => () => ({ data: mockStatuses[phase] })
+          select: ({ phase }: unknown) => () => ({ data: mockStatuses[phase] })
         },
         getCampaignEnriched: {
           select: () => () => ({ data: mockEnriched })
@@ -40,7 +40,7 @@ jest.mock('@/store/api/campaignApi', () => {
 jest.mock('@/store/api/scoringApi', () => {
   return {
     __esModule: true,
-    setMockProfiles: (p: any[]) => { mockProfiles = p; },
+    setMockProfiles: (p: unknown[]) => { mockProfiles = p; },
     scoringApi: {
       endpoints: {
         listScoringProfiles: {

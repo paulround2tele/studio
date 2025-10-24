@@ -12,7 +12,7 @@ import { EnhancedKPICard } from '@/components/refactor/campaign/EnhancedKPICard'
 import { MetricsDebugPanel } from '@/components/refactor/campaign/MetricsDebugPanel';
 import { useEnhancedMetricsContext } from '@/hooks/useEnhancedMetricsContext';
 import { getMemoryStats } from '@/services/campaignMetrics/historyStore';
-import { getPerformanceStats, exportPerformanceData } from '@/services/campaignMetrics/metricsPerf';
+import { getPerformanceStats as _getPerformanceStats, exportPerformanceData } from '@/services/campaignMetrics/metricsPerf';
 import type { DomainListItem } from '@/lib/api-client/models';
 
 interface EnhancedCampaignOverviewProps {
@@ -42,7 +42,7 @@ export const EnhancedCampaignOverview: React.FC<EnhancedCampaignOverviewProps> =
     features,
     isLoading,
     error,
-    progress,
+    progress: _progress,
     isConnected
   } = useEnhancedMetricsContext();
 
@@ -243,7 +243,7 @@ export const EnhancedCampaignOverview: React.FC<EnhancedCampaignOverviewProps> =
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recommendations.slice(0, 3).map((rec, index) => (
+              {recommendations.slice(0, 3).map((rec, _index) => (
                 <div key={rec.id} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
                   <div className="flex-shrink-0">
                     <Badge 

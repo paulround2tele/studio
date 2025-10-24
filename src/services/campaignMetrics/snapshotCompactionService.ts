@@ -3,9 +3,9 @@
  * Performance optimization for large timelines with configurable downsample strategies
  */
 
-import { AggregateSnapshot } from '@/types/campaignMetrics';
+import type { AggregateSnapshot, AggregateMetrics } from '@/types/campaignMetrics';
 import { telemetryService } from './telemetryService';
-import { safeAt, safeFirst, safeLast, hasMinElements, isNonEmptyArray } from '@/lib/utils/arrayUtils';
+import { safeAt, safeFirst, safeLast, hasMinElements as _hasMinElements, isNonEmptyArray } from '@/lib/utils/arrayUtils';
 
 // Feature flag for snapshot compaction
 const isSnapshotCompactionEnabled = () => 
@@ -380,48 +380,65 @@ class SnapshotCompactionService {
    */
   private averageSnapshots(
     snapshots: AggregateSnapshot[],
-    startIndex: number,
-    endIndex: number
+    _startIndex: number,
+    _endIndex: number
   ): AggregateSnapshot {
     if (snapshots.length === 0) {
       return {
         timestamp: new Date().toISOString(),
-  aggregates: {},
+        aggregates: {} as AggregateMetrics
       } as AggregateSnapshot;
     }
+
     if (snapshots.length === 1) {
       const only = safeFirst(snapshots);
       if (only) return only as AggregateSnapshot;
+
       return {
         timestamp: new Date().toISOString(),
-  aggregates: {},
+        aggregates: {} as AggregateMetrics
       } as AggregateSnapshot;
     }
 
     const middleIndex = Math.floor(snapshots.length / 2);
-  const middleSnapshot = safeAt(snapshots, middleIndex) || safeFirst(snapshots);
-  const timestamp = middleSnapshot ? middleSnapshot.timestamp : new Date().toISOString();
+    const middleSnapshot = safeAt(snapshots, middleIndex) || safeFirst(snapshots);
+    const timestamp = middleSnapshot ? middleSnapshot.timestamp : new Date().toISOString();
 
-  const firstSnapshot = safeFirst(snapshots);
-  const firstAgg: Record<string, unknown> = firstSnapshot ? (firstSnapshot as AggregateSnapshot).aggregates as unknown as Record<string, unknown> : {};
-    const aggregates: any = {};
-    Object.keys(firstAgg).forEach(key => {
+    const firstSnapshot = safeFirst(snapshots);
+    const templateAggregates = firstSnapshot?.aggregates ?? ({} as AggregateMetrics);
+    const aggregateKeys = Object.keys(templateAggregates) as (keyof AggregateMetrics)[];
+
+    const aggregates: Partial<AggregateMetrics> = {};
+
+    aggregateKeys.forEach(key => {
       const numericValues = snapshots
-  .map(s => (s.aggregates as unknown as Record<string, unknown>)?.[key])
-        .filter(v => typeof v === 'number') as number[];
+        .map(snapshot => snapshot.aggregates?.[key])
+        .filter((value): value is number => typeof value === 'number');
+
       if (numericValues.length > 0) {
-        aggregates[key] = numericValues.reduce((sum, val) => sum + val, 0) / numericValues.length;
-      } else {
-  aggregates[key] = firstAgg[key];
+        const average = numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length;
+        aggregates[key] = average;
+        return;
+      }
+
+      const fallback = templateAggregates[key];
+      if (typeof fallback === 'number') {
+        aggregates[key] = fallback;
       }
     });
 
+    const averagedAggregates = {
+      ...templateAggregates,
+      ...aggregates
+    } as AggregateMetrics;
+
     // Merge averaged aggregates with representative snapshot (excluding its original aggregates to avoid duplication)
-  const { aggregates: _origAgg, ...rest } = (middleSnapshot || {}) as Partial<AggregateSnapshot>;
+    const { aggregates: _origAgg, ...rest } = (middleSnapshot || {}) as Partial<AggregateSnapshot>;
+
     return {
       ...rest,
       timestamp,
-      aggregates,
+      aggregates: averagedAggregates
     } as AggregateSnapshot;
   }
 

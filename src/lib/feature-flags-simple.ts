@@ -134,11 +134,10 @@ export function useShowLegacyDomainsTable(): boolean {
 }
 
 /**
- * Check if backend canonical integration is enabled (Phase 7)
  * Master flag for server-first resolution
  */
-export function useBackendCanonical(): boolean {
-  return isFeatureEnabled(PHASE7_FLAGS.ENABLE_BACKEND_CANONICAL, true);
+export function isBackendCanonical(): boolean {
+  return isFeatureEnabled('ENABLE_BACKEND_CANONICAL', false);
 }
 
 /**
@@ -161,16 +160,16 @@ export function useForecastCustomHorizon(): boolean {
  */
 
 /**
- * Check if scenario simulation is enabled (Phase 11)
+ * Scenario simulation (Phase 9)
  */
-export function useScenarioSimulation(): boolean {
+export function isScenarioSimulationEnabled(): boolean {
   return isFeatureEnabled(PHASE11_FLAGS.ENABLE_SCENARIOS, false);
 }
 
 /**
- * Check if edge processing is enabled (Phase 11)
+ * Edge processing (Phase 9)
  */
-export function useEdgeProcessing(): boolean {
+export function isEdgeProcessingEnabled(): boolean {
   return isFeatureEnabled(PHASE11_FLAGS.ENABLE_EDGE_PROCESSING, false);
 }
 

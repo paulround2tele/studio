@@ -5,7 +5,7 @@
 
 import { telemetryService } from './telemetryService';
 import { capabilitiesService } from './capabilitiesService';
-import { useBackendCanonical } from '@/lib/feature-flags-simple';
+import { isBackendCanonical } from '@/lib/feature-flags-simple';
 
 // Feature flag for degradation management
 const isDegradationManagementEnabled = () => 
@@ -332,7 +332,7 @@ class DegradationEvaluatorService {
     const startTime = Date.now();
 
     try {
-      if (!useBackendCanonical()) {
+      if (!isBackendCanonical()) {
         // If backend canonical is disabled, all domains are in fallback mode
         return {
           domain: domain as DomainHealth['domain'],

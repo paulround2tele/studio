@@ -212,7 +212,7 @@ export const AdaptiveTimeline: React.FC<AdaptiveTimelineProps> = ({
   }, [series, viewportWidth, data, maxPoints, isAdaptiveEnabled]);
 
   // Handle point click
-  const handlePointClick = useCallback((point: ChartPoint) => {
+  const _handlePointClick = useCallback((point: ChartPoint) => {
     if (onPointClick) {
       const originalPoint: TimeSeriesPoint = {
         timestamp: point.timestamp,
@@ -312,7 +312,7 @@ export const AdaptiveTimeline: React.FC<AdaptiveTimelineProps> = ({
             tickFormatter={(value) => typeof value === 'number' ? value.toFixed(1) : value}
           />
           <Tooltip 
-            content={({ active, payload, label }) => {
+            content={({ active, payload, label: _label }) => {
               if (!active || !payload || payload.length === 0 || !payload[0]) return null;
               
               const point = payload[0].payload;

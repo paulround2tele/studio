@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 
 // We will simulate RTK Query cache shape minimally for getCampaignDomains queries.
-interface QueryEntry { endpointName: string; originalArgs: any; data?: any }
+interface QueryEntry { endpointName: string; originalArgs: unknown; data?: unknown }
 interface MockApiState { queries: Record<string, QueryEntry> }
 
 const buildDomainsPage = (campaignId: string, limit: number, offset: number, items: DomainListItem[], total: number): QueryEntry => ({
@@ -34,7 +34,7 @@ const keyFor = (args: { campaignId: string; limit: number; offset: number }) =>
 // Provide a mock campaignApi export before importing the hook module.
 jest.mock('@/store/api/campaignApi', () => {
   const util = {
-    updateQueryData: (_endpoint: string, _args: any, _updater: (draft: any) => void) => ({ type: '__TEST__/NOOP' }),
+    updateQueryData: (_endpoint: string, _args: unknown, _updater: (draft: unknown) => void) => ({ type: '__TEST__/NOOP' }),
   };
   return { campaignApi: { util } };
 });
@@ -43,7 +43,7 @@ jest.mock('@/store/api/campaignApi', () => {
 import { campaignApi } from '@/store/api/campaignApi';
 
 function makeStore(initial: MockApiState) {
-  const campaignApiReducer = (state: MockApiState = initial, action: any): MockApiState => {
+  const campaignApiReducer = (state: MockApiState = initial, action: unknown): MockApiState => {
     if (action.type === '__TEST__/APPLY_DOMAIN_PATCH') {
       const { campaignId, limit, offset, apply } = action.payload;
       const k = keyFor({ campaignId, limit, offset });
@@ -62,7 +62,7 @@ function makeStore(initial: MockApiState) {
   };
   return configureStore({
     reducer: {
-      // @ts-ignore
+      // @ts-expect-error
       campaignApi: campaignApiReducer,
     }
   });
@@ -72,14 +72,14 @@ describe('multi-page optimistic domain updates', () => {
   const campaignId = 'cmp123';
   const limit = 50;
   const secondPageOffset = 50; // page index 1
-  const targetDomain: DomainListItem = { id: 'd-77', domain: 'example77.test' } as any;
+  const targetDomain: DomainListItem = { id: 'd-77', domain: 'example77.test' } as unknown;
 
   it('updates domain on non-zero page when SSE event arrives', () => {
     // page 0 without the domain
-    const page1Items: DomainListItem[] = Array.from({ length: 50 }).map((_, i) => ({ id: `d-${i}`, domain: `example${i}.test` } as any));
+    const page1Items: DomainListItem[] = Array.from({ length: 50 }).map((_, i) => ({ id: `d-${i}`, domain: `example${i}.test` } as unknown));
     // page 1 containing target domain at position 10
-    const page2Items: DomainListItem[] = Array.from({ length: 50 }).map((_, i) => ({ id: `d-${i+50}`, domain: `example${i+50}.test`, dnsStatus: 'pending' } as any));
-    page2Items[10] = { ...targetDomain, dnsStatus: 'pending' } as any;
+    const page2Items: DomainListItem[] = Array.from({ length: 50 }).map((_, i) => ({ id: `d-${i+50}`, domain: `example${i+50}.test`, dnsStatus: 'pending' } as unknown));
+    page2Items[10] = { ...targetDomain, dnsStatus: 'pending' } as unknown;
 
     const initialQueries: Record<string, QueryEntry> = {
       [keyFor({ campaignId, limit, offset: 0 })]: buildDomainsPage(campaignId, limit, 0, page1Items, 120),
@@ -89,8 +89,8 @@ describe('multi-page optimistic domain updates', () => {
     const store = makeStore({ queries: initialQueries });
 
     // Monkey patch campaignApi.util.updateQueryData to dispatch our synthetic reducer action
-    const originalUpdate = (campaignApi as any).util.updateQueryData;
-    (campaignApi as any).util.updateQueryData = (endpointName: string, args: any, updater: (draft: any) => void) => {
+    const originalUpdate = (campaignApi as unknown).util.updateQueryData;
+    (campaignApi as unknown).util.updateQueryData = (endpointName: string, args: unknown, updater: (draft: unknown) => void) => {
       if (endpointName === 'getCampaignDomains') {
         store.dispatch({ type: '__TEST__/APPLY_DOMAIN_PATCH', payload: { campaignId: args.campaignId, limit: args.limit, offset: args.offset, apply: updater } });
       }
@@ -106,7 +106,7 @@ describe('multi-page optimistic domain updates', () => {
       for (let pageIndex=0; pageIndex<10; pageIndex++) {
         const offset = pageIndex * l;
         try {
-          (campaignApi.util as any).updateQueryData('getCampaignDomains', { campaignId, limit: l, offset }, (draft: any) => {
+          (campaignApi.util as unknown).updateQueryData('getCampaignDomains', { campaignId, limit: l, offset }, (draft: unknown) => {
             const items: DomainListItem[] = draft?.items || [];
             const idx = items.findIndex(d => d.id === incomingPatch.id);
             if (idx !== -1) {
@@ -118,11 +118,11 @@ describe('multi-page optimistic domain updates', () => {
     });
 
     // Assert updated on second page (offset 50) only
-    const state: any = store.getState();
+    const state: unknown = store.getState();
     const updatedPage2 = state.campaignApi.queries[keyFor({ campaignId, limit, offset: secondPageOffset })].data.items;
-    expect(updatedPage2.find((d: any) => d.id === targetDomain.id).dnsStatus).toBe('valid');
+    expect(updatedPage2.find((d: unknown) => d.id === targetDomain.id).dnsStatus).toBe('valid');
 
     // Clean up monkey patch
-  (campaignApi as any).util.updateQueryData = originalUpdate;
+  (campaignApi as unknown).util.updateQueryData = originalUpdate;
   });
 });

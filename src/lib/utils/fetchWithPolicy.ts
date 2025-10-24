@@ -217,7 +217,7 @@ export class FetchWithPolicy {
           // Attempt JSON parse anyway; if fails, surface error
           try {
             return await response.json();
-          } catch (e) {
+          } catch (_e) {
             throw new Error('Expected JSON response but received incompatible content-type');
           }
         }

@@ -307,7 +307,7 @@ export function useBanditArmPerformance(armId: string) {
 export function useBanditContext(
   userId?: string,
   campaignId?: string,
-  additionalFeatures: Record<string, any> = {}
+  additionalFeatures: Record<string, unknown> = {}
 ): BanditContext {
   return useMemo(() => ({
     userId,
@@ -329,7 +329,7 @@ export function useBanditABTest(
   variants: Array<{ id: string; name: string; description: string }>,
   context?: BanditContext
 ) {
-  const [state, actions] = useBandit();
+  const [_state, actions] = useBandit();
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -344,7 +344,7 @@ export function useBanditABTest(
             category: testName,
             version: '1.0'
           });
-        } catch (error) {
+        } catch (_error) {
           // Ignore errors for already registered arms
         }
       }
@@ -374,7 +374,7 @@ export function useBanditABTest(
       setSelectedVariant(variantId);
       setLoading(false);
       return variantId;
-    } catch (error) {
+    } catch (_error) {
       // Fallback to random selection
       const randomVariant = variants[Math.floor(Math.random() * variants.length)];
       if (randomVariant) {
@@ -397,14 +397,6 @@ export function useBanditABTest(
       console.warn('Failed to record conversion:', error);
     }
   }, [selectedVariant, context, testName, actions]);
-
-  return {
-    selectedVariant,
-    loading,
-    selectVariant,
-    recordConversion,
-    isReady: !loading && selectedVariant !== null
-  };
 
   return {
     selectedVariant,

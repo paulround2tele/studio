@@ -258,7 +258,7 @@ export function useClientTraceDebug(options: UseTracingDebugOptions = {}): [Trac
 /**
  * Hook for span lifecycle tracking
  */
-export function useSpanTracker(operation: string, attributes?: Record<string, any>) {
+export function useSpanTracker(operation: string, attributes?: Record<string, unknown>) {
   const [spanId, setSpanId] = useState<string | null>(null);
   const [status, setStatus] = useState<TraceSpan['status'] | null>(null);
   const [duration, setDuration] = useState<number | null>(null);
@@ -273,14 +273,36 @@ export function useSpanTracker(operation: string, attributes?: Record<string, an
     return id;
   }, [operation, attributes]);
 
-  const endSpan = useCallback((finalStatus: 'completed' | 'error' = 'completed', error?: any) => {
+  const endSpan = useCallback((finalStatus: 'completed' | 'error' = 'completed', error?: unknown) => {
     if (!spanId || spanId === 'noop-span') return;
 
-    const errorInfo = error ? {
-      message: error?.message || 'Unknown error',
-      stack: error?.stack,
-      code: error?.code
-    } : undefined;
+    const errorInfo = error
+      ? (() => {
+          if (error instanceof Error) {
+            const withCode = error as Error & { code?: string };
+            return {
+              message: withCode.message,
+              stack: withCode.stack,
+              code: withCode.code
+            };
+          }
+
+          if (typeof error === 'string') {
+            return { message: error };
+          }
+
+          if (typeof error === 'object' && error !== null) {
+            const errObj = error as { message?: unknown; stack?: unknown; code?: unknown };
+            return {
+              message: typeof errObj.message === 'string' ? errObj.message : 'Unknown error',
+              stack: typeof errObj.stack === 'string' ? errObj.stack : undefined,
+              code: typeof errObj.code === 'string' ? errObj.code : undefined
+            };
+          }
+
+          return { message: 'Unknown error' };
+        })()
+      : undefined;
 
     tracingService.endSpan(spanId, finalStatus, errorInfo);
     setStatus(finalStatus);
@@ -292,7 +314,7 @@ export function useSpanTracker(operation: string, attributes?: Record<string, an
     }
   }, [spanId]);
 
-  const addAttributes = useCallback((newAttributes: Record<string, any>) => {
+  const addAttributes = useCallback((newAttributes: Record<string, unknown>) => {
     if (!spanId || spanId === 'noop-span') return;
     tracingService.addSpanAttributes(spanId, newAttributes);
   }, [spanId]);
@@ -302,7 +324,7 @@ export function useSpanTracker(operation: string, attributes?: Record<string, an
     tracingService.addSpanTags(spanId, tags);
   }, [spanId]);
 
-  const addLog = useCallback((level: 'debug' | 'info' | 'warn' | 'error', message: string, fields?: Record<string, any>) => {
+  const addLog = useCallback((level: 'debug' | 'info' | 'warn' | 'error', message: string, fields?: Record<string, unknown>) => {
     if (!spanId || spanId === 'noop-span') return;
     tracingService.addSpanLog(spanId, level, message, fields);
   }, [spanId]);

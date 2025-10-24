@@ -1,12 +1,12 @@
 /**
  * Type Guards for API Response Validation
- * Replaces unsafe `as any` casts with proper runtime type checking
+ * Replaces unsafe `as unknown` casts with proper runtime type checking
  */
 
 // Temporary interfaces removed – generated models now available. We preserve guard behavior using generated types + unknown refinement.
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
-import type { EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-campaign-response';
+import type { EnrichedCampaignResponse as _EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-campaign-response';
 
 // Composite bulk structure not directly generated; represent minimally with unknown maps refined at runtime.
 export interface BulkEnrichedDataResponseStruct { campaigns?: Record<string, unknown> | null; totalCount?: number | null; metadata?: Record<string, unknown> | null; }

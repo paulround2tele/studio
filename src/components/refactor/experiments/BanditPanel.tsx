@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { RefreshCw, Plus, TrendingUp, Target, Award, AlertCircle } from 'lucide-react';
+import { TrendingUp as _TrendingUp, TrendingDown as _TrendingDown, Settings as _Settings, RefreshCw, AlertCircle, Award, Plus, Target } from 'lucide-react';
 
 interface BanditPanelProps {
   className?: string;

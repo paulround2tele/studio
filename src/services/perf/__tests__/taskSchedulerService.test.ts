@@ -17,7 +17,7 @@ const mockWorker = {
   onerror: jest.fn(),
 };
 
-(global as any).Worker = jest.fn(() => mockWorker);
+(global as unknown).Worker = jest.fn(() => mockWorker);
 
 describe('TaskSchedulerService Safety Improvements', () => {
   let taskScheduler: typeof import('../taskSchedulerService').taskScheduler;
@@ -39,7 +39,7 @@ describe('TaskSchedulerService Safety Improvements', () => {
       const promise = taskScheduler.queueTask('forecast_blend', { test: 'data' });
       
       // Simulate worker unavailable
-      (taskScheduler as any).workerHealthy = false;
+      (taskScheduler as unknown).workerHealthy = false;
       
       const result = await promise;
       expect(result.executedBy).toBe('fallback');
@@ -83,7 +83,7 @@ describe('TaskSchedulerService Safety Improvements', () => {
   describe('Error Handling', () => {
     it('should handle worker initialization failure', () => {
       // Mock Worker constructor to throw
-      (global as any).Worker = jest.fn(() => {
+      (global as unknown).Worker = jest.fn(() => {
         throw new Error('Worker not supported');
       });
 
@@ -95,7 +95,7 @@ describe('TaskSchedulerService Safety Improvements', () => {
     });
 
     it('should handle worker message without taskId', () => {
-      const service = (taskScheduler as any);
+      const service = (taskScheduler as unknown);
       
       // Should not throw when handling malformed message
       expect(() => {
@@ -117,7 +117,7 @@ describe('TaskSchedulerService Safety Improvements', () => {
 
   describe('Timer Management', () => {
     it('should track active timers', () => {
-      const service = (taskScheduler as any);
+      const service = (taskScheduler as unknown);
       const initialTimerCount = service.activeTimers.size;
       
       // Create a timer
@@ -128,7 +128,7 @@ describe('TaskSchedulerService Safety Improvements', () => {
     });
 
     it('should remove timers when they execute', (done) => {
-      const service = (taskScheduler as any);
+      const service = (taskScheduler as unknown);
       
       const timer = service.createTimer(() => {
         expect(service.activeTimers.has(timer)).toBe(false);

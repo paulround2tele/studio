@@ -14,12 +14,12 @@ import { RecommendationPanel } from './RecommendationPanel';
 import type { CampaignRecommendation } from '@/lib/api-client/models/campaign-recommendation';
 import type { Recommendation } from '@/types/campaignMetrics';
 import { ConfigSummary } from './ConfigSummary';
-import { ConfigSummaryPanel } from './ConfigSummaryPanel';
-import { MomentumPanel } from './MomentumPanel';
-import { ClassificationBuckets } from './ClassificationBuckets';
+import { ConfigSummaryPanel as _ConfigSummaryPanel } from './ConfigSummaryPanel';
+import { MomentumPanel as _MomentumPanel } from './MomentumPanel';
+import { ClassificationBuckets as _ClassificationBuckets } from './ClassificationBuckets';
 import { WarningDistribution } from './WarningDistribution';
-import { WarningBar } from './WarningBar';
-import { WarningPills } from './WarningPills';
+import { WarningBar as _WarningBar } from './WarningBar';
+import { WarningPills as _WarningPills } from './WarningPills';
 import { MoverList } from './MoverList';
 import { Histogram } from './Histogram';
 import { mergeCampaignPhases } from './phaseStatusUtils';
@@ -45,7 +45,7 @@ interface CampaignExperiencePageProps {
   role?: string;
 }
 
-export function CampaignExperiencePage({ className, role = "region" }: CampaignExperiencePageProps) {
+export function CampaignExperiencePage({ className: _className, role: _role = "region" }: CampaignExperiencePageProps) {
   const params = useParams();
   const campaignId = params?.id as string;
 
@@ -54,7 +54,7 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
   const { data: funnelData, isLoading: funnelLoading, error: funnelError } = useGetCampaignFunnelQuery(campaignId);
   const { data: recommendationsData, isLoading: recsLoading } = useGetCampaignRecommendationsQuery(campaignId);
   const { data: enrichedData } = useGetCampaignEnrichedQuery(campaignId);
-  const { data: classificationsData } = useGetCampaignClassificationsQuery({ campaignId });
+  const { data: _classificationsData } = useGetCampaignClassificationsQuery({ campaignId });
   const { data: momentumData } = useGetCampaignMomentumQuery(campaignId);
 
   // Real-time phase updates
@@ -159,14 +159,14 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
   }, [metricsData]);
 
   // Transform for warning bar and pills
-  const warningBarData: WarningBarData[] = warningData.map(w => ({
+  const _warningBarData: WarningBarData[] = warningData.map(w => ({
     type: w.type,
     count: w.count,
     rate: w.rate,
     severity: w.severity
   }));
 
-  const warningPillData: WarningPillData[] = warningData.map(w => ({
+  const _warningPillData: WarningPillData[] = warningData.map(w => ({
     type: w.type,
     count: w.count,
     severity: w.severity
@@ -238,7 +238,7 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
   }
 
   return (
-    <div className={className}>
+    <div className={_className}>
       {/* Header with SSE connection status */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">

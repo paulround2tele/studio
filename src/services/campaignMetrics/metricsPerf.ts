@@ -63,7 +63,7 @@ export function mark(name: string, detail?: Record<string, unknown>): void {
   if (typeof performance !== 'undefined' && performance.mark) {
     try {
       performance.mark(name);
-    } catch (error) {
+    } catch (_error) {
       // Ignore errors from duplicate marks
     }
   }
@@ -130,7 +130,7 @@ export function measure(label: string, startMark: string, endMark?: string): num
   if (typeof performance !== 'undefined' && performance.measure) {
     try {
       performance.measure(label, startMark, actualEndMark);
-    } catch (error) {
+    } catch (_error) {
       // Ignore measurement errors
     }
   }
@@ -185,10 +185,10 @@ export function timeFunction<T>(
     mark(endMark);
     measure(name, startMark, endMark);
     return result;
-  } catch (error) {
+  } catch (_error) {
     mark(`${name}_error`);
     measure(`${name}_error`, startMark, `${name}_error`);
-    throw error;
+    throw _error;
   }
 }
 
@@ -214,10 +214,10 @@ export async function timeAsyncFunction<T>(
     mark(endMark);
     measure(name, startMark, endMark);
     return result;
-  } catch (error) {
+  } catch (_error) {
     mark(`${name}_error`);
     measure(`${name}_error`, startMark, `${name}_error`);
-    throw error;
+    throw _error;
   }
 }
 
@@ -280,7 +280,7 @@ export function clearPerformanceData(): void {
     try {
       performance.clearMarks();
       performance.clearMeasures();
-    } catch (error) {
+    } catch (_error) {
       // Ignore errors
     }
   }
@@ -316,8 +316,8 @@ export function emitPerformanceEvent(eventName: string, detail: Record<string, u
     });
 
     window.dispatchEvent(event);
-  } catch (error) {
-    console.warn('Failed to emit performance event:', error);
+  } catch (_error) {
+    console.warn('Failed to emit performance event:', _error);
   }
 }
 

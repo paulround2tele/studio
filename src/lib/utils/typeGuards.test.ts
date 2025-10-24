@@ -1,5 +1,5 @@
 /**
- * Tests for Type Guards - Ensuring `as any` replacement functionality
+ * Tests for Type Guards - Ensuring `as unknown` replacement functionality
  * These tests verify that our type guards work correctly with real API response data
  */
 
@@ -21,7 +21,7 @@ import {
 import type { UUID } from '@/lib/api-client/uuid-types';
 import type { BulkEnrichedDataResponse } from '@/lib/api-client/models/bulk-enriched-data-response';
 
-describe('Type Guards - `as any` Replacement Tests', () => {
+describe('Type Guards - `as unknown` Replacement Tests', () => {
   
   describe('isGeneratedDomain', () => {
     it('should validate valid GeneratedDomain objects', () => {
@@ -90,10 +90,10 @@ describe('Type Guards - `as any` Replacement Tests', () => {
     });
 
     it('should return empty response for null/undefined', () => {
-      const empty = assertBulkEnrichedDataResponse(null as any);
+      const empty = assertBulkEnrichedDataResponse(null as unknown);
       expect(empty).toEqual({ campaigns: {}, totalCount: 0, metadata: {} });
 
-      const empty2 = assertBulkEnrichedDataResponse(undefined as any);
+      const empty2 = assertBulkEnrichedDataResponse(undefined as unknown);
       expect(empty2).toEqual({ campaigns: {}, totalCount: 0, metadata: {} });
     });
 
@@ -171,7 +171,7 @@ describe('Type Guards - `as any` Replacement Tests', () => {
         }
       };
 
-      const campaignsMap = extractCampaignsMap(response as any);
+      const campaignsMap = extractCampaignsMap(response as unknown);
       
       expect(campaignsMap.size).toBe(2);
       expect(campaignsMap.has('campaign-1')).toBe(true);
@@ -185,7 +185,7 @@ describe('Type Guards - `as any` Replacement Tests', () => {
 
     it('should handle empty response', () => {
       const response = { campaigns: {} };
-      const campaignsMap = extractCampaignsMap(response as any);
+      const campaignsMap = extractCampaignsMap(response as unknown);
       expect(campaignsMap.size).toBe(0);
     });
 
@@ -200,7 +200,7 @@ describe('Type Guards - `as any` Replacement Tests', () => {
         }
       };
 
-      const campaignsMap = extractCampaignsMap(response as any);
+      const campaignsMap = extractCampaignsMap(response as unknown);
       expect(campaignsMap.size).toBe(1);
       expect(campaignsMap.has('valid-campaign')).toBe(true);
       expect(campaignsMap.has('invalid-campaign')).toBe(false);
@@ -290,7 +290,7 @@ describe('Integration Tests - Real API Response Scenarios', () => {
     };
 
     // Test that our type guards work with real structure
-    const bulkData = realApiResponse.data as any; // Use any for test data simulation
+    const bulkData = realApiResponse.data as unknown; // Use any for test data simulation
     expect(isBulkEnrichedDataResponse(bulkData)).toBe(true);
     
     // Test conversion to campaigns map

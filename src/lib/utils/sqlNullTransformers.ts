@@ -274,6 +274,7 @@ export type SqlNullWrapper =
   | SqlNullFloat64;
 
 // Overload signatures provide precise return types for callers
+/* eslint-disable no-redeclare */
 export function transformSqlNullValue(value: SqlNullInt32): number | undefined;
 export function transformSqlNullValue(value: SqlNullString): string | undefined;
 export function transformSqlNullValue(value: SqlNullTime): string | undefined;
@@ -301,6 +302,7 @@ export function transformSqlNullValue(value: unknown): unknown {
   }
   return value;
 }
+/* eslint-enable no-redeclare */
 
 /**
  * Transform an entire object by applying SQL null transformations to all properties

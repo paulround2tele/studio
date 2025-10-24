@@ -4,7 +4,7 @@
  */
 
 // Import feature flag function under alias to prevent react-hooks lint violations in plain service module
-import { useScenarioSimulation as scenarioSimulationEnabled } from '../../lib/feature-flags-simple';
+import { isScenarioSimulationEnabled as scenarioSimulationEnabled } from '../../lib/feature-flags-simple';
 import { telemetryService } from '../campaignMetrics/telemetryService';
 
 // Feature flag check
@@ -74,7 +74,7 @@ export interface BaselineContext {
   startTimestamp: number;
   endTimestamp: number;
   baselineMetrics: Record<string, number>;
-  assumedCausalGraph?: any; // Reference to causal graph if available
+  assumedCausalGraph?: unknown; // Reference to causal graph if available
 }
 
 /**

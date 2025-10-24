@@ -26,9 +26,9 @@ export function ensurePhaseStatus(
       return d;
     }
   }
-  return {
-    phase: phase as any, // cast to align with generated type expecting string literal
-    status: (status || 'not_started') as any,
+  const defaultStatus: PhaseStatusResponse = {
+    phase,
+    status: status ?? 'not_started',
     progress: {
       totalItems: 0,
       processedItems: 0,
@@ -38,6 +38,8 @@ export function ensurePhaseStatus(
     },
     configuration: {},
   };
+
+  return defaultStatus;
 }
 export function markConfigured(draft: unknown, phase: PipelinePhase): PhaseStatusResponse {
   return ensurePhaseStatus(draft, phase, 'configured');

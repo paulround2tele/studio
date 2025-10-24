@@ -462,7 +462,7 @@ class ForecastBlendService {
 
     const errors = history.map(entry => entry.error);
     const actuals = history.map(entry => entry.actual);
-    const predictions = history.map(entry => entry.predicted);
+    const _predictions = history.map(entry => entry.predicted);
 
     const meanAbsoluteError = errors.reduce((sum, err) => sum + err, 0) / errors.length;
     const rollingMeanActual = actuals.reduce((sum, val) => sum + val, 0) / actuals.length;

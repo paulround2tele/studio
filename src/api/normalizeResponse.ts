@@ -13,7 +13,7 @@
  * @returns Extracted data or throws error
  */
 interface SuccessEnvelope<D = unknown> { success: true; data?: D; error?: never }
-interface ErrorEnvelope { success: false; error: unknown }
+interface _ErrorEnvelope { success: false; error: unknown }
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;

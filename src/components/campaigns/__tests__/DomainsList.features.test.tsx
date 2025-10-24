@@ -20,7 +20,7 @@ jest.mock('@/lib/api-client/apis/campaigns-api', () => {
     ...actual,
     CampaignsApi: class MockCampaignsApi {
       async campaignsEnrichedGet(campaignId: string) {
-        return { data: { data: { campaign: { id: campaignId } }, success: true } } as any;
+        return { data: { data: { campaign: { id: campaignId } }, success: true } } as unknown;
       }
       async campaignsDomainsList(campaignId: string, limit?: number, offset?: number) {
         return {
@@ -84,7 +84,7 @@ jest.mock('@/lib/api-client/apis/campaigns-api', () => {
             },
             success: true,
           },
-        } as any;
+        } as unknown;
       }
     },
   };

@@ -17,7 +17,7 @@ export interface TraceSpan {
   endTime?: number;
   duration?: number;
   status: 'started' | 'completed' | 'error';
-  attributes: Record<string, any>;
+  attributes: Record<string, unknown>;
   tags: string[];
   logs: TraceLog[];
   error?: {
@@ -31,7 +31,7 @@ export interface TraceLog {
   timestamp: number;
   level: 'debug' | 'info' | 'warn' | 'error';
   message: string;
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
 }
 
 export interface TraceExport {
@@ -82,7 +82,7 @@ class TracingService {
   /**
    * Start a new trace span
    */
-  startSpan(name: string, attributes: Record<string, any> = {}, parentId?: string): string {
+  startSpan(name: string, attributes: Record<string, unknown> = {}, parentId?: string): string {
     if (!this.isAvailable()) {
       return 'noop-span';
     }
@@ -141,7 +141,7 @@ class TracingService {
   /**
    * Add attributes to a span
    */
-  addSpanAttributes(spanId: string, attributes: Record<string, any>): void {
+  addSpanAttributes(spanId: string, attributes: Record<string, unknown>): void {
     if (!this.isAvailable() || spanId === 'noop-span') return;
 
     const span = this.spans.get(spanId);
@@ -167,7 +167,7 @@ class TracingService {
   /**
    * Add log to a span
    */
-  addSpanLog(spanId: string, level: TraceLog['level'], message: string, fields?: Record<string, any>): void {
+  addSpanLog(spanId: string, level: TraceLog['level'], message: string, fields?: Record<string, unknown>): void {
     if (!this.isAvailable() || spanId === 'noop-span') return;
 
     const span = this.spans.get(spanId);
@@ -292,7 +292,7 @@ class TracingService {
   /**
    * Create a trace wrapper for async operations
    */
-  traceAsync<T>(name: string, operation: () => Promise<T>, attributes?: Record<string, any>): Promise<T> {
+  traceAsync<T>(name: string, operation: () => Promise<T>, attributes?: Record<string, unknown>): Promise<T> {
     if (!this.isAvailable()) {
       return operation();
     }
@@ -317,7 +317,7 @@ class TracingService {
   /**
    * Create a trace wrapper for sync operations
    */
-  traceSync<T>(name: string, operation: () => T, attributes?: Record<string, any>): T {
+  traceSync<T>(name: string, operation: () => T, attributes?: Record<string, unknown>): T {
     if (!this.isAvailable()) {
       return operation();
     }
@@ -398,7 +398,7 @@ class TracingService {
    * Emit statistics telemetry
    */
   private emitStatsEvent(): void {
-    const stats = this.getStats();
+    const _stats = this.getStats();
     const recentSpans = this.getRecentSpans(100);
     
     // Calculate stats for the last minute
@@ -453,7 +453,7 @@ export const trace = {
   /**
    * Trace a forecast blend operation
    */
-  forecastBlend: <T>(operation: () => Promise<T>, attributes?: Record<string, any>) => {
+  forecastBlend: <T>(operation: () => Promise<T>, attributes?: Record<string, unknown>) => {
     return tracingService.traceAsync('forecast_blend', operation, {
       component: 'forecastBlendService',
       ...attributes
@@ -463,7 +463,7 @@ export const trace = {
   /**
    * Trace a root cause analysis
    */
-  rootCauseAnalysis: <T>(operation: () => Promise<T>, attributes?: Record<string, any>) => {
+  rootCauseAnalysis: <T>(operation: () => Promise<T>, attributes?: Record<string, unknown>) => {
     return tracingService.traceAsync('root_cause_analysis', operation, {
       component: 'rootCauseAnalyticsService',
       ...attributes
@@ -473,7 +473,7 @@ export const trace = {
   /**
    * Trace a capability diff operation
    */
-  capabilityDiff: <T>(operation: () => T, attributes?: Record<string, any>) => {
+  capabilityDiff: <T>(operation: () => T, attributes?: Record<string, unknown>) => {
     return tracingService.traceSync('capability_diff', operation, {
       component: 'capabilitiesService',
       ...attributes
@@ -483,7 +483,7 @@ export const trace = {
   /**
    * Trace a bandit arm selection
    */
-  banditSelect: <T>(operation: () => T, attributes?: Record<string, any>) => {
+  banditSelect: <T>(operation: () => T, attributes?: Record<string, unknown>) => {
     return tracingService.traceSync('bandit_select', operation, {
       component: 'banditService',
       ...attributes

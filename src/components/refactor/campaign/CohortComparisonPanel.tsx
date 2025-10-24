@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BarChart, LineChart, TrendingUp, TrendingDown, Users, Calendar, Info, Settings } from 'lucide-react';
+import { BarChart, LineChart, TrendingUp as _TrendingUp, TrendingDown as _TrendingDown, Users, Calendar, Info, Settings as _Settings } from 'lucide-react';
 import { AggregateSnapshot } from '@/types/campaignMetrics';
 import { 
   useCohortComparison, 
@@ -256,7 +256,7 @@ export function CohortComparisonPanel({
  */
 function CohortGrowthCurvesView({
   growthCurves,
-  maxDays,
+  maxDays: _maxDays,
   formatValue,
   metricLabel
 }: {

@@ -4,7 +4,7 @@
  */
 
 import { ProgressUpdate } from '@/types/campaignMetrics';
-import type { CampaignSseEventPayload, CampaignSseProgressEvent, CampaignSseEvent } from '@/lib/api-client/models';
+import type { CampaignSseEventPayload as _CampaignSseEventPayload, CampaignSseProgressEvent, CampaignSseEvent } from '@/lib/api-client/models';
 import { subscribeStreamPool, isStreamPoolingAvailable } from './streamPool';
 import { telemetryService } from './telemetryService';
 
@@ -55,8 +55,8 @@ export class ProgressStream {
     if (useSSE && typeof EventSource !== 'undefined') {
       try {
         await this.startSSE();
-      } catch (error) {
-        console.warn('[ProgressStream] SSE failed, falling back to polling:', error);
+      } catch (_error) {
+        console.warn('[ProgressStream] SSE failed, falling back to polling:', _error);
         this.startPolling();
       }
     } else {
@@ -132,7 +132,7 @@ export class ProgressStream {
           this.handleSSEMessage(event);
         };
 
-        this.eventSource.onerror = (error) => {
+        this.eventSource.onerror = (_error) => {
           this.handleSSEError(reject);
         };
       }
@@ -181,8 +181,8 @@ export class ProgressStream {
         }
         return;
       }
-    } catch (error) {
-      this.callbacks.onError(new Error(`Failed to parse SSE data: ${error}`));
+    } catch (_error) {
+      this.callbacks.onError(new Error(`Failed to parse SSE data: ${String(_error)}`));
     }
   }
 
@@ -260,8 +260,8 @@ export class ProgressStream {
         
         // Schedule next poll
         this.pollingTimer = setTimeout(poll, interval);
-      } catch (error) {
-        this.callbacks.onError(error as Error);
+      } catch (_error) {
+        this.callbacks.onError(_error instanceof Error ? _error : new Error(String(_error)));
         
         // Retry with exponential backoff
         if (this.retryCount < (this.options.maxRetries || 3)) {

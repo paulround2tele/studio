@@ -9,11 +9,17 @@ const isWasmAccelEnabled = (): boolean => {
 };
 
 // Types for WASM kernels
+type WasmKernelModule = {
+  lttb_downsample?: (xValues: Float64Array, yValues: Float64Array, threshold: number) => Float64Array;
+  update_blend_weights?: (weights: Float64Array, errors: Float64Array) => Float64Array;
+  synthesize_quantile_bands?: (residuals: Float64Array, confidence: number) => Float64Array;
+};
+
 export interface WasmKernel {
   name: string;
   loaded: boolean;
   error?: string;
-  module?: any;
+  module?: WasmKernelModule;
   performance: {
     calls: number;
     totalTime: number;
@@ -90,8 +96,9 @@ class WasmAccelerationService {
     try {
       await this.waitForReady();
       const kernel = this.kernels.get('lttb');
-      
-      if (!kernel || !kernel.loaded || !kernel.module) {
+      const wasm = kernel?.module;
+
+      if (!kernel || !kernel.loaded || !wasm || typeof wasm.lttb_downsample !== 'function') {
         return this.fallbackLttbDownsample(points, threshold);
       }
 
@@ -102,15 +109,18 @@ class WasmAccelerationService {
       const yValues = new Float64Array(points.map(p => p.y));
       
       // Call WASM function
-      const result = kernel.module.lttb_downsample(xValues, yValues, threshold);
+      const result = wasm.lttb_downsample(xValues, yValues, threshold);
       
       // Convert result back to points
       const downsampledPoints: LttbPoint[] = [];
       for (let i = 0; i < result.length; i += 2) {
+        const indexValue = result[i] ?? 0;
+        const yValue = result[i + 1] ?? 0;
+        const sourceIndex = Math.round(indexValue);
         downsampledPoints.push({
-          x: result[i],
-          y: result[i + 1],
-          timestamp: points[Math.round(result[i])]?.timestamp
+          x: indexValue,
+          y: yValue,
+          timestamp: points[sourceIndex]?.timestamp
         });
       }
 
@@ -134,8 +144,9 @@ class WasmAccelerationService {
     try {
       await this.waitForReady();
       const kernel = this.kernels.get('blend');
-      
-      if (!kernel || !kernel.loaded || !kernel.module) {
+      const wasm = kernel?.module;
+
+      if (!kernel || !kernel.loaded || !wasm || typeof wasm.update_blend_weights !== 'function') {
         return this.fallbackBlendWeightsUpdate(prevWeights, errors);
       }
 
@@ -151,12 +162,13 @@ class WasmAccelerationService {
       const errorArray = new Float64Array(errors.map(e => (typeof e === 'number' && !Number.isNaN(e) ? e : 0)));
       
       // Call WASM function
-      const newWeights = kernel.module.update_blend_weights(weights, errorArray);
+      const newWeights = wasm.update_blend_weights(weights, errorArray);
       
       // Convert back to object
       const result: BlendWeights = {};
       modelIds.forEach((id, index) => {
-        result[id] = newWeights[index];
+        const weight = newWeights[index] ?? 0;
+        result[id] = weight;
       });
 
       this.updateKernelPerformance('blend', performance.now() - startTime);
@@ -179,8 +191,9 @@ class WasmAccelerationService {
     try {
       await this.waitForReady();
       const kernel = this.kernels.get('quantile');
-      
-      if (!kernel || !kernel.loaded || !kernel.module) {
+      const wasm = kernel?.module;
+
+      if (!kernel || !kernel.loaded || !wasm || typeof wasm.synthesize_quantile_bands !== 'function') {
         return this.fallbackQuantileBandSynthesize(residuals, confidenceLevel);
       }
 
@@ -190,12 +203,16 @@ class WasmAccelerationService {
       const residualArray = new Float64Array(residuals);
       
       // Call WASM function
-      const result = kernel.module.synthesize_quantile_bands(residualArray, confidenceLevel);
+      const result = wasm.synthesize_quantile_bands(residualArray, confidenceLevel);
       
+      const lower = result[0] ?? 0;
+      const median = result[1] ?? 0;
+      const upper = result[2] ?? 0;
+
       const quantileBand: QuantileBand = {
-        lower: result[0],
-        median: result[1],
-        upper: result[2],
+        lower,
+        median,
+        upper,
         confidence: confidenceLevel
       };
 
@@ -329,7 +346,7 @@ class WasmAccelerationService {
   /**
    * Create mock WASM module (for development/testing)
    */
-  private createMockWasmModule(name: string): any {
+  private createMockWasmModule(name: string): WasmKernelModule {
     switch (name) {
       case 'lttb':
         return {

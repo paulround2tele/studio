@@ -117,9 +117,9 @@ const tableHeadVariants = cva(
 // Simple Table Wrapper for common use cases
 interface SimpleTableProps extends TableProps {
   headers: string[]
-  data: Record<string, any>[]
+  data: Record<string, unknown>[]
   caption?: string
-  onRowClick?: (row: Record<string, any>, index: number) => void
+  onRowClick?: (row: Record<string, unknown>, index: number) => void
   sortable?: boolean
   loading?: boolean
   emptyMessage?: string
@@ -156,8 +156,8 @@ const SimpleTable = React.forwardRef<HTMLTableElement, SimpleTableProps>(
       if (!sortColumn || !sortable) return data
       
       return [...data].sort((a, b) => {
-        const aValue = a[sortColumn]
-        const bValue = b[sortColumn]
+        const aValue = a[sortColumn] as string | number
+        const bValue = b[sortColumn] as string | number
         
         if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
         if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
@@ -216,7 +216,7 @@ const SimpleTable = React.forwardRef<HTMLTableElement, SimpleTableProps>(
               >
                 {headers.map((header, cellIndex) => (
                   <TableCell key={cellIndex} size={size}>
-                    {row[header] ?? '-'}
+                    {(row[header] as React.ReactNode) ?? '-'}
                   </TableCell>
                 ))}
               </TableRow>

@@ -109,7 +109,7 @@ interface AuditDebugState {
 
 export const ForecastQualityDebugPanel: React.FC<ForecastQualityDebugPanelProps> = ({
   campaignId,
-  snapshots,
+  snapshots: _snapshots,
   className = '',
   onClose
 }) => {

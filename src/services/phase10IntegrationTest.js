@@ -15,12 +15,12 @@ try {
 
   // Privacy Services
   const privacyRedactionModule = require('./privacy/privacyRedactionService');
-  const differentialPrivacyModule = require('./privacy/differentialPrivacyService');
+  const _differentialPrivacyModule = require('./privacy/differentialPrivacyService');
   console.log('✓ Privacy Services loaded');
 
   // Performance Services
   const wasmModule = require('./perf/wasmAccelerationService');
-  const memoryModule = require('./perf/memoryPressureService');
+  const _memoryModule = require('./perf/memoryPressureService');
   console.log('✓ Performance Services loaded');
 
   // Observability Services

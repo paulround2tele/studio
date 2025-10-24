@@ -66,7 +66,7 @@ export interface CohortSegment {
   campaigns: CampaignMetadata[];
   criteria: {
     mode: CohortSegmentationMode;
-    parameters: Record<string, any>;
+    parameters: Record<string, unknown>;
   };
   metrics: {
     totalCampaigns: number;
@@ -248,9 +248,24 @@ class DynamicCohortSegmentationService {
       }
     }
 
-    return segments.sort((a, b) => 
-      (b.criteria.parameters.tierIndex || 0) - (a.criteria.parameters.tierIndex || 0)
-    );
+    return segments.sort((a, b) => {
+      const bTier = this.getTierIndex(b);
+      const aTier = this.getTierIndex(a);
+      return bTier - aTier;
+    });
+  }
+
+  private getTierIndex(segment: CohortSegment): number {
+    const parameters = segment.criteria.parameters as { tierIndex?: unknown };
+    const rawTierIndex = parameters?.tierIndex;
+    if (typeof rawTierIndex === 'number' && Number.isFinite(rawTierIndex)) {
+      return rawTierIndex;
+    }
+    if (typeof rawTierIndex === 'string') {
+      const parsed = Number.parseInt(rawTierIndex, 10);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    return 0;
   }
 
   /**

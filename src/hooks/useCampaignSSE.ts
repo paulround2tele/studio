@@ -5,11 +5,11 @@ import { useAppDispatch } from '@/store/hooks';
 import { phaseStarted, phaseCompleted, phaseFailed } from '@/store/slices/pipelineExecSlice';
 import { campaignApi } from '@/store/api/campaignApi';
 import type { PhaseStatusResponse } from '@/lib/api-client/models';
-import { ensurePhaseStatus, PipelinePhase, PhaseRunStatus } from '@/utils/phaseStatus';
+import { ensurePhaseStatus, PipelinePhase, PhaseRunStatus as _PhaseRunStatus } from '@/utils/phaseStatus';
 import type { PipelinePhaseKey } from '@/store/selectors/pipelineSelectors';
 import type { 
-  CampaignSSEEventHandlers, 
-  RawSSEData,
+  CampaignSSEEventHandlers as _CampaignSSEEventHandlers, 
+  RawSSEData as _RawSSEData,
   CampaignSSEEvent,
   SseProgressEvent,
   SsePhaseStartedEvent,
@@ -76,7 +76,7 @@ export type PhaseEvent = ImportedPhaseEvent;
 interface PhaseStatusWithError extends PhaseStatusResponse { error?: string }
 
 // Convert raw SSEEvent into discriminated union CampaignSSEEvent (no raw any)
-function mapRawToCampaignSSE(event: SSEEvent): CampaignSSEEvent | undefined {
+function _mapRawToCampaignSSE(event: SSEEvent): CampaignSSEEvent | undefined {
   const campaignId = event.campaign_id || (
     typeof event.data === 'object' && event.data !== null && 'campaign_id' in event.data
       ? (event.data as { campaign_id?: string }).campaign_id

@@ -6,7 +6,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { RadioGroup, RadioGroupItem as _RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, Settings } from 'lucide-react';
 import type { WizardGoalStep, ExecutionMode } from '../../types';
@@ -51,7 +51,7 @@ export function GoalStep({ data, onChange }: GoalStepProps) {
           rows={3}
         />
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Add context about what you're trying to achieve with this campaign
+          Add context about what you&apos;re trying to achieve with this campaign
         </p>
       </div>
 
@@ -120,7 +120,7 @@ export function GoalStep({ data, onChange }: GoalStepProps) {
                       ? 'text-blue-700 dark:text-blue-200' 
                       : 'text-gray-600 dark:text-gray-400'
                   }>
-                    Control each phase manually. You'll configure and start each phase 
+                    Control each phase manually. You&apos;ll configure and start each phase 
                     (domain generation, validation, extraction) individually when ready.
                   </CardDescription>
                 </CardContent>

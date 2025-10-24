@@ -9,7 +9,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setFullSequenceMode, setPreflightOpen } from '@/store/ui/campaignUiSlice';
 import { useUpdateCampaignModeMutation } from '@/store/api/campaignApi';
 import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
-import type { PipelineRelatedRootState } from '@/store/types/pipelineState';
+import type { PipelineRelatedRootState as _PipelineRelatedRootState } from '@/store/types/pipelineState';
 import { CampaignModeEnum } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 

@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 
 describe('API Contract Personas Pilot', () => {
   const specPath = path.join(process.cwd(), 'backend/openapi/dist/openapi.yaml');
-  let spec: any;
+  let spec: unknown;
   beforeAll(() => {
     const content = fs.readFileSync(specPath, 'utf-8');
     spec = yaml.load(content);

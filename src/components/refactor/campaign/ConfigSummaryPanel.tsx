@@ -63,12 +63,12 @@ const statusConfig = {
   }
 };
 
-export function ConfigSummaryPanel({ 
-  config,
-  campaignId,
-  title = "Campaign Configuration",
+export function ConfigSummaryPanel({
+  campaignId: _campaignId,
+  config: _items,
+  title,
   className,
-  showActions = true,
+  showActions,
   onEdit,
   onDuplicate,
   onShare,
@@ -76,9 +76,7 @@ export function ConfigSummaryPanel({
   onRefresh,
   lastUpdated,
   status
-}: ConfigSummaryPanelProps) {
-  
-  const handleEdit = () => {
+}: ConfigSummaryPanelProps) {  const handleEdit = () => {
     onEdit?.();
   };
 
@@ -183,7 +181,7 @@ export function ConfigSummaryPanel({
       </CardHeader>
       
       <CardContent className="pt-0">
-        {config.length === 0 ? (
+        {_items.length === 0 ? (
           <div className="text-center py-8">
             <Settings className="w-8 h-8 mx-auto mb-2 text-gray-400" />
             <p className="text-sm text-gray-500">
@@ -202,7 +200,7 @@ export function ConfigSummaryPanel({
           </div>
         ) : (
           <ConfigSummary 
-            config={config} 
+            config={_items} 
             title="" // Hide title since it's in the panel header
           />
         )}

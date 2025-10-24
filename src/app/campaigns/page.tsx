@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
 type CampaignStatus = CampaignLite['metadata']['status'];
-type CampaignPhase = NonNullable<CampaignLite['metadata']['currentPhase']>;
+type CampaignPhase = NonNullable<CampaignLite['currentPhase']>;
 
 interface CampaignCardView {
   campaignId: string;

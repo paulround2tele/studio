@@ -1,0 +1,332 @@
+
+> domainflow-frontend@1.0.0 lint
+> next lint
+
+
+ ⚠ The Next.js plugin was not detected in your ESLint configuration. See https://nextjs.org/docs/app/api-reference/config/eslint#migrating-existing-config
+
+./src/api/normalizeResponse.ts
+16:11  Error: 'ErrorEnvelope' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dbgui/page.tsx
+112:24  Error: 'Crypto' is not defined.  no-undef
+113:108  Error: 'Crypto' is not defined.  no-undef
+
+./src/app/keyword-sets/[id]/edit/page.tsx
+39:25  Error: 'resp.data' is restricted from being used. Direct resp.data access with casts discouraged; use unwrapApiResponse<T>(resp).  no-restricted-properties
+
+./src/app/keyword-sets/page.tsx
+15:1  Error: Manual type aliases for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local type, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+29:20  Error: 'resp.data' is restricted from being used. Direct resp.data access with casts discouraged; use unwrapApiResponse<T>(resp).  no-restricted-properties
+49:23  Error: React Hook "useSSE" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function.  react-hooks/rules-of-hooks
+
+./src/app/login/page.tsx
+13:10  Error: 'LoginPageFallback' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/page.tsx
+1:10  Error: 'redirect' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/personas/page.tsx
+13:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/consistent-type-imports').
+18:1  Error: Manual type aliases for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local type, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+
+./src/components/BulkOperationsDashboard.tsx
+496:11  Warning: React Hook useMemo has a missing dependency: 'dispatch'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/SSEDebugPanel.tsx
+251:43  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+251:43  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+253:57  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+253:57  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/components/analysis/RichnessContributionBar.tsx
+73:39  Error: 'totalPositive' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/CampaignDashboard.tsx
+37:1  Error: Manual interface definitions for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local interface, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+42:1  Error: Manual interface definitions for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local interface, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+
+./src/components/campaigns/CampaignFormV2.tsx
+3:10  Error: 'useState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/CampaignProgress.tsx
+60:63  Error: 'state' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/ConversionCTA.tsx
+7:15  Error: 'PipelineRelatedRootState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/DomainStreamingTable.tsx
+9:26  Error: 'LifecycleState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+92:7  Warning: 'DomainRow' is already defined.  no-redeclare
+92:7  Error: 'DomainRow' is read-only.  no-import-assign
+194:9  Warning: The 'apiDomains' logical expression could make the dependencies of useMemo Hook (at line 221) change on every render. To fix this, wrap the initialization of 'apiDomains' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+194:9  Warning: The 'apiDomains' logical expression could make the dependencies of useMemo Hook (at line 261) change on every render. To fix this, wrap the initialization of 'apiDomains' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./src/components/campaigns/DomainsList.tsx
+18:41  Error: 'MetricValue' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+51:183  Error: Empty block statement.  no-empty
+56:166  Error: Empty block statement.  no-empty
+59:164  Error: Empty block statement.  no-empty
+69:163  Error: Empty block statement.  no-empty
+74:75  Error: Empty block statement.  no-empty
+146:9  Error: 'aggregates' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/__tests__/DomainsList.features.test.tsx
+23:87  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+87:14  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/components/campaigns/__tests__/DomainsList.sorting.test.tsx
+17:46  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/components/campaigns/controls/CampaignModeToggle.tsx
+12:15  Error: 'PipelineRelatedRootState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/campaigns/sections/PersonaAssignmentSection.tsx
+11:1  Error: Manual interface definitions for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local interface, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+16:1  Error: Manual interface definitions for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local interface, use a different naming pattern that doesn't conflict with generated types.  no-restricted-syntax
+
+./src/components/campaigns/workspace/forms/DNSValidationConfigForm.tsx
+11:23  Error: 'ProxiesApi' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+17:15  Error: 'Proxy' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+18:15  Error: 'ProxyPool' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+76:169  Warning: React Hook useEffect has a missing dependency: 'form'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/campaigns/workspace/forms/HTTPValidationConfigForm.tsx
+17:15  Error: 'ProxyPool' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+18:37  Error: 'ApiKeywordSet' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/config/StealthToggle.tsx
+19:9  Warning: The 'api' object construction makes the dependencies of useCallback Hook (at line 33) change on every render. To fix this, wrap the initialization of 'api' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+28:14  Error: 'e' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+44:14  Error: 'e' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/dashboard/LatestActivityTable.tsx
+87:9  Warning: The 'domainsByCampaign' object construction makes the dependencies of useMemo Hook (at line 176) change on every render. To fix this, wrap the initialization of 'domainsByCampaign' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./src/components/debug/ForecastQualityDebugPanel.tsx
+112:3  Error: 'snapshots' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+216:6  Warning: React Hook useEffect has a missing dependency: 'loadAuditDebug'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/domains/__tests__/RichnessBreakdownModal.test.tsx
+28:6  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/components/layout/AdvancedConditionalLayout.tsx
+55:9  Error: 'isPublicPath' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/refactor/__tests__/CampaignCreateWizard.test.tsx
+33:44  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+33:61  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+55:63  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+306:46  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/components/refactor/__tests__/CampaignOverviewV2.test.tsx
+21:44  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+21:61  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+32:63  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/components/refactor/analytics/CausalGraphPanel.tsx
+7:10  Error: 'useCausalGraph' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+54:21  Error: React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render.  react-hooks/rules-of-hooks
+
+./src/components/refactor/campaign/CampaignExperiencePage.tsx
+57:35  Error: Parsing error: ',' expected.
+
+./src/components/refactor/campaign/CampaignOverviewV2.tsx
+20:18  Error: Parsing error: '=' expected.
+
+./src/components/refactor/campaign/ConfigSummaryPanel.tsx
+68:3  Error: 'items' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+71:5  Error: 'onEdit' is not defined.  no-undef
+75:5  Error: 'onDuplicate' is not defined.  no-undef
+79:5  Error: 'onShare' is not defined.  no-undef
+83:5  Error: 'onExport' is not defined.  no-undef
+87:5  Error: 'onRefresh' is not defined.  no-undef
+96:45  Error: 'title' is not defined.  no-undef
+97:14  Error: 'status' is not defined.  no-undef
+100:55  Error: 'status' is not defined.  no-undef
+102:31  Error: 'status' is not defined.  no-undef
+107:12  Error: 'showActions' is not defined.  no-undef
+109:16  Error: 'onRefresh' is not defined.  no-undef
+121:16  Error: 'onEdit' is not defined.  no-undef
+140:20  Error: 'onDuplicate' is not defined.  no-undef
+146:20  Error: 'onShare' is not defined.  no-undef
+152:20  Error: 'onExport' is not defined.  no-undef
+167:10  Error: 'lastUpdated' is not defined.  no-undef
+169:28  Error: 'lastUpdated' is not defined.  no-undef
+175:10  Error: 'config' is not defined.  no-undef
+181:14  Error: 'onEdit' is not defined.  no-undef
+194:21  Error: 'config' is not defined.  no-undef
+
+./src/components/refactor/campaign/RetryHint.tsx
+71:3  Error: 'phase' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+73:52  Error: 'variant' is not defined.  no-undef
+77:13  Error: 'variant' is not defined.  no-undef
+79:66  Error: 'phaseName' is not defined.  no-undef
+81:23  Error: 'phaseName' is not defined.  no-undef
+85:79  Error: 'phaseName' is not defined.  no-undef
+92:13  Error: 'variant' is not defined.  no-undef
+125:7  Error: 'className' is not defined.  no-undef
+137:14  Error: 'errorCode' is not defined.  no-undef
+139:30  Error: 'errorCode' is not defined.  no-undef
+161:12  Error: 'onRetry' is not defined.  no-undef
+161:24  Error: 'variant' is not defined.  no-undef
+161:59  Error: 'variant' is not defined.  no-undef
+162:30  Error: 'onRetry' is not defined.  no-undef
+164:22  Error: 'variant' is not defined.  no-undef
+168:12  Error: 'onManualStart' is not defined.  no-undef
+169:30  Error: 'onManualStart' is not defined.  no-undef
+175:12  Error: 'onRefreshStatus' is not defined.  no-undef
+175:31  Error: 'variant' is not defined.  no-undef
+176:30  Error: 'onRefreshStatus' is not defined.  no-undef
+
+./src/components/refactor/experiments/BanditPanel.tsx
+14:37  Error: 'TrendingDown' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+14:51  Error: 'Settings' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+44:12  Error: 'AlertCircle' is not defined.  react/jsx-no-undef
+44:12  Error: 'AlertCircle' is not defined.  no-undef
+119:25  Error: 'Award' is not defined.  react/jsx-no-undef
+119:25  Error: 'Award' is not defined.  no-undef
+233:16  Error: 'Plus' is not defined.  react/jsx-no-undef
+233:16  Error: 'Plus' is not defined.  no-undef
+260:16  Error: 'Plus' is not defined.  react/jsx-no-undef
+260:16  Error: 'Plus' is not defined.  no-undef
+273:14  Error: 'Target' is not defined.  react/jsx-no-undef
+273:14  Error: 'Target' is not defined.  no-undef
+336:16  Error: 'Award' is not defined.  react/jsx-no-undef
+336:16  Error: 'Award' is not defined.  no-undef
+
+./src/hooks/__tests__/useWorkerMetricsFallback.test.ts
+14:24  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+48:12  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+51:12  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+152:18  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+170:30  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+186:18  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+252:18  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/hooks/useCampaignSSE.ts
+413:6  Warning: React Hook useCallback has a missing dependency: 'dispatch'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/hooks/useCampaignServerMetrics.ts
+101:6  Warning: React Hook useMemo has an unnecessary dependency: 'USE_SERVER_METRICS'. Either exclude it or remove the dependency array. Outer scope values like 'USE_SERVER_METRICS' aren't valid dependencies because mutating them doesn't re-render the component.  react-hooks/exhaustive-deps
+189:54  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/hooks/useCausalGraph.ts
+52:5  Error: 'confidenceThreshold' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/hooks/useClientTraceDebug.ts
+261:79  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+295:68  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+305:116  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/hooks/useCohortComparison.ts
+16:3  Error: 'CohortCampaign' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/hooks/useEnhancedMetricsContext.tsx
+29:15  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+29:15  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+30:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:19  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+31:14  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+63:25  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/hooks/useMetricsContext.tsx
+17:15  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:15  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+18:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:19  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+19:14  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+45:20  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/hooks/useSSEFallback.ts
+70:6  Warning: React Hook useCallback has a missing dependency: 'triggerFallback'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+96:6  Warning: React Hook useCallback has a missing dependency: 'startFallbackPolling'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/hooks/useSemanticSummaries.ts
+78:61  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+78:61  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+372:80  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+372:80  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+374:11  Error: 'batchId' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+455:12  Error: 'actions' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/hooks/useWorkerMetricsFallback.ts
+17:16  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:16  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+18:22  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:22  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+24:15  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+24:15  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+25:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+25:21  Error: Avoid annotating with any. Use a specific generated type or unknown + proper type guard.  no-restricted-syntax
+
+./src/lib/feature-flags-simple.ts
+199:1  Error: Parsing error: '}' expected.
+
+./src/lib/hooks/useCachedAuth.tsx
+147:6  Warning: React Hook useCallback has a missing dependency: 'authApi'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+280:6  Warning: React Hook useCallback has a missing dependency: 'authApi'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+300:6  Warning: React Hook useCallback has missing dependencies: 'authApi' and 'router'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/lib/hooks/useInfiniteScroll.ts
+85:6  Warning: React Hook useCallback has a missing dependency: 'data.length'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/lib/hooks/usePaginatedDomains.ts
+52:10  Error: 'version' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+72:9  Warning: The 'currentItems' logical expression could make the dependencies of useCallback Hook (at line 144) change on every render. To fix this, wrap the initialization of 'currentItems' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./src/lib/utils/__tests__/typeSafetyPrimitives.test.ts
+50:35  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+134:22  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+147:70  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/lib/utils/fetchWithPolicy.ts
+220:20  Error: 'e' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/utils/phaseMapping.ts
+7:36  Error: 'APICampaignPhaseEnum' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/utils/typeGuards.test.ts
+93:60  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+96:66  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+174:60  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+188:60  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+203:60  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+293:46  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/lib/utils/typeGuards.ts
+9:15  Error: 'EnrichedCampaignResponse' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/utils/uuidValidation.ts
+292:64  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/server/authCookieCache.ts
+3:6  Error: 'CacheStore' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+21:70  Error: 'ttlMs' is assigned a value but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/analytics/causalGraphService.ts
+305:13  Error: 'edgesUpdated' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/__tests__/forecastService.test.ts
+119:14  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/services/campaignMetrics/__tests__/serverAdapter.test.ts
+182:38  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+194:72  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/services/campaignMetrics/auditLogService.ts
+326:59  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+326:59  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+326:101  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+326:101  Error: Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.  no-restricted-syntax
+
+./src/services/campaignMetrics/capabilitiesService.ts
+484:19  Error: 'key' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+493:19  Error: 'key' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/dataQualityValidationService.ts
+165:7  Error: '_metrics' is not defined.  no-undef
+668:5  Error: 'metrics' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/services/campaignMetrics/degradationEvaluatorService.ts
+393:34  Error: 'domain' 

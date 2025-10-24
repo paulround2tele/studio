@@ -8,14 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { X, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { PersonasApi, ProxiesApi, ProxyPoolsApi } from '@/lib/api-client';
+import { PersonasApi, ProxiesApi as _ProxiesApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
 // Removed phantom PhaseStatusResponse enums; use literals
 import { markConfigured } from '@/utils/phaseStatus';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
-import type { Proxy } from '@/lib/api-client/models/proxy';
-import type { ProxyPool } from '@/lib/api-client/models/proxy-pool';
+import type { Proxy as _Proxy } from '@/lib/api-client/models/proxy';
+import type { ProxyPool as _ProxyPool } from '@/lib/api-client/models/proxy-pool';
 import { useConfigurePhaseStandaloneMutation, campaignApi } from '@/store/api/campaignApi';
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';

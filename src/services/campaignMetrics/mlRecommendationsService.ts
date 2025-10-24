@@ -141,10 +141,18 @@ function validateMLRecommendation(rec: unknown): rec is MLRecommendation {
   if (!Array.isArray(r.features) || !r.features.every(f=> typeof f === 'string')) return false;
   if (typeof r.modelVersion !== 'string') return false;
   if (r.explainability) {
-    const e = r.explainability as any;
-    if (typeof e !== 'object' || !Array.isArray(e.primary_factors) || typeof e.confidence !== 'number' || typeof e.model_reasoning !== 'string') {
+    const e = r.explainability as unknown;
+    if (!e || typeof e !== 'object') {
       return false;
     }
+    const explainability = e as {
+      primary_factors?: unknown;
+      confidence?: unknown;
+      model_reasoning?: unknown;
+    };
+    if (!Array.isArray(explainability.primary_factors)) return false;
+    if (typeof explainability.confidence !== 'number') return false;
+    if (typeof explainability.model_reasoning !== 'string') return false;
   }
   return true;
 }

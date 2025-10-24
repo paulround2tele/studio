@@ -323,7 +323,7 @@ class AuditLogService {
       case 'horizon_override':
         if (context.campaignId) {
           impact.affectedCampaigns = [context.campaignId];
-          impact.estimatedDataPoints = typeof (context as any)?.newValue === 'number' ? (context as any).newValue : 7; // Forecast horizon
+          impact.estimatedDataPoints = typeof context.newValue === 'number' ? context.newValue : 7; // Forecast horizon
         }
         break;
       

@@ -25,7 +25,7 @@ export function StealthToggle({ className }: Props) {
       // API now returns direct payload: { enabled: boolean }
       const data = res.data;
       setEnabled(Boolean(data?.enabled));
-    } catch (e) {
+    } catch (_e) {
       toast({ title: 'Failed to load stealth setting', variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -41,7 +41,7 @@ export function StealthToggle({ className }: Props) {
       setEnabled(next);
       await api.configUpdateStealth({ enabled: next });
       toast({ title: `Stealth ${next ? 'enabled' : 'disabled'}` });
-    } catch (e) {
+    } catch (_e) {
       setEnabled(!next);
       toast({ title: 'Failed to update stealth setting', variant: 'destructive' });
     }

@@ -6,7 +6,7 @@ import { ExternalLink, RefreshCw } from 'lucide-react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
-import type { DomainRow, LifecycleState } from '@/types/domain';
+import type { DomainRow as DomainRowType, LifecycleState as _LifecycleState } from '@/types/domain';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
 import { Button } from '@/components/ui/button';
 // Deprecated hook replaced with direct RTK Query usage
@@ -210,10 +210,10 @@ export default function DomainStreamingTable({
       summary: {
         total,
         generated: total,
-        dnsValidated: apiDomains.filter((d: DomainRow) => ['ok','valid','resolved','validated','succeeded'].includes(String(d.dnsStatus || '').toLowerCase())).length,
-        httpValidated: apiDomains.filter((d: DomainRow) => ['ok','valid','resolved','validated','succeeded'].includes(String(d.httpStatus || '').toLowerCase())).length,
-        leadsGenerated: apiDomains.filter((d: DomainRow) => ['match','matched'].includes(String(d.leadStatus || '').toLowerCase())).length,
-        failed: apiDomains.filter((d: DomainRow) => ['error','invalid','unresolved','failed','timeout'].includes(String(d.dnsStatus || '').toLowerCase()) || ['error','invalid','unresolved','failed','timeout'].includes(String(d.httpStatus || '').toLowerCase())).length,
+        dnsValidated: apiDomains.filter((d: DomainRowType) => ['ok','valid','resolved','validated','succeeded'].includes(String(d.dnsStatus || '').toLowerCase())).length,
+        httpValidated: apiDomains.filter((d: DomainRowType) => ['ok','valid','resolved','validated','succeeded'].includes(String(d.httpStatus || '').toLowerCase())).length,
+        leadsGenerated: apiDomains.filter((d: DomainRowType) => ['match','matched'].includes(String(d.leadStatus || '').toLowerCase())).length,
+        failed: apiDomains.filter((d: DomainRowType) => ['error','invalid','unresolved','failed','timeout'].includes(String(d.dnsStatus || '').toLowerCase()) || ['error','invalid','unresolved','failed','timeout'].includes(String(d.httpStatus || '').toLowerCase())).length,
       },
       currentPhase: 'unknown',
       phaseStatus: 'unknown'

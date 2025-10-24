@@ -75,7 +75,7 @@ export function useSemanticSummaries(options: UseSemanticSummariesOptions = {}):
   }>(), []);
 
   // Generate cache key
-  const generateCacheKey = useCallback((type: string, data: any): string => {
+  const generateCacheKey = useCallback((type: string, data: unknown): string => {
     const dataStr = JSON.stringify(data);
     // Simple hash for cache key
     let hash = 0;
@@ -294,7 +294,7 @@ export function useSemanticSummaries(options: UseSemanticSummariesOptions = {}):
     if (!enableCaching) return;
 
     const cleanupInterval = setInterval(() => {
-      const now = Date.now();
+      const _now = Date.now();
       const keysToDelete: string[] = [];
 
       summaryCache.forEach((value, key) => {
@@ -328,7 +328,7 @@ export function useSemanticSummaries(options: UseSemanticSummariesOptions = {}):
     if (!enableCaching) return;
 
     const cleanupInterval = setInterval(() => {
-      const now = Date.now();
+      const _now = Date.now();
       const keysToDelete: string[] = [];
 
       summaryCache.forEach((value, key) => {
@@ -369,9 +369,9 @@ export function useBatchSummarization() {
   }>>(new Map());
 
   const processBatch = useCallback(async (
-    items: Array<{ id: string; type: 'anomaly_cluster' | 'causal_delta'; data: any }>
+    items: Array<{ id: string; type: 'anomaly_cluster' | 'causal_delta'; data: unknown }>
   ) => {
-    const batchId = `batch_${Date.now()}`;
+    const _batchId = `batch_${Date.now()}`;
     
     // Initialize batch jobs
     const initialJobs = new Map();
@@ -397,9 +397,9 @@ export function useBatchSummarization() {
 
         let result: SummaryResult;
         if (item.type === 'anomaly_cluster') {
-          result = await actions.summarizeAnomalyCluster(item.data);
+          result = await actions.summarizeAnomalyCluster(item.data as AnomalyCluster);
         } else {
-          result = await actions.summarizeCausalDelta(item.data);
+          result = await actions.summarizeCausalDelta(item.data as CausalGraphDelta);
         }
 
         setBatchJobs(prev => new Map(prev).set(item.id, {

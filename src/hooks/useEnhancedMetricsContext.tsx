@@ -7,6 +7,7 @@ import React, { createContext, useContext, useMemo, useEffect, ReactNode } from 
 import { 
   DomainMetricsInput, 
   AggregateSnapshot, 
+  AggregateMetrics,
   DeltaMetrics, 
   Mover, 
   ProgressUpdate, 
@@ -26,9 +27,9 @@ import { mark, measure, incrementCounter, PerfMarkers } from '@/services/campaig
 export interface EnhancedMetricsContextValue {
   // Core metrics data
   currentSnapshot: AggregateSnapshot | null;
-  aggregates: any;
-  classification: any;
-  uiBuckets: any[];
+  aggregates: AggregateMetrics;
+  classification: unknown;
+  uiBuckets: unknown[];
   
   // Phase 4: Historical data
   snapshots: AggregateSnapshot[];
@@ -60,7 +61,7 @@ export interface EnhancedMetricsContextValue {
   
   // Phase 4: Enhanced recommendations
   recommendations: ScoredRecommendation[];
-  recommendationGroups: any[];
+  recommendationGroups: unknown[];
   
   // Phase 4: Worker metrics
   workerMetrics: {
@@ -262,7 +263,14 @@ export function EnhancedMetricsProvider({
   const contextValue: EnhancedMetricsContextValue = useMemo(() => ({
     // Core metrics
     currentSnapshot: serverMetrics.currentSnapshot,
-    aggregates: serverMetrics.aggregates,
+    aggregates: serverMetrics.aggregates || {
+      totalDomains: 0,
+      successRate: 0,
+      avgLeadScore: 0,
+      dnsSuccessRate: 0,
+      httpSuccessRate: 0,
+      runtime: 0
+    },
     classification: serverMetrics.classification,
     uiBuckets: serverMetrics.uiBuckets,
     

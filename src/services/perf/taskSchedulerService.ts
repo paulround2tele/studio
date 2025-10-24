@@ -3,12 +3,12 @@
  * Manages worker task queuing with backpressure and fallback handling
  */
 
-import { useEdgeProcessing } from '../../lib/feature-flags-simple';
+import { isEdgeProcessingEnabled as isEdgeProcessing } from '../../lib/feature-flags-simple';
 import { telemetryService } from '../campaignMetrics/telemetryService';
 
 // Feature flag check
 const isEdgeProcessingEnabled = (): boolean => {
-  return useEdgeProcessing();
+  return isEdgeProcessing();
 };
 
 /**

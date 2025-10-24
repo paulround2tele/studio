@@ -122,9 +122,9 @@ export function useCampaignProgress(
   const [error, setError] = useState<Error | null>(null);
   
   // Phase 4: Enhanced state tracking
-  const [connectionState, setConnectionState] = useState<'disconnected' | 'connecting' | 'connected' | 'degraded' | 'pollingFallback' | 'error'>('disconnected');
-  const [reconnectCount, setReconnectCount] = useState(0);
-  const [lastHeartbeat, setLastHeartbeat] = useState<number | null>(null);
+  const [connectionState, _setConnectionState] = useState<'disconnected' | 'connecting' | 'connected' | 'degraded' | 'pollingFallback' | 'error'>('disconnected');
+  const [reconnectCount, _setReconnectCount] = useState(0);
+  const [lastHeartbeat, _setLastHeartbeat] = useState<number | null>(null);
   
   const streamRef = useRef<ProgressStream | null>(null);
   const startTimeRef = useRef<number | null>(null);

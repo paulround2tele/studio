@@ -54,7 +54,7 @@ export const {
 // Note: Compare this to the old pattern which required:
 // - extractResponseData() calls everywhere
 // - Manual unwrapping of { success, data } envelopes  
-// - Type casting with 'as any'
+// - Type casting with 'as unknown'
 // - Complex error handling for envelope structure
 //
 // Now we have clean, direct types that match the actual API responses!

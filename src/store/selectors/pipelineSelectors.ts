@@ -23,7 +23,7 @@ export interface UIPipelinePhase {
 // ---------------------------------------------
 const selectCampaignUiSlice = (s: RootState) => s.campaignUI;
 const selectCampaignUIById = (id: string) => createSelector(selectCampaignUiSlice, slice => slice.byId?.[id]);
-// Access RTK Query slice with explicit indexing to avoid 'as any'
+// Access RTK Query slice with explicit indexing to avoid 'as unknown'
 // RootState is declared in store; if campaignApi slice typing is missing, extend RootState accordingly instead of casting.
 // For now, treat unknown to keep zero 'any' usage and refine at call sites.
 type CampaignApiSliceState = RootState[typeof campaignApi.reducerPath];

@@ -78,7 +78,7 @@ export function useCampaignPhaseStream(
   campaignId: string | null,
   options: UseCampaignPhaseStreamOptions = {}
 ): UseCampaignPhaseStreamReturn {
-  const { enabled = true, onPhaseUpdate, onError } = options;
+  const { enabled: _enabled = true, onPhaseUpdate, onError } = options;
 
   const [phases, setPhases] = useState<PipelinePhase[]>(DEFAULT_PHASES);
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
@@ -90,7 +90,7 @@ export function useCampaignPhaseStream(
     if (raw.event === 'phaseUpdate' && raw.data && typeof raw.data === 'object') {
       event = { type: 'phaseUpdate', data: raw.data as PhaseUpdateEvent };
     } else if (raw.event === 'heartbeat') {
-      event = { type: 'heartbeat', serverTime: (raw.data as any)?.serverTime };
+      event = { type: 'heartbeat', serverTime: (raw.data as unknown as {serverTime?: string})?.serverTime };
     } else {
       event = { type: raw.event, ...raw } as UnknownSSE;
     }
@@ -122,12 +122,12 @@ export function useCampaignPhaseStream(
     }
   }, [onPhaseUpdate, onError]);
 
-  const handleSSEError = useCallback((error: string) => {
+  const _handleSSEError = useCallback((error: string) => {
     onError?.(error);
   }, [onError]);
 
   // Use the existing SSE hook
-  const { readyState, lastEvent, error: sseHookError } = useSSE(
+  const { readyState, lastEvent: _lastEvent, error: sseHookError } = useSSE(
     campaignId ? `/api/v2/sse/campaigns/${campaignId}/events` : null,
     handleSSEEvent,
     {

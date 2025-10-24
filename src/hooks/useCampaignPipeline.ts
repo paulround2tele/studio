@@ -8,7 +8,7 @@ import {
 } from '@/store/api/campaignApi';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
-import type { PipelineRelatedRootState } from '@/store/types/pipelineState';
+import type { PipelineRelatedRootState as _PipelineRelatedRootState } from '@/store/types/pipelineState';
 import { CampaignModeEnum } from '@/lib/api-client';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
 import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
@@ -80,8 +80,8 @@ export function useCampaignPipeline(campaignId: string) {
 
   // Derived UI state (legacy UI slice still stores mode optimistically)
   const overviewSel = useMemo(() => pipelineSelectors.overview(campaignId), [campaignId]);
-  const overview = useAppSelector(overviewSel as any) as ReturnType<typeof overviewSel>;
-  const fullSequenceMode: boolean | undefined = (overview as any)?.mode?.autoAdvance ?? (overview as any)?.ui?.fullSequenceMode;
+  const overview = useAppSelector(overviewSel as unknown as Parameters<typeof useAppSelector>[0]) as ReturnType<typeof overviewSel>;
+  const fullSequenceMode: boolean | undefined = (overview as unknown as {mode?: {autoAdvance?: boolean}; ui?: {fullSequenceMode?: boolean}})?.mode?.autoAdvance ?? (overview as unknown as {mode?: {autoAdvance?: boolean}; ui?: {fullSequenceMode?: boolean}})?.ui?.fullSequenceMode;
 
   // Public API
   return {

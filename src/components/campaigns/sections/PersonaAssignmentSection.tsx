@@ -8,12 +8,12 @@ import { Control } from 'react-hook-form';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 
 // Define types for the other props that might be passed
-interface Persona {
+interface LocalPersona {
   id?: string;
   name?: string;
 }
 
-interface Proxy { id?: string; name?: string; host?: string; port?: number }
+interface LocalProxy { id?: string; name?: string; host?: string; port?: number }
 
 // Use the same type as the parent form for consistency
 type CampaignFormData = {
@@ -32,9 +32,9 @@ type CampaignFormData = {
 
 interface PersonaAssignmentSectionProps {
   control: Control<CampaignFormData>;
-  dnsPersonas?: PersonaResponse[] | Persona[];
-  httpPersonas?: PersonaResponse[] | Persona[];
-  proxies?: Proxy[];
+  dnsPersonas?: PersonaResponse[] | LocalPersona[];
+  httpPersonas?: PersonaResponse[] | LocalPersona[];
+  proxies?: LocalProxy[];
   needsHttpPersona?: boolean;
   needsDnsPersona?: boolean;
   noneValuePlaceholder?: string;
@@ -133,7 +133,7 @@ export const PersonaAssignmentSection: React.FC<PersonaAssignmentSectionProps> =
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={noneValuePlaceholder}>No proxy</SelectItem>
-                    { (_proxies as Proxy[])?.filter((p: Proxy) => p.id).map((p: Proxy) => (
+                    { (_proxies as LocalProxy[])?.filter((p: LocalProxy) => p.id).map((p: LocalProxy) => (
                       <SelectItem key={p.id} value={p.id!}>
                         {p.host ? `${p.host}${p.port ? `:${p.port}` : ''}` : (p.name || 'Unnamed proxy')}
                       </SelectItem>

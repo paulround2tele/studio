@@ -8,7 +8,7 @@ import { capabilitiesService } from './capabilitiesService';
 import { telemetryService } from './telemetryService';
 import { fetchWithPolicy } from '@/lib/utils/fetchWithPolicy';
 // Alias feature flag helpers to avoid react-hooks lint violations in non-React service file
-import { useBackendCanonical as backendCanonicalEnabled, useTimelinePagination as timelinePaginationEnabled } from '@/lib/feature-flags-simple';
+import { isBackendCanonical as backendCanonicalEnabled, useTimelinePagination as timelinePaginationEnabled } from '@/lib/feature-flags-simple';
 
 // Feature flag for server timeline
 const isServerTimelineEnabled = () => 

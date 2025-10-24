@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { Button } from '@/components/ui/button';
 import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
 import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
-import type { PipelineRelatedRootState } from '@/store/types/pipelineState';
+import type { PipelineRelatedRootState as _PipelineRelatedRootState } from '@/store/types/pipelineState';
 
 export const ConversionCTA: React.FC<{ campaignId: string }> = ({ campaignId }) => {
   const overviewSel = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);

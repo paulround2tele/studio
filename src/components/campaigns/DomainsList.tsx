@@ -15,7 +15,7 @@ import RichnessBadge from '@/components/domains/RichnessBadge';
 import TopKeywordsList from '@/components/domains/TopKeywordsList';
 import MicrocrawlGainChip from '@/components/domains/MicrocrawlGainChip';
 import { Switch } from '@/components/ui/switch';
-import type { DomainRow, DomainWarning, MetricValue } from '@/types/domain';
+import type { DomainRow, DomainWarning, MetricValue as _MetricValue } from '@/types/domain';
 import type { DomainAnalysisFeaturesRichness, ScoringProfile } from '@/lib/api-client/models';
 
 // Utility: derive warning indicators from a richness feature object
@@ -48,15 +48,15 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
   const SORT_STORAGE_KEY = 'campaignDomains.sort';
   const [sortKey, setSortKey] = React.useState<SortKey>(() => {
     if (typeof window === 'undefined') return 'richness';
-    try { const raw = localStorage.getItem(SORT_STORAGE_KEY); if (raw) { const p = JSON.parse(raw); if (['richness','microcrawl','keywords'].includes(p.key)) return p.key; } } catch {}
+    try { const raw = localStorage.getItem(SORT_STORAGE_KEY); if (raw) { const p = JSON.parse(raw); if (['richness','microcrawl','keywords'].includes(p.key)) return p.key; } } catch { /* Ignore parse errors */ }
     return 'richness';
   });
   const [sortDir, setSortDir] = React.useState<'asc'|'desc'>(() => {
     if (typeof window === 'undefined') return 'desc';
-    try { const raw = localStorage.getItem(SORT_STORAGE_KEY); if (raw) { const p = JSON.parse(raw); if (p.dir === 'asc' || p.dir === 'desc') return p.dir; } } catch {}
+    try { const raw = localStorage.getItem(SORT_STORAGE_KEY); if (raw) { const p = JSON.parse(raw); if (p.dir === 'asc' || p.dir === 'desc') return p.dir; } } catch { /* Ignore parse errors */ }
     return 'desc';
   });
-  const persistSort = React.useCallback((key: SortKey, dir: 'asc'|'desc') => { try { localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify({ key, dir })); } catch {} }, []);
+  const persistSort = React.useCallback((key: SortKey, dir: 'asc'|'desc') => { try { localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify({ key, dir })); } catch { /* Ignore storage errors */ } }, []);
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) { const nd = sortDir === 'asc' ? 'desc' : 'asc'; setSortDir(nd); persistSort(key, nd); return; }
     setSortKey(key); setSortDir('desc'); persistSort(key, 'desc');
@@ -66,12 +66,12 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
   const WARNINGS_FILTER_STORAGE_KEY = 'campaignDomains.warningsFilter';
   const [warningsFilter, setWarningsFilter] = React.useState<WarningsFilter>(() => {
     if (typeof window === 'undefined') return 'all';
-    try { const raw = localStorage.getItem(WARNINGS_FILTER_STORAGE_KEY); if (raw && ['all','with','without'].includes(raw)) return raw as WarningsFilter; } catch {}
+    try { const raw = localStorage.getItem(WARNINGS_FILTER_STORAGE_KEY); if (raw && ['all','with','without'].includes(raw)) return raw as WarningsFilter; } catch { /* Ignore parse errors */ }
     return 'all';
   });
   const onChangeWarningsFilter = (val: WarningsFilter) => {
     setWarningsFilter(val);
-    try { localStorage.setItem(WARNINGS_FILTER_STORAGE_KEY, val); } catch {}
+    try { localStorage.setItem(WARNINGS_FILTER_STORAGE_KEY, val); } catch { /* Ignore storage errors */ }
   };
 
   // Detect server-side sorting support via metadata (meta.extra.sort) once items come from API (hook would need to expose it; for now rely on each item carrying passthrough? Placeholder detection using first item marker).
@@ -143,7 +143,7 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
   // Derive aggregates (defensive extraction)
   // Note: enriched response doesn't include domainAggregates in current schema
   // These may need to come from a separate query or be added to EnrichedCampaignResponse
-  const aggregates = {}; // Remove unsafe cast, use empty object as fallback
+  const _aggregates = {}; // Remove unsafe cast, use empty object as fallback
   const discovered = total; // Use total from paginated response
   const validated = 0; // Will need proper query for this data
   const analyzed = 0; // Will need proper query for this data
