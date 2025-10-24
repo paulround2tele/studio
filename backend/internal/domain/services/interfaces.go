@@ -83,6 +83,13 @@ type HTTPValidationService interface {
 	// HTTP-specific methods can be added here if needed
 }
 
+// EnrichmentService handles enrichment phase execution
+// Bridges HTTP results into enrichment feature vectors prior to analysis
+type EnrichmentService interface {
+	PhaseService
+	// Enrichment-specific methods can be added here if needed
+}
+
 // AnalysisService handles analysis phase execution
 // Orchestrates contentfetcher.ContentFetcher and keywordextractor engines
 type AnalysisService interface {

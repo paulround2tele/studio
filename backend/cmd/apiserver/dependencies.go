@@ -303,6 +303,7 @@ func initAppDependencies() (*AppDeps, error) {
 	domainGenSvc := domainservices.NewDomainGenerationService(deps.Stores.Campaign, domainDeps)
 	dnsValidationSvc := domainservices.NewDNSValidationService(dnsValSvc, deps.Stores.Campaign, domainDeps)
 	httpValidationSvc := domainservices.NewHTTPValidationService(deps.Stores.Campaign, domainDeps, httpValSvc, deps.Stores.Persona, deps.Stores.Proxy, deps.Stores.Keyword)
+	enrichmentSvc := domainservices.NewEnrichmentService(deps.Stores.Campaign, domainDeps)
 	analysisSvc := domainservices.NewAnalysisService(deps.Stores.Campaign, domainDeps, contentFetcherSvc, deps.Stores.Persona, deps.Stores.Proxy)
 
 	// Stealth integration and wrappers (decoupled from legacy)
@@ -327,6 +328,7 @@ func initAppDependencies() (*AppDeps, error) {
 			domainGenSvc,
 			stealthAwareDNS,
 			stealthAwareHTTP,
+			enrichmentSvc,
 			analysisSvc,
 			deps.SSE,
 			deps.Metrics,

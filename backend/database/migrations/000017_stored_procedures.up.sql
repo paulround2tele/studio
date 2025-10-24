@@ -134,7 +134,7 @@ CREATE OR REPLACE FUNCTION setup_campaign_phases(
     p_user_id UUID
 ) RETURNS JSONB AS $$
 DECLARE
-    phases phase_type_enum[] := ARRAY['domain_generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
+    phases phase_type_enum[] := ARRAY['domain_generation', 'dns_validation', 'http_keyword_validation', 'enrichment', 'analysis'];
     phase_type phase_type_enum;
     phase_order INTEGER := 1;
     created_phases JSONB := '[]';
@@ -152,14 +152,14 @@ BEGIN
             p_campaign_id,
             phase_type,
             phase_order,
-            CASE WHEN phase_order = 1 THEN 'running' ELSE 'pending' END,
+            CASE WHEN phase_order = 1 THEN 'in_progress' ELSE 'not_started' END,
             p_user_id
         );
 
         created_phases := created_phases || jsonb_build_object(
             'phase_type', phase_type,
             'phase_order', phase_order,
-            'status', CASE WHEN phase_order = 1 THEN 'running' ELSE 'pending' END
+            'status', CASE WHEN phase_order = 1 THEN 'in_progress' ELSE 'not_started' END
         );
 
         phase_order := phase_order + 1;

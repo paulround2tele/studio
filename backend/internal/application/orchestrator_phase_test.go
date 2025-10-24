@@ -36,7 +36,7 @@ func TestStartPhaseFromConfigured(t *testing.T) {
 	// Create campaign
 	campID := uuid.New()
 	now := time.Now()
-	c := &models.LeadGenerationCampaign{ID: campID, Name: "configured-phase-camp", CreatedAt: now, UpdatedAt: now, CampaignType: "lead_generation", TotalPhases: 4}
+	c := &models.LeadGenerationCampaign{ID: campID, Name: "configured-phase-camp", CreatedAt: now, UpdatedAt: now, CampaignType: "lead_generation", TotalPhases: 5}
 	if err := cs.CreateCampaign(context.Background(), nil, c); err != nil {
 		t.Fatalf("create campaign: %v", err)
 	}
@@ -61,8 +61,9 @@ func TestStartPhaseFromConfigured(t *testing.T) {
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
 	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, analysisSvc, nil, nil)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, nil)
 
 	if err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeDomainGeneration); err != nil {
 		t.Fatalf("start from configured: %v", err)
@@ -93,7 +94,7 @@ func TestHTTPConfigureBlockedUntilDNSCompleted(t *testing.T) {
 	// Create campaign (DNS phase not run/completed)
 	campID := uuid.New()
 	now := time.Now()
-	c := &models.LeadGenerationCampaign{ID: campID, Name: "http-gate-camp", CreatedAt: now, UpdatedAt: now, CampaignType: "lead_generation", TotalPhases: 4}
+	c := &models.LeadGenerationCampaign{ID: campID, Name: "http-gate-camp", CreatedAt: now, UpdatedAt: now, CampaignType: "lead_generation", TotalPhases: 5}
 	if err := cs.CreateCampaign(context.Background(), nil, c); err != nil {
 		t.Fatalf("create campaign: %v", err)
 	}

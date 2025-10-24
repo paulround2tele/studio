@@ -76,6 +76,7 @@ func loadMigrations(dir string) ([]MigrationFile, error) {
 
 	var migrations []MigrationFile
 	concurrentRegex := regexp.MustCompile(`(?i)CREATE\s+INDEX\s+CONCURRENTLY`)
+	alterTypeAddValueRegex := regexp.MustCompile(`(?i)ALTER\s+TYPE\s+[^;]+\s+ADD\s+VALUE`)
 
 	for _, file := range files {
 		if file.IsDir() {
@@ -113,7 +114,7 @@ func loadMigrations(dir string) ([]MigrationFile, error) {
 		}
 
 		// Check for CONCURRENTLY operations
-		hasConcurrent := concurrentRegex.MatchString(string(content))
+		hasConcurrent := concurrentRegex.MatchString(string(content)) || alterTypeAddValueRegex.MatchString(string(content))
 
 		migration := MigrationFile{
 			Version:       uint(version),

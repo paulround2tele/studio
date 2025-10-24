@@ -132,6 +132,7 @@ const (
 	JobTypeGeneration     JobTypeEnum = "generation"              // @enum generation
 	JobTypeDNSValidation  JobTypeEnum = "dns_validation"          // @enum dns_validation
 	JobTypeHTTPValidation JobTypeEnum = "http_keyword_validation" // @enum http_keyword_validation
+	JobTypeEnrichment     JobTypeEnum = "enrichment"              // @enum enrichment
 	JobTypeAnalysis       JobTypeEnum = "analysis"                // @enum analysis
 )
 
@@ -321,7 +322,7 @@ type KeywordRule struct {
 // LEAD GENERATION CAMPAIGN - Phase-Centric Architecture
 // ======================================================================
 
-// LeadGenerationCampaign represents a lead generation campaign with 4 phases
+// LeadGenerationCampaign represents a lead generation campaign with 5 phases
 type LeadGenerationCampaign struct {
 	ID     uuid.UUID  `db:"id" json:"id"`
 	Name   string     `db:"name" json:"name" validate:"required"`
@@ -339,8 +340,8 @@ type LeadGenerationCampaign struct {
 	// Phase management
 	CurrentPhaseID  *uuid.UUID     `db:"current_phase_id" json:"currentPhaseId,omitempty"`
 	CurrentPhase    *PhaseTypeEnum `db:"current_phase" json:"currentPhase,omitempty"`
-	TotalPhases     int            `db:"total_phases" json:"totalPhases" validate:"eq=4"`
-	CompletedPhases int            `db:"completed_phases" json:"completedPhases" validate:"gte=0,lte=4"`
+	TotalPhases     int            `db:"total_phases" json:"totalPhases" validate:"eq=5"`
+	CompletedPhases int            `db:"completed_phases" json:"completedPhases" validate:"gte=0,lte=5"`
 	OverallProgress *float64       `db:"overall_progress" json:"overallProgress,omitempty" validate:"omitempty,gte=0,lte=100"`
 
 	// JSONB columns for efficient phase data storage
@@ -394,7 +395,7 @@ type CampaignPhase struct {
 	ID         uuid.UUID     `db:"id" json:"id"`
 	CampaignID uuid.UUID     `db:"campaign_id" json:"campaignId"`
 	PhaseType  PhaseTypeEnum `db:"phase_type" json:"phaseType"`
-	PhaseOrder int           `db:"phase_order" json:"phaseOrder" validate:"gte=1,lte=4"`
+	PhaseOrder int           `db:"phase_order" json:"phaseOrder" validate:"gte=1,lte=5"`
 
 	// Phase execution status
 	Status             PhaseStatusEnum `db:"status" json:"status"`
@@ -432,6 +433,7 @@ const (
 	PhaseTypeDomainGeneration      PhaseTypeEnum = "domain_generation"
 	PhaseTypeDNSValidation         PhaseTypeEnum = "dns_validation"
 	PhaseTypeHTTPKeywordValidation PhaseTypeEnum = "http_keyword_validation"
+	PhaseTypeEnrichment            PhaseTypeEnum = "enrichment"
 	PhaseTypeAnalysis              PhaseTypeEnum = "analysis"
 )
 

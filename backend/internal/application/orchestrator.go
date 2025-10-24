@@ -44,6 +44,7 @@ type CampaignOrchestrator struct {
 	domainGenerationSvc domainservices.DomainGenerationService
 	dnsValidationSvc    domainservices.DNSValidationService
 	httpValidationSvc   domainservices.HTTPValidationService
+	enrichmentSvc       domainservices.EnrichmentService
 	analysisSvc         domainservices.AnalysisService
 
 	// Real-time communication (interface to allow test stubs)
@@ -81,14 +82,14 @@ type OrchestratorMetrics interface {
 	IncPhaseAutoStarts()
 	IncCampaignCompletions()
 	RecordPhaseDuration(phase string, d time.Duration)
-	
+
 	// Auto-start specific metrics
 	IncAutoStartAttempts()
 	IncAutoStartSuccesses()
 	IncAutoStartFailures()
 	RecordAutoStartLatency(d time.Duration)
 	RecordFirstPhaseRunningLatency(d time.Duration)
-	
+
 	// Campaign mode tracking
 	IncManualModeCreations()
 	IncAutoModeCreations()
@@ -97,19 +98,19 @@ type OrchestratorMetrics interface {
 // noopMetrics provides no-op implementations when metrics are not configured.
 type noopMetrics struct{}
 
-func (n *noopMetrics) IncPhaseStarts()                           {}
-func (n *noopMetrics) IncPhaseCompletions()                      {}
-func (n *noopMetrics) IncPhaseFailures()                         {}
-func (n *noopMetrics) IncPhaseAutoStarts()                       {}
-func (n *noopMetrics) IncCampaignCompletions()                   {}
-func (n *noopMetrics) RecordPhaseDuration(string, time.Duration) {}
-func (n *noopMetrics) IncAutoStartAttempts()                     {}
-func (n *noopMetrics) IncAutoStartSuccesses()                    {}
-func (n *noopMetrics) IncAutoStartFailures()                     {}
-func (n *noopMetrics) RecordAutoStartLatency(time.Duration)      {}
+func (n *noopMetrics) IncPhaseStarts()                              {}
+func (n *noopMetrics) IncPhaseCompletions()                         {}
+func (n *noopMetrics) IncPhaseFailures()                            {}
+func (n *noopMetrics) IncPhaseAutoStarts()                          {}
+func (n *noopMetrics) IncCampaignCompletions()                      {}
+func (n *noopMetrics) RecordPhaseDuration(string, time.Duration)    {}
+func (n *noopMetrics) IncAutoStartAttempts()                        {}
+func (n *noopMetrics) IncAutoStartSuccesses()                       {}
+func (n *noopMetrics) IncAutoStartFailures()                        {}
+func (n *noopMetrics) RecordAutoStartLatency(time.Duration)         {}
 func (n *noopMetrics) RecordFirstPhaseRunningLatency(time.Duration) {}
-func (n *noopMetrics) IncManualModeCreations()                   {}
-func (n *noopMetrics) IncAutoModeCreations()                     {}
+func (n *noopMetrics) IncManualModeCreations()                      {}
+func (n *noopMetrics) IncAutoModeCreations()                        {}
 
 // SSEBroadcaster minimal interface needed from SSE service
 type SSEBroadcaster interface {
@@ -122,6 +123,7 @@ func NewCampaignOrchestrator(
 	domainGenerationSvc domainservices.DomainGenerationService,
 	dnsValidationSvc domainservices.DNSValidationService,
 	httpValidationSvc domainservices.HTTPValidationService,
+	enrichmentSvc domainservices.EnrichmentService,
 	analysisSvc domainservices.AnalysisService,
 	sseService SSEBroadcaster,
 	metrics OrchestratorMetrics,
@@ -136,6 +138,7 @@ func NewCampaignOrchestrator(
 		domainGenerationSvc: domainGenerationSvc,
 		dnsValidationSvc:    dnsValidationSvc,
 		httpValidationSvc:   httpValidationSvc,
+		enrichmentSvc:       enrichmentSvc,
 		analysisSvc:         analysisSvc,
 		sseService:          sseService,
 		metrics:             metrics,
@@ -268,7 +271,7 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		// Strict model A: all configs must be present before any start (handled at API layer earlier ideally).
 		configs, _ := o.store.ListPhaseConfigs(ctx, querier, campaignID)
 		missingList := []string{}
-		for _, required := range []models.PhaseTypeEnum{models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation, models.PhaseTypeAnalysis} {
+		for _, required := range []models.PhaseTypeEnum{models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation, models.PhaseTypeEnrichment, models.PhaseTypeAnalysis} {
 			if _, ok := configs[required]; !ok {
 				missingList = append(missingList, string(required))
 			}
@@ -316,6 +319,17 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	}
 	if o.metrics != nil {
 		o.metrics.IncPhaseStarts()
+	}
+
+	// Persist phase start state in campaign_phases (best-effort; orchestrator remains authoritative)
+	if querier != nil {
+		if err := o.store.StartPhase(context.Background(), querier, campaignID, phase); err != nil {
+			o.deps.Logger.Warn(ctx, "Failed to persist phase start state", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"error":       err.Error(),
+			})
+		}
 	}
 
 	// Ensure an execution record exists (StartPhaseInternal may be called without prior ConfigurePhase)
@@ -380,6 +394,8 @@ func parsePhaseType(phaseType string) (models.PhaseTypeEnum, error) {
 		return models.PhaseTypeDNSValidation, nil
 	case "http_keyword_validation", "http_validation": // accept alias used by some handlers
 		return models.PhaseTypeHTTPKeywordValidation, nil
+	case "enrichment":
+		return models.PhaseTypeEnrichment, nil
 	case "analysis":
 		return models.PhaseTypeAnalysis, nil
 	default:
@@ -418,6 +434,7 @@ func (o *CampaignOrchestrator) GetCampaignStatus(ctx context.Context, campaignID
 		models.PhaseTypeDomainGeneration,
 		models.PhaseTypeDNSValidation,
 		models.PhaseTypeHTTPKeywordValidation,
+		models.PhaseTypeEnrichment,
 		models.PhaseTypeAnalysis,
 	}
 
@@ -490,6 +507,8 @@ func (o *CampaignOrchestrator) getPhaseService(phase models.PhaseTypeEnum) (doma
 		return o.dnsValidationSvc, nil
 	case models.PhaseTypeHTTPKeywordValidation:
 		return o.httpValidationSvc, nil
+	case models.PhaseTypeEnrichment:
+		return o.enrichmentSvc, nil
 	case models.PhaseTypeAnalysis:
 		return o.analysisSvc, nil
 	default:
@@ -678,6 +697,16 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 	if finalStatus != nil && finalStatus.Status == models.PhaseStatusCompleted {
 		// Metrics: phase completion
 		o.metrics.IncPhaseCompletions()
+		// Mark phase completed in persistence to keep campaign_phases in sync.
+		if querier, ok := o.deps.DB.(store.Querier); ok {
+			if err := o.store.CompletePhase(context.Background(), querier, campaignID, phase); err != nil {
+				o.deps.Logger.Warn(ctx, "Failed to persist phase completion state", map[string]interface{}{
+					"campaign_id": campaignID,
+					"phase":       phase,
+					"error":       err.Error(),
+				})
+			}
+		}
 		// Record duration if timestamps available
 		if finalStatus.StartedAt != nil && finalStatus.CompletedAt != nil {
 			elapsed := finalStatus.CompletedAt.Sub(*finalStatus.StartedAt)
@@ -774,6 +803,8 @@ func (o *CampaignOrchestrator) nextPhase(current models.PhaseTypeEnum) (models.P
 	case models.PhaseTypeDNSValidation:
 		return models.PhaseTypeHTTPKeywordValidation, true
 	case models.PhaseTypeHTTPKeywordValidation:
+		return models.PhaseTypeEnrichment, true
+	case models.PhaseTypeEnrichment:
 		return models.PhaseTypeAnalysis, true
 	default:
 		return "", false
@@ -914,6 +945,14 @@ func (o *CampaignOrchestrator) HandleCampaignCompletion(ctx context.Context, cam
 	if querier, ok := o.deps.DB.(store.Querier); ok {
 		if err := o.store.UpdateCampaignStatus(ctx, querier, campaignID, models.PhaseStatusCompleted, sql.NullString{}); err != nil {
 			o.deps.Logger.Warn(ctx, "Failed to persist completed status", map[string]interface{}{
+				"campaign_id": campaignID,
+				"error":       err.Error(),
+			})
+		}
+		// Clear current_phase once campaign is fully complete while preserving terminal status for reporting.
+		completedStatus := models.PhaseStatusCompleted
+		if err := o.store.UpdateCampaignPhaseFields(ctx, querier, campaignID, nil, &completedStatus); err != nil {
+			o.deps.Logger.Warn(ctx, "Failed to clear current phase on completion", map[string]interface{}{
 				"campaign_id": campaignID,
 				"error":       err.Error(),
 			})

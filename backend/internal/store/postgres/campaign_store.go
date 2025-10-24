@@ -151,7 +151,7 @@ func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Q
 		campaign.CampaignType = "lead_generation"
 	}
 	if campaign.TotalPhases == 0 {
-		campaign.TotalPhases = 4
+		campaign.TotalPhases = 5
 	}
 	if campaign.CompletedPhases == 0 {
 		campaign.CompletedPhases = 0
@@ -219,7 +219,7 @@ func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.
 		campaign.CampaignType = "lead_generation"
 	}
 	if campaign.TotalPhases == 0 {
-		campaign.TotalPhases = 4
+		campaign.TotalPhases = 5
 	}
 
 	// DEBUG: Log what we actually retrieved
@@ -387,7 +387,7 @@ func (s *campaignStorePostgres) ListCampaigns(ctx context.Context, exec store.Qu
 			campaign.CampaignType = "lead_generation"
 		}
 		if campaign.TotalPhases == 0 {
-			campaign.TotalPhases = 4
+			campaign.TotalPhases = 5
 		}
 	}
 
@@ -1449,20 +1449,22 @@ func (s *campaignStorePostgres) CreateCampaignPhases(ctx context.Context, exec s
 		phaseOrder int
 	}
 	phases := []phaseDef{
-		{models.PhaseTypeEnum("domain_generation"), 1},
-		{models.PhaseTypeEnum("dns_validation"), 2},
-		{models.PhaseTypeEnum("http_keyword"), 3},
-		{models.PhaseTypeEnum("analysis"), 4},
+		{models.PhaseTypeDomainGeneration, 1},
+		{models.PhaseTypeDNSValidation, 2},
+		{models.PhaseTypeHTTPKeywordValidation, 3},
+		{models.PhaseTypeEnrichment, 4},
+		{models.PhaseTypeAnalysis, 5},
 	}
 	now := time.Now()
 	insert := `INSERT INTO campaign_phases (id, campaign_id, phase_type, phase_order, status, progress_percentage, started_at, completed_at, error_message, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`
 	for _, p := range phases {
+		status := models.PhaseStatusNotStarted
 		_, err := exec.ExecContext(ctx, insert,
 			uuid.New(),
 			campaignID,
 			p.phaseType,
 			p.phaseOrder,
-			models.PhaseStatusEnum("pending"),
+			status,
 			0.0,
 			nil, // started_at
 			nil, // completed_at
@@ -1745,10 +1747,12 @@ func (s *campaignStorePostgres) ensurePhaseRow(ctx context.Context, exec store.Q
 		order = 2
 	case models.PhaseTypeHTTPKeywordValidation:
 		order = 3
+	case models.PhaseTypeEnrichment:
+		order = 4
 	case models.PhaseTypeAnalysis:
-		order = 4
+		order = 5
 	default:
-		order = 4
+		order = 5
 	}
 	q := `INSERT INTO campaign_phases (campaign_id, phase_type, phase_order, status, progress_percentage, created_at, updated_at)
           VALUES ($1,$2,$3,'not_started',0,NOW(),NOW())

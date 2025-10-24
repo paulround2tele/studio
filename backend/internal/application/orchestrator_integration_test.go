@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"testing"
@@ -166,7 +167,7 @@ func createTestCampaign(t *testing.T, cs store.CampaignStore) uuid.UUID {
 		CreatedAt:       now,
 		UpdatedAt:       now,
 		CampaignType:    "lead_generation",
-		TotalPhases:     4,
+		TotalPhases:     5,
 		CompletedPhases: 0,
 	}
 	if err := cs.CreateCampaign(context.Background(), nil, c); err != nil {
@@ -206,9 +207,10 @@ func TestFullSequenceAutoAdvanceSuccess(t *testing.T) {
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
 	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
 	metrics := &testMetrics{}
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, analysisSvc, nil, metrics)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, metrics)
 
 	campaignID := createTestCampaign(t, cs)
 	// Enable full sequence mode
@@ -219,6 +221,7 @@ func TestFullSequenceAutoAdvanceSuccess(t *testing.T) {
 	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
 	upsertConfig(t, cs, campaignID, models.PhaseTypeDNSValidation)
 	upsertConfig(t, cs, campaignID, models.PhaseTypeHTTPKeywordValidation)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeEnrichment)
 	upsertConfig(t, cs, campaignID, models.PhaseTypeAnalysis)
 
 	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
@@ -232,23 +235,296 @@ func TestFullSequenceAutoAdvanceSuccess(t *testing.T) {
 	})
 	// Wait for orchestrator to process completion and increment metric (async goroutine)
 	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions > 0 })
-	// Expect 4 starts (domain + 3 auto)
-	if metrics.phaseStarts < 4 {
-		t.Fatalf("expected >=4 phase starts got %d", metrics.phaseStarts)
+	// Expect 5 starts (domain + 4 auto)
+	if metrics.phaseStarts < 5 {
+		t.Fatalf("expected >=5 phase starts got %d", metrics.phaseStarts)
 	}
-	if metrics.phaseCompletions != 4 {
-		t.Fatalf("expected 4 phase completions got %d", metrics.phaseCompletions)
+	if metrics.phaseCompletions != 5 {
+		t.Fatalf("expected 5 phase completions got %d", metrics.phaseCompletions)
 	}
-	if metrics.phaseAutoStarts != 3 { // domain manual, remaining 3 auto
-		t.Fatalf("expected 3 auto starts got %d", metrics.phaseAutoStarts)
+	if metrics.phaseAutoStarts != 4 { // domain manual, remaining 4 auto
+		t.Fatalf("expected 4 auto starts got %d", metrics.phaseAutoStarts)
 	}
 	if metrics.campaignCompletions != 1 {
 		t.Fatalf("expected 1 campaign completion got %d", metrics.campaignCompletions)
 	}
 	// Durations should exist for each phase
-	for _, ph := range []string{"domain_generation", "dns_validation", "http_keyword_validation", "analysis"} {
+	for _, ph := range []string{"domain_generation", "dns_validation", "http_keyword_validation", "enrichment", "analysis"} {
 		if d, ok := metrics.durations[ph]; !ok || d <= 0 {
 			t.Fatalf("expected duration recorded for %s", ph)
+		}
+	}
+}
+
+func TestFullSequenceAutoAdvanceWithRealEnrichment(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := &testLogger{t: t}
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := domainservices.NewEnrichmentService(cs, deps)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	metrics := &testMetrics{}
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, metrics)
+
+	campaignID := createTestCampaign(t, cs)
+	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
+		t.Fatalf("set mode: %v", err)
+	}
+	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeDNSValidation)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeHTTPKeywordValidation)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeEnrichment)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeAnalysis)
+
+	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("start domain_generation: %v", err)
+	}
+
+	waitUntil(t, 2*time.Second, func() bool {
+		st, _ := analysisSvc.GetStatus(context.Background(), campaignID)
+		return st.Status == models.PhaseStatusCompleted
+	})
+	waitUntil(t, 2*time.Second, func() bool {
+		st, _ := enrichmentSvc.GetStatus(context.Background(), campaignID)
+		return st.Status == models.PhaseStatusCompleted
+	})
+	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions > 0 })
+
+	if metrics.phaseStarts < 5 {
+		t.Fatalf("expected >=5 phase starts got %d", metrics.phaseStarts)
+	}
+	if metrics.phaseCompletions != 5 {
+		t.Fatalf("expected 5 phase completions got %d", metrics.phaseCompletions)
+	}
+	if metrics.phaseAutoStarts != 4 {
+		t.Fatalf("expected 4 auto starts got %d", metrics.phaseAutoStarts)
+	}
+	if metrics.campaignCompletions != 1 {
+		t.Fatalf("expected 1 campaign completion got %d", metrics.campaignCompletions)
+	}
+	for _, ph := range []string{"domain_generation", "dns_validation", "http_keyword_validation", "enrichment", "analysis"} {
+		if d, ok := metrics.durations[ph]; !ok || d <= 0 {
+			t.Fatalf("expected duration recorded for %s", ph)
+		}
+	}
+}
+
+func TestCampaignDatabaseStateAfterFullAuto(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := &testLogger{t: t}
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := domainservices.NewEnrichmentService(cs, deps)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	metrics := &testMetrics{}
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, metrics)
+
+	campaignID := createTestCampaign(t, cs)
+	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
+		t.Fatalf("set mode: %v", err)
+	}
+	for _, ph := range []models.PhaseTypeEnum{
+		models.PhaseTypeDomainGeneration,
+		models.PhaseTypeDNSValidation,
+		models.PhaseTypeHTTPKeywordValidation,
+		models.PhaseTypeEnrichment,
+		models.PhaseTypeAnalysis,
+	} {
+		upsertConfig(t, cs, campaignID, ph)
+	}
+
+	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("start domain_generation: %v", err)
+	}
+
+	// Wait for terminal phases to complete.
+	waitUntil(t, 2*time.Second, func() bool {
+		st, _ := analysisSvc.GetStatus(context.Background(), campaignID)
+		return st.Status == models.PhaseStatusCompleted
+	})
+	waitUntil(t, 2*time.Second, func() bool {
+		st, _ := enrichmentSvc.GetStatus(context.Background(), campaignID)
+		return st.Status == models.PhaseStatusCompleted
+	})
+	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions == 1 })
+
+	// Validate campaign summary columns.
+	var total, completed int
+	var currentPhase sql.NullString
+	var overallStatus string
+	if err := db.QueryRow(
+		`SELECT total_phases, completed_phases, current_phase, phase_status FROM lead_generation_campaigns WHERE id = $1`,
+		campaignID,
+	).Scan(&total, &completed, &currentPhase, &overallStatus); err != nil {
+		t.Fatalf("fetch campaign row: %v", err)
+	}
+	if total != 5 {
+		t.Fatalf("expected total_phases=5 got %d", total)
+	}
+	if completed != 5 {
+		t.Fatalf("expected completed_phases=5 got %d", completed)
+	}
+	if currentPhase.Valid {
+		t.Fatalf("expected current_phase NULL, got %s", currentPhase.String)
+	}
+	if overallStatus != string(models.PhaseStatusCompleted) {
+		t.Fatalf("expected phase_status=completed got %s", overallStatus)
+	}
+
+	// Verify each phase row recorded completion and ordering 1..5.
+	rows, err := db.Query(
+		`SELECT phase_type, phase_order, status FROM campaign_phases WHERE campaign_id = $1 ORDER BY phase_order ASC`,
+		campaignID,
+	)
+	if err != nil {
+		t.Fatalf("query phases: %v", err)
+	}
+	defer rows.Close()
+
+	expected := []struct {
+		typ   models.PhaseTypeEnum
+		order int
+	}{
+		{models.PhaseTypeDomainGeneration, 1},
+		{models.PhaseTypeDNSValidation, 2},
+		{models.PhaseTypeHTTPKeywordValidation, 3},
+		{models.PhaseTypeEnrichment, 4},
+		{models.PhaseTypeAnalysis, 5},
+	}
+	idx := 0
+	for rows.Next() {
+		var phaseType string
+		var order int
+		var status string
+		if err := rows.Scan(&phaseType, &order, &status); err != nil {
+			t.Fatalf("scan phase row: %v", err)
+		}
+		if idx >= len(expected) {
+			t.Fatalf("unexpected extra phase row %s", phaseType)
+		}
+		ex := expected[idx]
+		if phaseType != string(ex.typ) {
+			t.Fatalf("phase %d expected %s got %s", idx+1, ex.typ, phaseType)
+		}
+		if order != ex.order {
+			t.Fatalf("phase %s expected order %d got %d", phaseType, ex.order, order)
+		}
+		if status != string(models.PhaseStatusCompleted) {
+			t.Fatalf("phase %s expected status completed got %s", phaseType, status)
+		}
+		idx++
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatalf("rows err: %v", err)
+	}
+	if idx != len(expected) {
+		t.Fatalf("expected %d phase rows got %d", len(expected), idx)
+	}
+}
+
+func TestFrontendReadModelReadyAfterFullAuto(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := &testLogger{t: t}
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := domainservices.NewEnrichmentService(cs, deps)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	metrics := &testMetrics{}
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, metrics)
+
+	campaignID := createTestCampaign(t, cs)
+	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
+		t.Fatalf("set mode: %v", err)
+	}
+	for _, ph := range []models.PhaseTypeEnum{
+		models.PhaseTypeDomainGeneration,
+		models.PhaseTypeDNSValidation,
+		models.PhaseTypeHTTPKeywordValidation,
+		models.PhaseTypeEnrichment,
+		models.PhaseTypeAnalysis,
+	} {
+		upsertConfig(t, cs, campaignID, ph)
+	}
+
+	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("start domain_generation: %v", err)
+	}
+
+	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions == 1 })
+
+	waitUntil(t, 2*time.Second, func() bool {
+		campaign, err := cs.GetCampaignByID(context.Background(), db, campaignID)
+		if err != nil {
+			return false
+		}
+		if campaign.TotalPhases != 5 {
+			return false
+		}
+		if campaign.CompletedPhases != 5 {
+			return false
+		}
+		if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.PhaseStatusCompleted {
+			return false
+		}
+		return campaign.CurrentPhase == nil
+	})
+
+	campaign, err := cs.GetCampaignByID(context.Background(), db, campaignID)
+	if err != nil {
+		t.Fatalf("get campaign: %v", err)
+	}
+	if campaign.TotalPhases != 5 {
+		t.Fatalf("total phases: expected 5 got %d", campaign.TotalPhases)
+	}
+	if campaign.CompletedPhases != 5 {
+		t.Fatalf("completed phases: expected 5 got %d", campaign.CompletedPhases)
+	}
+	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.PhaseStatusCompleted {
+		t.Fatalf("phase status expected completed got %v", campaign.PhaseStatus)
+	}
+	if campaign.CurrentPhase != nil {
+		t.Fatalf("expected current phase cleared got %v", *campaign.CurrentPhase)
+	}
+
+	phases, err := cs.GetCampaignPhases(context.Background(), db, campaignID)
+	if err != nil {
+		t.Fatalf("get phases: %v", err)
+	}
+	if len(phases) != 5 {
+		t.Fatalf("expected 5 phases got %d", len(phases))
+	}
+	expectedOrder := []models.PhaseTypeEnum{
+		models.PhaseTypeDomainGeneration,
+		models.PhaseTypeDNSValidation,
+		models.PhaseTypeHTTPKeywordValidation,
+		models.PhaseTypeEnrichment,
+		models.PhaseTypeAnalysis,
+	}
+	for idx, ph := range phases {
+		ex := expectedOrder[idx]
+		if ph.PhaseType != ex {
+			t.Fatalf("phase %d expected %s got %s", idx+1, ex, ph.PhaseType)
+		}
+		if ph.PhaseOrder != idx+1 {
+			t.Fatalf("phase %s expected order %d got %d", ph.PhaseType, idx+1, ph.PhaseOrder)
+		}
+		if ph.Status != models.PhaseStatusCompleted {
+			t.Fatalf("phase %s expected status completed got %s", ph.PhaseType, ph.Status)
+		}
+		if ph.CompletedAt == nil {
+			t.Fatalf("phase %s missing completed_at timestamp", ph.PhaseType)
 		}
 	}
 }
@@ -261,15 +537,16 @@ func TestFirstPhaseMissingConfigsGated(t *testing.T) {
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
 	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
 	metrics := &testMetrics{}
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, analysisSvc, nil, metrics)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, metrics)
 
 	campaignID := createTestCampaign(t, cs)
 	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
 		t.Fatalf("set mode: %v", err)
 	}
-	// Only provide DNS config (insufficient: missing HTTP + Analysis)
+	// Only provide DNS config (insufficient: missing HTTP + Enrichment + Analysis)
 	upsertConfig(t, cs, campaignID, models.PhaseTypeDNSValidation)
 
 	err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration)
@@ -292,9 +569,10 @@ func TestMidChainMissingNextConfigBlocks(t *testing.T) {
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
 	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
 	metrics := &testMetrics{}
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, analysisSvc, nil, metrics)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, metrics)
 
 	campaignID := createTestCampaign(t, cs)
 	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
@@ -331,9 +609,10 @@ func TestFailureThenRetryChainContinues(t *testing.T) {
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
 	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
 	metrics := &testMetrics{}
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, analysisSvc, nil, metrics)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, metrics)
 
 	campaignID := createTestCampaign(t, cs)
 	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
@@ -343,6 +622,7 @@ func TestFailureThenRetryChainContinues(t *testing.T) {
 	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
 	upsertConfig(t, cs, campaignID, models.PhaseTypeDNSValidation)
 	upsertConfig(t, cs, campaignID, models.PhaseTypeHTTPKeywordValidation)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeEnrichment)
 	upsertConfig(t, cs, campaignID, models.PhaseTypeAnalysis)
 
 	// Force DNS failure on first attempt.
@@ -373,23 +653,23 @@ func TestFailureThenRetryChainContinues(t *testing.T) {
 	// Wait for async campaign completion handling
 	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions > 0 })
 
-	// Metrics assertions: one failure (auto dns start), 4 completions, 4 starts (domain, dns manual, http auto, analysis auto)
+	// Metrics assertions: one failure (auto dns start), 5 completions, 5 starts (domain, dns manual, http auto, enrichment auto, analysis auto)
 	if metrics.phaseFailures != 1 {
 		t.Fatalf("expected 1 phase failure got %d", metrics.phaseFailures)
 	}
-	if metrics.phaseCompletions != 4 {
-		t.Fatalf("expected 4 phase completions got %d", metrics.phaseCompletions)
+	if metrics.phaseCompletions != 5 {
+		t.Fatalf("expected 5 phase completions got %d", metrics.phaseCompletions)
 	}
-	if metrics.phaseStarts != 4 {
-		t.Fatalf("expected 4 phase starts got %d", metrics.phaseStarts)
+	if metrics.phaseStarts != 5 {
+		t.Fatalf("expected 5 phase starts got %d", metrics.phaseStarts)
 	}
-	if metrics.phaseAutoStarts != 2 { // http + analysis
-		t.Fatalf("expected 2 successful auto starts got %d", metrics.phaseAutoStarts)
+	if metrics.phaseAutoStarts != 3 { // http + enrichment + analysis
+		t.Fatalf("expected 3 successful auto starts got %d", metrics.phaseAutoStarts)
 	}
 	if metrics.campaignCompletions != 1 {
 		t.Fatalf("expected 1 campaign completion got %d", metrics.campaignCompletions)
 	}
-	for _, ph := range []string{"domain_generation", "dns_validation", "http_keyword_validation", "analysis"} {
+	for _, ph := range []string{"domain_generation", "dns_validation", "http_keyword_validation", "enrichment", "analysis"} {
 		if d, ok := metrics.durations[ph]; !ok || d <= 0 {
 			t.Fatalf("expected duration recorded for %s", ph)
 		}
@@ -406,9 +686,10 @@ func TestPhaseStartFailureMetrics(t *testing.T) {
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
 	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
 	metrics := &testMetrics{}
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, analysisSvc, nil, metrics)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, metrics)
 
 	campaignID := createTestCampaign(t, cs)
 	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
@@ -418,6 +699,7 @@ func TestPhaseStartFailureMetrics(t *testing.T) {
 	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
 	upsertConfig(t, cs, campaignID, models.PhaseTypeDNSValidation)
 	upsertConfig(t, cs, campaignID, models.PhaseTypeHTTPKeywordValidation)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeEnrichment)
 	upsertConfig(t, cs, campaignID, models.PhaseTypeAnalysis)
 
 	// Force failure on first attempt
@@ -453,9 +735,10 @@ func TestIdempotentPhaseStartNoDuplicateExecution(t *testing.T) {
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
 	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
 	metrics := &testMetrics{}
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, analysisSvc, nil, metrics)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, metrics)
 
 	campaignID := createTestCampaign(t, cs)
 	// Provide downstream configs (full_sequence gating disabled by staying in default step_by_step mode so optional)
