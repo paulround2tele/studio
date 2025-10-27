@@ -13,7 +13,7 @@ interface HTTPKeywordValidationRequest { keywordSetIds?: string[]; keywords?: st
 
 export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable";
 export type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
-export type CampaignPhase = 'discovery' | 'validation' | 'extraction' | 'analysis';
+export type CampaignPhase = 'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis';
 
 // Import OpenAPI types for full sequence support (legacy)
 export type DNSValidationRequest = DNSValidationAPIRequest;

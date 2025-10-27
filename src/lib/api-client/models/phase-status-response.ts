@@ -31,7 +31,7 @@ export interface PhaseStatusResponse {
    * @memberof PhaseStatusResponse
    */
   'phase': 
-      'discovery' | 'validation' | 'extraction' | 'analysis'
+      'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis'
 ;
   /**
    * 

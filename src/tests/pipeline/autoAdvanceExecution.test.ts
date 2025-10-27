@@ -33,6 +33,7 @@ describe('autoAdvanceExecution', () => {
     const initialStatuses: Record<PipelinePhaseKey, string> = {
       discovery: 'configured',
       validation: 'configured',
+      enrichment: 'configured',
       extraction: 'configured',
       analysis: 'configured',
     };
@@ -50,6 +51,7 @@ describe('autoAdvanceExecution', () => {
     const selectOverview = pipelineSelectors.overview(campaignId);
     const discoveryPhase: PipelinePhaseKey = 'discovery';
     const validationPhase: PipelinePhaseKey = 'validation';
+    const enrichmentPhase: PipelinePhaseKey = 'enrichment';
     const extractionPhase: PipelinePhaseKey = 'extraction';
 
     // Initially auto-advance should not trigger (nothing started yet)
@@ -77,7 +79,17 @@ describe('autoAdvanceExecution', () => {
     store.dispatch(phaseCompleted({ campaignId, phase: validationPhase }));
     ov = selectOverview(store.getState() as RootState);
     const phases2 = ov.phases.map(p => (p.key === validationPhase || p.key === discoveryPhase) ? { ...p, execState: 'completed' } : p);
-  const next2 = computeAutoStartPhase(phases2, true);
-    expect(next2).toBe(extractionPhase);
+    const next2 = computeAutoStartPhase(phases2, true);
+    expect(next2).toBe(enrichmentPhase);
+
+    // Simulate enrichment completion to ensure extraction becomes next target
+    store.dispatch(phaseStarted({ campaignId, phase: enrichmentPhase }));
+    store.dispatch(phaseCompleted({ campaignId, phase: enrichmentPhase }));
+    ov = selectOverview(store.getState() as RootState);
+    const phases3 = ov.phases.map(p => (p.key === validationPhase || p.key === discoveryPhase || p.key === enrichmentPhase)
+      ? { ...p, execState: 'completed' }
+      : p);
+    const next3 = computeAutoStartPhase(phases3, true);
+    expect(next3).toBe(extractionPhase);
   });
 });

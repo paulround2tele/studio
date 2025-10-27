@@ -45,6 +45,15 @@ export interface CampaignProgressResponsePhases {
    * 
    * @memberof CampaignProgressResponsePhases
    */
+  'enrichment'?: 
+        
+          
+          PhaseProgressSummary
+    ;
+  /**
+   * 
+   * @memberof CampaignProgressResponsePhases
+   */
   'extraction'?: 
         
           

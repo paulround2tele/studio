@@ -102,7 +102,9 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
 
   const [wizardState, setWizardState] = useState<CampaignWizardState>({
     currentStep: 0,
-    goal: {},
+    goal: {
+      executionMode: 'manual',
+    },
     pattern: {},
     targeting: {
       includeKeywords: [],
@@ -189,11 +191,11 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
       return 'Select at least one DNS persona before running auto mode.';
     }
     if ((wizardState.targeting.httpPersonas?.length || 0) === 0) {
-      return 'Select at least one HTTP persona before running auto mode.';
+      return 'Select at least one enrichment persona before running auto mode.';
     }
     const keywordCount = (wizardState.targeting.includeKeywords?.length || 0) + (wizardState.targeting.adHocKeywords?.length || 0);
     if (keywordCount === 0) {
-      return 'Provide at least one keyword for HTTP validation or add a custom keyword.';
+      return 'Provide at least one keyword for HTTP enrichment or add a custom keyword.';
     }
     return null;
   };
@@ -370,7 +372,16 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
         const firstPhase: APIPhaseEnum = getFirstPhase();
         const domainGenConfig = mapPatternToDomainGeneration(wizardState.pattern);
         const dnsConfig = mapTargetingToDNSValidation(wizardState.targeting);
-        const httpConfig = mapTargetingToHTTPValidation(wizardState.targeting);
+        const enrichmentConfig = mapTargetingToHTTPValidation(wizardState.targeting);
+        const extractionPersonaIds = (wizardState.targeting.analysisPersonas && wizardState.targeting.analysisPersonas.length > 0)
+          ? wizardState.targeting.analysisPersonas
+          : wizardState.targeting.httpPersonas;
+        const extractionConfig: Record<string, unknown> = {
+          // Initial extraction phase piggybacks on enrichment outputs; default strategy until UI exposes advanced options.
+          reuseEnrichment: true,
+          requestedBy: 'auto_wizard',
+          personaIds: extractionPersonaIds || [],
+        };
         const analysisConfig = mapTargetingToAnalysis(wizardState.targeting);
 
         const phaseConfigurations: Array<{ phase: APIPhaseEnum; configuration: Record<string, unknown> }> = [
@@ -383,8 +394,12 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
             configuration: dnsConfig as unknown as Record<string, unknown>,
           },
           {
+            phase: 'enrichment',
+            configuration: enrichmentConfig as unknown as Record<string, unknown>,
+          },
+          {
             phase: 'extraction',
-            configuration: httpConfig as unknown as Record<string, unknown>,
+            configuration: extractionConfig,
           },
         ];
 

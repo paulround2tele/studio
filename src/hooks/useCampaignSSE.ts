@@ -28,7 +28,9 @@ import type { CampaignPhase } from '@/types/domain';
 const BACKEND_TO_INTERNAL_PHASE: Record<string, PipelinePhase> = {
   domain_generation: 'discovery',
   dns_validation: 'validation',
-  http_validation: 'extraction',
+  http_validation: 'enrichment',
+  http_keyword_validation: 'enrichment',
+  enrichment: 'extraction',
   analysis: 'analysis',
   analytics: 'analysis',
 };
@@ -47,6 +49,8 @@ const toPipelinePhase = (phase: string | PipelinePhase): PipelinePhaseKey | unde
       return 'discovery';
     case 'validation':
       return 'validation';
+    case 'enrichment':
+      return 'enrichment';
     case 'extraction':
       return 'extraction';
     default:

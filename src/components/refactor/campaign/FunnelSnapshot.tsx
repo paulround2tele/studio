@@ -99,7 +99,7 @@ export function FunnelSnapshot({
       color: '#06B6D4'
     },
     {
-      name: 'HTTP Valid',
+      name: 'HTTP Enriched',
       count: data.httpValid,
       percentage: data.generated > 0 ? (data.httpValid / data.generated) * 100 : 0,
       color: '#10B981'

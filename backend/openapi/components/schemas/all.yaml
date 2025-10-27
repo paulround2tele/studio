@@ -186,7 +186,7 @@ CampaignModeEnum:
 CampaignPhaseEnum:
   type: string
   description: Canonical campaign phase identifier
-  enum: [discovery, validation, extraction, analysis]
+  enum: [discovery, validation, enrichment, extraction, analysis]
 ExecutionStatusEnum:
   type: string
   enum: [not_started, ready, configured, in_progress, paused, completed, failed]
@@ -225,7 +225,7 @@ PhaseExecution:
     phaseType:
       type: string
       description: Phase identifier
-      enum: [discovery, validation, extraction, analysis]
+      enum: [discovery, validation, enrichment, extraction, analysis]
     status: { $ref: '#/ExecutionStatusEnum' }
     startedAt: { type: string, format: date-time, nullable: true }
     completedAt: { type: string, format: date-time, nullable: true }
@@ -1773,7 +1773,7 @@ CampaignResponse:
       description: Campaign configuration
     currentPhase:
       type: string
-      enum: [discovery, validation, extraction, analysis]
+      enum: [discovery, validation, enrichment, extraction, analysis]
       nullable: true
     progress:
       type: object
@@ -1832,7 +1832,7 @@ PhaseStatusResponse:
   properties:
     phase:
       type: string
-      enum: [discovery, validation, extraction, analysis]
+      enum: [discovery, validation, enrichment, extraction, analysis]
     status:
       type: string
       enum: [not_started, configured, running, paused, completed, failed]
@@ -1887,6 +1887,8 @@ CampaignProgressResponse:
         discovery:
           $ref: '#/PhaseProgressSummary'
         validation:
+          $ref: '#/PhaseProgressSummary'
+        enrichment:
           $ref: '#/PhaseProgressSummary'
         extraction:
           $ref: '#/PhaseProgressSummary'

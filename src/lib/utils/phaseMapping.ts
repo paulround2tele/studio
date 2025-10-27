@@ -3,8 +3,6 @@
  * and frontend configuration types
  */
 
-// Use proper generated types from OpenAPI - SINGLE SOURCE OF TRUTH
-import type { CampaignPhaseEnum as APICampaignPhaseEnum } from '@/lib/api-client/models/campaign-phase-enum';
 export type CampaignPhaseStatusEnum = 'not_started' | 'in_progress' | 'completed' | 'failed' | 'paused';
 export type PhaseConfigureRequest = import('@/lib/api-client/models/phase-configuration-request').PhaseConfigurationRequest;
 
@@ -12,7 +10,8 @@ export type PhaseConfigureRequest = import('@/lib/api-client/models/phase-config
 export type APIPhaseEnum = 
   | 'discovery'     // maps to domain_generation internally
   | 'validation'    // maps to dns_validation internally  
-  | 'extraction'    // maps to http_keyword_validation internally
+  | 'enrichment'    // maps to http_keyword_validation internally
+  | 'extraction'    // maps to enrichment internally
   | 'analysis';     // maps to analysis internally
 
 // Internal backend phase names (what gets persisted)
@@ -20,20 +19,23 @@ export type InternalPhaseEnum =
   | 'domain_generation'
   | 'dns_validation' 
   | 'http_keyword_validation'
+  | 'enrichment'
   | 'analysis';
 
 // Phase mapping constants (matching backend internal/phases/translate.go)
 const API_TO_INTERNAL: Record<APIPhaseEnum, InternalPhaseEnum> = {
   'discovery': 'domain_generation',
   'validation': 'dns_validation', 
-  'extraction': 'http_keyword_validation',
+  'enrichment': 'http_keyword_validation',
+  'extraction': 'enrichment',
   'analysis': 'analysis'
 };
 
 const INTERNAL_TO_API: Record<InternalPhaseEnum, APIPhaseEnum> = {
   'domain_generation': 'discovery',
   'dns_validation': 'validation',
-  'http_keyword_validation': 'extraction', 
+  'http_keyword_validation': 'enrichment', 
+  'enrichment': 'extraction',
   'analysis': 'analysis'
 };
 
@@ -58,7 +60,8 @@ export function getPhaseDisplayName(phase: APIPhaseEnum): string {
   const displayNames: Record<APIPhaseEnum, string> = {
     discovery: "Domain Discovery", 
     validation: "DNS Validation",
-    extraction: "HTTP Keyword Extraction",
+    enrichment: "HTTP Data Enrichment",
+    extraction: "Lead Extraction",
     analysis: "Analysis & Scoring",
   };
   
@@ -67,7 +70,7 @@ export function getPhaseDisplayName(phase: APIPhaseEnum): string {
 
 // Get the ordered sequence of API phases
 export function getPhaseSequence(): APIPhaseEnum[] {
-  return ['discovery', 'validation', 'extraction', 'analysis'];
+  return ['discovery', 'validation', 'enrichment', 'extraction', 'analysis'];
 }
 
 // Determine next phase in the workflow
@@ -268,7 +271,7 @@ export function mapTargetingToDNSValidation(targeting: {
   };
 }
 
-// Map wizard targeting step to HTTP validation configuration
+// Map wizard targeting step to HTTP enrichment configuration
 export function mapTargetingToHTTPValidation(targeting: {
   keywords?: string[];
   includeKeywords?: string[];
@@ -290,7 +293,7 @@ export function mapTargetingToHTTPValidation(targeting: {
     personaIds: targeting.httpPersonas || [],
     keywords,
     adHocKeywords: targeting.adHocKeywords || [],
-    name: 'HTTP Keyword Extraction Phase',
+    name: 'HTTP Enrichment Phase',
     enrichmentEnabled,
     microCrawlEnabled: microEnabled,
     microCrawlMaxPages: microPages,

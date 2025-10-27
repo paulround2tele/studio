@@ -124,8 +124,8 @@ export function TargetingStep({
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          <strong>Targeting Personas & Keywords:</strong> Choose personas to run DNS / HTTP phases and supply the keywords used for analysis.
-          {autoMode ? ' Auto mode requires at least one DNS persona, one HTTP persona, and one keyword.' : ' You can configure these later from the campaign dashboard if needed.'}
+          <strong>Targeting Personas & Keywords:</strong> Choose personas to run DNS and enrichment phases and supply the keywords used for analysis.
+          {autoMode ? ' Auto mode requires at least one DNS persona, one enrichment persona, and one keyword.' : ' You can configure these later from the campaign dashboard if needed.'}
         </AlertDescription>
       </Alert>
 
@@ -179,13 +179,13 @@ export function TargetingStep({
 
       <section className="space-y-3">
         <div>
-          <h3 className="text-sm font-semibold">HTTP Personas</h3>
-          <p className="text-xs text-muted-foreground">Select personas used during HTTP keyword extraction and analysis.</p>
+          <h3 className="text-sm font-semibold">Enrichment Personas</h3>
+          <p className="text-xs text-muted-foreground">Select personas used during HTTP enrichment and downstream analysis.</p>
         </div>
         {personasLoading ? (
           <p className="text-sm text-muted-foreground">Loading personas...</p>
         ) : httpPersonas.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No HTTP personas available. Create one before running extraction.</p>
+          <p className="text-sm text-muted-foreground">No enrichment personas available. Create one before running enrichment.</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
             {httpPersonas.map(persona => {
@@ -201,7 +201,7 @@ export function TargetingStep({
                     id={checkboxId}
                     checked={checked}
                     onCheckedChange={(value) => togglePersona(persona.id, persona.name, 'http', value)}
-                    aria-label={`HTTP persona ${persona.name}`}
+                    aria-label={`Enrichment persona ${persona.name}`}
                   />
                   <span className="text-sm font-medium">{persona.name}</span>
                 </label>
@@ -220,7 +220,7 @@ export function TargetingStep({
           onChange={(event) => applyIncludeKeywords(event.target.value)}
         />
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          These keywords seed HTTP validation and downstream analysis. Provide at least one to run in auto mode.
+          These keywords seed HTTP enrichment and downstream analysis. Provide at least one to run in auto mode.
         </p>
       </section>
 
@@ -261,7 +261,7 @@ export function TargetingStep({
           </div>
         )}
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Optional additional keywords sent as ad-hoc prompts to the extraction engine.
+          Optional additional keywords sent as ad-hoc prompts to the enrichment engine.
         </p>
       </section>
 

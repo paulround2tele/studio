@@ -23,6 +23,7 @@
 export enum CampaignPhaseEnum {
     discovery = 'discovery',
     validation = 'validation',
+    enrichment = 'enrichment',
     extraction = 'extraction',
     analysis = 'analysis'
 }

@@ -115,7 +115,7 @@ export function ReviewStep({ goal, pattern, targeting }: ReviewStepProps) {
 
                 {targeting.httpPersonaNames && targeting.httpPersonaNames.length > 0 && (
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">HTTP Personas</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Enrichment Personas</p>
                     <div className="flex flex-wrap gap-1">
                       {targeting.httpPersonaNames.map((name, index) => (
                         <Badge key={name || index} variant="secondary" className="text-xs">
@@ -197,7 +197,7 @@ export function ReviewStep({ goal, pattern, targeting }: ReviewStepProps) {
           ) : (
             <>
               <li>• Configure and manually start each phase on the dashboard</li>
-              <li>• Control when to proceed to validation and analysis phases</li>
+              <li>• Control when to proceed to validation, enrichment, extraction, and analysis phases</li>
             </>
           )}
           <li>• View campaign results and analytics</li>

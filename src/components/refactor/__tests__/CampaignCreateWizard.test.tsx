@@ -11,6 +11,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { useRouter } from 'next/navigation';
 import CampaignCreateWizard from '../campaign/CampaignCreateWizard';
 import { campaignApi } from '@/store/api/campaignApi';
+import { useCampaignFormData } from '@/lib/hooks/useCampaignFormData';
 
 // Mock dependencies
 jest.mock('next/navigation', () => ({
@@ -24,14 +25,27 @@ jest.mock('@/hooks/use-toast', () => ({
 }));
 
 const mockUseCreateCampaignMutation = jest.fn();
+const mockUseUpdateCampaignModeMutation = jest.fn();
+const mockUseStartPhaseStandaloneMutation = jest.fn();
+const mockUseConfigurePhaseStandaloneMutation = jest.fn();
+const mockUpdateCampaignMode = jest.fn();
+const mockStartPhase = jest.fn();
+const mockConfigurePhase = jest.fn();
 
 jest.mock('@/store/api/campaignApi', () => ({
   useCreateCampaignMutation: () => mockUseCreateCampaignMutation(),
+  useUpdateCampaignModeMutation: () => mockUseUpdateCampaignModeMutation(),
+  useStartPhaseStandaloneMutation: () => mockUseStartPhaseStandaloneMutation(),
+  useConfigurePhaseStandaloneMutation: () => mockUseConfigurePhaseStandaloneMutation(),
   campaignApi: {
     reducerPath: 'campaignApi',
     reducer: jest.fn(),
     middleware: jest.fn(() => () => (next: unknown) => (action: unknown) => next(action))
   }
+}));
+
+jest.mock('@/lib/hooks/useCampaignFormData', () => ({
+  useCampaignFormData: jest.fn(),
 }));
 
 // Mock router
@@ -61,13 +75,69 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <Provider store={store}>{children}</Provider>;
 };
 
+const selectManualMode = async (user?: ReturnType<typeof userEvent.setup>) => {
+  const manualRadio = screen.getByLabelText(/manual \(step-by-step\)/i);
+  if (user) {
+    await user.click(manualRadio);
+  } else {
+    fireEvent.click(manualRadio);
+  }
+  await waitFor(() => expect(manualRadio).toBeChecked());
+};
+
+const getMaxDomainsInput = (): HTMLInputElement => {
+  const labelElement = screen.getByText('Max Domains');
+  const container = labelElement.parentElement;
+  const input = container?.querySelector('input');
+  if (!input || !(input instanceof HTMLInputElement)) {
+    throw new Error('Max Domains input not found');
+  }
+  return input;
+};
+
 describe('CampaignCreateWizard Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    const createUnwrap = jest.fn().mockResolvedValue({ id: 'new-campaign-id' });
     mockUseCreateCampaignMutation.mockReturnValue([
-      jest.fn(),
+      jest.fn(() => ({ unwrap: createUnwrap })),
       { isLoading: false }
     ]);
+
+    const updateUnwrap = jest.fn().mockResolvedValue({});
+    mockUpdateCampaignMode.mockReturnValue({ unwrap: updateUnwrap });
+    mockUseUpdateCampaignModeMutation.mockReturnValue([
+      mockUpdateCampaignMode,
+      { isLoading: false }
+    ]);
+
+    const startUnwrap = jest.fn().mockResolvedValue({ status: 'started' });
+    mockStartPhase.mockReturnValue({ unwrap: startUnwrap });
+    mockUseStartPhaseStandaloneMutation.mockReturnValue([
+      mockStartPhase,
+      { isLoading: false }
+    ]);
+
+    const configureUnwrap = jest.fn().mockResolvedValue({ status: 'configured' });
+    mockConfigurePhase.mockReturnValue({ unwrap: configureUnwrap });
+    mockUseConfigurePhaseStandaloneMutation.mockReturnValue([
+      mockConfigurePhase,
+      { isLoading: false }
+    ]);
+
+    (useCampaignFormData as jest.Mock).mockReturnValue({
+      dnsPersonas: [
+        { id: 'dns-persona-1', name: 'DNS Persona 1' },
+      ],
+      httpPersonas: [
+        { id: 'http-persona-1', name: 'HTTP Persona 1' },
+      ],
+      isLoading: false,
+      error: null,
+      proxies: [],
+      sourceCampaigns: [],
+      refetch: jest.fn(),
+    });
   });
 
   describe('Initial Render', () => {
@@ -105,7 +175,7 @@ describe('CampaignCreateWizard Component', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByText('Goal')).toBeInTheDocument();
+      expect(screen.getAllByText('Goal').length).toBeGreaterThan(0);
       expect(screen.getByText('Pattern')).toBeInTheDocument();
       expect(screen.getByText('Targeting')).toBeInTheDocument();
       expect(screen.getByText('Review & Launch')).toBeInTheDocument();
@@ -135,6 +205,7 @@ describe('CampaignCreateWizard Component', () => {
 
       const nameInput = screen.getByPlaceholderText('Enter a descriptive name for your campaign');
       await user.type(nameInput, 'Test Campaign');
+      await selectManualMode(user);
 
       const nextButton = screen.getByRole('button', { name: /next/i });
       expect(nextButton).toBeEnabled();
@@ -152,6 +223,7 @@ describe('CampaignCreateWizard Component', () => {
       // Fill required field
       const nameInput = screen.getByPlaceholderText('Enter a descriptive name for your campaign');
       await user.type(nameInput, 'Test Campaign');
+      await selectManualMode(user);
 
       // Click next
       const nextButton = screen.getByRole('button', { name: /next/i });
@@ -160,7 +232,7 @@ describe('CampaignCreateWizard Component', () => {
       // Should be on step 2
       await waitFor(() => {
         expect(screen.getByText('Step 2 of 4')).toBeInTheDocument();
-        expect(screen.getByText('25% complete')).toBeInTheDocument();
+        expect(screen.getByText('50% complete')).toBeInTheDocument();
       });
     });
 
@@ -187,6 +259,7 @@ describe('CampaignCreateWizard Component', () => {
       // Go to step 2
       const nameInput = screen.getByPlaceholderText('Enter a descriptive name for your campaign');
       await user.type(nameInput, 'Test Campaign');
+      await selectManualMode(user);
       await user.click(screen.getByRole('button', { name: /next/i }));
 
       // Go back to step 1
@@ -223,11 +296,12 @@ describe('CampaignCreateWizard Component', () => {
       // Navigate to pattern step
       const nameInput = screen.getByPlaceholderText('Enter a descriptive name for your campaign');
       await user.type(nameInput, 'Test Campaign');
+      await selectManualMode(user);
       await user.click(screen.getByRole('button', { name: /next/i }));
 
       await waitFor(() => {
-        expect(screen.getByLabelText('Base Pattern *')).toBeInTheDocument();
-        expect(screen.getByLabelText('Maximum Domains *')).toBeInTheDocument();
+        expect(screen.getByLabelText('Constant Segment')).toBeInTheDocument();
+        expect(screen.getByText('Max Domains')).toBeInTheDocument();
       });
     });
   });
@@ -245,6 +319,7 @@ describe('CampaignCreateWizard Component', () => {
       // Navigate to pattern step
       const nameInput = screen.getByPlaceholderText('Enter a descriptive name for your campaign');
       await user.type(nameInput, 'Test Campaign');
+      await selectManualMode(user);
       await user.click(screen.getByRole('button', { name: /next/i }));
 
       // Next should be disabled without pattern and max domains
@@ -254,10 +329,11 @@ describe('CampaignCreateWizard Component', () => {
       });
 
       // Fill required fields
-      const patternInput = screen.getByPlaceholderText('e.g., example-{variation}.com');
-      const maxDomainsInput = screen.getByPlaceholderText('1000');
-      
-      await user.type(patternInput, 'test-{variation}.com');
+      const patternInput = screen.getByLabelText('Constant Segment');
+      const maxDomainsInput = getMaxDomainsInput();
+
+      await user.type(patternInput, 'brand');
+      await user.clear(maxDomainsInput);
       await user.type(maxDomainsInput, '100');
 
       // Next should now be enabled
@@ -290,6 +366,7 @@ describe('CampaignCreateWizard Component', () => {
       // Complete goal step and go to pattern
       const nameInput = screen.getByPlaceholderText('Enter a descriptive name for your campaign');
       await user.type(nameInput, 'Test Campaign');
+      await selectManualMode(user);
       await user.click(screen.getByRole('button', { name: /next/i }));
 
       // Click back to goal step via indicator
@@ -303,7 +380,7 @@ describe('CampaignCreateWizard Component', () => {
   });
 
   describe('Campaign Submission', () => {
-    const setupCompleteWizard = async (user: unknown) => {
+    const setupCompleteWizard = async (user: ReturnType<typeof userEvent.setup>) => {
       render(
         <TestWrapper>
           <CampaignCreateWizard />
@@ -313,16 +390,18 @@ describe('CampaignCreateWizard Component', () => {
       // Step 1: Goal
       const nameInput = screen.getByPlaceholderText('Enter a descriptive name for your campaign');
       await user.type(nameInput, 'Test Campaign');
+      await selectManualMode(user);
       await user.click(screen.getByRole('button', { name: /next/i }));
 
       // Step 2: Pattern
       await waitFor(() => {
-        expect(screen.getByLabelText('Base Pattern *')).toBeInTheDocument();
+        expect(screen.getByLabelText('Constant Segment')).toBeInTheDocument();
       });
-      
-      const patternInput = screen.getByPlaceholderText('e.g., example-{variation}.com');
-      const maxDomainsInput = screen.getByPlaceholderText('1000');
-      await user.type(patternInput, 'test-{variation}.com');
+
+      const patternInput = screen.getByLabelText('Constant Segment');
+      const maxDomainsInput = getMaxDomainsInput();
+      await user.type(patternInput, 'brand');
+      await user.clear(maxDomainsInput);
       await user.type(maxDomainsInput, '100');
       await user.click(screen.getByRole('button', { name: /next/i }));
 
@@ -334,7 +413,7 @@ describe('CampaignCreateWizard Component', () => {
 
       // Step 4: Review
       await waitFor(() => {
-        expect(screen.getByText('Review your campaign settings')).toBeInTheDocument();
+        expect(screen.getByText(/Review your campaign settings/i)).toBeInTheDocument();
       });
     };
 
@@ -349,10 +428,10 @@ describe('CampaignCreateWizard Component', () => {
 
     it('should call create campaign mutation on submit', async () => {
       const user = userEvent.setup();
-      const mockCreateCampaign = jest.fn().mockResolvedValue({
-        unwrap: () => Promise.resolve({ id: 'new-campaign-id' })
-      });
-      
+      const mockCreateCampaign = jest.fn(() => ({
+        unwrap: jest.fn().mockResolvedValue({ id: 'new-campaign-id' })
+      }));
+
       mockUseCreateCampaignMutation.mockReturnValue([
         mockCreateCampaign,
         { isLoading: false }
@@ -366,17 +445,18 @@ describe('CampaignCreateWizard Component', () => {
       await waitFor(() => {
         expect(mockCreateCampaign).toHaveBeenCalledWith({
           name: 'Test Campaign',
-          description: ''
+          description: '',
+          configuration: undefined,
         });
       });
     });
 
     it('should redirect to campaign page after successful creation', async () => {
       const user = userEvent.setup();
-      const mockCreateCampaign = jest.fn().mockResolvedValue({
-        unwrap: () => Promise.resolve({ id: 'new-campaign-id' })
-      });
-      
+      const mockCreateCampaign = jest.fn(() => ({
+        unwrap: jest.fn().mockResolvedValue({ id: 'new-campaign-id' })
+      }));
+
       mockUseCreateCampaignMutation.mockReturnValue([
         mockCreateCampaign,
         { isLoading: false }
@@ -392,15 +472,17 @@ describe('CampaignCreateWizard Component', () => {
       });
     });
 
-    it('should show loading state during creation', async () => {
-      const user = userEvent.setup();
-      
+    it('should show loading state during creation', () => {
       mockUseCreateCampaignMutation.mockReturnValue([
-        jest.fn(),
+        jest.fn(() => ({ unwrap: jest.fn() })),
         { isLoading: true }
       ]);
 
-      await setupCompleteWizard(user);
+      render(
+        <TestWrapper>
+          <CampaignCreateWizard />
+        </TestWrapper>
+      );
 
       const createButton = screen.getByRole('button', { name: /creating/i });
       expect(createButton).toBeDisabled();

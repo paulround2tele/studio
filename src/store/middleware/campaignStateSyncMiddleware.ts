@@ -17,8 +17,8 @@ export const campaignStateSyncMiddleware: Middleware = (store) => (next) => (act
   const { meta } = action as typeof action & { meta: { arg: { originalArgs: { campaignId: string; phase: string } } } };
     const campaignId = meta.arg.originalArgs.campaignId;
   const rawPhase = meta.arg.originalArgs.phase;
-  const allowed: ReadonlyArray<string> = ['discovery','validation','extraction','analysis'];
-  const phase = (allowed.includes(rawPhase) ? rawPhase : normalizeToApiPhase(rawPhase) || 'discovery') as 'discovery' | 'validation' | 'extraction' | 'analysis';
+  const allowed: ReadonlyArray<string> = ['discovery','validation','enrichment','extraction','analysis'];
+  const phase = (allowed.includes(rawPhase) ? rawPhase : normalizeToApiPhase(rawPhase) || 'discovery') as 'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis';
   store.dispatch(phaseStarted({ campaignId, phase }));
     // Refetch campaigns list to sync broader state (no cast to any; dispatch returns a subscription handle)
   (store.dispatch as AppDispatch)(campaignApi.endpoints.getCampaignsStandalone.initiate());

@@ -13,6 +13,8 @@ import { PhaseStepper, PhasePanelShell, StatusBadge, CampaignOverviewCard, Alert
 import { useStartPhaseStandaloneMutation, useGetPhaseStatusStandaloneQuery } from '@/store/api/campaignApi';
 import computeAutoStartPhase from '@/store/selectors/autoAdvanceLogic';
 import type { PhaseStatusResponse } from '@/lib/api-client/models/phase-status-response';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
 
 type CampaignPhase = PhaseStatusResponse['phase'];
 
@@ -20,10 +22,16 @@ interface PipelineWorkspaceProps { campaignId: string; }
 
 // Unified pipeline layout (legacy flag removed during final cleanup phase)
 
+const friendlyPhaseLabel = (phaseKey: string): string => {
+  const normalized = normalizeToApiPhase(phaseKey.toLowerCase());
+  return normalized ? getPhaseDisplayName(normalized) : phaseKey;
+};
+
 export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId }) => {
   // Actively subscribe to per-phase status so selectors receive data+invalidations
   useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'discovery' });
   useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'validation' });
+  useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'enrichment' });
   useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'extraction' });
   useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'analysis' });
   const selectOverview = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
@@ -65,7 +73,13 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
     switch (phase) {
       case 'discovery': return <DiscoveryConfigForm {...common} readOnly={isConfigured} />;
       case 'validation': return <DNSValidationConfigForm {...common} readOnly={isConfigured} />;
-      case 'extraction': return <HTTPValidationConfigForm {...common} readOnly={isConfigured} />;
+      case 'enrichment': return <HTTPValidationConfigForm {...common} readOnly={isConfigured} />;
+      case 'extraction':
+        return (
+          <div className="text-sm text-muted-foreground">
+            Lead extraction relies on enrichment outputs. Automated campaigns configure this phase with default parameters.
+          </div>
+        );
       case 'analysis': return <AnalysisConfigForm {...common} readOnly={isConfigured} />;
       default: return <div className="text-xs">Unknown phase: {phase}</div>;
     }
@@ -73,7 +87,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
   // Derive stepper model for new PhaseStepper (Phase 2 integration, non-destructive)
   const stepperPhases = React.useMemo(() => phases.map((p, idx) => ({
     key: p.key,
-    label: p.key,
+    label: friendlyPhaseLabel(p.key),
     order: idx,
     configState: p.configState,
     execState: p.execState,
@@ -93,7 +107,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
       {/* Adaptive Panel */}
         <PhasePanelShell
           phaseKey={panelPhase}
-          title={panelPhase ? `${panelPhase} ${isConfigured ? 'Configured' : 'Configuration'}` : 'Phase'}
+          title={panelPhase ? `${friendlyPhaseLabel(panelPhase)} ${isConfigured ? 'Configured' : 'Configuration'}` : 'Phase'}
           statusBadges={panelPhase && (
             <>
               <StatusBadge variant={isConfigured ? 'configured' : 'missing'} compact>{phaseMeta?.configState}</StatusBadge>
@@ -141,7 +155,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
             {retryEligible.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-1" aria-label="Retry failed phase buttons">
                 {retryEligible.map(p => (
-                  <Button key={p} size="sm" variant="destructive" className="text-[10px] py-1" onClick={()=>startPhase({ campaignId, phase: p as CampaignPhase })}>Retry {p}</Button>
+                  <Button key={p} size="sm" variant="destructive" className="text-[10px] py-1" onClick={()=>startPhase({ campaignId, phase: p as CampaignPhase })}>Retry {friendlyPhaseLabel(p)}</Button>
                 ))}
               </div>
             )}

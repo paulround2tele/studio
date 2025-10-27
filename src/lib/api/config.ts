@@ -16,6 +16,28 @@ function joinUrl(base: string, path: string): string {
 
 export function getApiBasePath(): string {
   const env = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (env) {
+    try {
+      const parsed = new URL(env);
+      const { hostname } = parsed;
+
+      const isCodespaces = hostname?.endsWith('.app.github.dev');
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+
+      if (!isLocalhost && !isCodespaces) {
+        return joinUrl(env, 'api/v2');
+      }
+    } catch (error) {
+      console.warn('Invalid NEXT_PUBLIC_API_URL provided, falling back to default', error);
+    }
+  }
+
+  const codespacesHost = process.env.CODESPACES_HOSTNAME;
+  if (codespacesHost) {
+    const inferBase = `https://${codespacesHost.replace(/:8080$/, '-8080.app.github.dev')}`;
+    return joinUrl(inferBase, 'api/v2');
+  }
+
   // Prefer explicit env; otherwise default local dev server
   const root = env && env.length > 0 ? env : 'http://localhost:8080';
 

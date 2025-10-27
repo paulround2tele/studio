@@ -69,7 +69,7 @@ export interface CampaignResponse {
    * @memberof CampaignResponse
    */
   'currentPhase'?: 
-      'discovery' | 'validation' | 'extraction' | 'analysis'
+      'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis'
 ;
   /**
    * 

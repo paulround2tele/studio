@@ -1976,6 +1976,7 @@ export interface components {
             phases: {
                 discovery?: components["schemas"]["PhaseProgressSummary"];
                 validation?: components["schemas"]["PhaseProgressSummary"];
+                enrichment?: components["schemas"]["PhaseProgressSummary"];
                 extraction?: components["schemas"]["PhaseProgressSummary"];
                 analysis?: components["schemas"]["PhaseProgressSummary"];
             };
@@ -2787,7 +2788,7 @@ export interface components {
             /** @description Campaign configuration */
             configuration: Record<string, never>;
             /** @enum {string|null} */
-            currentPhase?: "discovery" | "validation" | "extraction" | "analysis" | null;
+            currentPhase?: "discovery" | "validation" | "enrichment" | "extraction" | "analysis" | null;
             progress: {
                 totalDomains?: number;
                 processedDomains?: number;
@@ -3015,7 +3016,7 @@ export interface components {
              * @description Phase identifier
              * @enum {string}
              */
-            phaseType: "discovery" | "validation" | "extraction" | "analysis";
+            phaseType: "discovery" | "validation" | "enrichment" | "extraction" | "analysis";
             status: components["schemas"]["ExecutionStatusEnum"];
             /** Format: date-time */
             startedAt?: string | null;
@@ -3093,10 +3094,10 @@ export interface components {
          * @description Canonical campaign phase identifier
          * @enum {string}
          */
-        CampaignPhaseEnum: "discovery" | "validation" | "extraction" | "analysis";
+        CampaignPhaseEnum: "discovery" | "validation" | "enrichment" | "extraction" | "analysis";
         PhaseStatusResponse: {
             /** @enum {string} */
-            phase: "discovery" | "validation" | "extraction" | "analysis";
+            phase: "discovery" | "validation" | "enrichment" | "extraction" | "analysis";
             /** @enum {string} */
             status: "not_started" | "configured" | "running" | "paused" | "completed" | "failed";
             /** @description Current phase configuration */
@@ -6671,7 +6672,7 @@ export interface operations {
             header?: never;
             path: {
                 campaignId: string;
-                phaseType: "discovery" | "validation" | "extraction" | "analysis";
+                phaseType: "discovery" | "validation" | "enrichment" | "extraction" | "analysis";
             };
             cookie?: never;
         };
@@ -6696,7 +6697,7 @@ export interface operations {
             header?: never;
             path: {
                 campaignId: string;
-                phaseType: "discovery" | "validation" | "extraction" | "analysis";
+                phaseType: "discovery" | "validation" | "enrichment" | "extraction" | "analysis";
             };
             cookie?: never;
         };
@@ -6726,7 +6727,7 @@ export interface operations {
             header?: never;
             path: {
                 campaignId: string;
-                phaseType: "discovery" | "validation" | "extraction" | "analysis";
+                phaseType: "discovery" | "validation" | "enrichment" | "extraction" | "analysis";
             };
             cookie?: never;
         };

@@ -49,7 +49,7 @@ export interface PhaseExecution {
    * @memberof PhaseExecution
    */
   'phaseType': 
-      'discovery' | 'validation' | 'extraction' | 'analysis'
+      'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis'
 ;
   /**
    * 

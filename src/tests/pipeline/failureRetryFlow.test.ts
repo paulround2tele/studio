@@ -65,7 +65,7 @@ describe('failure -> retry UI selector flow', () => {
   }
 
   it('marks lastFailedPhase and exposes retryEligiblePhases after a failure', () => {
-    const store = makeStore({ discovery: 'configured', validation: 'configured', extraction: 'configured', analysis: 'configured' });
+    const store = makeStore({ discovery: 'configured', validation: 'configured', enrichment: 'configured', extraction: 'configured', analysis: 'configured' });
     store.dispatch(setFullSequenceMode({ campaignId, value: true }));
     // start discovery
     store.dispatch(phaseStarted({ campaignId, phase: discoveryPhase }));
@@ -88,7 +88,7 @@ describe('failure -> retry UI selector flow', () => {
   });
 
   it('after retry success failure-related selectors clear and nextUserAction advances', () => {
-    const store = makeStore({ discovery: 'configured', validation: 'configured', extraction: 'configured', analysis: 'configured' });
+    const store = makeStore({ discovery: 'configured', validation: 'configured', enrichment: 'configured', extraction: 'configured', analysis: 'configured' });
     // initial failure
     store.dispatch(phaseStarted({ campaignId, phase: discoveryPhase }));
     store.dispatch(phaseFailed({ campaignId, phase: discoveryPhase, error: 'boom' }));

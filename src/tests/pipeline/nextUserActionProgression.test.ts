@@ -39,7 +39,7 @@ describe('nextUserAction selector progression', () => {
   };
 
   it('guides configuration until a phase is runnable, then promotes execution before later configuration', () => {
-    const store = makeStore(buildQueries({ discovery: undefined, validation: undefined, extraction: undefined, analysis: undefined }));
+    const store = makeStore(buildQueries({ discovery: undefined, validation: undefined, enrichment: undefined, extraction: undefined, analysis: undefined }));
     const sel = pipelineSelectors.nextUserAction(campaignId);
     expect(sel(store.getState() as RootState)).toEqual({ type: 'configure', phase: 'discovery', reason: 'Configuration required' });
 
@@ -49,37 +49,44 @@ describe('nextUserAction selector progression', () => {
     };
 
     // discovery configured -> we can immediately start it even though later phases lack config
-    let snap = reselect({ discovery: 'configured', validation: undefined, extraction: undefined, analysis: undefined });
+    let snap = reselect({ discovery: 'configured', validation: undefined, enrichment: undefined, extraction: undefined, analysis: undefined });
     expect(sel(snap.state)).toEqual({ type: 'start', phase: 'discovery' });
 
     // discovery running keeps the call in watch mode
-    snap = reselect({ discovery: 'running', validation: undefined, extraction: undefined, analysis: undefined });
+    snap = reselect({ discovery: 'running', validation: undefined, enrichment: undefined, extraction: undefined, analysis: undefined });
     expect(sel(snap.state)).toEqual({ type: 'watch', phase: 'discovery' });
 
     // once discovery completed we gate on next missing configuration
-    snap = reselect({ discovery: 'completed', validation: undefined, extraction: undefined, analysis: undefined });
+    snap = reselect({ discovery: 'completed', validation: undefined, enrichment: undefined, extraction: undefined, analysis: undefined });
     expect(sel(snap.state)).toEqual({ type: 'configure', phase: 'validation', reason: 'Configuration required' });
 
     // validation configured unlocks starting it despite later phases missing config
-    snap = reselect({ discovery: 'completed', validation: 'configured', extraction: undefined, analysis: undefined });
+    snap = reselect({ discovery: 'completed', validation: 'configured', enrichment: undefined, extraction: undefined, analysis: undefined });
     expect(sel(snap.state)).toEqual({ type: 'start', phase: 'validation' });
 
-    // validation completed now asks to configure extraction
-    snap = reselect({ discovery: 'completed', validation: 'completed', extraction: undefined, analysis: undefined });
+    // validation completed now asks to configure enrichment
+    snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: undefined, extraction: undefined, analysis: undefined });
+    expect(sel(snap.state)).toEqual({ type: 'configure', phase: 'enrichment', reason: 'Configuration required' });
+
+    snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: 'configured', extraction: undefined, analysis: undefined });
+    expect(sel(snap.state)).toEqual({ type: 'start', phase: 'enrichment' });
+
+    // enrichment completion shifts focus to extraction
+    snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: 'completed', extraction: undefined, analysis: undefined });
     expect(sel(snap.state)).toEqual({ type: 'configure', phase: 'extraction', reason: 'Configuration required' });
 
-    snap = reselect({ discovery: 'completed', validation: 'completed', extraction: 'configured', analysis: undefined });
+    snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: 'completed', extraction: 'configured', analysis: undefined });
     expect(sel(snap.state)).toEqual({ type: 'start', phase: 'extraction' });
 
-    snap = reselect({ discovery: 'completed', validation: 'completed', extraction: 'completed', analysis: undefined });
+    snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: 'completed', extraction: 'completed', analysis: undefined });
     expect(sel(snap.state)).toEqual({ type: 'configure', phase: 'analysis', reason: 'Configuration required' });
 
-    snap = reselect({ discovery: 'completed', validation: 'completed', extraction: 'completed', analysis: 'configured' });
+    snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: 'completed', extraction: 'completed', analysis: 'configured' });
     expect(sel(snap.state)).toEqual({ type: 'start', phase: 'analysis' });
   });
 
   it('guidance queue unaffected by configuration progression', () => {
-    const store = makeStore(buildQueries({ discovery: 'configured', validation: undefined, extraction: undefined, analysis: undefined }));
+    const store = makeStore(buildQueries({ discovery: 'configured', validation: undefined, enrichment: undefined, extraction: undefined, analysis: undefined }));
     store.dispatch(pushGuidanceMessage({ campaignId, msg: { id: 'g1', message: 'Test guidance', severity: 'info' } }));
     const overviewSel = pipelineSelectors.overview(campaignId);
     const ov = overviewSel(store.getState() as RootState);

@@ -6,9 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, Clock, Pause } from 'lucide-react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
-type CampaignCurrentPhaseEnum = 'discovery' | 'validation' | 'extraction' | 'analysis';
+type CampaignCurrentPhaseEnum = 'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis';
 type CampaignPhaseStatusEnum = 'not_started' | 'configured' | 'running' | 'paused' | 'completed' | 'failed';
 import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import { getPhaseDisplayName as getCanonicalPhaseDisplayName } from '@/lib/utils/phaseMapping';
 
 // Helper function to ensure valid badge variants
 function getValidBadgeVariant(color: string): "default" | "secondary" | "destructive" | "outline" {
@@ -93,18 +95,8 @@ const CampaignProgressMonitor = memo(({
 
   // Phase display names
   const getPhaseDisplayName = (phase: CampaignCurrentPhaseEnum): string => {
-    switch (phase) {
-      case 'discovery':
-        return 'Discovery';
-      case 'validation':
-        return 'Validation';
-      case 'extraction':
-        return 'Extraction';
-      case 'analysis':
-        return 'Analysis';
-      default:
-        return String(phase);
-    }
+    const normalized = normalizeToApiPhase(phase.toLowerCase());
+    return normalized ? getCanonicalPhaseDisplayName(normalized) : String(phase);
   };
 
   return (

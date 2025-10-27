@@ -1,7 +1,7 @@
 import { PhaseStatusResponse } from '@/lib/api-client/models';
 
 // Fallback literal types when enum exports are not generated (OpenAPI may inline string enums)
-export type PipelinePhase = 'discovery' | 'validation' | 'extraction' | 'analysis';
+export type PipelinePhase = 'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis';
 export type PhaseRunStatus =
   | 'not_started'
   | 'configured'

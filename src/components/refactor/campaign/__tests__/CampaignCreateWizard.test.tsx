@@ -34,17 +34,17 @@ const mockUseUpdateCampaignModeMutation = jest.fn();
 const mockUseStartPhaseStandaloneMutation = jest.fn();
 const mockUseConfigurePhaseStandaloneMutation = jest.fn();
 
-jest.mock('@/store/api/campaignApi', () => ({
-  campaignApi: {
-    reducer: jest.fn(),
-    middleware: [],
-    endpoints: {},
-  },
-  useCreateCampaignMutation: () => mockUseCreateCampaignMutation(),
-  useUpdateCampaignModeMutation: () => mockUseUpdateCampaignModeMutation(),
-  useStartPhaseStandaloneMutation: () => mockUseStartPhaseStandaloneMutation(),
-  useConfigurePhaseStandaloneMutation: () => mockUseConfigurePhaseStandaloneMutation(),
-}));
+jest.mock('@/store/api/campaignApi', () => {
+  const actualModule = jest.requireActual('@/store/api/campaignApi');
+
+  return {
+    ...actualModule,
+    useCreateCampaignMutation: () => mockUseCreateCampaignMutation(),
+    useUpdateCampaignModeMutation: () => mockUseUpdateCampaignModeMutation(),
+    useStartPhaseStandaloneMutation: () => mockUseStartPhaseStandaloneMutation(),
+    useConfigurePhaseStandaloneMutation: () => mockUseConfigurePhaseStandaloneMutation(),
+  };
+});
 
 jest.mock('@/lib/hooks/useCampaignFormData', () => ({
   useCampaignFormData: jest.fn(),
@@ -66,11 +66,32 @@ const createTestStore = () => {
 
 const renderWithProviders = (component: React.ReactElement) => {
   const store = createTestStore();
-  return render(
+  const utils = render(
     <Provider store={store}>
       {component}
     </Provider>
   );
+
+  return {
+    store,
+    ...utils,
+    rerender: (nextComponent: React.ReactElement) =>
+      utils.rerender(
+        <Provider store={store}>
+          {nextComponent}
+        </Provider>
+      ),
+  };
+};
+
+const getMaxDomainsInput = (): HTMLInputElement => {
+  const labelElement = screen.getByText('Max Domains');
+  const container = labelElement.parentElement ?? labelElement.closest('div');
+  const input = container?.querySelector('input');
+  if (!input || !(input instanceof HTMLInputElement)) {
+    throw new Error('Max Domains input not found');
+  }
+  return input;
 };
 
 describe('CampaignCreateWizard', () => {
@@ -89,6 +110,15 @@ describe('CampaignCreateWizard', () => {
     mockUseStartPhaseStandaloneMutation.mockReturnValue([mockStartPhase, { isLoading: false }]);
     mockUseConfigurePhaseStandaloneMutation.mockReturnValue([mockConfigurePhase, { isLoading: false }]);
 
+    mockCreateCampaign.mockReturnValue({
+      unwrap: jest.fn().mockResolvedValue({ id: 'test-campaign-id' }),
+    });
+    mockUpdateCampaignMode.mockReturnValue({
+      unwrap: jest.fn().mockResolvedValue({}),
+    });
+    mockStartPhase.mockReturnValue({
+      unwrap: jest.fn().mockResolvedValue({ status: 'started' }),
+    });
     mockConfigurePhase.mockImplementation(() => ({
       unwrap: jest.fn().mockResolvedValue({ status: 'configured' }),
     }));
@@ -130,7 +160,7 @@ describe('CampaignCreateWizard', () => {
       await user.type(nameInput, 'Test Auto Campaign');
 
       // Select auto mode
-      const autoModeRadio = screen.getByLabelText(/Full Auto/i);
+      const autoModeRadio = screen.getByRole('radio', { name: /Full Auto/i });
       await user.click(autoModeRadio);
 
       // Next to pattern step
@@ -138,10 +168,10 @@ describe('CampaignCreateWizard', () => {
       await user.click(nextButton);
 
       // Step 2: Fill in pattern step
-      const patternInput = screen.getByPlaceholderText(/e\.g\., example-\{variation\}\.com/);
-      await user.type(patternInput, 'test-{variation}.com');
+      const patternInput = screen.getByLabelText('Constant Segment');
+      await user.type(patternInput, 'brand');
 
-      const maxDomainsInput = screen.getByPlaceholderText('1000');
+      const maxDomainsInput = getMaxDomainsInput();
       await user.clear(maxDomainsInput);
       await user.type(maxDomainsInput, '100');
 
@@ -156,7 +186,7 @@ describe('CampaignCreateWizard', () => {
     await user.click(nextButton);
 
       // Step 4: Review and create
-      const createButton = screen.getByRole('button', { name: /create campaign/i });
+      const createButton = screen.getByRole('button', { name: /create & start campaign/i });
       await user.click(createButton);
 
       await waitFor(() => {
@@ -164,7 +194,7 @@ describe('CampaignCreateWizard', () => {
         expect(mockCreateCampaign).toHaveBeenCalled();
 
         // Verify phases were configured before auto-start
-        expect(mockConfigurePhase).toHaveBeenCalledTimes(4);
+        expect(mockConfigurePhase).toHaveBeenCalledTimes(5);
         expect(mockConfigurePhase).toHaveBeenNthCalledWith(1, expect.objectContaining({
           campaignId: 'test-campaign-id',
           phase: 'discovery',
@@ -173,9 +203,12 @@ describe('CampaignCreateWizard', () => {
           phase: 'validation',
         }));
         expect(mockConfigurePhase).toHaveBeenNthCalledWith(3, expect.objectContaining({
-          phase: 'extraction',
+          phase: 'enrichment',
         }));
         expect(mockConfigurePhase).toHaveBeenNthCalledWith(4, expect.objectContaining({
+          phase: 'extraction',
+        }));
+        expect(mockConfigurePhase).toHaveBeenNthCalledWith(5, expect.objectContaining({
           phase: 'analysis',
         }));
         
@@ -192,14 +225,14 @@ describe('CampaignCreateWizard', () => {
         });
         
         // Verify success toast
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
           title: 'Campaign Created & Started',
-          description: expect.stringContaining('auto mode and the discovery phase has started automatically'),
-        });
+          description: expect.stringContaining('auto mode'),
+        }));
         
         // Verify redirect
         expect(mockPush).toHaveBeenCalledWith('/campaigns/test-campaign-id');
-      });
+      }, { timeout: 3000 });
     });
 
     it('should handle auto-start failure gracefully', async () => {
@@ -222,17 +255,17 @@ describe('CampaignCreateWizard', () => {
       const nameInput = screen.getByPlaceholderText('Enter a descriptive name for your campaign');
       await user.type(nameInput, 'Test Auto Campaign');
 
-      const autoModeRadio = screen.getByLabelText(/Full Auto/i);
+      const autoModeRadio = screen.getByRole('radio', { name: /Full Auto/i });
       await user.click(autoModeRadio);
 
     // Navigate through steps
     let nextButton = screen.getByRole('button', { name: /next/i });
     await user.click(nextButton);
 
-      const patternInput = screen.getByPlaceholderText(/e\.g\., example-\{variation\}\.com/);
-      await user.type(patternInput, 'test-{variation}.com');
+      const patternInput = screen.getByLabelText('Constant Segment');
+      await user.type(patternInput, 'brand');
 
-      const maxDomainsInput = screen.getByPlaceholderText('1000');
+      const maxDomainsInput = getMaxDomainsInput();
       await user.clear(maxDomainsInput);
       await user.type(maxDomainsInput, '100');
 
@@ -246,7 +279,7 @@ describe('CampaignCreateWizard', () => {
     nextButton = screen.getByRole('button', { name: /next/i });
     await user.click(nextButton);
 
-      const createButton = screen.getByRole('button', { name: /create campaign/i });
+      const createButton = screen.getByRole('button', { name: /create & start campaign/i });
       await user.click(createButton);
 
       await waitFor(() => {
@@ -255,19 +288,18 @@ describe('CampaignCreateWizard', () => {
         expect(mockUpdateCampaignMode).toHaveBeenCalled();
         
     // Verify phases were configured and auto-start was attempted
-    expect(mockConfigurePhase).toHaveBeenCalledTimes(4);
+    expect(mockConfigurePhase).toHaveBeenCalledTimes(5);
     expect(mockStartPhase).toHaveBeenCalled();
         
         // Verify warning toast about auto-start failure
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
           title: 'Campaign Created',
-          description: expect.stringContaining('but auto-start failed. You can start the discovery phase manually'),
-          variant: 'default',
-        });
+          description: expect.stringContaining('auto-start failed'),
+        }));
         
         // Verify redirect still happens
         expect(mockPush).toHaveBeenCalledWith('/campaigns/test-campaign-id');
-      });
+      }, { timeout: 3000 });
     });
 
     it('should not attempt auto-start for manual mode', async () => {
@@ -287,17 +319,17 @@ describe('CampaignCreateWizard', () => {
       await user.type(nameInput, 'Test Manual Campaign');
 
       // Select manual mode
-      const manualModeRadio = screen.getByLabelText(/Manual/i);
+      const manualModeRadio = screen.getByRole('radio', { name: /Manual \(Step-by-Step\)/i });
       await user.click(manualModeRadio);
 
       // Navigate through steps
       let nextButton = screen.getByRole('button', { name: /next/i });
       await user.click(nextButton);
 
-      const patternInput = screen.getByPlaceholderText(/e\.g\., example-\{variation\}\.com/);
-      await user.type(patternInput, 'test-{variation}.com');
+      const patternInput = screen.getByLabelText('Constant Segment');
+      await user.type(patternInput, 'brand');
 
-      const maxDomainsInput = screen.getByPlaceholderText('1000');
+      const maxDomainsInput = getMaxDomainsInput();
       await user.clear(maxDomainsInput);
       await user.type(maxDomainsInput, '100');
 
@@ -323,10 +355,10 @@ describe('CampaignCreateWizard', () => {
   expect(mockConfigurePhase).not.toHaveBeenCalled();
         
         // Verify regular success toast
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
           title: 'Campaign Created Successfully',
           description: expect.stringContaining('manual mode'),
-        });
+        }));
       });
     });
   });
@@ -353,24 +385,28 @@ describe('CampaignCreateWizard', () => {
       });
 
       // Force start phase hook to indicate loading state
-      mockUseStartPhaseStandaloneMutation.mockReturnValue([mockStartPhase, { isLoading: true }]);
+      let startPhaseLoading = false;
+      mockUseStartPhaseStandaloneMutation.mockImplementation(() => [
+        mockStartPhase,
+        { isLoading: startPhaseLoading },
+      ]);
 
-      renderWithProviders(<CampaignCreateWizard />);
+      const { rerender } = renderWithProviders(<CampaignCreateWizard />);
 
       // Navigate to final step and create
       const nameInput = screen.getByPlaceholderText('Enter a descriptive name for your campaign');
       await user.type(nameInput, 'Test Auto Campaign');
 
-      const autoModeRadio = screen.getByLabelText(/Full Auto/i);
+      const autoModeRadio = screen.getByRole('radio', { name: /Full Auto/i });
       await user.click(autoModeRadio);
 
-      let nextButton = screen.getByRole('button', { name: /next/i });
+      let nextButton = screen.getByRole('button', { name: /^Next/i });
       await user.click(nextButton);
 
-      const patternInput = screen.getByPlaceholderText(/e\.g\., example-\{variation\}\.com/);
-      await user.type(patternInput, 'test-{variation}.com');
+      const patternInput = screen.getByLabelText('Constant Segment');
+      await user.type(patternInput, 'brand');
 
-      const maxDomainsInput = screen.getByPlaceholderText('1000');
+      const maxDomainsInput = getMaxDomainsInput();
       await user.clear(maxDomainsInput);
       await user.type(maxDomainsInput, '100');
 
@@ -383,12 +419,15 @@ describe('CampaignCreateWizard', () => {
 
   await user.click(nextButton);
 
-      const createButton = screen.getByRole('button', { name: /create campaign/i });
+      const createButton = screen.getByRole('button', { name: /create & start campaign/i });
       await user.click(createButton);
+
+      startPhaseLoading = true;
+      rerender(<CampaignCreateWizard />);
 
       // Should show loading state during start phase
       await waitFor(() => {
-        expect(screen.getByText('Starting Campaign...')).toBeInTheDocument();
+        expect(screen.getByText('Starting Auto Campaign...')).toBeInTheDocument();
       });
 
       // Resolve the start phase

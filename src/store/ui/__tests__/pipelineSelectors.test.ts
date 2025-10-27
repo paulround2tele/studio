@@ -37,7 +37,7 @@ describe('pipeline overview selector', () => {
 				campaignUI: campaignUIReducer,
 				// omit pipelineExec intentionally
 				// @ts-expect-error
-				campaignApi: (s = { queries: makeQueries(campaignId, { discovery: undefined, validation: undefined, extraction: undefined, analysis: undefined }) }) => s,
+				campaignApi: (s = { queries: makeQueries(campaignId, { discovery: undefined, validation: undefined, enrichment: undefined, extraction: undefined, analysis: undefined }) }) => s,
 			}
 		});
 		const sel = pipelineSelectors.overview(campaignId);
@@ -47,7 +47,7 @@ describe('pipeline overview selector', () => {
 	});
 
 	it('enriches phases with duration after completion events', () => {
-		const store = makeStore(campaignId, { discovery: 'configured', validation: 'configured', extraction: 'configured', analysis: 'configured' });
+		const store = makeStore(campaignId, { discovery: 'configured', validation: 'configured', enrichment: 'configured', extraction: 'configured', analysis: 'configured' });
 		const ovSel = pipelineSelectors.overview(campaignId);
 		store.dispatch(phaseStarted({ campaignId, phase: 'discovery', ts: 1000 }));
 		store.dispatch(phaseCompleted({ campaignId, phase: 'discovery', ts: 1500 }));

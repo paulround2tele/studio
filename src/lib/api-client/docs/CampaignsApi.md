@@ -1289,7 +1289,7 @@ const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
-let phaseType: 'discovery' | 'validation' | 'extraction' | 'analysis'; // (default to undefined)
+let phaseType: 'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis'; // (default to undefined)
 
 const { status, data } = await apiInstance.campaignsPhaseExecutionDelete(
     campaignId,
@@ -1302,7 +1302,7 @@ const { status, data } = await apiInstance.campaignsPhaseExecutionDelete(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **campaignId** | [**string**] |  | defaults to undefined|
-| **phaseType** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
+| **phaseType** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;enrichment&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;enrichment&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
 
 
 ### Return type
@@ -1344,7 +1344,7 @@ const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
-let phaseType: 'discovery' | 'validation' | 'extraction' | 'analysis'; // (default to undefined)
+let phaseType: 'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis'; // (default to undefined)
 
 const { status, data } = await apiInstance.campaignsPhaseExecutionGet(
     campaignId,
@@ -1357,7 +1357,7 @@ const { status, data } = await apiInstance.campaignsPhaseExecutionGet(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **campaignId** | [**string**] |  | defaults to undefined|
-| **phaseType** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
+| **phaseType** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;enrichment&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;enrichment&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
 
 
 ### Return type
@@ -1400,7 +1400,7 @@ const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
-let phaseType: 'discovery' | 'validation' | 'extraction' | 'analysis'; // (default to undefined)
+let phaseType: 'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis'; // (default to undefined)
 let phaseExecutionUpdate: PhaseExecutionUpdate; //
 
 const { status, data } = await apiInstance.campaignsPhaseExecutionPut(
@@ -1416,7 +1416,7 @@ const { status, data } = await apiInstance.campaignsPhaseExecutionPut(
 |------------- | ------------- | ------------- | -------------|
 | **phaseExecutionUpdate** | **PhaseExecutionUpdate**|  | |
 | **campaignId** | [**string**] |  | defaults to undefined|
-| **phaseType** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
+| **phaseType** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;enrichment&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;enrichment&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
 
 
 ### Return type

@@ -12,7 +12,7 @@ get:
       required: true
       schema:
         type: string
-        enum: [discovery, validation, extraction, analysis]
+        enum: [discovery, validation, enrichment, extraction, analysis]
   responses:
     '200':
       description: OK
@@ -35,7 +35,7 @@ put:
       required: true
       schema:
         type: string
-        enum: [discovery, validation, extraction, analysis]
+        enum: [discovery, validation, enrichment, extraction, analysis]
   requestBody:
     required: true
     content:
@@ -64,7 +64,7 @@ delete:
       required: true
       schema:
         type: string
-        enum: [discovery, validation, extraction, analysis]
+        enum: [discovery, validation, enrichment, extraction, analysis]
   responses:
     '204': { description: No Content }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }

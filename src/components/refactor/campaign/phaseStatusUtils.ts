@@ -8,6 +8,7 @@ import type { PipelinePhase } from './PipelineBar';
 import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campaign-phases-status-response';
 import type { CampaignPhasesStatusResponsePhasesInner } from '@/lib/api-client/models/campaign-phases-status-response-phases-inner';
 import type { FunnelData } from './FunnelSnapshot';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 export interface MergeCampaignPhasesOptions {
   basePhases?: PipelinePhase[];
@@ -25,11 +26,11 @@ type MutablePhase = PipelinePhase & {
 };
 
 const FUNNEL_FIELD_BY_PHASE: Partial<Record<PhaseKey, keyof FunnelData>> = {
-  generation: 'generated',
-  dns: 'dnsValid',
-  http: 'httpValid',
+  discovery: 'generated',
+  validation: 'dnsValid',
+  enrichment: 'httpValid',
+  extraction: 'leads',
   analysis: 'analyzed',
-  leads: 'leads'
 };
 
 const SAFE_PROGRESS_MAX = 100;
@@ -48,7 +49,9 @@ function applySnapshot(phases: Map<PhaseKey, MutablePhase>, snapshot?: CampaignP
   }
 
   snapshot.phases.forEach((phaseSnapshot: CampaignPhasesStatusResponsePhasesInner) => {
-    const phase = phases.get(phaseSnapshot.phase as PhaseKey);
+    const normalized = normalizeToApiPhase(String(phaseSnapshot.phase || '').toLowerCase());
+    if (!normalized) return;
+    const phase = phases.get(normalized as PhaseKey);
     if (!phase) return;
 
     phase.status = phaseSnapshot.status;
@@ -75,7 +78,7 @@ function applyFunnelFallback(phases: Map<PhaseKey, MutablePhase>, funnel?: Funne
     if (value <= 0) return;
 
     // Special handling for generation where we only know produced domains
-    if (key === 'generation') {
+    if (key === 'discovery') {
       phase.status = 'completed';
       phase.progressPercentage = SAFE_PROGRESS_MAX;
       return;
@@ -97,7 +100,9 @@ function applySseOverlay(phases: Map<PhaseKey, MutablePhase>, ssePhases?: Pipeli
   if (!isMeaningfulSseUpdate(ssePhases, lastUpdate)) return;
 
   ssePhases!.forEach((ssePhase) => {
-    const target = phases.get(ssePhase.key as PhaseKey);
+    const normalized = normalizeToApiPhase(String(ssePhase.key || '').toLowerCase());
+    if (!normalized) return;
+    const target = phases.get(normalized as PhaseKey);
     if (!target) return;
 
     target.status = ssePhase.status;

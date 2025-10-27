@@ -34,16 +34,16 @@ describe('mergeCampaignPhases', () => {
     };
 
     const result = mergeCampaignPhases({ statusSnapshot: snapshot });
-    const generation = result.find((phase) => phase.key === 'generation');
-    const dns = result.find((phase) => phase.key === 'dns');
+    const discovery = result.find((phase) => phase.key === 'discovery');
+    const validation = result.find((phase) => phase.key === 'validation');
 
-    expect(generation).toMatchObject({
+    expect(discovery).toMatchObject({
       status: 'completed',
       progressPercentage: 100,
       startedAt: '2024-01-01T00:00:00Z',
       completedAt: '2024-01-01T00:05:00Z'
     });
-    expect(dns).toMatchObject({
+    expect(validation).toMatchObject({
       status: 'in_progress',
       progressPercentage: 50
     });
@@ -61,14 +61,14 @@ describe('mergeCampaignPhases', () => {
     };
 
     const result = mergeCampaignPhases({ funnelData });
-    const generation = result.find((phase) => phase.key === 'generation');
-    const dns = result.find((phase) => phase.key === 'dns');
+    const discovery = result.find((phase) => phase.key === 'discovery');
+    const validation = result.find((phase) => phase.key === 'validation');
 
-    expect(generation).toMatchObject({
+    expect(discovery).toMatchObject({
       status: 'completed',
       progressPercentage: 100
     });
-    expect(dns).toMatchObject({
+    expect(validation).toMatchObject({
       status: 'in_progress',
       progressPercentage: 60
     });
@@ -95,15 +95,15 @@ describe('mergeCampaignPhases', () => {
 
   it('ignores SSE phases when lacking last update timestamp', () => {
     const ssePhases: PipelinePhase[] = cloneDefaultPhases().map((phase) =>
-      phase.key === 'leads'
+      phase.key === 'extraction'
         ? { ...phase, status: 'completed', progressPercentage: 100 }
         : phase
     );
 
     const result = mergeCampaignPhases({ ssePhases });
-    const leads = result.find((phase) => phase.key === 'leads');
+    const extraction = result.find((phase) => phase.key === 'extraction');
 
-    expect(leads).toMatchObject({
+    expect(extraction).toMatchObject({
       status: 'not_started',
       progressPercentage: 0
     });
@@ -113,7 +113,7 @@ describe('mergeCampaignPhases', () => {
 describe('deriveOverallProgress', () => {
   it('computes average progress across phases', () => {
     const phases: PipelinePhase[] = cloneDefaultPhases().map((phase) =>
-      phase.key === 'generation'
+      phase.key === 'discovery'
         ? { ...phase, status: 'completed', progressPercentage: 100 }
         : phase
     );

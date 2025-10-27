@@ -3108,6 +3108,7 @@ paths:
             enum:
               - discovery
               - validation
+              - enrichment
               - extraction
               - analysis
       responses:
@@ -3141,6 +3142,7 @@ paths:
             enum:
               - discovery
               - validation
+              - enrichment
               - extraction
               - analysis
       requestBody:
@@ -3182,6 +3184,7 @@ paths:
             enum:
               - discovery
               - validation
+              - enrichment
               - extraction
               - analysis
       responses:
@@ -4612,6 +4615,8 @@ components:
             discovery:
               $ref: '#/components/schemas/PhaseProgressSummary'
             validation:
+              $ref: '#/components/schemas/PhaseProgressSummary'
+            enrichment:
               $ref: '#/components/schemas/PhaseProgressSummary'
             extraction:
               $ref: '#/components/schemas/PhaseProgressSummary'
@@ -6172,6 +6177,7 @@ components:
           enum:
             - discovery
             - validation
+            - enrichment
             - extraction
             - analysis
           nullable: true
@@ -6615,6 +6621,7 @@ components:
           enum:
             - discovery
             - validation
+            - enrichment
             - extraction
             - analysis
         status:
@@ -6759,6 +6766,7 @@ components:
       enum:
         - discovery
         - validation
+        - enrichment
         - extraction
         - analysis
     PhaseStatusResponse:
@@ -6769,6 +6777,7 @@ components:
           enum:
             - discovery
             - validation
+            - enrichment
             - extraction
             - analysis
         status:

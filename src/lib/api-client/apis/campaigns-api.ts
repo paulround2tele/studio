@@ -3771,6 +3771,7 @@ export enum CampaignsDomainsListWarningsEnum {
 export enum CampaignsPhaseExecutionDeletePhaseTypeEnum {
     discovery = 'discovery',
     validation = 'validation',
+    enrichment = 'enrichment',
     extraction = 'extraction',
     analysis = 'analysis'
 }
@@ -3781,6 +3782,7 @@ export enum CampaignsPhaseExecutionDeletePhaseTypeEnum {
 export enum CampaignsPhaseExecutionGetPhaseTypeEnum {
     discovery = 'discovery',
     validation = 'validation',
+    enrichment = 'enrichment',
     extraction = 'extraction',
     analysis = 'analysis'
 }
@@ -3791,6 +3793,7 @@ export enum CampaignsPhaseExecutionGetPhaseTypeEnum {
 export enum CampaignsPhaseExecutionPutPhaseTypeEnum {
     discovery = 'discovery',
     validation = 'validation',
+    enrichment = 'enrichment',
     extraction = 'extraction',
     analysis = 'analysis'
 }

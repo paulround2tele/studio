@@ -6,6 +6,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSSE, type SSEEvent } from './useSSE';
 import type { PipelinePhase } from '@/components/refactor/campaign/PipelineBar';
+import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
+import { API_PHASE_ORDER, normalizeToApiPhase, type ApiPhase } from '@/lib/utils/phaseNames';
 
 export interface PhaseUpdateEvent {
   campaignId: string;
@@ -30,39 +32,15 @@ interface UseCampaignPhaseStreamReturn {
   lastUpdate: number | null;
 }
 
-// Default phase configuration matching the expected 5-phase pipeline
-export const DEFAULT_PHASES: PipelinePhase[] = [
-  {
-    key: 'generation',
-    label: 'Generation',
-    status: 'not_started',
-    progressPercentage: 0
-  },
-  {
-    key: 'dns',
-    label: 'DNS Validation',
-    status: 'not_started',
-    progressPercentage: 0
-  },
-  {
-    key: 'http',
-    label: 'HTTP Validation',
-    status: 'not_started',
-    progressPercentage: 0
-  },
-  {
-    key: 'analysis',
-    label: 'Analysis',
-    status: 'not_started',
-    progressPercentage: 0
-  },
-  {
-    key: 'leads',
-    label: 'Lead Extraction',
-    status: 'not_started',
-    progressPercentage: 0
-  }
-];
+const buildDefaultPhase = (phase: ApiPhase): PipelinePhase => ({
+  key: phase,
+  label: getPhaseDisplayName(phase),
+  status: 'not_started',
+  progressPercentage: 0,
+});
+
+// Default phase configuration matching canonical API order
+export const DEFAULT_PHASES: PipelinePhase[] = API_PHASE_ORDER.map(buildDefaultPhase);
 
 /**
  * Hook for real-time campaign phase updates via SSE
@@ -97,11 +75,18 @@ export function useCampaignPhaseStream(
     try {
       if (event.type === 'phaseUpdate' && (event as PhaseUpdateSSE).data) {
         const phaseEvent = (event as PhaseUpdateSSE).data;
-        
+        const normalizedPhase = normalizeToApiPhase(String(phaseEvent.phase || '').toLowerCase());
+
+        if (!normalizedPhase) {
+          return;
+        }
+
         // Update the specific phase
-        setPhases(prevPhases => 
-          prevPhases.map(phase => 
-            phase.key === phaseEvent.phase
+        setPhases(prevPhases => {
+          const hasPhase = prevPhases.some(phase => phase.key === normalizedPhase);
+          const next = hasPhase ? prevPhases : [...prevPhases, buildDefaultPhase(normalizedPhase)];
+          return next.map(phase =>
+            phase.key === normalizedPhase
               ? {
                   ...phase,
                   status: phaseEvent.status,
@@ -110,11 +95,11 @@ export function useCampaignPhaseStream(
                   completedAt: phaseEvent.completedAt
                 }
               : phase
-          )
-        );
+          );
+        });
 
         setLastUpdate(Date.now());
-        onPhaseUpdate?.(phaseEvent);
+        onPhaseUpdate?.({ ...phaseEvent, phase: normalizedPhase });
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to process phase update';

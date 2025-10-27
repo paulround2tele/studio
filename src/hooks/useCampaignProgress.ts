@@ -11,6 +11,8 @@ import {
   createMockProgressStream,
   ProgressStreamOptions 
 } from '@/services/campaignMetrics/progressStream';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
 
 // Feature flag check
 const ENABLE_REALTIME_PROGRESS = process.env.NEXT_PUBLIC_ENABLE_REALTIME_PROGRESS === 'true';
@@ -290,17 +292,34 @@ export function useProgressAvailability(campaignId: string): boolean {
  */
 export function useFormattedPhase(phase: string): string {
   return useMemo(() => {
-    const phaseMap: Record<string, string> = {
-      'initializing': 'Initializing',
-      'dns_validation': 'DNS Validation', 
-      'http_validation': 'HTTP Validation',
-      'enrichment': 'Data Enrichment',
-      'analysis': 'Analysis',
-      'completed': 'Completed',
-      'failed': 'Failed',
-      'cancelled': 'Cancelled'
+    const value = typeof phase === 'string' ? phase.trim() : '';
+    if (!value) return 'Unknown Phase';
+
+    const normalized = normalizeToApiPhase(value.toLowerCase());
+    if (normalized) {
+      return getPhaseDisplayName(normalized);
+    }
+
+    const fallbackMap: Record<string, string> = {
+      initializing: 'Initializing',
+      domain_generation: 'Domain Discovery',
+      generation: 'Domain Discovery',
+      dns_validation: 'DNS Validation',
+      dns: 'DNS Validation',
+      http_keyword_validation: 'HTTP Data Enrichment',
+      http_validation: 'HTTP Data Enrichment',
+      http: 'HTTP Data Enrichment',
+      leads: 'Lead Extraction',
+      enrichment: 'Lead Extraction',
+      extraction: 'Lead Extraction',
+      analysis: 'Analysis',
+      analytics: 'Analysis',
+      completed: 'Completed',
+      failed: 'Failed',
+      cancelled: 'Cancelled',
     };
 
-    return phaseMap[phase.toLowerCase()] || phase;
+    const key = value.toLowerCase();
+    return fallbackMap[key] || value;
   }, [phase]);
 }
