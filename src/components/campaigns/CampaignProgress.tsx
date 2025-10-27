@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 interface CampaignProgressProps {
   campaign: Campaign;
@@ -65,9 +66,11 @@ export function CampaignProgress({ campaign, phaseExecutions, state: _state }: C
     const map = new Map<CampaignPhase, PhaseExecution>();
     if (Array.isArray(phaseExecutions)) {
       for (const exec of phaseExecutions) {
-        if (exec && typeof exec.phaseType === 'string' && phaseDisplayNames[exec.phaseType as CampaignPhase]) {
-          map.set(exec.phaseType as CampaignPhase, exec);
-        }
+        if (!exec || typeof exec.phaseType !== 'string') continue;
+        const normalized = normalizeToApiPhase(exec.phaseType);
+        if (!normalized) continue;
+        if (!phaseDisplayNames[normalized as CampaignPhase]) continue;
+        map.set(normalized as CampaignPhase, exec);
       }
     }
     return map;
