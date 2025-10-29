@@ -53,6 +53,7 @@
     "maxBodyReadBytes": 10485760
   },
   "logging": {
-    "level": "INFO"
+    "level": "INFO",
+    "logFilePath": "logs/apiserver.log"
   }
 }

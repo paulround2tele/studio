@@ -22,6 +22,14 @@ const (
 	CookieAuthScopes = "cookieAuth.Scopes"
 )
 
+// Defines values for AuthConfigProvider.
+const (
+	AuthConfigProviderLocal  AuthConfigProvider = "local"
+	AuthConfigProviderNone   AuthConfigProvider = "none"
+	AuthConfigProviderOauth2 AuthConfigProvider = "oauth2"
+	AuthConfigProviderSaml   AuthConfigProvider = "saml"
+)
+
 // Defines values for BulkAnalyticsRequestAggregationFunctions.
 const (
 	Avg   BulkAnalyticsRequestAggregationFunctions = "avg"
@@ -119,10 +127,10 @@ const (
 
 // Defines values for BulkResourceAllocationRequestPriority.
 const (
-	Critical BulkResourceAllocationRequestPriority = "critical"
-	High     BulkResourceAllocationRequestPriority = "high"
-	Low      BulkResourceAllocationRequestPriority = "low"
-	Normal   BulkResourceAllocationRequestPriority = "normal"
+	BulkResourceAllocationRequestPriorityCritical BulkResourceAllocationRequestPriority = "critical"
+	BulkResourceAllocationRequestPriorityHigh     BulkResourceAllocationRequestPriority = "high"
+	BulkResourceAllocationRequestPriorityLow      BulkResourceAllocationRequestPriority = "low"
+	BulkResourceAllocationRequestPriorityNormal   BulkResourceAllocationRequestPriority = "normal"
 )
 
 // Defines values for BulkResourceAllocationResponseStatus.
@@ -159,6 +167,7 @@ const (
 const (
 	CampaignPhaseEnumAnalysis   CampaignPhaseEnum = "analysis"
 	CampaignPhaseEnumDiscovery  CampaignPhaseEnum = "discovery"
+	CampaignPhaseEnumEnrichment CampaignPhaseEnum = "enrichment"
 	CampaignPhaseEnumExtraction CampaignPhaseEnum = "extraction"
 	CampaignPhaseEnumValidation CampaignPhaseEnum = "validation"
 )
@@ -209,6 +218,7 @@ const (
 const (
 	CampaignResponseCurrentPhaseAnalysis   CampaignResponseCurrentPhase = "analysis"
 	CampaignResponseCurrentPhaseDiscovery  CampaignResponseCurrentPhase = "discovery"
+	CampaignResponseCurrentPhaseEnrichment CampaignResponseCurrentPhase = "enrichment"
 	CampaignResponseCurrentPhaseExtraction CampaignResponseCurrentPhase = "extraction"
 	CampaignResponseCurrentPhaseValidation CampaignResponseCurrentPhase = "validation"
 )
@@ -334,6 +344,20 @@ const (
 	String KeywordRuleType = "string"
 )
 
+// Defines values for LoggingConfigFormat.
+const (
+	Json LoggingConfigFormat = "json"
+	Text LoggingConfigFormat = "text"
+)
+
+// Defines values for LoggingConfigLevel.
+const (
+	LoggingConfigLevelDebug LoggingConfigLevel = "debug"
+	LoggingConfigLevelError LoggingConfigLevel = "error"
+	LoggingConfigLevelInfo  LoggingConfigLevel = "info"
+	LoggingConfigLevelWarn  LoggingConfigLevel = "warn"
+)
+
 // Defines values for PageInfoSortOrder.
 const (
 	PageInfoSortOrderASC  PageInfoSortOrder = "ASC"
@@ -398,6 +422,7 @@ const (
 const (
 	PhaseExecutionPhaseTypeAnalysis   PhaseExecutionPhaseType = "analysis"
 	PhaseExecutionPhaseTypeDiscovery  PhaseExecutionPhaseType = "discovery"
+	PhaseExecutionPhaseTypeEnrichment PhaseExecutionPhaseType = "enrichment"
 	PhaseExecutionPhaseTypeExtraction PhaseExecutionPhaseType = "extraction"
 	PhaseExecutionPhaseTypeValidation PhaseExecutionPhaseType = "validation"
 )
@@ -416,6 +441,7 @@ const (
 const (
 	PhaseStatusResponsePhaseAnalysis   PhaseStatusResponsePhase = "analysis"
 	PhaseStatusResponsePhaseDiscovery  PhaseStatusResponsePhase = "discovery"
+	PhaseStatusResponsePhaseEnrichment PhaseStatusResponsePhase = "enrichment"
 	PhaseStatusResponsePhaseExtraction PhaseStatusResponsePhase = "extraction"
 	PhaseStatusResponsePhaseValidation PhaseStatusResponsePhase = "validation"
 )
@@ -443,11 +469,18 @@ const (
 	ProxyProtocolSocks5 ProxyProtocol = "socks5"
 )
 
+// Defines values for RateLimiterConfigStrategy.
+const (
+	FixedWindow   RateLimiterConfigStrategy = "fixed_window"
+	SlidingWindow RateLimiterConfigStrategy = "sliding_window"
+	TokenBucket   RateLimiterConfigStrategy = "token_bucket"
+)
+
 // Defines values for RecommendationSeverity.
 const (
-	Action RecommendationSeverity = "action"
-	Info   RecommendationSeverity = "info"
-	Warn   RecommendationSeverity = "warn"
+	RecommendationSeverityAction RecommendationSeverity = "action"
+	RecommendationSeverityInfo   RecommendationSeverity = "info"
+	RecommendationSeverityWarn   RecommendationSeverity = "warn"
 )
 
 // Defines values for TimelineEventStatus.
@@ -456,6 +489,14 @@ const (
 	TimelineEventStatusFailed    TimelineEventStatus = "failed"
 	TimelineEventStatusPending   TimelineEventStatus = "pending"
 	TimelineEventStatusRunning   TimelineEventStatus = "running"
+)
+
+// Defines values for WorkerConfigPriority.
+const (
+	WorkerConfigPriorityCritical WorkerConfigPriority = "critical"
+	WorkerConfigPriorityHigh     WorkerConfigPriority = "high"
+	WorkerConfigPriorityLow      WorkerConfigPriority = "low"
+	WorkerConfigPriorityNormal   WorkerConfigPriority = "normal"
 )
 
 // Defines values for XRequestedWith.
@@ -494,14 +535,15 @@ const (
 
 // Defines values for CampaignsDomainsListParamsWarnings.
 const (
-	Has  CampaignsDomainsListParamsWarnings = "has"
-	None CampaignsDomainsListParamsWarnings = "none"
+	CampaignsDomainsListParamsWarningsHas  CampaignsDomainsListParamsWarnings = "has"
+	CampaignsDomainsListParamsWarningsNone CampaignsDomainsListParamsWarnings = "none"
 )
 
 // Defines values for CampaignsPhaseExecutionDeleteParamsPhaseType.
 const (
 	CampaignsPhaseExecutionDeleteParamsPhaseTypeAnalysis   CampaignsPhaseExecutionDeleteParamsPhaseType = "analysis"
 	CampaignsPhaseExecutionDeleteParamsPhaseTypeDiscovery  CampaignsPhaseExecutionDeleteParamsPhaseType = "discovery"
+	CampaignsPhaseExecutionDeleteParamsPhaseTypeEnrichment CampaignsPhaseExecutionDeleteParamsPhaseType = "enrichment"
 	CampaignsPhaseExecutionDeleteParamsPhaseTypeExtraction CampaignsPhaseExecutionDeleteParamsPhaseType = "extraction"
 	CampaignsPhaseExecutionDeleteParamsPhaseTypeValidation CampaignsPhaseExecutionDeleteParamsPhaseType = "validation"
 )
@@ -510,6 +552,7 @@ const (
 const (
 	CampaignsPhaseExecutionGetParamsPhaseTypeAnalysis   CampaignsPhaseExecutionGetParamsPhaseType = "analysis"
 	CampaignsPhaseExecutionGetParamsPhaseTypeDiscovery  CampaignsPhaseExecutionGetParamsPhaseType = "discovery"
+	CampaignsPhaseExecutionGetParamsPhaseTypeEnrichment CampaignsPhaseExecutionGetParamsPhaseType = "enrichment"
 	CampaignsPhaseExecutionGetParamsPhaseTypeExtraction CampaignsPhaseExecutionGetParamsPhaseType = "extraction"
 	CampaignsPhaseExecutionGetParamsPhaseTypeValidation CampaignsPhaseExecutionGetParamsPhaseType = "validation"
 )
@@ -518,6 +561,7 @@ const (
 const (
 	CampaignsPhaseExecutionPutParamsPhaseTypeAnalysis   CampaignsPhaseExecutionPutParamsPhaseType = "analysis"
 	CampaignsPhaseExecutionPutParamsPhaseTypeDiscovery  CampaignsPhaseExecutionPutParamsPhaseType = "discovery"
+	CampaignsPhaseExecutionPutParamsPhaseTypeEnrichment CampaignsPhaseExecutionPutParamsPhaseType = "enrichment"
 	CampaignsPhaseExecutionPutParamsPhaseTypeExtraction CampaignsPhaseExecutionPutParamsPhaseType = "extraction"
 	CampaignsPhaseExecutionPutParamsPhaseTypeValidation CampaignsPhaseExecutionPutParamsPhaseType = "validation"
 )
@@ -570,7 +614,40 @@ type AssociateScoringProfileRequest struct {
 }
 
 // AuthConfig Authentication configuration
-type AuthConfig map[string]FlexibleValue
+type AuthConfig struct {
+	// AccessTokenTtlSeconds Access token time-to-live in seconds
+	AccessTokenTtlSeconds int32 `json:"accessTokenTtlSeconds"`
+
+	// AllowedProviders Providers enabled system-wide
+	AllowedProviders *[]string `json:"allowedProviders,omitempty"`
+
+	// Enabled Whether authentication is enforced
+	Enabled bool `json:"enabled"`
+
+	// JwtAudience JWT audience claim value
+	JwtAudience *string `json:"jwtAudience"`
+
+	// JwtIssuer JWT issuer claim value
+	JwtIssuer *string `json:"jwtIssuer"`
+
+	// PasswordPolicy Password policy configuration
+	PasswordPolicy *struct {
+		MinLength        *int  `json:"minLength,omitempty"`
+		RequireLowercase *bool `json:"requireLowercase,omitempty"`
+		RequireNumbers   *bool `json:"requireNumbers,omitempty"`
+		RequireSymbols   *bool `json:"requireSymbols,omitempty"`
+		RequireUppercase *bool `json:"requireUppercase,omitempty"`
+	} `json:"passwordPolicy,omitempty"`
+
+	// Provider Authentication provider type
+	Provider AuthConfigProvider `json:"provider"`
+
+	// RefreshTokenTtlSeconds Refresh token time-to-live in seconds
+	RefreshTokenTtlSeconds int32 `json:"refreshTokenTtlSeconds"`
+}
+
+// AuthConfigProvider Authentication provider type
+type AuthConfigProvider string
 
 // BatchKeywordExtractionRequest defines model for BatchKeywordExtractionRequest.
 type BatchKeywordExtractionRequest struct {
@@ -741,8 +818,17 @@ type BulkDomainGenerationRequest struct {
 			ConstantString       string                                                 `json:"constantString"`
 			NumDomainsToGenerate int                                                    `json:"numDomainsToGenerate"`
 			PatternType          BulkDomainGenerationRequestOperationsConfigPatternType `json:"patternType"`
-			Tlds                 []string                                               `json:"tlds"`
-			VariableLength       int                                                    `json:"variableLength"`
+
+			// PrefixVariableLength Optional prefix-side variable length when patternType is prefix or both
+			PrefixVariableLength *int `json:"prefixVariableLength,omitempty"`
+
+			// SuffixVariableLength Optional suffix-side variable length when patternType is suffix or both
+			SuffixVariableLength *int     `json:"suffixVariableLength,omitempty"`
+			Tlds                 []string `json:"tlds"`
+
+			// VariableLength Legacy combined length retained for backwards compatibility
+			// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
+			VariableLength *int `json:"variableLength,omitempty"`
 		} `json:"config"`
 		MaxDomains int `json:"maxDomains"`
 	} `json:"operations"`
@@ -1068,6 +1154,7 @@ type CampaignProgressResponse struct {
 	Phases struct {
 		Analysis   *PhaseProgressSummary `json:"analysis,omitempty"`
 		Discovery  *PhaseProgressSummary `json:"discovery,omitempty"`
+		Enrichment *PhaseProgressSummary `json:"enrichment,omitempty"`
 		Extraction *PhaseProgressSummary `json:"extraction,omitempty"`
 		Validation *PhaseProgressSummary `json:"validation,omitempty"`
 	} `json:"phases"`
@@ -1275,13 +1362,20 @@ type CreateCampaignRequest struct {
 			KeywordSetIds *[]openapi_types.UUID `json:"keywordSetIds,omitempty"`
 			PersonaIds    *[]openapi_types.UUID `json:"personaIds,omitempty"`
 
-			// ProjectionEstimate Optional projection estimate payload for UI modeling
-			ProjectionEstimate *map[string]interface{}                             `json:"projectionEstimate,omitempty"`
-			TargetDomains      *[]string                                           `json:"targetDomains,omitempty"`
-			Tlds               *[]string                                           `json:"tlds,omitempty"`
-			Type               CreateCampaignRequestConfigurationPatternConfigType `json:"type"`
+			// PrefixVariableLength Desired variable length for the prefix segment when pattern type includes prefix variation
+			PrefixVariableLength *int `json:"prefixVariableLength,omitempty"`
 
-			// VariableLength Desired variable length for generation
+			// ProjectionEstimate Optional projection estimate payload for UI modeling
+			ProjectionEstimate *map[string]interface{} `json:"projectionEstimate,omitempty"`
+
+			// SuffixVariableLength Desired variable length for the suffix segment when pattern type includes suffix variation
+			SuffixVariableLength *int                                                `json:"suffixVariableLength,omitempty"`
+			TargetDomains        *[]string                                           `json:"targetDomains,omitempty"`
+			Tlds                 *[]string                                           `json:"tlds,omitempty"`
+			Type                 CreateCampaignRequestConfigurationPatternConfigType `json:"type"`
+
+			// VariableLength Legacy combined variable length retained for backwards compatibility
+			// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
 			VariableLength *int `json:"variableLength,omitempty"`
 		} `json:"patternConfig,omitempty"`
 
@@ -1358,7 +1452,16 @@ type CreateScoringProfileRequest struct {
 }
 
 // DNSValidatorConfigJSON DNS validator configuration
-type DNSValidatorConfigJSON map[string]FlexibleValue
+type DNSValidatorConfigJSON struct {
+	// Resolvers Custom DNS resolver endpoints
+	Resolvers *[]string `json:"resolvers,omitempty"`
+
+	// Retries Number of retry attempts
+	Retries *int32 `json:"retries"`
+
+	// TimeoutMs Query timeout in milliseconds
+	TimeoutMs *int32 `json:"timeoutMs"`
+}
 
 // DatabaseStats Overall database statistics
 type DatabaseStats struct {
@@ -1644,7 +1747,31 @@ type KeywordSetResponse struct {
 }
 
 // LoggingConfig Logging configuration
-type LoggingConfig map[string]FlexibleValue
+type LoggingConfig struct {
+	// Destinations Log destinations (e.g. stdout, file)
+	Destinations *[]string `json:"destinations,omitempty"`
+
+	// EnableHttpAccessLog Enable structured HTTP access logging
+	EnableHttpAccessLog *bool `json:"enableHttpAccessLog,omitempty"`
+
+	// Extras Forward-compatible logging extensions
+	Extras *map[string]interface{} `json:"extras,omitempty"`
+
+	// Format Log output format
+	Format LoggingConfigFormat `json:"format"`
+
+	// Level Minimum log level
+	Level LoggingConfigLevel `json:"level"`
+
+	// SampleRate Fraction of debug/trace events to keep (if applicable)
+	SampleRate *float32 `json:"sampleRate"`
+}
+
+// LoggingConfigFormat Log output format
+type LoggingConfigFormat string
+
+// LoggingConfigLevel Minimum log level
+type LoggingConfigLevel string
 
 // LoginRequest defines model for LoginRequest.
 type LoginRequest struct {
@@ -1692,9 +1819,18 @@ type PatternOffsetRequest struct {
 	ConstantString *string                         `json:"constantString,omitempty"`
 	PatternType    PatternOffsetRequestPatternType `json:"patternType"`
 
+	// PrefixVariableLength Optional prefix-side variable length when patternType is prefix or both
+	PrefixVariableLength *int `json:"prefixVariableLength,omitempty"`
+
+	// SuffixVariableLength Optional suffix-side variable length when patternType is suffix or both
+	SuffixVariableLength *int `json:"suffixVariableLength,omitempty"`
+
 	// Tld Single TLD including dot, e.g. .com or without dot
-	Tld            *string `json:"tld,omitempty"`
-	VariableLength int     `json:"variableLength"`
+	Tld *string `json:"tld,omitempty"`
+
+	// VariableLength Legacy combined length retained for backwards compatibility (prefix+suffix)
+	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
+	VariableLength *int `json:"variableLength,omitempty"`
 }
 
 // PatternOffsetRequestPatternType defines model for PatternOffsetRequest.PatternType.
@@ -2052,7 +2188,34 @@ type ProxyTestResponse struct {
 }
 
 // RateLimiterConfig Rate limiter configuration
-type RateLimiterConfig map[string]FlexibleValue
+type RateLimiterConfig struct {
+	// BanDurationSeconds Temporary ban duration when threshold exceeded
+	BanDurationSeconds *int `json:"banDurationSeconds,omitempty"`
+
+	// Burst Additional burst capacity
+	Burst *int `json:"burst,omitempty"`
+
+	// ConcurrentLimit Maximum concurrent in-flight requests
+	ConcurrentLimit *int `json:"concurrentLimit,omitempty"`
+
+	// Enabled Enable request rate limiting
+	Enabled bool `json:"enabled"`
+
+	// MaxRequests Maximum requests per window
+	MaxRequests int `json:"maxRequests"`
+
+	// RespectForwardedFor Use X-Forwarded-For for client identity
+	RespectForwardedFor *bool `json:"respectForwardedFor,omitempty"`
+
+	// Strategy Rate limiting algorithm
+	Strategy RateLimiterConfigStrategy `json:"strategy"`
+
+	// WindowSeconds Window size for fixed/sliding strategies
+	WindowSeconds int `json:"windowSeconds"`
+}
+
+// RateLimiterConfigStrategy Rate limiting algorithm
+type RateLimiterConfigStrategy string
 
 // RecommendationSeverity defines model for RecommendationSeverity.
 type RecommendationSeverity string
@@ -2180,7 +2343,43 @@ type UserPublicResponse struct {
 }
 
 // WorkerConfig Worker configuration
-type WorkerConfig map[string]FlexibleValue
+type WorkerConfig struct {
+	// EnableHealthChecks Enable worker health monitoring
+	EnableHealthChecks *bool `json:"enableHealthChecks,omitempty"`
+
+	// EnableMetrics Enable worker performance metrics collection
+	EnableMetrics *bool `json:"enableMetrics,omitempty"`
+
+	// HealthCheckInterval Health check interval in seconds
+	HealthCheckInterval *int `json:"healthCheckInterval"`
+
+	// IdleTimeout Worker idle timeout in seconds
+	IdleTimeout *int `json:"idleTimeout"`
+
+	// JobTimeout Job execution timeout in seconds
+	JobTimeout int `json:"jobTimeout"`
+
+	// MaxJobs Maximum number of jobs in queue
+	MaxJobs int `json:"maxJobs"`
+
+	// MetricsInterval Metrics collection interval in seconds
+	MetricsInterval *int `json:"metricsInterval"`
+
+	// PoolSize Number of worker threads in the pool
+	PoolSize int `json:"poolSize"`
+
+	// Priority Worker pool priority level
+	Priority *WorkerConfigPriority `json:"priority,omitempty"`
+
+	// RetryAttempts Number of retry attempts for failed jobs
+	RetryAttempts *int `json:"retryAttempts"`
+
+	// RetryDelay Delay between retries in milliseconds
+	RetryDelay *int `json:"retryDelay"`
+}
+
+// WorkerConfigPriority Worker pool priority level
+type WorkerConfigPriority string
 
 // IncludeRules defines model for IncludeRules.
 type IncludeRules = bool
@@ -2346,6 +2545,36 @@ type DbBulkStatsParams struct {
 
 // DbBulkStatsParamsXRequestedWith defines parameters for DbBulkStats.
 type DbBulkStatsParamsXRequestedWith string
+
+// DebugNetworkLogIngestJSONBody defines parameters for DebugNetworkLogIngest.
+type DebugNetworkLogIngestJSONBody struct {
+	// DurationMs Duration of the request in milliseconds
+	DurationMs int `json:"durationMs"`
+
+	// Error Error message captured when the request failed
+	Error *string `json:"error,omitempty"`
+
+	// Method HTTP method used for the request
+	Method string `json:"method"`
+
+	// Ok Whether the browser considered the response successful
+	Ok *bool `json:"ok,omitempty"`
+
+	// RequestHeaders Request headers observed by the browser
+	RequestHeaders *map[string]string `json:"requestHeaders,omitempty"`
+
+	// ResponseHeaders Response headers observed by the browser
+	ResponseHeaders *map[string]string `json:"responseHeaders,omitempty"`
+
+	// Status HTTP status code returned by the response
+	Status *int `json:"status,omitempty"`
+
+	// Timestamp ISO-8601 timestamp produced by the client
+	Timestamp time.Time `json:"timestamp"`
+
+	// Url Absolute or relative request URL observed by the browser
+	Url string `json:"url"`
+}
 
 // KeywordExtractStreamParams defines parameters for KeywordExtractStream.
 type KeywordExtractStreamParams struct {
@@ -2522,6 +2751,9 @@ type DbBulkQueryJSONRequestBody = BulkDatabaseQueryRequest
 
 // DbBulkStatsJSONRequestBody defines body for DbBulkStats for application/json ContentType.
 type DbBulkStatsJSONRequestBody = BulkDatabaseStatsRequest
+
+// DebugNetworkLogIngestJSONRequestBody defines body for DebugNetworkLogIngest for application/json ContentType.
+type DebugNetworkLogIngestJSONRequestBody DebugNetworkLogIngestJSONBody
 
 // KeywordExtractBatchJSONRequestBody defines body for KeywordExtractBatch for application/json ContentType.
 type KeywordExtractBatchJSONRequestBody = BatchKeywordExtractionRequest
@@ -3787,6 +4019,9 @@ type ServerInterface interface {
 	// Get bulk database statistics
 	// (POST /database/stats)
 	DbBulkStats(w http.ResponseWriter, r *http.Request, params DbBulkStatsParams)
+	// Ingest frontend network log entry
+	// (POST /debug/network-log)
+	DebugNetworkLogIngest(w http.ResponseWriter, r *http.Request)
 	// Batch keyword extraction
 	// (POST /extract/keywords)
 	KeywordExtractBatch(w http.ResponseWriter, r *http.Request)
@@ -4393,6 +4628,12 @@ func (_ Unimplemented) DbBulkQuery(w http.ResponseWriter, r *http.Request, param
 // Get bulk database statistics
 // (POST /database/stats)
 func (_ Unimplemented) DbBulkStats(w http.ResponseWriter, r *http.Request, params DbBulkStatsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Ingest frontend network log entry
+// (POST /debug/network-log)
+func (_ Unimplemented) DebugNetworkLogIngest(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6757,6 +6998,20 @@ func (siw *ServerInterfaceWrapper) DbBulkStats(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
+// DebugNetworkLogIngest operation middleware
+func (siw *ServerInterfaceWrapper) DebugNetworkLogIngest(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DebugNetworkLogIngest(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // KeywordExtractBatch operation middleware
 func (siw *ServerInterfaceWrapper) KeywordExtractBatch(w http.ResponseWriter, r *http.Request) {
 
@@ -9009,6 +9264,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/database/stats", wrapper.DbBulkStats)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/debug/network-log", wrapper.DebugNetworkLogIngest)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/extract/keywords", wrapper.KeywordExtractBatch)
@@ -12980,6 +13238,48 @@ func (response DbBulkStats500JSONResponse) VisitDbBulkStatsResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DebugNetworkLogIngestRequestObject struct {
+	Body *DebugNetworkLogIngestJSONRequestBody
+}
+
+type DebugNetworkLogIngestResponseObject interface {
+	VisitDebugNetworkLogIngestResponse(w http.ResponseWriter) error
+}
+
+type DebugNetworkLogIngest202ResponseHeaders struct {
+	XRequestId string
+}
+
+type DebugNetworkLogIngest202Response struct {
+	Headers DebugNetworkLogIngest202ResponseHeaders
+}
+
+func (response DebugNetworkLogIngest202Response) VisitDebugNetworkLogIngestResponse(w http.ResponseWriter) error {
+	w.Header().Set("X-Request-Id", fmt.Sprint(response.Headers.XRequestId))
+	w.WriteHeader(202)
+	return nil
+}
+
+type DebugNetworkLogIngest400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response DebugNetworkLogIngest400JSONResponse) VisitDebugNetworkLogIngestResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DebugNetworkLogIngest500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response DebugNetworkLogIngest500JSONResponse) VisitDebugNetworkLogIngestResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type KeywordExtractBatchRequestObject struct {
 	Body *KeywordExtractBatchJSONRequestBody
 }
@@ -16820,6 +17120,9 @@ type StrictServerInterface interface {
 	// Get bulk database statistics
 	// (POST /database/stats)
 	DbBulkStats(ctx context.Context, request DbBulkStatsRequestObject) (DbBulkStatsResponseObject, error)
+	// Ingest frontend network log entry
+	// (POST /debug/network-log)
+	DebugNetworkLogIngest(ctx context.Context, request DebugNetworkLogIngestRequestObject) (DebugNetworkLogIngestResponseObject, error)
 	// Batch keyword extraction
 	// (POST /extract/keywords)
 	KeywordExtractBatch(ctx context.Context, request KeywordExtractBatchRequestObject) (KeywordExtractBatchResponseObject, error)
@@ -18920,6 +19223,37 @@ func (sh *strictHandler) DbBulkStats(w http.ResponseWriter, r *http.Request, par
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(DbBulkStatsResponseObject); ok {
 		if err := validResponse.VisitDbBulkStatsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DebugNetworkLogIngest operation middleware
+func (sh *strictHandler) DebugNetworkLogIngest(w http.ResponseWriter, r *http.Request) {
+	var request DebugNetworkLogIngestRequestObject
+
+	var body DebugNetworkLogIngestJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DebugNetworkLogIngest(ctx, request.(DebugNetworkLogIngestRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DebugNetworkLogIngest")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DebugNetworkLogIngestResponseObject); ok {
+		if err := validResponse.VisitDebugNetworkLogIngestResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

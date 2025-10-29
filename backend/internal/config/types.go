@@ -24,6 +24,7 @@ type CookieHandlingConfig struct {
 // LoggingConfig defines logging parameters.
 type LoggingConfig struct {
 	Level                    string `json:"level"`
+	LogFilePath              string `json:"logFilePath,omitempty"`
 	EnableFileLogging        bool   `json:"enableFileLogging,omitempty"`
 	LogDirectory             string `json:"logDirectory,omitempty"`
 	MaxFileSize              int    `json:"maxFileSize,omitempty"`

@@ -12,6 +12,7 @@ import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ReduxProvider } from '@/components/providers/ReduxProvider';
 import { RTKCampaignDataProvider } from '@/providers/RTKCampaignDataProvider';
 import { NoSSR } from '@/components/providers/NoSSR';
+import NetworkRequestLogger from '@/components/debug/NetworkRequestLogger';
 
 export const metadata: Metadata = {
   title: 'DomainFlow',
@@ -39,18 +40,21 @@ export default async function RootLayout({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         }>
-          <ReduxProvider>
-            <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
-              <AuthProvider>
-                <RTKCampaignDataProvider>
-                  <GlobalLoadingIndicator />
-                  <AdvancedConditionalLayout>
-                    {children}
-                  </AdvancedConditionalLayout>
-                </RTKCampaignDataProvider>
-              </AuthProvider>
-            </ThemeProvider>
-          </ReduxProvider>
+          <>
+            {process.env.NEXT_PUBLIC_ENABLE_NETWORK_LOGGING === 'true' ? <NetworkRequestLogger /> : null}
+            <ReduxProvider>
+              <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
+                <AuthProvider>
+                  <RTKCampaignDataProvider>
+                    <GlobalLoadingIndicator />
+                    <AdvancedConditionalLayout>
+                      {children}
+                    </AdvancedConditionalLayout>
+                  </RTKCampaignDataProvider>
+                </AuthProvider>
+              </ThemeProvider>
+            </ReduxProvider>
+          </>
         </NoSSR>
       </body>
     </html>

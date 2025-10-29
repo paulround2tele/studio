@@ -49,6 +49,7 @@ const (
 	// Global API rate limiter defaults
 	DefaultAPIRateLimitWindowSeconds = 900
 	DefaultAPIRateLimitMaxRequests   = 1000
+	DefaultLogFilePath               = "logs/apiserver.log"
 )
 
 // DefaultAppConfigJSON returns the default application configuration as an AppConfigJSON struct.
@@ -108,7 +109,8 @@ func DefaultAppConfigJSON() AppConfigJSON {
 			MaxBodyReadBytes:        DefaultMaxBodyReadBytes,
 		},
 		Logging: LoggingConfig{
-			Level: "INFO",
+			Level:       "INFO",
+			LogFilePath: DefaultLogFilePath,
 		},
 		RateLimiter: RateLimiterConfig{
 			MaxRequests:   DefaultAPIRateLimitMaxRequests,

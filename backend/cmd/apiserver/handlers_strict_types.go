@@ -14,11 +14,11 @@ import (
 
 // strictHandlers implements gen.StrictServerInterface and is split across files in this package.
 type strictHandlers struct {
-	deps *AppDeps
+	deps          *AppDeps
+	networkLogger *networkLogHandler
 }
 
-// Ensure strictHandlers implements new interface methods at compile time (when codegen updates include them)
-// var _ gen.StrictServerInterface = (*strictHandlers)(nil)
+var _ gen.StrictServerInterface = (*strictHandlers)(nil)
 
 // CampaignsDomainScoreBreakdown implements GET /campaigns/{campaignId}/domains/{domain}/score-breakdown
 // It delegates to the analysis service ScoreBreakdown method and returns component scores.
@@ -84,7 +84,7 @@ func containsLimitClause(lowerSQL string) bool {
 	return false
 }
 
-func int64Ptr(v int64) *int64 { return &v }
+func int64Ptr(v int64) *int64    { return &v }
 func ptrString(s string) *string { return &s }
 
 // mapDBValue converts driver/native scanned values into API DatabaseValue union fields.

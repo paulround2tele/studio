@@ -122,6 +122,9 @@ func applyEnvironmentOverrides(config *AppConfig) {
 	if logLevel := os.Getenv("LOG_LEVEL"); logLevel != "" {
 		config.Logging.Level = logLevel
 	}
+	if logPath := os.Getenv("APISERVER_LOG_PATH"); logPath != "" {
+		config.Logging.LogFilePath = logPath
+	}
 
 	// DNS Validator overrides
 	if rateLimitDPS := getEnvAsInt("DNS_RATE_LIMIT_DPS", 0); rateLimitDPS > 0 {

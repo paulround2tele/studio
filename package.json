@@ -5,7 +5,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/start-next-dev.mjs",
+    "dev:raw": "next dev",
     "build": "next build",
     "build:turbo": "next build --turbo",
     "build:safe": "npm run typecheck && npm run build",

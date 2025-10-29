@@ -138,6 +138,9 @@
 "/monitoring/stats":
   $ref: "./monitoring/stats.yaml"
 
+"/debug/network-log":
+  $ref: "./debug/network-log.yaml"
+
 
 "/auth/login":
   $ref: "./auth/login.yaml"

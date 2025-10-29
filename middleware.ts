@@ -13,6 +13,8 @@ function isPublicPath(pathname: string) {
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const method = req.method;
+  const clientIp = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
 
   // Skip Next.js internals and static assets explicitly (also handled by matcher)
   if (
@@ -29,7 +31,7 @@ export function middleware(req: NextRequest) {
   }
 
   const hasSession = req.cookies.has(SESSION_COOKIE_NAME);
-  console.log('[middleware] path=', pathname, 'session=', hasSession);
+  console.log('[middleware]', method, pathname, 'session=', hasSession, 'ip=', clientIp);
 
   // Helper to set a small presence hint cookie for layouts/UI (no auth decisions on client)
   const setPresenceCookie = (res: NextResponse) => {

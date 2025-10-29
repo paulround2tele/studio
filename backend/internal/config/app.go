@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -112,6 +113,9 @@ func Load(mainConfigPath string) (*AppConfig, error) {
 	}
 
 	appConfig := ConvertJSONToAppConfig(appCfgJSON)
+	if strings.TrimSpace(appConfig.Logging.LogFilePath) == "" {
+		appConfig.Logging.LogFilePath = DefaultLogFilePath
+	}
 	appConfig.loadedFromPath = mainConfigPath
 
 	// Apply post-load defaults or sanity checks for fields not directly in AppConfigJSON root

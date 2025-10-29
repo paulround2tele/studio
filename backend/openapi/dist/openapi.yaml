@@ -2534,6 +2534,78 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /debug/network-log:
+    post:
+      tags:
+        - monitoring
+      security: []
+      summary: Ingest frontend network log entry
+      operationId: debug_network_log_ingest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - timestamp
+                - url
+                - method
+                - durationMs
+              properties:
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: ISO-8601 timestamp produced by the client
+                url:
+                  type: string
+                  maxLength: 2048
+                  description: Absolute or relative request URL observed by the browser
+                method:
+                  type: string
+                  maxLength: 16
+                  description: HTTP method used for the request
+                status:
+                  type: integer
+                  minimum: 100
+                  maximum: 599
+                  description: HTTP status code returned by the response
+                ok:
+                  type: boolean
+                  description: Whether the browser considered the response successful
+                durationMs:
+                  type: integer
+                  minimum: 0
+                  description: Duration of the request in milliseconds
+                error:
+                  type: string
+                  maxLength: 2048
+                  description: Error message captured when the request failed
+                requestHeaders:
+                  type: object
+                  additionalProperties:
+                    type: string
+                    maxLength: 2048
+                  description: Request headers observed by the browser
+                responseHeaders:
+                  type: object
+                  additionalProperties:
+                    type: string
+                    maxLength: 2048
+                  description: Response headers observed by the browser
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            X-Request-Id:
+              description: Unique request identifier for log correlation
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /auth/login:
     post:
       tags:

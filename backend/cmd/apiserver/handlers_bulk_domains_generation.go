@@ -50,14 +50,27 @@ func (h *strictHandlers) BulkGenerateDomains(ctx context.Context, r gen.BulkGene
 				"max_domains": op.MaxDomains,
 				"batch_size":  1000,
 			}
-			if op.Config.VariableLength > 0 || op.Config.ConstantString != "" || len(op.Config.Tlds) > 0 {
-				cfg["operation_config"] = map[string]interface{}{
-					"pattern_type":         op.Config.PatternType,
-					"constantString":       op.Config.ConstantString,
-					"variableLength":       op.Config.VariableLength,
-					"tlds":                 op.Config.Tlds,
-					"numDomainsToGenerate": op.Config.NumDomainsToGenerate,
-				}
+			patternCfg := map[string]interface{}{
+				"pattern_type":         op.Config.PatternType,
+				"characterSet":         op.Config.CharacterSet,
+				"constantString":       op.Config.ConstantString,
+				"numDomainsToGenerate": op.Config.NumDomainsToGenerate,
+				"tlds":                 op.Config.Tlds,
+			}
+			if op.Config.BatchSize != nil {
+				patternCfg["batchSize"] = *op.Config.BatchSize
+			}
+			if op.Config.VariableLength != nil {
+				patternCfg["variableLength"] = *op.Config.VariableLength
+			}
+			if op.Config.PrefixVariableLength != nil {
+				patternCfg["prefixVariableLength"] = *op.Config.PrefixVariableLength
+			}
+			if op.Config.SuffixVariableLength != nil {
+				patternCfg["suffixVariableLength"] = *op.Config.SuffixVariableLength
+			}
+			if len(op.Config.Tlds) > 0 || op.Config.ConstantString != "" || op.Config.VariableLength != nil || op.Config.PrefixVariableLength != nil || op.Config.SuffixVariableLength != nil {
+				cfg["operation_config"] = patternCfg
 			}
 			// Configure and start. Errors are tolerated per-op and reflected in status
 			status := gen.BulkGenerationResponseOperationsStatusPending
@@ -91,5 +104,3 @@ func (h *strictHandlers) BulkGenerateDomains(ctx context.Context, r gen.BulkGene
 
 	return gen.BulkGenerateDomains200JSONResponse(resp), nil
 }
-
-

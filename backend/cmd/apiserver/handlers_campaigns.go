@@ -1892,21 +1892,57 @@ func (h *strictHandlers) CampaignsDomainGenerationPatternOffset(ctx context.Cont
 	}
 	var prefixNull sql.NullInt32
 	var suffixNull sql.NullInt32
-	variableLengthTotal := int(r.Body.VariableLength)
+	legacyVar := 0
+	if r.Body.VariableLength != nil {
+		legacyVar = *r.Body.VariableLength
+	}
+	prefixVar := 0
+	if r.Body.PrefixVariableLength != nil {
+		prefixVar = *r.Body.PrefixVariableLength
+	}
+	suffixVar := 0
+	if r.Body.SuffixVariableLength != nil {
+		suffixVar = *r.Body.SuffixVariableLength
+	}
 	pattern := string(r.Body.PatternType)
+	variableLengthTotal := 0
 
 	switch r.Body.PatternType {
 	case gen.PatternOffsetRequestPatternTypePrefix:
-		prefixNull = sql.NullInt32{Int32: int32(r.Body.VariableLength), Valid: true}
+		if prefixVar == 0 {
+			prefixVar = legacyVar
+		}
+		if prefixVar > 0 {
+			prefixNull = sql.NullInt32{Int32: int32(prefixVar), Valid: true}
+			variableLengthTotal = prefixVar
+		}
 		pattern = string(models.PatternTypePrefixVariable)
 	case gen.PatternOffsetRequestPatternTypeSuffix:
-		suffixNull = sql.NullInt32{Int32: int32(r.Body.VariableLength), Valid: true}
+		if suffixVar == 0 {
+			suffixVar = legacyVar
+		}
+		if suffixVar > 0 {
+			suffixNull = sql.NullInt32{Int32: int32(suffixVar), Valid: true}
+			variableLengthTotal = suffixVar
+		}
 		pattern = string(models.PatternTypeSuffixVariable)
 	case gen.PatternOffsetRequestPatternTypeBoth:
-		prefixNull = sql.NullInt32{Int32: int32(r.Body.VariableLength), Valid: true}
-		suffixNull = sql.NullInt32{Int32: int32(r.Body.VariableLength), Valid: true}
-		variableLengthTotal = int(r.Body.VariableLength) * 2
+		if prefixVar == 0 {
+			prefixVar = legacyVar
+		}
+		if suffixVar == 0 {
+			suffixVar = legacyVar
+		}
+		if prefixVar > 0 {
+			prefixNull = sql.NullInt32{Int32: int32(prefixVar), Valid: true}
+		}
+		if suffixVar > 0 {
+			suffixNull = sql.NullInt32{Int32: int32(suffixVar), Valid: true}
+		}
+		variableLengthTotal = prefixVar + suffixVar
 		pattern = string(models.PatternTypeBothVariable)
+	default:
+		variableLengthTotal = legacyVar
 	}
 
 	params := models.DomainGenerationCampaignParams{

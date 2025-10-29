@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -23,6 +25,13 @@ const (
 
 // startChiServer starts the Chi server on the configured port and blocks.
 func startChiServer() {
+	logCloser, err := initFileLogging()
+	if err != nil {
+		log.Fatalf("Failed to initialize log file: %v", err)
+	}
+	if logCloser != nil {
+		defer logCloser.Close()
+	}
 	// Initialize shared dependencies for strict handlers
 	deps, err := initAppDependencies()
 	if err != nil {
@@ -32,6 +41,7 @@ func startChiServer() {
 	// Lightweight auth-context middleware: validate session cookie and attach user_id to ctx
 	authCtx := func(next gen.StrictHandlerFunc, operationID string) gen.StrictHandlerFunc {
 		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, req interface{}) (interface{}, error) {
+			ctx = context.WithValue(ctx, "client_ip", clientIP(r))
 			// Only attempt if session service is available
 			if deps.Session != nil {
 				if c, err := r.Cookie(config.SessionCookieName); err == nil {
@@ -95,7 +105,9 @@ func startChiServer() {
 		}
 	}
 
-	handler := gen.NewStrictHandlerWithOptions(&strictHandlers{deps: deps}, []gen.StrictMiddlewareFunc{authCtx, authLoginCookie}, opts)
+	networkLogger := newNetworkLogHandler(deps)
+	strict := &strictHandlers{deps: deps, networkLogger: networkLogger}
+	handler := gen.NewStrictHandlerWithOptions(strict, []gen.StrictMiddlewareFunc{authCtx, authLoginCookie}, opts)
 	baseHandler := gen.HandlerWithOptions(handler, gen.ChiServerOptions{BaseURL: "/api/v2"})
 
 	// CORS middleware to allow frontend at localhost:3000 to call API with credentials
@@ -124,7 +136,14 @@ func startChiServer() {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
-	r := corsWrapper(baseHandler)
+	finalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && r.URL.Path == "/api/v2/debug/network-log" {
+			networkLogger.ServeHTTP(w, r)
+			return
+		}
+		baseHandler.ServeHTTP(w, r)
+	})
+	r := corsWrapper(finalHandler)
 
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {
@@ -135,6 +154,51 @@ func startChiServer() {
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Chi ListenAndServe error: %v", err)
 	}
+}
+
+// initFileLogging configures the global logger to write to both stdout and a persistent log file.
+// The log path can be overridden with APISERVER_LOG_PATH; defaults to ./apiserver.log relative to the working directory.
+func initFileLogging() (io.Closer, error) {
+	logPath := resolveLogPath()
+
+	dir := filepath.Dir(logPath)
+	if dir != "." && dir != "" {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return nil, err
+		}
+	}
+
+	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+	if err != nil {
+		return nil, err
+	}
+
+	multi := io.MultiWriter(os.Stdout, file)
+	log.SetOutput(multi)
+	log.SetFlags(log.LstdFlags | log.LUTC)
+
+	return file, nil
+}
+
+func resolveLogPath() string {
+	if env := strings.TrimSpace(os.Getenv("APISERVER_LOG_PATH")); env != "" {
+		return env
+	}
+
+	if data, err := os.ReadFile("config.json"); err == nil {
+		var cfg struct {
+			Logging struct {
+				LogFilePath string `json:"logFilePath"`
+			} `json:"logging"`
+		}
+		if err := json.Unmarshal(data, &cfg); err == nil {
+			if cfgPath := strings.TrimSpace(cfg.Logging.LogFilePath); cfgPath != "" {
+				return cfgPath
+			}
+		}
+	}
+
+	return config.DefaultLogFilePath
 }
 
 // clientIP extracts the best-effort client IP from headers or remote addr
@@ -171,7 +235,8 @@ func sameSiteFromString(s string) http.SameSite {
 }
 func NewStrictTestRouter(deps *AppDeps) chi.Router {
 	r := chi.NewRouter()
-	strict := &strictHandlers{deps: deps}
+	networkLogger := newNetworkLogHandler(deps)
+	strict := &strictHandlers{deps: deps, networkLogger: networkLogger}
 	h := gen.NewStrictHandler(strict, nil)
 	r.Route("/api/v2", func(r chi.Router) {
 		gen.HandlerFromMuxWithBaseURL(h, r, "/api/v2")
