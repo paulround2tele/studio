@@ -45,7 +45,6 @@ interface HeartbeatMessage { type: 'heartbeat'; serverTime?: string }
 interface DifferentialUpdateMessage { type: 'differential_update'; patch: DifferentialPatch }
 interface FullSnapshotMessage { type: 'full_snapshot'; snapshot: Record<string, unknown> }
 interface RawMessage { type: 'raw'; data: string }
-type StructuredMessage = HeartbeatMessage | DifferentialUpdateMessage | FullSnapshotMessage | RawMessage;
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 const hasType = (v: unknown): v is Record<string, unknown> & { type: string } => isRecord(v) && typeof (v as { type?: unknown }).type === 'string';

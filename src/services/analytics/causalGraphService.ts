@@ -50,6 +50,7 @@ export interface CausalGraphUpdateEvent {
   nodes: number;
   edges: number;
   pruned: number;
+  updated?: number;
 }
 
 /**
@@ -317,7 +318,8 @@ class CausalGraphService {
     this.emitTelemetry({
       nodes: this.nodes.size,
       edges: this.edges.size,
-      pruned: edgesPruned
+      pruned: edgesPruned,
+      updated: edgesUpdated
     });
 
     // Keep only recent observations (sliding window)

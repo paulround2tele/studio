@@ -447,6 +447,7 @@ const (
 	PhaseStatusInProgress PhaseStatusEnum = "in_progress"
 	PhaseStatusPaused     PhaseStatusEnum = "paused"
 	PhaseStatusCompleted  PhaseStatusEnum = "completed"
+	PhaseStatusSkipped    PhaseStatusEnum = "skipped"
 	PhaseStatusFailed     PhaseStatusEnum = "failed"
 )
 

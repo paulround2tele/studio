@@ -303,7 +303,7 @@ export function getMemoryStats(): {
   let totalSnapshots = 0;
   let estimatedSize = 0;
 
-  for (const [campaignId, history] of store.entries()) {
+  for (const [, history] of store.entries()) {
     totalSnapshots += history.entries.length;
     // Rough estimate: each snapshot ~2KB
     estimatedSize += history.entries.length * 2;

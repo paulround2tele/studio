@@ -8,32 +8,23 @@ import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, Edit } from 'lucide-react';
 import { KeywordSetsApi, Configuration } from '@/lib/api-client';
-const keywordSetsApi = new KeywordSetsApi(new Configuration());
-import type { KeywordSetResponse as ApiKeywordSetResponse } from '@/lib/api-client/models';
+import type { KeywordSetResponse } from '@/lib/api-client/models';
+import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
 import { useSSE } from '@/hooks/useSSE';
-
-type LocalKeywordSet = ApiKeywordSetResponse;
+import type { SSEEvent } from '@/hooks/useSSE';
+const keywordSetsApi = new KeywordSetsApi(new Configuration());
 
 export default function KeywordSetsPage() {
-  const [sets, setSets] = useState<LocalKeywordSet[]>([]);
+  const [sets, setSets] = useState<KeywordSetResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loadSets = useCallback(async () => {
     setIsLoading(true);
     try {
-      setIsLoading(true);
-      // Use the correct method name from the generated API
       const resp = await keywordSetsApi.keywordSetsList();
-      // Generated client returns AxiosResponse<KeywordSetResponse[]>
-      const body = resp.data as ApiKeywordSetResponse[] | { data?: ApiKeywordSetResponse[] };
-      if (Array.isArray(body)) {
-        setSets(body);
-      } else if (body && typeof body === 'object' && 'data' in body && Array.isArray(body.data)) {
-        setSets(body.data);
-      } else {
-        setSets([]);
-      }
+      const body = unwrapApiResponse<KeywordSetResponse[]>(resp) ?? [];
+      setSets(Array.isArray(body) ? body : []);
     } catch (e) {
       console.error(e);
       setErrorMessage(e instanceof Error ? e.message : 'Failed to load keyword sets');
@@ -42,21 +33,26 @@ export default function KeywordSetsPage() {
     }
   }, []);
 
+  const handleSseEvent = useCallback((evt: SSEEvent) => {
+    const eventName = evt.event;
+    if (
+      eventName === 'keyword_set_created' ||
+      eventName === 'keyword_set_updated' ||
+      eventName === 'keyword_set_deleted'
+    ) {
+      loadSets();
+    }
+  }, [loadSets]);
+
+  useSSE('/api/v2/sse/events', handleSseEvent, {
+    autoReconnect: true,
+    maxReconnectAttempts: 10,
+    reconnectDelay: 2000,
+    withCredentials: true
+  });
+
   useEffect(() => {
     loadSets();
-    // Subscribe to global SSE and refresh on keyword set lifecycle events
-    const url = `/api/v2/sse/events`;
-    const { close } = useSSE(url, (evt) => {
-      const t = evt.event;
-      if (t === 'keyword_set_created' || t === 'keyword_set_updated' || t === 'keyword_set_deleted') {
-        // Lightweight refetch
-        loadSets();
-      }
-    }, { autoReconnect: true, maxReconnectAttempts: 10, reconnectDelay: 2000, withCredentials: true });
-
-    return () => {
-      close();
-    };
   }, [loadSets]);
 
   return (

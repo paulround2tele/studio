@@ -12,9 +12,6 @@ sed -i 's/function evaluateMetrics(_metrics/function evaluateMetrics(metrics/g' 
 # degradationEvaluatorService.ts - _domain reference  
 sed -i 's/checkDomainHealth(_domain/checkDomainHealth(domain/g' src/services/campaignMetrics/degradationEvaluatorService.ts
 
-# Fix useState import that was removed
-grep -q "import React from 'react';" src/components/campaigns/CampaignFormV2.tsx || sed -i "s/import React/import React, { useState }/g" src/components/campaigns/CampaignFormV2.tsx
-
 # Fix state parameter that was over-replaced
 sed -i 's/(\_state)/(state)/g' src/components/campaigns/CampaignProgress.tsx
 

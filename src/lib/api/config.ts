@@ -17,6 +17,15 @@ function joinUrl(base: string, path: string): string {
 export function getApiBasePath(): string {
   const env = process.env.NEXT_PUBLIC_API_URL?.trim();
   if (env) {
+    if (env.startsWith('/')) {
+      if (typeof window === 'undefined') {
+        // Server-side usage needs absolute URL to avoid invalid URL errors
+        const loopback = process.env.INTERNAL_API_ORIGIN?.trim() || 'http://localhost:8080';
+        return joinUrl(loopback, env);
+      }
+      // Browser can rely on Next.js rewrites with relative path to stay same-origin
+      return env;
+    }
     try {
       const parsed = new URL(env);
       const { hostname } = parsed;

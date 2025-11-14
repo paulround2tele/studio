@@ -43,7 +43,7 @@ export interface ScoringProfileLite {
  * Campaign phase union type from generated enum
  * Replaces string literals throughout the app
  */
-export type CampaignPhase = 'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis';
+export type CampaignPhase = 'discovery' | 'validation' | 'extraction' | 'analysis' | 'enrichment';
 
 /**
  * Phase status type from generated enum
@@ -126,7 +126,7 @@ export const isValidLifecycleState = (state: unknown): state is LifecycleState =
 };
 
 export const isValidCampaignPhase = (phase: unknown): phase is CampaignPhase => {
-  return typeof phase === 'string' && ['discovery','validation','enrichment','extraction','analysis'].includes(phase);
+  return typeof phase === 'string' && ['discovery','validation','extraction','analysis','enrichment'].includes(phase);
 };
 
 export const isValidPhaseStatus = (status: unknown): status is PhaseStatus => {

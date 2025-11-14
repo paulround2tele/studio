@@ -434,12 +434,16 @@ func (s *httpValidationService) Configure(ctx context.Context, campaignID uuid.U
 
 	// Store configuration in campaign phases
 	if s.store != nil {
-		if raw, mErr := json.Marshal(httpConfig); mErr == nil {
-			var exec store.Querier
-			if q, ok := s.deps.DB.(store.Querier); ok {
-				exec = q
-			}
-			_ = s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation, raw)
+		raw, marshalErr := json.Marshal(httpConfig)
+		if marshalErr != nil {
+			return fmt.Errorf("failed to marshal http validation config: %w", marshalErr)
+		}
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		if err := s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation, raw); err != nil {
+			return fmt.Errorf("failed to persist http validation config: %w", err)
 		}
 	}
 	s.deps.Logger.Info(ctx, "HTTP validation configuration stored", map[string]interface{}{
@@ -557,7 +561,7 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 	}
 
 	if len(domains) == 0 {
-		s.updateExecutionStatus(campaignID, models.PhaseStatusCompleted, "no validated domains found")
+		s.updateExecutionStatus(campaignID, models.PhaseStatusSkipped, "no validated domains found")
 		close(execution.ProgressChan)
 		return execution.ProgressChan, nil
 	}
@@ -1601,7 +1605,7 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 		// fallback per-domain
 		for domain, fv := range vectors {
 			raw, _ := json.Marshal(fv)
-			
+
 			// Convert parked_confidence to proper float64 or nil
 			var parkedConf interface{} = nil
 			if pc, ok := fv["parked_confidence"]; ok && pc != nil {
@@ -1618,7 +1622,7 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 					}
 				}
 			}
-			
+
 			// Convert is_parked to proper boolean or nil
 			var isParked interface{} = nil
 			if ip, ok := fv["is_parked"]; ok && ip != nil {
@@ -1629,7 +1633,7 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 					isParked = v == "true"
 				}
 			}
-			
+
 			if exec != nil {
 				_, err := exec.ExecContext(ctx, `UPDATE generated_domains SET feature_vector = $1, last_http_fetched_at = NOW(), parked_confidence = CASE WHEN $2 IS NOT NULL THEN $2::numeric ELSE parked_confidence END, is_parked = CASE WHEN $3::boolean IS TRUE THEN TRUE ELSE is_parked END WHERE campaign_id = $4 AND domain_name = $5`, raw, parkedConf, isParked, campaignID, domain)
 				if err != nil && s.deps.Logger != nil {
@@ -1652,7 +1656,7 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 	for _, d := range domains {
 		fv := vectors[d]
 		raw, _ := json.Marshal(fv)
-		
+
 		// Convert parked_confidence to proper float64 or nil
 		var parkedConf interface{} = nil
 		if pc, ok := fv["parked_confidence"]; ok && pc != nil {
@@ -1669,7 +1673,7 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 				}
 			}
 		}
-		
+
 		// Convert is_parked to proper boolean or nil
 		var isParked interface{} = nil
 		if ip, ok := fv["is_parked"]; ok && ip != nil {
@@ -1680,7 +1684,7 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 				isParked = v == "true"
 			}
 		}
-		
+
 		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d)", idx, idx+1, idx+2, idx+3))
 		args = append(args, d, raw, parkedConf, isParked) // domain, feature_vector, parked_confidence, is_parked
 		idx += 4
@@ -1700,7 +1704,7 @@ SET feature_vector = incoming.feature_vector,
 	is_parked = CASE WHEN incoming.is_parked IS TRUE THEN TRUE ELSE gd.is_parked END
 FROM incoming
 WHERE gd.campaign_id = $1 AND gd.domain_name = incoming.domain_name`, strings.Join(valueStrings, ","))
-	
+
 	// Debug: Log the query and args
 	if s.deps.Logger != nil {
 		sampleLen := len(args)
@@ -1713,13 +1717,13 @@ WHERE gd.campaign_id = $1 AND gd.domain_name = incoming.domain_name`, strings.Jo
 			"sample_args": fmt.Sprintf("%v", args[:sampleLen]),
 		})
 	}
-	
+
 	if _, err := sqlxDB.ExecContext(ctx, query, args...); err != nil {
 		if s.deps.Logger != nil {
 			s.deps.Logger.Warn(ctx, "Feature vector bulk update failed", map[string]interface{}{
 				"campaign_id": campaignID.String(),
-				"error": err.Error(),
-				"query": query,
+				"error":       err.Error(),
+				"query":       query,
 			})
 		}
 		return fmt.Errorf("bulk feature vector update failed: %w", err)
@@ -1876,7 +1880,7 @@ func (s *httpValidationService) updateExecutionStatus(campaignID uuid.UUID, stat
 	execution.Status = status
 	execution.ErrorMessage = errorMsg
 
-	if status == models.PhaseStatusCompleted || status == models.PhaseStatusFailed {
+	if status == models.PhaseStatusCompleted || status == models.PhaseStatusFailed || status == models.PhaseStatusSkipped {
 		now := time.Now()
 		execution.CompletedAt = &now
 	}
@@ -1906,6 +1910,8 @@ func (s *httpValidationService) updateExecutionStatus(campaignID uuid.UUID, stat
 		switch status {
 		case models.PhaseStatusCompleted:
 			_ = s.store.CompletePhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation)
+		case models.PhaseStatusSkipped:
+			_ = s.store.SkipPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation, errorMsg)
 		case models.PhaseStatusFailed:
 			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation, errorMsg)
 		case models.PhaseStatusPaused:

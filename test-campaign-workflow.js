@@ -16,7 +16,7 @@ console.log('- Unified envelope format enforced\n');
 
 // Test 2: Verify extractResponseData usage
 console.log('✅ Test 2: Response Unwrapping Fixed');
-console.log('- CampaignFormV2.tsx: Removed manual double-wrapping logic');
+console.log('- CampaignCreateWizard.tsx: Uses extractResponseData directly with OpenAPI models');
 console.log('- PhaseConfiguration.tsx: Using extractResponseData and proper error handling');
 console.log('- DNSValidationConfigModal.tsx: Fixed response handling');
 console.log('- All components now use extractResponseData() helper\n');

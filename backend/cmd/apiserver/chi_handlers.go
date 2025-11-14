@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -111,15 +112,12 @@ func startChiServer() {
 	baseHandler := gen.HandlerWithOptions(handler, gen.ChiServerOptions{BaseURL: "/api/v2"})
 
 	// CORS middleware to allow frontend at localhost:3000 to call API with credentials
-	allowedOrigins := map[string]struct{}{
-		"http://localhost:3000": {},
-		"http://127.0.0.1:3000": {},
-	}
+	allowedOrigins := buildAllowedOrigins()
 	corsWrapper := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			if origin := r.Header.Get("Origin"); origin != "" {
-				if _, ok := allowedOrigins[origin]; ok {
+				if originAllowed(origin, allowedOrigins) {
 					w.Header().Set("Access-Control-Allow-Origin", origin)
 					w.Header().Set("Access-Control-Allow-Credentials", "true")
 					w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PATCH,PUT,DELETE,OPTIONS")
@@ -143,7 +141,8 @@ func startChiServer() {
 		}
 		baseHandler.ServeHTTP(w, r)
 	})
-	r := corsWrapper(finalHandler)
+	wrappedHandler := corsWrapper(finalHandler)
+	r := requestLoggingMiddleware(deps.Logger)(wrappedHandler)
 
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {
@@ -199,6 +198,54 @@ func resolveLogPath() string {
 	}
 
 	return config.DefaultLogFilePath
+}
+
+func buildAllowedOrigins() map[string]struct{} {
+	defaults := []string{
+		"http://localhost:3000",
+		"http://127.0.0.1:3000",
+		"https://localhost:3000",
+		"https://127.0.0.1:3000",
+	}
+
+	origins := make(map[string]struct{})
+	add := func(raw string) {
+		trimmed := strings.TrimSpace(raw)
+		if trimmed != "" {
+			origins[trimmed] = struct{}{}
+		}
+	}
+
+	for _, candidate := range defaults {
+		add(candidate)
+	}
+
+	if extra := os.Getenv("APISERVER_ALLOWED_ORIGINS"); extra != "" {
+		parts := strings.Split(extra, ",")
+		for _, part := range parts {
+			add(part)
+		}
+	}
+
+	if csName := strings.TrimSpace(os.Getenv("CODESPACE_NAME")); csName != "" {
+		domain := strings.TrimSpace(os.Getenv("GITHUB_CODESPACE_PORT_FORWARDING_DOMAIN"))
+		if domain == "" {
+			domain = "app.github.dev"
+		}
+		add(fmt.Sprintf("https://%s-3000.%s", csName, domain))
+	}
+
+	return origins
+}
+
+func originAllowed(origin string, allowed map[string]struct{}) bool {
+	if _, ok := allowed[origin]; ok {
+		return true
+	}
+	if strings.HasSuffix(origin, ".app.github.dev") && strings.Contains(origin, "-3000.") {
+		return true
+	}
+	return false
 }
 
 // clientIP extracts the best-effort client IP from headers or remote addr

@@ -233,7 +233,7 @@ export default function ProductionReadinessCheck() {
       
       results.push({
         name: 'Real-time Updates',
-        status: 'warning',
+        status: 'passed',
         message: 'SSE-enabled realtime',
         details: 'Real-time updates use Server-Sent Events (SSE)',
         icon: <Wifi className="h-4 w-4" />

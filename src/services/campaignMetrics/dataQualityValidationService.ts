@@ -155,7 +155,7 @@ class DataQualityValidationService {
     const recommendations = this.generateRecommendations(issues, metrics);
 
     // Emit telemetry (throttled)
-    this.emitValidationTelemetry(campaignId, issues, metrics);
+    this.emitValidationTelemetry(campaignId, issues);
 
     const result: DataQualityValidationResult = {
       campaignId,
@@ -664,8 +664,7 @@ class DataQualityValidationService {
    */
   private emitValidationTelemetry(
     campaignId: string,
-    issues: DataQualityIssue[],
-    metrics: DataQualityValidationResult['metrics']
+    issues: DataQualityIssue[]
   ): void {
     const now = Date.now();
     const lastEmission = this.telemetryThrottle.get(campaignId) || 0;

@@ -54,7 +54,7 @@ func TestScoreDomains_ParkedPenaltyOrdering(t *testing.T) {
 		WithArgs(campaignID).WillReturnRows(rows)
 
 	// Expect bulk update. Args pattern: campaignID, a.com, 0.308, 0.308, b.com, 0.821, 0.821 (ordering preserved)
-	mock.ExpectExec(regexp.QuoteMeta(`WITH incoming(domain_name,relevance_score,domain_score) AS (VALUES ($2,$3,$4),($5,$6,$7))
+	mock.ExpectExec(regexp.QuoteMeta(`WITH incoming(domain_name,relevance_score,domain_score) AS (VALUES ($2::text,$3::numeric,$4::numeric),($5::text,$6::numeric,$7::numeric))
 UPDATE generated_domains gd
 SET relevance_score = incoming.relevance_score,
 	domain_score = incoming.domain_score

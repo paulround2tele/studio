@@ -3,7 +3,7 @@
  * Web Worker for offloading heavy classification and aggregate computations
  */
 
-import { safeAt, safeFirst, safeLast, hasMinElements, isNonEmptyArray } from '@/lib/utils/arrayUtils';
+import { safeAt, safeFirst, safeLast, hasMinElements } from '@/lib/utils/arrayUtils';
 
 // Import types for worker communication
 interface WorkerMessage {
@@ -44,11 +44,17 @@ interface WorkerMessage {
 
 // Import the pure functions used for computation
 // Note: These need to be worker-safe (no DOM dependencies)
-let classifyDomains: (domains: unknown[]) => any;
-let computeAggregates: (domains: unknown[]) => any;
-let enrichAggregatesWithHighPotential: (aggregates: unknown, highPotentialCount: number) => any;
-let computeMovers: (domains: unknown[], previousDomains?: unknown[]) => any;
-let calculateDeltas: (current: unknown, previous?: unknown) => any;
+type ClassificationSummary = ReturnType<typeof safeClassifyDomains>;
+type AggregateSummary = ReturnType<typeof safeComputeAggregates>;
+type EnrichedAggregates = ReturnType<typeof safeEnrichAggregatesWithHighPotential>;
+type MoversSummary = ReturnType<typeof safeComputeMovers>;
+type DeltaSummary = ReturnType<typeof safeCalculateDeltas>;
+
+let classifyDomains: (domains: unknown[]) => ClassificationSummary;
+let computeAggregates: (domains: unknown[]) => AggregateSummary;
+let enrichAggregatesWithHighPotential: (aggregates: unknown, highPotentialCount: number) => EnrichedAggregates;
+let computeMovers: (domains: unknown[], previousDomains?: unknown[]) => MoversSummary;
+let calculateDeltas: (current: unknown, previous?: unknown) => DeltaSummary;
 
 const extractScore = (domain: unknown): number | undefined => {
   if (!domain || typeof domain !== 'object') return undefined;

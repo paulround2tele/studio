@@ -11,14 +11,33 @@ import { useParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { skipToken } from '@reduxjs/toolkit/query/react';
 
 function EditCampaignPageContent() {
   const params = useParams();
   const router = useRouter();
 
-  const campaignId = params.id as string;
+  const rawCampaignId = params?.id;
+  const campaignId = Array.isArray(rawCampaignId) ? rawCampaignId[0] : rawCampaignId;
 
-  const { data: enriched, isLoading: loading, error } = useGetCampaignEnrichedQuery(campaignId);
+  const queryArg = campaignId ? campaignId : skipToken;
+  const { data: enriched, isLoading: loading, error } = useGetCampaignEnrichedQuery(queryArg);
+
+  if (!campaignId) {
+    return (
+      <div className="text-center py-10">
+        <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+        <PageHeader
+          title="Missing Campaign Identifier"
+          description="We couldn't determine which campaign to edit."
+          icon={FilePenLine}
+        />
+        <Button onClick={() => router.push('/campaigns')} className="mt-6">
+          Back to Campaigns
+        </Button>
+      </div>
+    );
+  }
   const campaignData: CampaignResponse | undefined = enriched?.campaign;
 
   if (loading) {

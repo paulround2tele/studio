@@ -385,12 +385,16 @@ func (s *analysisService) Configure(ctx context.Context, campaignID uuid.UUID, c
 
 	// Store configuration in campaign phases
 	if s.store != nil {
-		if raw, mErr := json.Marshal(analysisConfig); mErr == nil {
-			var exec store.Querier
-			if q, ok := s.deps.DB.(store.Querier); ok {
-				exec = q
-			}
-			_ = s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeAnalysis, raw)
+		raw, marshalErr := json.Marshal(analysisConfig)
+		if marshalErr != nil {
+			return fmt.Errorf("failed to marshal analysis config: %w", marshalErr)
+		}
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		if err := s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeAnalysis, raw); err != nil {
+			return fmt.Errorf("failed to persist analysis config: %w", err)
 		}
 	}
 	s.deps.Logger.Info(ctx, "Analysis configuration stored", map[string]interface{}{
@@ -1341,7 +1345,7 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 	args = append(args, campaignID)
 	idx := 2
 	for _, sr := range scores {
-		valueStrings = append(valueStrings, fmt.Sprintf("($%d,$%d,$%d)", idx, idx+1, idx+2))
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d::text,$%d::numeric,$%d::numeric)", idx, idx+1, idx+2))
 		args = append(args, sr.Domain, sr.Rel, sr.Score)
 		idx += 3
 	}
@@ -1725,18 +1729,18 @@ func (s *analysisService) makeReadPathDecision(ctx context.Context, campaignID u
 
 	// Calculate coverage: ready features vs expected domains
 	var readyCount, expectedCount int64
-	
+
 	// Count ready features
-	err := dbx.QueryRowContext(ctx, 
-		`SELECT COUNT(*) FROM analysis_ready_features WHERE campaign_id = $1`, 
+	err := dbx.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM analysis_ready_features WHERE campaign_id = $1`,
 		campaignID).Scan(&readyCount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count ready features: %w", err)
 	}
 
 	// Count expected domains (domains with feature_vector or potentially extractable)
-	err = dbx.QueryRowContext(ctx, 
-		`SELECT COUNT(*) FROM generated_domains WHERE campaign_id = $1`, 
+	err = dbx.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM generated_domains WHERE campaign_id = $1`,
 		campaignID).Scan(&expectedCount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count expected domains: %w", err)

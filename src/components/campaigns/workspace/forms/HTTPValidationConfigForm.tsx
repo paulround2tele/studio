@@ -15,7 +15,6 @@ import { PersonaType } from '@/lib/api-client/models/persona-type';
 import { markConfigured } from '@/utils/phaseStatus';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { ProxyPool as _ProxyPool } from '@/lib/api-client/models/proxy-pool';
-import type { KeywordSetResponse as ApiKeywordSet } from '@/lib/api-client/models/keyword-set-response';
 import { useConfigurePhaseStandaloneMutation, campaignApi } from '@/store/api/campaignApi';
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';

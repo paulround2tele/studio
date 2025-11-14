@@ -481,7 +481,7 @@ class CapabilitiesService {
 
     // Validate that versions are either missing or valid
     if (update.capabilities.versions) {
-      for (const [key, version] of Object.entries(update.capabilities.versions)) {
+      for (const version of Object.values(update.capabilities.versions)) {
         if (version && typeof version !== 'string') {
           return false;
         }
@@ -490,7 +490,7 @@ class CapabilitiesService {
 
     // Validate features structure
     if (update.capabilities.features) {
-      for (const [key, feature] of Object.entries(update.capabilities.features)) {
+      for (const feature of Object.values(update.capabilities.features)) {
         if (feature !== undefined && typeof feature !== 'boolean') {
           return false;
         }

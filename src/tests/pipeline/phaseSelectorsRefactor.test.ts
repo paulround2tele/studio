@@ -18,7 +18,7 @@ function buildPhaseQuery(campaignId: string, phase: string, status: string | und
 // Real selectors call campaignApi.endpoints.getPhaseStatusStandalone.select(args)
 // Instead of spinning full API slice we patch campaignApi.endpoints.getPhaseStatusStandalone.select to pull from our injected reducer state.
 
-const PHASES = ['discovery','validation','enrichment','extraction','analysis'] as const;
+const PHASES = ['discovery','validation','extraction','analysis','enrichment'] as const;
 
 describe('pipelineSelectors makeSelectPipelinePhases (refactored)', () => {
   const campaignId = 'cmp-1';

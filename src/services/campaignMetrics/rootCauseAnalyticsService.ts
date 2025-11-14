@@ -193,7 +193,7 @@ class RootCauseAnalyticsService {
    */
   private async identifyContributingFactors(context: AnomalyContext): Promise<ContributingFactor[]> {
     const factors: ContributingFactor[] = [];
-    const { snapshots, anomalyValue, baselineValue: _baselineValue, affectedTimeRange } = context;
+    const { snapshots, baselineValue: _baselineValue, affectedTimeRange } = context;
 
     // Analyze data quality factors
     const dataQualityFactors = this.analyzeDataQualityFactors(context);
@@ -216,7 +216,7 @@ class RootCauseAnalyticsService {
     factors.push(...seasonalFactors);
 
     // Score and filter factors by relevance
-    return this.scoreAndFilterFactors(factors, context);
+    return this.scoreAndFilterFactors(factors);
   }
 
   /**
@@ -459,7 +459,7 @@ class RootCauseAnalyticsService {
       if (!template) continue;
 
       // Generate interventions based on factor type and severity
-      const factorInterventions = this.generateFactorInterventions(factor, template);
+      const factorInterventions = this.generateFactorInterventions(factor);
       interventions.push(...factorInterventions);
     }
 
@@ -737,8 +737,7 @@ class RootCauseAnalyticsService {
   }
 
   private scoreAndFilterFactors(
-    factors: ContributingFactor[],
-    context: AnomalyContext
+    factors: ContributingFactor[]
   ): ContributingFactor[] {
     // Filter out low-confidence factors and sort by relevance
     return factors
@@ -748,8 +747,7 @@ class RootCauseAnalyticsService {
   }
 
   private generateFactorInterventions(
-    factor: ContributingFactor,
-    template: unknown
+    factor: ContributingFactor
   ): InterventionRecommendation[] {
     const interventions: InterventionRecommendation[] = [];
 

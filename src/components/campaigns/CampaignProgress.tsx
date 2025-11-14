@@ -5,7 +5,7 @@ import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import type { PhaseExecution } from '@/lib/api-client/models/phase-execution';
 import type { CampaignState } from '@/lib/api-client/models/campaign-state';
 // Local phase literal union matching OpenAPI string literals
-type CampaignPhase = 'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis';
+type CampaignPhase = 'discovery' | 'validation' | 'extraction' | 'analysis' | 'enrichment';
 import { CheckCircle, AlertTriangle, Clock, Loader2, WorkflowIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -26,7 +26,7 @@ interface CampaignProgressProps {
 
 // PROFESSIONAL PHASE DISPLAY NAMES using ACTUAL OpenAPI ENUM VALUES
 // Define phase order for progress calculation
-const PHASE_ORDER: CampaignPhase[] = ['discovery','validation','enrichment','extraction','analysis'];
+const PHASE_ORDER: CampaignPhase[] = ['discovery','validation','extraction','analysis','enrichment'];
 
 const phaseDisplayNames: Record<CampaignPhase, string> = PHASE_ORDER.reduce((acc, phase) => {
   acc[phase] = getPhaseDisplayName(phase);

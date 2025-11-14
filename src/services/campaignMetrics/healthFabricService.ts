@@ -190,7 +190,7 @@ class HealthFabricService {
     }
 
     // Update trends
-    updatedHealth.trends = this.calculateTrends(domainType, updatedHealth.score);
+    updatedHealth.trends = this.calculateTrends(domainType);
 
     // Check for significant changes
     if (currentHealth) {
@@ -368,7 +368,7 @@ class HealthFabricService {
   /**
    * Calculate health trends for a domain
    */
-  private calculateTrends(domainType: string, currentScore: number): DomainHealth['trends'] {
+  private calculateTrends(domainType: string): DomainHealth['trends'] {
     const history = this.healthHistory.get(domainType) || [];
     
     if (history.length < 2) {

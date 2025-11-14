@@ -101,7 +101,7 @@ function scoreRecommendation(
 ): ScoredRecommendation {
   const rawScore = calculateRawScore(recommendation, input);
   const severityWeight = SEVERITY_WEIGHTS[recommendation.severity] || 0.5;
-  const recencyFactor = calculateRecencyFactor(recommendation, input);
+  const recencyFactor = calculateRecencyFactor(recommendation);
   
   const compositePriority = severityWeight * rawScore * recencyFactor;
 
@@ -168,7 +168,7 @@ function calculateRawScore(recommendation: Recommendation, input: ScoringInput):
 /**
  * Calculate recency factor based on deltas and time
  */
-function calculateRecencyFactor(recommendation: Recommendation, input: ScoringInput): number {
+function calculateRecencyFactor(recommendation: Recommendation): number {
   // Delta-based recommendations are more recent/urgent
   if (recommendation.id.includes('decline') || recommendation.id.includes('improvement')) {
     return 1.0;

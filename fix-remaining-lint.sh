@@ -35,7 +35,6 @@ sed -i 's/\bstate\b/_state/g' src/services/simulation/seedService.ts
 # Prefix remaining unused variables with underscore
 sed -i 's/LoginPageFallback/\_LoginPageFallback/g' src/app/login/page.tsx
 sed -i 's/import { redirect }/import { redirect as _redirect }/g' src/app/page.tsx
-sed -i 's/import React, { useState }/import React/g' src/components/campaigns/CampaignFormV2.tsx
 sed -i 's/(state)/(\_state)/g' src/components/campaigns/CampaignProgress.tsx
 sed -i 's/PipelineRelatedRootState,/PipelineRelatedRootState as _PipelineRelatedRootState,/g' src/components/campaigns/ConversionCTA.tsx
 sed -i 's/MetricValue,/MetricValue as _MetricValue,/g' src/components/campaigns/DomainsList.tsx

@@ -38,7 +38,7 @@ Never implement something “because Phase 2 said so” if it’s superseded in 
 | Phase 3 Deltas / Movers / ProgressStream | Plan Phase C (Momentum & Movers) + part of D (Rec Engine) | Ensure server `/momentum` implemented; remove synthetic movers once live. |
 | Pipeline Workspace / Enterprise Upgrade steps | Underpin UI layout for CampaignExperiencePage | Reconcile naming & delete superseded components post Phase E. |
 | “ProgressStream” SSE abstraction | Plan SSE Hook `useCampaignPhaseStream` | Normalize event schema & field names. |
-| Old flags (`CAMPAIGN_WIZARD_V1`, `CAMPAIGN_OVERVIEW_V2`, `SHOW_LEGACY_DOMAINS_TABLE`) | Unified Flag `ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE` | Decommission historical flags per Plan Phase E. |
+| Legacy flags (`CAMPAIGN_OVERVIEW_V2`, `SHOW_LEGACY_DOMAINS_TABLE`, retired `CAMPAIGN_WIZARD_V1`) | Unified Flag `ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE` | Legacy campaign form removed; unified flag owns all experience gating. |
 
 ---
 

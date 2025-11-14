@@ -5,7 +5,7 @@
 
 import type { AggregateSnapshot, AggregateMetrics } from '@/types/campaignMetrics';
 import { telemetryService } from './telemetryService';
-import { safeAt, safeFirst, safeLast, hasMinElements as _hasMinElements, isNonEmptyArray } from '@/lib/utils/arrayUtils';
+import { safeAt, safeFirst, safeLast, hasMinElements as _hasMinElements } from '@/lib/utils/arrayUtils';
 
 // Feature flag for snapshot compaction
 const isSnapshotCompactionEnabled = () => 
@@ -110,7 +110,7 @@ class SnapshotCompactionService {
       strategy: fullConfig.strategy,
       compactedSnapshots,
       preservedIndices,
-      metadata: this.calculateCompactionMetadata(snapshots, compactedSnapshots, preservedIndices)
+      metadata: this.calculateCompactionMetadata(snapshots, compactedSnapshots)
     };
 
     // Emit telemetry
@@ -447,8 +447,7 @@ class SnapshotCompactionService {
    */
   private calculateCompactionMetadata(
     original: AggregateSnapshot[],
-    compacted: AggregateSnapshot[],
-    preservedIndices: number[]
+    compacted: AggregateSnapshot[]
   ): CompactionResult['metadata'] {
     let avgInterval = 0;
     if (compacted.length > 1) {

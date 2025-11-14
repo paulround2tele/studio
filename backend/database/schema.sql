@@ -473,6 +473,7 @@ CREATE TYPE public.phase_status_enum AS ENUM (
     'in_progress',
     'paused',
     'completed',
+    'skipped',
     'failed'
 );
 
@@ -2003,7 +2004,7 @@ BEGIN
         SELECT phase_type, status INTO computed_current_phase, computed_phase_status
         FROM campaign_phases 
         WHERE campaign_id = campaign_uuid 
-        AND status != 'completed'
+        AND status NOT IN ('completed', 'skipped')
         ORDER BY phase_order
         LIMIT 1;
     END IF;
@@ -2021,7 +2022,7 @@ BEGIN
     SELECT COUNT(*) INTO completed_count
     FROM campaign_phases 
     WHERE campaign_id = campaign_uuid 
-    AND status = 'completed';
+    AND status IN ('completed', 'skipped');
     
     -- Only update if values have actually changed (prevent unnecessary updates)
     IF computed_current_phase IS DISTINCT FROM current_campaign_phase OR 

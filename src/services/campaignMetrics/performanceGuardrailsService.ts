@@ -162,7 +162,7 @@ class PerformanceGuardrailsService {
   private memoryStats: MemoryStats[] = [];
   private performanceMetrics: PerformanceMetrics[] = [];
   private retentionPolicies = new Map<string, RetentionPolicy>();
-  private gcFriendlyCollections = new Map<string, GCFriendlyCollection<any>>();
+  private gcFriendlyCollections = new Map<string, GCFriendlyCollection<unknown>>();
   private monitoringEnabled = true;
   private cleanupTimers = new Map<string, number>();
 

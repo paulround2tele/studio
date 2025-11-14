@@ -16,7 +16,6 @@ import {
 export interface UseCausalGraphOptions {
   autoRefresh?: boolean;
   refreshInterval?: number;
-  confidenceThreshold?: number;
   enableIngest?: boolean;
 }
 
@@ -49,7 +48,6 @@ export function useCausalGraph(options: UseCausalGraphOptions = {}): [CausalGrap
   const {
     autoRefresh = false,
     refreshInterval = 30000, // 30 seconds
-    confidenceThreshold = 0.6,
     enableIngest = true
   } = options;
 

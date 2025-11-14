@@ -452,8 +452,6 @@ export function useBatchSummarization() {
  * Hook for summary quality metrics
  */
 export function useSummaryQuality() {
-  const [, actions] = useSemanticSummaries();
-
   const evaluateSummary = useCallback((summary: SummaryResult): {
     score: number;
     factors: {

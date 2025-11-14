@@ -12,8 +12,7 @@ import {
   isCohortComparisonAvailable,
   getDefaultCohortConfig,
   CohortMatrix,
-  CohortComparisonConfig,
-  CohortCampaign
+  CohortComparisonConfig
 } from '@/services/campaignMetrics/cohortService';
 
 /**

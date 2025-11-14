@@ -24,8 +24,10 @@ function EditPersonaPageContent() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const personaId = params.id as string;
-  const personaTypeParam = searchParams.get('type') as 'http' | 'dns' | null; 
+  const rawPersonaId = params?.id;
+  const personaId = Array.isArray(rawPersonaId) ? rawPersonaId[0] : rawPersonaId;
+  const personaTypeValue = searchParams?.get('type') ?? null;
+  const personaTypeParam: 'http' | 'dns' | null = personaTypeValue === 'http' || personaTypeValue === 'dns' ? personaTypeValue : null;
   
   const [persona, setPersona] = useState<PersonaResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,30 +45,21 @@ function EditPersonaPageContent() {
       return;
     }
     
-    const type = personaTypeParam; 
+    const type = personaTypeParam;
+    const targetPersonaId = personaId as string;
 
-    async function fetchPersona() {
+    async function fetchPersona(id: string, personaType: 'http' | 'dns') {
       setLoading(true);
-      setError(null); 
+      setError(null);
       try {
-  let response;
-        
-        // Use type-specific API methods
-        if (type === 'dns') {
-          response = await personasApi.personasGet(personaId);
-        } else if (type === 'http') {
-          response = await personasApi.personasGet(personaId);
-        } else {
-          response = await personasApi.personasGet(personaId);
-        }
-        
-  const data: PersonaResponse | undefined = response.data ?? undefined;
+        const response = await personasApi.personasGet(id);
+        const data: PersonaResponse | undefined = response.data ?? undefined;
         if (data) {
           // Check if the returned persona matches the expected type
-          if (data.personaType !== type) {
-            setError(`Mismatch: Persona ID '${personaId}' found, but it is a '${data.personaType}' persona, not '${type}'.`);
+          if (data.personaType !== personaType) {
+            setError(`Mismatch: Persona ID '${id}' found, but it is a '${data.personaType}' persona, not '${personaType}'.`);
             setPersona(null);
-            toast({ title: "Type Mismatch", description: `Persona found, but it's not of type '${type}'.`, variant: "destructive" });
+            toast({ title: "Type Mismatch", description: `Persona found, but it's not of type '${personaType}'.`, variant: "destructive" });
           } else {
             setPersona(data);
           }
@@ -84,7 +77,7 @@ function EditPersonaPageContent() {
         setLoading(false);
       }
     }
-    fetchPersona();
+    fetchPersona(targetPersonaId, type);
   }, [personaId, personaTypeParam, toast]); // Removed router from deps as it was not used
 
   if (loading) {

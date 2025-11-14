@@ -75,9 +75,9 @@
     "body": "Adjust keyword set edit page once proper keyword sets API is finalized.\n\n- File: `src/app/keyword-sets/[id]/edit/page.tsx` (around line 37)\n\nBlocked By:\n- Backend keyword sets API endpoints\n\nAcceptance Criteria:\n- Wire to generated client methods; remove placeholders"
   },
   {
-    "title": "[Frontend][Campaigns] Fix enum schema mismatches in CampaignFormV2",
+    "title": "[Frontend][Campaigns] Verify CampaignCreateWizard enum alignment",
     "labels": ["frontend", "type-safety", "important"],
-    "body": "Resolve enum mismatches and remove `any` usage in CampaignFormV2.\n\n- File: `src/components/campaigns/CampaignFormV2.tsx` (around line 78)\n\nAcceptance Criteria:\n- Align enums with generated OpenAPI types\n- No `any` casts for enums"
+    "body": "Ensure the CampaignCreateWizard remains aligned with generated OpenAPI enums. Legacy CampaignFormV2 has been removed.\n\n- File: `src/components/refactor/campaign/CampaignCreateWizard.tsx` (domain configuration step)\n\nAcceptance Criteria:\n- Confirm enums map directly to generated types\n- Remove any manual casts that drifted during migration"
   },
   {
     "title": "[Frontend][Campaigns] Separate UI-only state slice for campaign settings",

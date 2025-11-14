@@ -214,7 +214,7 @@ export function createSyntheticMovers(domains: DomainMetricsInput[]): Mover[] {
     .sort((a, b) => b.lead_score - a.lead_score)
     .slice(0, 3);
 
-  topDomains.forEach((domain, index) => {
+  topDomains.forEach((domain) => {
     // Create richness mover
     const richnessChange = (Math.random() - 0.3) * 20; // Bias toward positive
     movers.push({

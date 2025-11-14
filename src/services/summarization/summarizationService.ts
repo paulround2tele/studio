@@ -224,7 +224,7 @@ class SummarizationService {
       this.worker = new Worker(workerUrl);
       
       this.worker.onmessage = (event) => {
-        const { type, success, data } = event.data;
+        const { type, success } = event.data;
         
         if (type === 'init') {
           this.workerReady = success;

@@ -39,61 +39,7 @@ export function useSSEFallback({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasTriggeredFallback = useRef(false);
-
-  // Reset event timer when SSE event received
-  const resetEventTimer = useCallback(() => {
-    setLastEventTime(Date.now());
-    hasTriggeredFallback.current = false;
-    
-    // Clear any existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    
-    // Stop fallback polling if it was active
-    if (isUsingFallback) {
-      setIsUsingFallback(false);
-      setRetryCount(0);
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = null;
-      }
-    }
-    
-    // Set new timeout for fallback
-    if (enabled) {
-      timeoutRef.current = setTimeout(() => {
-        triggerFallback();
-      }, timeoutMs);
-    }
-  }, [enabled, timeoutMs, isUsingFallback]);
-
-  // Trigger fallback when no events received
-  const triggerFallback = useCallback(async () => {
-    if (hasTriggeredFallback.current || !enabled) {
-      return;
-    }
-    
-    hasTriggeredFallback.current = true;
-    setIsUsingFallback(true);
-    
-    console.warn(`No SSE events received for ${timeoutMs}ms, switching to fallback polling`);
-    
-    if (onFallbackTriggered) {
-      onFallbackTriggered();
-    }
-    
-    // Show user notification for long delays
-    toast({
-      title: "Connection Issue",
-      description: "Real-time updates are delayed. Switching to manual refresh mode.",
-      variant: 'default'
-    });
-    
-    // Start polling for status updates
-    startFallbackPolling();
-  }, [enabled, timeoutMs, onFallbackTriggered, toast]);
+  const retryCountRef = useRef(0);
 
   // Start fallback polling
   const startFallbackPolling = useCallback(() => {
@@ -102,9 +48,11 @@ export function useSSEFallback({
     }
     
     pollIntervalRef.current = setInterval(async () => {
-      if (retryCount >= maxRetries) {
+      if (retryCountRef.current >= maxRetries) {
         console.warn('Max fallback retries reached, stopping polling');
         setIsUsingFallback(false);
+        retryCountRef.current = 0;
+        setRetryCount(0);
         if (pollIntervalRef.current) {
           clearInterval(pollIntervalRef.current);
           pollIntervalRef.current = null;
@@ -122,14 +70,73 @@ export function useSSEFallback({
       try {
         if (onStatusRefresh) {
           await onStatusRefresh();
-          setRetryCount(prev => prev + 1);
+          setRetryCount(prev => {
+            const next = prev + 1;
+            retryCountRef.current = next;
+            return next;
+          });
         }
       } catch (error) {
         console.error('Fallback status refresh failed:', error);
-        setRetryCount(prev => prev + 1);
+        setRetryCount(prev => {
+          const next = prev + 1;
+          retryCountRef.current = next;
+          return next;
+        });
       }
     }, pollIntervalMs);
-  }, [retryCount, maxRetries, pollIntervalMs, onStatusRefresh, toast]);
+  }, [maxRetries, onStatusRefresh, pollIntervalMs, toast]);
+
+  // Trigger fallback when no events received
+  const triggerFallback = useCallback(async () => {
+    if (hasTriggeredFallback.current || !enabled) {
+      return;
+    }
+    
+    hasTriggeredFallback.current = true;
+    setIsUsingFallback(true);
+    
+    console.warn(`No SSE events received for ${timeoutMs}ms, switching to fallback polling`);
+    
+    if (onFallbackTriggered) {
+      onFallbackTriggered();
+    }
+    
+    toast({
+      title: "Connection Issue",
+      description: "Real-time updates are delayed. Switching to manual refresh mode.",
+      variant: 'default'
+    });
+    
+    startFallbackPolling();
+  }, [enabled, onFallbackTriggered, startFallbackPolling, timeoutMs, toast]);
+
+  // Reset event timer when SSE event received
+  const resetEventTimer = useCallback(() => {
+    setLastEventTime(Date.now());
+    hasTriggeredFallback.current = false;
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    if (isUsingFallback) {
+      setIsUsingFallback(false);
+      retryCountRef.current = 0;
+      setRetryCount(0);
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    }
+
+    if (enabled) {
+      timeoutRef.current = setTimeout(() => {
+        triggerFallback();
+      }, timeoutMs);
+    }
+  }, [enabled, isUsingFallback, timeoutMs, triggerFallback]);
 
   // Manual refresh trigger
   const triggerManualRefresh = useCallback(async () => {
@@ -155,6 +162,7 @@ export function useSSEFallback({
   // Reset fallback state
   const resetFallback = useCallback(() => {
     setIsUsingFallback(false);
+    retryCountRef.current = 0;
     setRetryCount(0);
     hasTriggeredFallback.current = false;
     

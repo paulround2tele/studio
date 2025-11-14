@@ -17,9 +17,6 @@ sed -i '13d' src/app/personas/page.tsx
 # RichnessContributionBar.tsx
 sed -i 's/  const totalPositive = /  const _totalPositive = /g' src/components/analysis/RichnessContributionBar.tsx
 
-# CampaignFormV2.tsx
-sed -i 's/import React, { useState }/import React, { useState as _useState }/g' src/components/campaigns/CampaignFormV2.tsx
-
 # CampaignProgress.tsx
 sed -i 's/(state)/(\_state)/g' src/components/campaigns/CampaignProgress.tsx
 

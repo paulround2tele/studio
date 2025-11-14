@@ -28,7 +28,7 @@ function normaliseUrl(rawUrl: string): string {
   }
 }
 
-function collectHeaders(headers?: HeadersInit): Record<string, string> | undefined {
+function collectHeaders(headers?: RequestInit['headers']): Record<string, string> | undefined {
   if (!headers) return undefined;
   const result: Record<string, string> = {};
   const assign = (key: string, value: string) => {

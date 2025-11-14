@@ -1,4 +1,4 @@
-import { NonEmptyArray as _NonEmptyArray, selectRandom, normalizeArmStats } from '@/lib/utils/typeSafetyPrimitives';
+import { NonEmptyArray as _NonEmptyArray, selectRandom } from '@/lib/utils/typeSafetyPrimitives';
 
 /**
  * Adaptive Experimentation Service (Phase 10)
@@ -171,7 +171,7 @@ class BanditService {
   /**
    * Select best arm based on context
    */
-  selectArm(context: BanditContext): BanditDecision {
+  selectArm(_context: BanditContext): BanditDecision {
     if (!this.isAvailable() || this.arms.size === 0) {
       throw new Error('No arms available for selection');
     }
@@ -209,16 +209,16 @@ class BanditService {
 
     switch (selectedStrategy) {
       case 'ucb':
-        decision = this.selectArmUCB(context);
+        decision = this.selectArmUCB(_context);
         break;
       case 'thompson':
-        decision = this.selectArmThompson(context);
+        decision = this.selectArmThompson(_context);
         break;
       case 'epsilon_greedy':
-        decision = this.selectArmEpsilonGreedy(context);
+        decision = this.selectArmEpsilonGreedy(_context);
         break;
       default:
-        decision = this.selectArmUCB(context);
+        decision = this.selectArmUCB(_context);
     }
 
     this.emitDecisionTelemetry(decision);
@@ -311,7 +311,7 @@ class BanditService {
   /**
    * UCB (Upper Confidence Bound) arm selection
    */
-  private selectArmUCB(context: BanditContext): BanditDecision {
+  private selectArmUCB(_context: BanditContext): BanditDecision {
     const arms = Array.from(this.arms.values());
     let bestArm: BanditArm | null = null;
     let bestUcbValue = -Infinity;
@@ -351,7 +351,7 @@ class BanditService {
   /**
    * Thompson Sampling arm selection
    */
-  private selectArmThompson(context: BanditContext): BanditDecision {
+  private selectArmThompson(_context: BanditContext): BanditDecision {
     const arms = Array.from(this.arms.values());
     let bestArm: BanditArm | null = null;
     let bestSample = -Infinity;
@@ -390,7 +390,7 @@ class BanditService {
   /**
    * Epsilon-Greedy arm selection
    */
-  private selectArmEpsilonGreedy(context: BanditContext): BanditDecision {
+  private selectArmEpsilonGreedy(_context: BanditContext): BanditDecision {
     const epsilon = Math.pow(this.config.epsilonDecay, this.totalPulls) * this.config.explorationFactor;
     
     if (Math.random() < epsilon) {

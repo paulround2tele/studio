@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +16,8 @@ export function StealthToggle({ className }: Props) {
   const [loading, setLoading] = useState(false);
   const [enabled, setEnabled] = useState<boolean>(false);
 
-  const api = new ServerSettingsApi(apiConfiguration);
+  const apiRef = useRef<ServerSettingsApi>(new ServerSettingsApi(apiConfiguration));
+  const api = apiRef.current;
 
   const load = useCallback(async () => {
     try {

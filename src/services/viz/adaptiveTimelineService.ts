@@ -5,7 +5,7 @@
 
 import { useAdaptiveVisualization as adaptiveVisualizationEnabled } from '../../lib/feature-flags-simple';
 import { telemetryService } from '../campaignMetrics/telemetryService';
-import { safeAt, safeFirst, safeLast, hasMinElements, isNonEmptyArray } from '@/lib/utils/arrayUtils';
+import { safeAt, safeFirst, safeLast, hasMinElements } from '@/lib/utils/arrayUtils';
 
 // Feature flag check
 const isAdaptiveVizEnabled = (): boolean => {
@@ -439,7 +439,7 @@ class AdaptiveTimelineService {
    */
   private generateSemanticHighlights(
     points: TimeSeriesPoint[],
-    metricKey: string
+    _metricKey: string
   ): SemanticHighlight[] {
     const highlights: SemanticHighlight[] = [];
 

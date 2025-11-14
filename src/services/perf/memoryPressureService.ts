@@ -29,15 +29,29 @@ export interface MemoryPressureEvent {
 /**
  * Memory Pressure Service Class
  */
+type CachePriority = 'low' | 'medium' | 'high';
+
+type CacheStore =
+  | Map<string, unknown>
+  | WeakMap<object, unknown>
+  | Set<unknown>
+  | { clear: () => void }
+  | unknown[];
+
+interface CacheEntry {
+  cache: CacheStore;
+  priority: CachePriority;
+  clearMethod?: () => void;
+}
+
+const hasClearMethod = (value: CacheStore): value is { clear: () => void } =>
+  typeof (value as { clear?: unknown }).clear === 'function';
+
 class MemoryPressureService {
   private config: MemoryPressureConfig;
   private checkInterval: NodeJS.Timeout | null = null;
   private visibilityHandler: (() => void) | null = null;
-  private cacheRegistry = new Map<string, {
-    cache: Map<string, any> | WeakMap<object, any> | any;
-    priority: 'low' | 'medium' | 'high';
-    clearMethod?: () => void;
-  }>();
+  private cacheRegistry = new Map<string, CacheEntry>();
 
   constructor(config: Partial<MemoryPressureConfig> = {}) {
     this.config = {
@@ -90,9 +104,9 @@ class MemoryPressureService {
    * Register a cache for management
    */
   registerCache(
-    name: string, 
-    cache: Map<string, any> | WeakMap<object, any> | any, 
-    priority: 'low' | 'medium' | 'high' = 'medium',
+    name: string,
+    cache: CacheStore,
+    priority: CachePriority = 'medium',
     clearMethod?: () => void
   ): void {
     this.cacheRegistry.set(name, {
@@ -112,7 +126,7 @@ class MemoryPressureService {
   /**
    * Clear caches based on priority
    */
-  clearCaches(priority?: 'low' | 'medium' | 'high'): number {
+  clearCaches(priority?: CachePriority): number {
     let clearedCount = 0;
 
     this.cacheRegistry.forEach((cacheInfo, name) => {
@@ -120,8 +134,10 @@ class MemoryPressureService {
         try {
           if (cacheInfo.clearMethod) {
             cacheInfo.clearMethod();
-          } else if (cacheInfo.cache && typeof cacheInfo.cache.clear === 'function') {
+          } else if (hasClearMethod(cacheInfo.cache)) {
             cacheInfo.cache.clear();
+          } else if (Array.isArray(cacheInfo.cache)) {
+            cacheInfo.cache.splice(0, cacheInfo.cache.length);
           }
           clearedCount++;
         } catch (error) {
@@ -175,7 +191,7 @@ class MemoryPressureService {
   /**
    * Get registered caches info
    */
-  getCacheInfo(): Array<{ name: string; priority: string; hasCustomClear: boolean }> {
+  getCacheInfo(): Array<{ name: string; priority: CachePriority; hasCustomClear: boolean }> {
     return Array.from(this.cacheRegistry.entries()).map(([name, info]) => ({
       name,
       priority: info.priority,
@@ -277,9 +293,7 @@ class MemoryPressureService {
       const telemetryService = w.__telemetryService;
       if (telemetryService && Array.isArray(telemetryService.eventQueue)) {
         this.registerCache('telemetry_events', telemetryService.eventQueue, 'low', () => {
-          if (telemetryService.eventQueue) {
-            telemetryService.eventQueue.splice(0, Math.floor(telemetryService.eventQueue.length * 0.5));
-          }
+          telemetryService.eventQueue?.splice(0, Math.floor(telemetryService.eventQueue.length * 0.5));
         });
       }
     }
@@ -296,9 +310,18 @@ class MemoryPressureService {
 
       globalCaches.forEach(cacheName => {
         const w = window as unknown as Record<string, unknown>;
-        if (w[cacheName]) {
-          const cache = w[cacheName];
-          this.registerCache(cacheName, cache as unknown as Map<string, unknown>, 'medium');
+        const cache = w[cacheName];
+        if (cache instanceof Map || cache instanceof WeakMap || cache instanceof Set) {
+          this.registerCache(cacheName, cache, 'medium');
+        } else if (Array.isArray(cache)) {
+          this.registerCache(cacheName, cache, 'medium', () => cache.splice(0, cache.length));
+        } else if (
+          cache &&
+          typeof cache === 'object' &&
+          'clear' in cache &&
+          typeof (cache as { clear?: unknown }).clear === 'function'
+        ) {
+          this.registerCache(cacheName, cache as { clear: () => void }, 'medium');
         }
       });
     }

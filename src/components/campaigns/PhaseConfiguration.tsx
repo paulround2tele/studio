@@ -64,6 +64,7 @@ const phaseDisplayNames: Record<string, string> = {
   dns_validation: "DNS Validation",
   http_keyword_validation: "HTTP Keyword Validation",
   analysis: "Analysis",
+  enrichment: "Lead Enrichment",
 };
 
 export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({

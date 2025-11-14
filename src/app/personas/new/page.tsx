@@ -16,6 +16,12 @@ function NewPersonaPageContent() {
 
 
   useEffect(() => {
+    if (!searchParams) {
+      setIsValidType(false);
+      setPersonaType(null);
+      setIsLoadingType(false);
+      return;
+    }
     const typeParam = searchParams.get('type');
     if (typeParam === 'http' || typeParam === 'dns') {
       setPersonaType(typeParam);

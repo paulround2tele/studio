@@ -49,7 +49,6 @@ export function usePaginatedDomains(campaignId: string, opts: UsePaginatedDomain
   const [pageSize, setPageSizeState] = useState(initialPageSize);
   const [page, setPage] = useState(1);
   const [infinite, setInfinite] = useState(initialInfinite);
-  const [version, setVersion] = useState(0); // bump to refetch current page
 
   const pageCache = useRef<Map<number, InternalPageCacheEntry>>(new Map());
   const accumulated = useRef<CampaignDomainsListResponse['items']>([]);
@@ -69,7 +68,8 @@ export function usePaginatedDomains(campaignId: string, opts: UsePaginatedDomain
   const hasNextFromCursor = cursorMode ? Boolean(pageInfo && pageInfo.hasNextPage) : false;
 
   // Cache current page items
-  const currentItems = data?.items || [];
+  const rawItems = data?.items;
+  const currentItems = useMemo(() => rawItems ?? [], [rawItems]);
   if (!isFetching && currentItems.length) {
     pageCache.current.set(page, { items: currentItems });
     if (infinite) {
@@ -146,7 +146,6 @@ export function usePaginatedDomains(campaignId: string, opts: UsePaginatedDomain
   const refresh = useCallback(() => {
     pageCache.current.clear();
     if (!infinite) accumulated.current = [];
-    setVersion(v => v + 1);
     refetch();
   }, [infinite, refetch]);
 

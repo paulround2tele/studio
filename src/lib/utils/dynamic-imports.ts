@@ -32,16 +32,15 @@ export const preloadComponent = (importFn: () => Promise<{ default: ComponentTyp
 
 // Dynamic imports for existing components
 export const DynamicComponents = {
-  // Existing complex forms
-  CampaignFormV2: createLazyComponent(
-    () => import('@/components/campaigns/CampaignFormV2')
+  CampaignCreateWizard: createLazyComponent(
+    () => import('@/components/refactor/campaign/CampaignCreateWizard')
   ),
 };
 
 // Utility for preloading critical routes
 export const preloadCriticalRoutes = () => {
   // Preload components that are likely to be accessed first
-  preloadComponent(() => import('@/components/campaigns/CampaignFormV2'));
+  preloadComponent(() => import('@/components/refactor/campaign/CampaignCreateWizard'));
 };
 
 // Bundle size utilities

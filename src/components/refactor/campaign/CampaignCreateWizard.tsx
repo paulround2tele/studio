@@ -372,15 +372,15 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
         const firstPhase: APIPhaseEnum = getFirstPhase();
         const domainGenConfig = mapPatternToDomainGeneration(wizardState.pattern);
         const dnsConfig = mapTargetingToDNSValidation(wizardState.targeting);
-        const enrichmentConfig = mapTargetingToHTTPValidation(wizardState.targeting);
-        const extractionPersonaIds = (wizardState.targeting.analysisPersonas && wizardState.targeting.analysisPersonas.length > 0)
+        const extractionPhaseConfig = mapTargetingToHTTPValidation(wizardState.targeting);
+        const enrichmentPersonaIds = (wizardState.targeting.analysisPersonas && wizardState.targeting.analysisPersonas.length > 0)
           ? wizardState.targeting.analysisPersonas
           : wizardState.targeting.httpPersonas;
-        const extractionConfig: Record<string, unknown> = {
-          // Initial extraction phase piggybacks on enrichment outputs; default strategy until UI exposes advanced options.
+        const enrichmentPhaseConfig: Record<string, unknown> = {
+          // Enrichment phase currently reuses analysis outputs until dedicated controls are exposed through the UI.
           reuseEnrichment: true,
           requestedBy: 'auto_wizard',
-          personaIds: extractionPersonaIds || [],
+          personaIds: enrichmentPersonaIds || [],
         };
         const analysisConfig = mapTargetingToAnalysis(wizardState.targeting);
 
@@ -394,12 +394,8 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
             configuration: dnsConfig as unknown as Record<string, unknown>,
           },
           {
-            phase: 'enrichment',
-            configuration: enrichmentConfig as unknown as Record<string, unknown>,
-          },
-          {
             phase: 'extraction',
-            configuration: extractionConfig,
+            configuration: extractionPhaseConfig as unknown as Record<string, unknown>,
           },
         ];
 
@@ -409,6 +405,11 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
             configuration: analysisConfig as unknown as Record<string, unknown>,
           });
         }
+
+        phaseConfigurations.push({
+          phase: 'enrichment',
+          configuration: enrichmentPhaseConfig,
+        });
 
         for (const { phase, configuration } of phaseConfigurations) {
           await configurePhase({

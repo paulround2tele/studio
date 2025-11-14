@@ -5,7 +5,7 @@ import { campaignApi } from '@/store/api/campaignApi';
 // ---------------------------------------------
 // Phase & Model Types
 // ---------------------------------------------
-export const PIPELINE_PHASE_ORDER = ['discovery','validation','enrichment','extraction','analysis'] as const;
+export const PIPELINE_PHASE_ORDER = ['discovery','validation','extraction','analysis','enrichment'] as const;
 export type PipelinePhaseKey = typeof PIPELINE_PHASE_ORDER[number];
 
 type BackendStatus = 'not_started' | 'configured' | 'running' | 'in_progress' | 'paused' | 'completed' | 'failed' | string | undefined;

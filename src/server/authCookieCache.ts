@@ -18,7 +18,7 @@ function getStore(): Map<string, CacheEntry> {
   return globalThis.__authCookieCache;
 }
 
-export function getCachedHasSession(cookieValue: string | undefined, ttlMs = DEFAULT_TTL_MS): boolean | null {
+export function getCachedHasSession(cookieValue: string | undefined): boolean | null {
   const key = cookieValue || '__no_cookie__';
   const store = getStore();
   const now = Date.now();

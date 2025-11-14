@@ -1,3 +1,6 @@
+
+'use client';
+
 /**
  * Campaign Experience Page Layout (Phase D)
  * Main campaign experience page integration with all refactor components
@@ -6,11 +9,14 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import type { SerializedError } from '@reduxjs/toolkit';
 
 import { KpiGrid } from './KpiGrid';
 import { PipelineBar } from './PipelineBar';
 import { FunnelSnapshot } from './FunnelSnapshot';
 import { RecommendationPanel } from './RecommendationPanel';
+import { LeadResultsPanel } from './LeadResultsPanel';
 import type { CampaignRecommendation } from '@/lib/api-client/models/campaign-recommendation';
 import type { Recommendation } from '@/types/campaignMetrics';
 import { ConfigSummary } from './ConfigSummary';
@@ -30,6 +36,7 @@ import {
   useGetCampaignFunnelQuery,
   useGetCampaignRecommendationsQuery,
   useGetCampaignEnrichedQuery,
+  useGetCampaignDomainsQuery,
   useGetCampaignClassificationsQuery,
   useGetCampaignMomentumQuery,
   useGetCampaignStatusQuery
@@ -45,6 +52,35 @@ interface CampaignExperiencePageProps {
   role?: string;
 }
 
+function extractErrorMessage(error?: FetchBaseQueryError | SerializedError | undefined): string | null {
+  if (!error) return null;
+
+  if ('message' in error && typeof error.message === 'string' && error.message.length > 0) {
+    return error.message;
+  }
+
+  if ('status' in (error as FetchBaseQueryError)) {
+    const fetchLike = error as FetchBaseQueryError;
+
+    if (typeof fetchLike.status === 'number') {
+      const payload = (fetchLike as { data?: unknown }).data;
+      if (payload && typeof (payload as { message?: unknown }).message === 'string') {
+        return (payload as { message: string }).message;
+      }
+      return `Request failed (${fetchLike.status})`;
+    }
+
+    if (typeof fetchLike.status === 'string') {
+      const errorText = (fetchLike as { error?: string }).error;
+      return errorText && errorText.length > 0
+        ? errorText
+        : `Request failed (${fetchLike.status})`;
+    }
+  }
+
+  return 'Failed to load lead details';
+}
+
 export function CampaignExperiencePage({ className: _className, role: _role = "region" }: CampaignExperiencePageProps) {
   const params = useParams();
   const campaignId = params?.id as string;
@@ -54,6 +90,10 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   const { data: funnelData, isLoading: funnelLoading, error: funnelError } = useGetCampaignFunnelQuery(campaignId);
   const { data: recommendationsData, isLoading: recsLoading } = useGetCampaignRecommendationsQuery(campaignId);
   const { data: enrichedData } = useGetCampaignEnrichedQuery(campaignId);
+  const { data: domainsList, isLoading: domainsLoading, error: domainsError } = useGetCampaignDomainsQuery(
+    { campaignId, limit: 200, offset: 0 },
+    { skip: !campaignId }
+  );
   const { data: _classificationsData } = useGetCampaignClassificationsQuery({ campaignId });
   const { data: momentumData } = useGetCampaignMomentumQuery(campaignId);
 
@@ -69,6 +109,12 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   });
 
   const { data: statusSnapshot } = useGetCampaignStatusQuery(campaignId);
+  const domainItems = React.useMemo(() => domainsList?.items ?? [], [domainsList]);
+  const leadAggregates = domainsList?.aggregates?.lead;
+  const leadPanelError = React.useMemo(
+    () => extractErrorMessage(domainsError),
+    [domainsError]
+  );
 
   const pipelinePhases = React.useMemo(() => mergeCampaignPhases({
     statusSnapshot,
@@ -289,6 +335,15 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
                 <p>Funnel data not available</p>
               </div>
             )}
+          </div>
+
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border">
+            <LeadResultsPanel
+              domains={domainItems}
+              aggregates={leadAggregates}
+              isLoading={domainsLoading}
+              error={leadPanelError}
+            />
           </div>
 
           {/* Config Summary */}

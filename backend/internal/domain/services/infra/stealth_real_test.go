@@ -160,6 +160,9 @@ func (f *fakeCampaignStore) GetDomainGenerationPhaseConfigStateByHash(ctx contex
 func (f *fakeCampaignStore) CreateOrUpdateDomainGenerationPhaseConfigState(ctx context.Context, exec store.Querier, state *models.DomainGenerationPhaseConfigState) error {
 	return fmt.Errorf("not implemented")
 }
+func (f *fakeCampaignStore) DeleteDomainGenerationPhaseConfigState(ctx context.Context, exec store.Querier, configHash string) error {
+	return fmt.Errorf("not implemented")
+}
 func (f *fakeCampaignStore) CountCampaignsWithPatternHash(ctx context.Context, exec store.Querier, patternHash string) (int, error) {
 	return 0, fmt.Errorf("not implemented")
 }
@@ -185,6 +188,9 @@ func (f *fakeCampaignStore) UpdatePhaseConfiguration(ctx context.Context, exec s
 	return fmt.Errorf("not implemented")
 }
 func (f *fakeCampaignStore) CompletePhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
+	return fmt.Errorf("not implemented")
+}
+func (f *fakeCampaignStore) SkipPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, reason string) error {
 	return fmt.Errorf("not implemented")
 }
 func (f *fakeCampaignStore) StartPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
@@ -293,6 +299,9 @@ func (f *fakeCampaignStore) UpdateDomainsBulkDNSStatus(ctx context.Context, exec
 	return fmt.Errorf("not implemented")
 }
 func (f *fakeCampaignStore) UpdateDomainsBulkHTTPStatus(ctx context.Context, exec store.Querier, results []models.HTTPKeywordResult) error {
+	return fmt.Errorf("not implemented")
+}
+func (f *fakeCampaignStore) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64) error {
 	return fmt.Errorf("not implemented")
 }
 func (f *fakeCampaignStore) UpsertPhaseConfig(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, config json.RawMessage) error {

@@ -35,19 +35,6 @@ export function CausalGraphPanel({
   
   const stats = useCausalGraphStats();
 
-  // Feature flag check
-  if (!filteredState.capabilities.available) {
-    return (
-      <Card className={`p-6 ${className}`}>
-        <div className="text-center text-gray-500">
-          <Info className="mx-auto h-8 w-8 mb-2" />
-          <p>Causal Graph Analysis is not available.</p>
-          <p className="text-sm mt-1">Enable NEXT_PUBLIC_ENABLE_CAUSAL_GRAPH to use this feature.</p>
-        </div>
-      </Card>
-    );
-  }
-
   const { graph, loading, error } = filteredState;
 
   // Group edges by confidence band
@@ -60,6 +47,18 @@ export function CausalGraphPanel({
       weak: graph.edges.filter(e => e.confidence < 0.3)
     };
   }, [graph]);
+
+  if (!filteredState.capabilities.available) {
+    return (
+      <Card className={`p-6 ${className}`}>
+        <div className="text-center text-gray-500">
+          <Info className="mx-auto h-8 w-8 mb-2" />
+          <p>Causal Graph Analysis is not available.</p>
+          <p className="text-sm mt-1">Enable NEXT_PUBLIC_ENABLE_CAUSAL_GRAPH to use this feature.</p>
+        </div>
+      </Card>
+    );
+  }
 
   // Get node connections
   const getNodeConnections = (nodeId: string) => {

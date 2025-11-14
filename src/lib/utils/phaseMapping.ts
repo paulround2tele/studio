@@ -10,8 +10,8 @@ export type PhaseConfigureRequest = import('@/lib/api-client/models/phase-config
 export type APIPhaseEnum = 
   | 'discovery'     // maps to domain_generation internally
   | 'validation'    // maps to dns_validation internally  
-  | 'enrichment'    // maps to http_keyword_validation internally
-  | 'extraction'    // maps to enrichment internally
+  | 'extraction'    // maps to http_keyword_validation internally
+  | 'enrichment'    // maps to enrichment internally
   | 'analysis';     // maps to analysis internally
 
 // Internal backend phase names (what gets persisted)
@@ -26,16 +26,16 @@ export type InternalPhaseEnum =
 const API_TO_INTERNAL: Record<APIPhaseEnum, InternalPhaseEnum> = {
   'discovery': 'domain_generation',
   'validation': 'dns_validation', 
-  'enrichment': 'http_keyword_validation',
-  'extraction': 'enrichment',
+  'extraction': 'http_keyword_validation',
+  'enrichment': 'enrichment',
   'analysis': 'analysis'
 };
 
 const INTERNAL_TO_API: Record<InternalPhaseEnum, APIPhaseEnum> = {
   'domain_generation': 'discovery',
   'dns_validation': 'validation',
-  'http_keyword_validation': 'enrichment', 
-  'enrichment': 'extraction',
+  'http_keyword_validation': 'extraction', 
+  'enrichment': 'enrichment',
   'analysis': 'analysis'
 };
 
@@ -60,9 +60,9 @@ export function getPhaseDisplayName(phase: APIPhaseEnum): string {
   const displayNames: Record<APIPhaseEnum, string> = {
     discovery: "Domain Discovery", 
     validation: "DNS Validation",
-    enrichment: "HTTP Data Enrichment",
-    extraction: "Lead Extraction",
+    extraction: "HTTP Keyword Validation",
     analysis: "Analysis & Scoring",
+    enrichment: "Lead Enrichment",
   };
   
   return displayNames[phase] || phase;
@@ -70,7 +70,7 @@ export function getPhaseDisplayName(phase: APIPhaseEnum): string {
 
 // Get the ordered sequence of API phases
 export function getPhaseSequence(): APIPhaseEnum[] {
-  return ['discovery', 'validation', 'enrichment', 'extraction', 'analysis'];
+  return ['discovery', 'validation', 'extraction', 'analysis', 'enrichment'];
 }
 
 // Determine next phase in the workflow
@@ -131,7 +131,7 @@ export interface AnalysisConfig {
   name?: string;
 }
 
-const DEFAULT_DNS_BATCH_SIZE = 250;
+const DEFAULT_DNS_BATCH_SIZE = 100;
 const DEFAULT_DNS_TIMEOUT_SECONDS = 30;
 const DEFAULT_DNS_MAX_RETRIES = 2;
 const DEFAULT_DNS_VALIDATION_TYPES = ['A', 'AAAA'];
@@ -271,7 +271,7 @@ export function mapTargetingToDNSValidation(targeting: {
   };
 }
 
-// Map wizard targeting step to HTTP enrichment configuration
+// Map wizard targeting step to HTTP keyword validation configuration
 export function mapTargetingToHTTPValidation(targeting: {
   keywords?: string[];
   includeKeywords?: string[];
@@ -293,7 +293,7 @@ export function mapTargetingToHTTPValidation(targeting: {
     personaIds: targeting.httpPersonas || [],
     keywords,
     adHocKeywords: targeting.adHocKeywords || [],
-    name: 'HTTP Enrichment Phase',
+    name: 'HTTP Keyword Validation Phase',
     enrichmentEnabled,
     microCrawlEnabled: microEnabled,
     microCrawlMaxPages: microPages,

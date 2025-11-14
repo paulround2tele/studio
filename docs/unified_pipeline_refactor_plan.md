@@ -160,7 +160,7 @@ Actions Executed:
 * Removed legacy UI components: `CampaignPhaseManager`, `PhaseDashboard`, `ModernPhaseConfiguration`, and entire `configuration/` directory.
 * Purged obsolete slice state & reducers (`showPhaseConfiguration`, `phaseConfiguration`, related actions) from `campaignSlice`.
 * Inlined minimal discovery configuration fields where prior `DomainGenerationConfig` component was referenced (workspace form + modal).
-* Updated `CampaignFormV2` comment to reference `PipelineWorkspace` instead of deprecated dashboard.
+* Updated campaign creation wizard comment to reference `PipelineWorkspace` instead of deprecated dashboard.
 * Added placeholder Jest tests for previously empty suites to keep test runner green post-purge.
 Validation:
 * TypeScript typecheck passes.

@@ -77,10 +77,16 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
       case 'extraction':
         return (
           <div className="text-sm text-muted-foreground">
-            Lead extraction relies on enrichment outputs. Automated campaigns configure this phase with default parameters.
+            HTTP keyword validation determines which domains qualify for deeper analysis. Automated campaigns configure this phase with the targeting defaults.
           </div>
         );
       case 'analysis': return <AnalysisConfigForm {...common} readOnly={isConfigured} />;
+      case 'enrichment':
+        return (
+          <div className="text-sm text-muted-foreground">
+            Lead enrichment transforms analyzed domains into actionable contacts. Configure personas and enrichment settings in upcoming iterations.
+          </div>
+        );
       default: return <div className="text-xs">Unknown phase: {phase}</div>;
     }
   };

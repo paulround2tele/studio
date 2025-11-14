@@ -34,14 +34,14 @@
       "9.9.9.9:53"
     ],
     "useSystemResolvers": false,
-    "queryTimeoutSeconds": 5,
+    "queryTimeoutSeconds": 3,
     "maxDomainsPerRequest": 100,
     "resolverStrategy": "random_rotation",
     "concurrentQueriesPerDomain": 2,
     "queryDelayMaxMs": 20,
-    "maxConcurrentGoroutines": 15,
-    "rateLimitDps": 10,
-    "rateLimitBurst": 5
+    "maxConcurrentGoroutines": 80,
+    "rateLimitDps": 60,
+    "rateLimitBurst": 120
   },
   "httpValidator": {
     "userAgents": [
@@ -57,15 +57,15 @@
       "Connection": "keep-alive",
       "Upgrade-Insecure-Requests": "1"
     },
-    "timeoutSeconds": 30,
+    "timeoutSeconds": 15,
     "followRedirects": true,
     "maxRedirects": 5,
     "maxDomainsPerRequest": 50,
     "concurrentRequestsPerDomain": 1,
     "requestDelayMaxMs": 100,
-    "maxConcurrentGoroutines": 10,
-    "rateLimitRps": 5,
-    "rateLimitBurst": 10
+    "maxConcurrentGoroutines": 30,
+    "rateLimitRps": 20,
+    "rateLimitBurst": 40
   },
   "logging": {
     "level": "${LOG_LEVEL:-info}",

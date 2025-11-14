@@ -4,7 +4,7 @@
  */
 
 import { ProgressUpdate } from '@/types/campaignMetrics';
-import type { CampaignSseEventPayload as _CampaignSseEventPayload, CampaignSseProgressEvent, CampaignSseEvent } from '@/lib/api-client/models';
+import type { CampaignSseEventPayload as _CampaignSseEventPayload, CampaignSseProgressEvent } from '@/lib/api-client/models';
 import { subscribeStreamPool, isStreamPoolingAvailable } from './streamPool';
 import { telemetryService } from './telemetryService';
 

@@ -34,7 +34,7 @@ export interface PayloadSignature {
 /**
  * Validated payload wrapper
  */
-export interface ValidatedPayload<T = any> {
+export interface ValidatedPayload<T = unknown> {
   data: T;
   isValid: boolean;
   validationErrors: string[];

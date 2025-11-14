@@ -88,6 +88,25 @@ export interface ExperimentalRecommendationConfig {
 /**
  * Enhanced recommendation system service
  */
+interface ServerRecommendationPayload {
+  id?: string;
+  severity?: EnhancedRecommendation['severity'];
+  title?: string;
+  detail?: string;
+  rationale?: string;
+  confidence?: number;
+  reasoning?: string[];
+  category?: EnhancedRecommendation['category'];
+  priority?: number;
+  estimatedImpact?: EnhancedRecommendation['estimatedImpact'];
+  actionable?: EnhancedRecommendation['actionable'];
+}
+
+interface ServerRecommendationResponse {
+  modelVersion?: string;
+  recommendations: ServerRecommendationPayload[];
+}
+
 class EnhancedRecommendationService {
   
   /**
@@ -175,27 +194,31 @@ class EnhancedRecommendationService {
         return [];
       }
 
-      // Mock server recommendation call - in practice would hit actual API
-      const serverResponse = await this.fetchServerRecommendations(campaignId);
-      
-      interface RawRec { [k: string]: unknown; confidence?: unknown; reasoning?: unknown; severity?: unknown; detail?: unknown; title?: unknown }
-      return serverResponse.filter(r => r && typeof r === 'object').map(r => {
-        const rec = r as RawRec;
-        return {
-          ...rec,
-          provenance: {
-            source: 'server' as const,
-            confidence: typeof rec.confidence === 'number' ? rec.confidence : 0.9,
-            modelVersion: (serverResponse as unknown as { modelVersion?: string }).modelVersion,
-            generatedAt: new Date().toISOString(),
-            reasoning: Array.isArray(rec.reasoning) ? rec.reasoning as string[] : []
-          },
-          category: this.categorizeRecommendation(rec as Record<string, unknown>),
-          priority: this.calculatePriority(rec as Record<string, unknown>),
-          estimatedImpact: this.estimateImpact(rec as Record<string, unknown>),
-          actionable: this.makeActionable(rec as Record<string, unknown>)
-        } as EnhancedRecommendation;
-      });
+      const { recommendations: serverRecommendations, modelVersion } = await this.fetchServerRecommendations(campaignId);
+
+      return serverRecommendations
+        .filter((recommendation): recommendation is ServerRecommendationPayload => Boolean(recommendation))
+        .map((rec) => {
+          const categoryFallback = this.categorizeRecommendation(rec as Record<string, unknown>);
+          return {
+            id: rec.id ?? `server_rec_${campaignId}_${Math.random().toString(36).slice(2)}`,
+            severity: rec.severity ?? 'info',
+            title: rec.title ?? 'Server Recommendation',
+            detail: rec.detail ?? 'No detail provided',
+            rationale: rec.rationale ?? 'Server-provided recommendation',
+            provenance: {
+              source: 'server',
+              confidence: typeof rec.confidence === 'number' ? rec.confidence : 0.9,
+              modelVersion,
+              generatedAt: new Date().toISOString(),
+              reasoning: Array.isArray(rec.reasoning) ? rec.reasoning : []
+            },
+            category: rec.category ?? categoryFallback,
+            priority: typeof rec.priority === 'number' ? rec.priority : this.calculatePriority(rec as Record<string, unknown>),
+            estimatedImpact: rec.estimatedImpact ?? this.estimateImpact(rec as Record<string, unknown>),
+            actionable: rec.actionable ?? this.makeActionable(rec as Record<string, unknown>)
+          } satisfies EnhancedRecommendation;
+        });
     } catch (error) {
       console.warn('[EnhancedRecommendationService] Server recommendations failed:', error);
       return [];
@@ -304,7 +327,7 @@ class EnhancedRecommendationService {
    */
   private generateClientHeuristicRecommendations(
     snapshots: AggregateSnapshot[],
-    context: Record<string, unknown>
+    _context: Record<string, unknown>
   ): EnhancedRecommendation[] {
     const recommendations: EnhancedRecommendation[] = [];
     
@@ -486,15 +509,16 @@ class EnhancedRecommendationService {
   /**
    * Helper methods
    */
-  private async fetchServerRecommendations(campaignId: string): Promise<any[]> {
-    // Mock server call - replace with actual API integration
-    return [];
+  private async fetchServerRecommendations(_campaignId: string): Promise<ServerRecommendationResponse> {
+    return {
+      recommendations: []
+    };
   }
 
   private generateSyntheticMLRecommendations(
-    campaignId: string,
-    snapshots: AggregateSnapshot[],
-    config: ExperimentalRecommendationConfig
+    _campaignId: string,
+    _snapshots: AggregateSnapshot[],
+    _config: ExperimentalRecommendationConfig
   ): EnhancedRecommendation[] {
     // Generate synthetic ML recommendations for demonstration
     return [];
@@ -519,7 +543,7 @@ class EnhancedRecommendationService {
     return Math.min(10, basePriority + confidence * 2);
   }
 
-  private estimateImpact(rec: Record<string, unknown>): EnhancedRecommendation['estimatedImpact'] {
+  private estimateImpact(_rec: Record<string, unknown>): EnhancedRecommendation['estimatedImpact'] {
     return {
       timeToImplement: '30 minutes',
       expectedROI: 10,

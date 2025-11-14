@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   useBulkGenerateDomainsMutation,
@@ -471,29 +471,36 @@ export const BulkOperationsDashboard: React.FC = () => {
       </div>
       
       {/* Pollers (hook-safe components) */}
-      {useMemo(() => trackedOperationIds.slice(0,25).map(id => {
-        const Poller: React.FC = () => {
-          const { data } = useGetBulkOperationStatusQuery({ operationId: id }, { pollingInterval: 5000 });
-          useEffect(() => {
-            const status = data as unknown as BulkOperationStatusResponse | undefined;
-            if (!status) return;
-            const processed = status.progress?.processed ?? 0;
-            const total = status.progress?.total ?? 0;
-            const percent = total > 0 ? Math.min(100, Math.round((processed/total)*100)) : undefined;
-            dispatch(updateOperationStatus({
-              id: status.operationId,
-              status: status.status as BulkOperationState,
-              progress: percent,
-              result: { processed, total } as unknown as Record<string, unknown>,
-            }));
-            if (['completed','failed','cancelled'].includes(status.status)) {
-              setCompletedAges(prev => ({ ...prev, [status.operationId]: Date.now() }));
-            }
-          }, [data]);
-          return null;
-        };
-        return <Poller key={id} />;
-      }), [trackedOperationIds])}
+          {trackedOperationIds.slice(0, 25).map((id) => {
+            const Poller: React.FC = () => {
+              const { data } = useGetBulkOperationStatusQuery(
+                { operationId: id },
+                { pollingInterval: 5000 }
+              );
+
+              useEffect(() => {
+                const status = data as unknown as BulkOperationStatusResponse | undefined;
+                if (!status) return;
+                const processed = status.progress?.processed ?? 0;
+                const total = status.progress?.total ?? 0;
+                const percent = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : undefined;
+                dispatch(
+                  updateOperationStatus({
+                    id: status.operationId,
+                    status: status.status as BulkOperationState,
+                    progress: percent,
+                    result: { processed, total } as unknown as Record<string, unknown>,
+                  })
+                );
+                if (['completed', 'failed', 'cancelled'].includes(status.status)) {
+                  setCompletedAges((prev) => ({ ...prev, [status.operationId]: Date.now() }));
+                }
+              }, [data]);
+              return null;
+            };
+
+            return <Poller key={id} />;
+          })}
       {/* Active Operations */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">Active Operations</h2>

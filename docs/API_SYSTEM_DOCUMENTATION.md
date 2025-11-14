@@ -181,7 +181,7 @@ export const apiSlice = createApi({
 ```typescript
 import { useGetCampaignsQuery, useCreateCampaignMutation } from './api';
 
-export function CampaignDashboard() {
+export function CampaignCreationExample() {
   const { 
     data: campaigns, 
     error, 

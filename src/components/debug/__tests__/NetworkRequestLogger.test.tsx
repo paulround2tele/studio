@@ -39,8 +39,8 @@ describe('NetworkRequestLogger', () => {
 
     const modulePath = require.resolve('../NetworkRequestLogger');
     delete require.cache[modulePath];
-    const module = await import('../NetworkRequestLogger');
-    const NetworkRequestLogger = module.default;
+    const loggerModule = await import('../NetworkRequestLogger');
+    const NetworkRequestLogger = loggerModule.default;
 
     render(<NetworkRequestLogger />);
 

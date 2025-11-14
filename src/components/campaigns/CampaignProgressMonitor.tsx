@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, Clock, Pause } from 'lucide-react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
-type CampaignCurrentPhaseEnum = 'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis';
+type CampaignCurrentPhaseEnum = 'discovery' | 'validation' | 'extraction' | 'analysis' | 'enrichment';
 type CampaignPhaseStatusEnum = 'not_started' | 'configured' | 'running' | 'paused' | 'completed' | 'failed';
 import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';

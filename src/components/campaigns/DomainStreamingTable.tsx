@@ -42,6 +42,16 @@ interface EnrichedDomain {
   generatedAt?: string;
 }
 
+const isDomainRow = (value: unknown): value is DomainRowType => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const candidate = value as Partial<DomainRowType>;
+  const hasDomain = typeof candidate.domain === 'string' && candidate.domain.length > 0;
+  const hasId = typeof candidate.id === 'string' && candidate.id.length > 0;
+  return hasDomain || hasId;
+};
+
 
 // Convert backend status to frontend format - ROBUST STATUS CONVERSION
 const convertStatus = (backendStatus?: string): DomainActivityStatus => {
@@ -191,7 +201,12 @@ export default function DomainStreamingTable({
     refetch,
   } = useGetCampaignDomainsQuery({ campaignId, limit, offset }, { skip: !campaignId, pollingInterval: 10000 });
 
-  const apiDomains = page?.items || [];
+  const apiDomains = useMemo(() => {
+    if (!Array.isArray(page?.items)) {
+      return [] as DomainRowType[];
+    }
+    return page.items.filter(isDomainRow);
+  }, [page]);
   const total = page?.total || 0;
   const hasMore = (offset + apiDomains.length) < total; // simplistic; single page accumulation
   const error = rtkError ? (typeof rtkError === 'object' && 'error' in rtkError ? rtkError.error as string : undefined) || 'Failed to load domains' : null;
@@ -210,10 +225,10 @@ export default function DomainStreamingTable({
       summary: {
         total,
         generated: total,
-        dnsValidated: apiDomains.filter((d: DomainRowType) => ['ok','valid','resolved','validated','succeeded'].includes(String(d.dnsStatus || '').toLowerCase())).length,
-        httpValidated: apiDomains.filter((d: DomainRowType) => ['ok','valid','resolved','validated','succeeded'].includes(String(d.httpStatus || '').toLowerCase())).length,
-        leadsGenerated: apiDomains.filter((d: DomainRowType) => ['match','matched'].includes(String(d.leadStatus || '').toLowerCase())).length,
-        failed: apiDomains.filter((d: DomainRowType) => ['error','invalid','unresolved','failed','timeout'].includes(String(d.dnsStatus || '').toLowerCase()) || ['error','invalid','unresolved','failed','timeout'].includes(String(d.httpStatus || '').toLowerCase())).length,
+        dnsValidated: apiDomains.filter((d) => ['ok','valid','resolved','validated','succeeded'].includes(String(d.dnsStatus || '').toLowerCase())).length,
+        httpValidated: apiDomains.filter((d) => ['ok','valid','resolved','validated','succeeded'].includes(String(d.httpStatus || '').toLowerCase())).length,
+        leadsGenerated: apiDomains.filter((d) => ['match','matched'].includes(String(d.leadStatus || '').toLowerCase())).length,
+        failed: apiDomains.filter((d) => ['error','invalid','unresolved','failed','timeout'].includes(String(d.dnsStatus || '').toLowerCase()) || ['error','invalid','unresolved','failed','timeout'].includes(String(d.httpStatus || '').toLowerCase())).length,
       },
       currentPhase: 'unknown',
       phaseStatus: 'unknown'
@@ -227,35 +242,33 @@ export default function DomainStreamingTable({
     }
 
     return apiDomains.map((domain) => {
-      const d = domain as Record<string, unknown>;
-      const dnsStatus = convertStatus((domain as { dnsStatus?: unknown }).dnsStatus as string | undefined) || 'not_validated';
-      const httpStatus = convertStatus((domain as { httpStatus?: unknown }).httpStatus as string | undefined) || 'not_validated';
-      const leadStatus = convertStatus((domain as { leadStatus?: unknown }).leadStatus as string | undefined) || 'not_validated';
-      const leadScoreRaw = (domain as { leadScore?: unknown }).leadScore;
+      const extendedDomain = domain as DomainRowType & Record<string, unknown>;
+      const dnsStatus = convertStatus(domain.dnsStatus) || 'not_validated';
+      const httpStatus = convertStatus(domain.httpStatus) || 'not_validated';
+      const leadStatus = convertStatus(domain.leadStatus) || 'not_validated';
+      const leadScoreRaw = extendedDomain.leadScore;
       const leadScore = typeof leadScoreRaw === 'number'
         ? leadScoreRaw
         : typeof leadScoreRaw === 'string'
           ? parseFloat(leadScoreRaw) || 0
           : 0;
-      
-      // Debug log removed for production type alignment cleanup
 
       return {
-        domainName: typeof (domain as { domain?: unknown }).domain === 'string'
-          ? (domain as { domain: string }).domain
-          : String((domain as { domain?: unknown }).domain ?? ''),
+        domainName: typeof domain.domain === 'string'
+          ? domain.domain
+          : String(domain.domain ?? ''),
         dnsStatus,
         httpStatus,
         leadScanStatus: leadStatus,
         leadScore,
-        dnsIp: typeof d['dnsIp'] === 'string' ? (d['dnsIp'] as string) : undefined,
-        httpStatusCode: d['httpStatusCode'] !== undefined ? String(d['httpStatusCode']) : undefined,
-        httpTitle: typeof d['httpTitle'] === 'string' ? (d['httpTitle'] as string) : undefined,
-        httpKeywords: typeof d['httpKeywords'] === 'string' ? (d['httpKeywords'] as string) : undefined,
-        sourceKeyword: typeof d['sourceKeyword'] === 'string' ? (d['sourceKeyword'] as string) : undefined,
-        sourcePattern: typeof d['sourcePattern'] === 'string' ? (d['sourcePattern'] as string) : undefined,
-        tld: typeof d['tld'] === 'string' ? (d['tld'] as string) : undefined,
-        generatedAt: typeof d['createdAt'] === 'string' ? (d['createdAt'] as string) : undefined,
+        dnsIp: typeof extendedDomain['dnsIp'] === 'string' ? (extendedDomain['dnsIp'] as string) : undefined,
+        httpStatusCode: extendedDomain['httpStatusCode'] !== undefined ? String(extendedDomain['httpStatusCode']) : undefined,
+        httpTitle: typeof extendedDomain['httpTitle'] === 'string' ? (extendedDomain['httpTitle'] as string) : undefined,
+        httpKeywords: typeof extendedDomain['httpKeywords'] === 'string' ? (extendedDomain['httpKeywords'] as string) : undefined,
+        sourceKeyword: typeof extendedDomain['sourceKeyword'] === 'string' ? (extendedDomain['sourceKeyword'] as string) : undefined,
+        sourcePattern: typeof extendedDomain['sourcePattern'] === 'string' ? (extendedDomain['sourcePattern'] as string) : undefined,
+        tld: typeof extendedDomain['tld'] === 'string' ? (extendedDomain['tld'] as string) : undefined,
+        generatedAt: typeof extendedDomain['createdAt'] === 'string' ? (extendedDomain['createdAt'] as string) : undefined,
       };
     });
   }, [apiDomains]);

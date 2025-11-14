@@ -1,27 +1,27 @@
 /**
  * Phase name normalization and mapping utilities
  * Single source of truth for translating between:
- * - API phase identifiers (discovery | validation | enrichment | extraction | analysis)
- * - Engine/progress identifiers (domain_generation | dns_validation | http_keyword_validation | enrichment | analysis)
+ * - API phase identifiers (discovery | validation | extraction | analysis | enrichment)
+ * - Engine/progress identifiers (domain_generation | dns_validation | http_keyword_validation | analysis | enrichment)
  */
 
-export type ApiPhase = 'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis';
-export type EnginePhase = 'domain_generation' | 'dns_validation' | 'http_keyword_validation' | 'enrichment' | 'analysis';
+export type ApiPhase = 'discovery' | 'validation' | 'extraction' | 'analysis' | 'enrichment';
+export type EnginePhase = 'domain_generation' | 'dns_validation' | 'http_keyword_validation' | 'analysis' | 'enrichment';
 
 const engineToApiMap: Record<EnginePhase, ApiPhase> = {
   domain_generation: 'discovery',
   dns_validation: 'validation',
-  http_keyword_validation: 'enrichment',
-  enrichment: 'extraction',
+  http_keyword_validation: 'extraction',
   analysis: 'analysis',
+  enrichment: 'enrichment',
 };
 
 const apiToEngineMap: Record<ApiPhase, EnginePhase> = {
   discovery: 'domain_generation',
   validation: 'dns_validation',
-  enrichment: 'http_keyword_validation',
-  extraction: 'enrichment',
+  extraction: 'http_keyword_validation',
   analysis: 'analysis',
+  enrichment: 'enrichment',
 };
 
 /** Normalize any known phase alias to the canonical API phase name. */
@@ -41,10 +41,10 @@ export function normalizeToApiPhase(phase: string): ApiPhase | null {
     case 'http':
     case 'http_validation':
     case 'http_keyword_validation':
-      return 'enrichment';
+      return 'extraction';
     case 'enrichment_phase':
     case 'content_extraction':
-      return 'extraction';
+      return 'enrichment';
     default:
       return null;
   }
@@ -61,11 +61,11 @@ export function engineToApiPhase(engine: EnginePhase): ApiPhase {
 }
 
 export function isApiPhase(v: string): v is ApiPhase {
-  return v === 'discovery' || v === 'validation' || v === 'enrichment' || v === 'extraction' || v === 'analysis';
+  return v === 'discovery' || v === 'validation' || v === 'extraction' || v === 'analysis' || v === 'enrichment';
 }
 
 export function isEnginePhase(v: string): v is EnginePhase {
-  return v === 'domain_generation' || v === 'dns_validation' || v === 'http_keyword_validation' || v === 'enrichment' || v === 'analysis';
+  return v === 'domain_generation' || v === 'dns_validation' || v === 'http_keyword_validation' || v === 'analysis' || v === 'enrichment';
 }
 
 /** Ordered workflow in engine/progress terms. */
@@ -73,15 +73,15 @@ export const ENGINE_PHASE_ORDER: EnginePhase[] = [
   'domain_generation',
   'dns_validation',
   'http_keyword_validation',
-  'enrichment',
   'analysis',
+  'enrichment',
 ];
 
 /** Ordered workflow in API terms. */
 export const API_PHASE_ORDER: ApiPhase[] = [
   'discovery',
   'validation',
-  'enrichment',
   'extraction',
   'analysis',
+  'enrichment',
 ];

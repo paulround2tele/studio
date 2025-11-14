@@ -51,6 +51,7 @@ type CampaignStore interface {
 	// Methods for DomainGenerationPhaseConfigState
 	GetDomainGenerationPhaseConfigStateByHash(ctx context.Context, exec Querier, configHash string) (*models.DomainGenerationPhaseConfigState, error)
 	CreateOrUpdateDomainGenerationPhaseConfigState(ctx context.Context, exec Querier, state *models.DomainGenerationPhaseConfigState) error
+	DeleteDomainGenerationPhaseConfigState(ctx context.Context, exec Querier, configHash string) error
 
 	// Methods for pattern reference counting and cleanup
 	CountCampaignsWithPatternHash(ctx context.Context, exec Querier, patternHash string) (int, error)
@@ -64,6 +65,7 @@ type CampaignStore interface {
 	UpdatePhaseProgress(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, progress float64, totalItems, processedItems, successfulItems, failedItems *int64) error
 	UpdatePhaseConfiguration(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, config json.RawMessage) error
 	CompletePhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error
+	SkipPhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, reason string) error
 	StartPhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error
 	PausePhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error
 	FailPhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string) error
@@ -128,6 +130,7 @@ type CampaignStore interface {
 	BulkDeleteCampaignsByIDs(ctx context.Context, exec Querier, campaignIDs []uuid.UUID) error
 	UpdateDomainsBulkDNSStatus(ctx context.Context, exec Querier, results []models.DNSValidationResult) error
 	UpdateDomainsBulkHTTPStatus(ctx context.Context, exec Querier, results []models.HTTPKeywordResult) error
+	UpdateDomainLeadStatus(ctx context.Context, exec Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64) error
 
 	// Phase configuration storage (explicit per-phase user config)
 	UpsertPhaseConfig(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, config json.RawMessage) error

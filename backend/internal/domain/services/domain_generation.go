@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -366,12 +367,16 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 
 	// Persist configuration in campaign phases
 	if s.store != nil {
-		if raw, mErr := json.Marshal(domainConfig); mErr == nil {
-			var exec store.Querier
-			if q, ok := s.deps.DB.(store.Querier); ok {
-				exec = q
-			}
-			_ = s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeDomainGeneration, raw)
+		raw, marshalErr := json.Marshal(domainConfig)
+		if marshalErr != nil {
+			return fmt.Errorf("failed to marshal domain generation config: %w", marshalErr)
+		}
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		if err := s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeDomainGeneration, raw); err != nil {
+			return fmt.Errorf("failed to persist domain generation config: %w", err)
 		}
 	}
 
@@ -436,6 +441,7 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 	var processedCount int64
 	// Authoritative starting offset: max(client offsetStart, global last_offset+1)
 	offset := config.OffsetStart
+	globalOffsetApplied := false
 	var exec store.Querier
 	if q, ok := s.deps.DB.(store.Querier); ok {
 		exec = q
@@ -443,11 +449,70 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 	if s.store != nil {
 		// Try read current global config state; ignore not found
 		if state, err := s.store.GetDomainGenerationPhaseConfigStateByHash(ctx, exec, execution.configHash); err == nil && state != nil {
-			if state.LastOffset+1 > offset {
-				offset = state.LastOffset + 1
+			nextOffset := state.LastOffset + 1
+			if nextOffset > offset {
+				offset = nextOffset
+				globalOffsetApplied = true
 			}
 		}
 	}
+
+	requestedTotal := config.NumDomains
+	totalCombinations := execution.generator.GetTotalCombinations()
+
+	if offset >= totalCombinations {
+		if globalOffsetApplied && config.OffsetStart < totalCombinations {
+			if s.deps.Logger != nil {
+				s.deps.Logger.Warn(ctx, "Domain generation global offset exhausted; resetting to configured start", map[string]interface{}{
+					"campaign_id":        campaignID,
+					"config_hash":        execution.configHash,
+					"last_offset_seen":   offset - 1,
+					"total_combinations": totalCombinations,
+				})
+			}
+			s.clearDomainGenerationConfigState(ctx, execution.configHash)
+			offset = config.OffsetStart
+		} else {
+			errMsg := fmt.Sprintf("Domain generation start offset %d exceeds total combinations %d", offset, totalCombinations)
+			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, errMsg)
+			return
+		}
+	}
+	availableCombos := totalCombinations - offset
+	if availableCombos <= 0 {
+		errMsg := fmt.Sprintf("Domain generation pattern exhausted: offset %d exceeds available combinations %d", offset, totalCombinations)
+		s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, errMsg)
+		return
+	}
+
+	effectiveTotal := requestedTotal
+	truncated := false
+	if effectiveTotal > availableCombos {
+		effectiveTotal = availableCombos
+		truncated = true
+		if s.deps.Logger != nil {
+			s.deps.Logger.Warn(ctx, "Requested domains exceed available combinations; truncating", map[string]interface{}{
+				"campaign_id":        campaignID,
+				"requested_domains":  requestedTotal,
+				"available_domains":  availableCombos,
+				"offset_start":       offset,
+				"total_combinations": totalCombinations,
+			})
+		}
+	}
+
+	if effectiveTotal <= 0 {
+		errMsg := fmt.Sprintf("No domain combinations available for pattern (offset %d, total %d)", offset, totalCombinations)
+		s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, errMsg)
+		return
+	}
+
+	config.NumDomains = effectiveTotal
+
+	s.mu.Lock()
+	execution.config.NumDomains = effectiveTotal
+	execution.itemsTotal = effectiveTotal
+	s.mu.Unlock()
 
 	for processedCount < config.NumDomains {
 		select {
@@ -542,13 +607,74 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 		}
 	}
 
-	// Mark as completed
-	s.updateExecutionStatus(campaignID, models.PhaseStatusCompleted, "Domain generation completed successfully")
+	// Emit a terminal progress update before we transition to completed status so listeners
+	// treat the phase as finished rather than stuck at 100% in-progress.
+	finalTotal := execution.itemsTotal
+	finalProcessed := execution.itemsProcessed
+	finalProgressPct := 100.0
+	if finalTotal > 0 {
+		finalProgressPct = float64(finalProcessed) / float64(finalTotal) * 100
+	}
 
-	s.deps.Logger.Info(ctx, "Domain generation completed", map[string]interface{}{
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		_ = s.store.UpdatePhaseProgress(ctx, exec, campaignID, models.PhaseTypeDomainGeneration, finalProgressPct, &finalTotal, &finalProcessed, nil, nil)
+	}
+
+	finalMessage := fmt.Sprintf("Generated %d domains", finalProcessed)
+	if truncated {
+		finalMessage = fmt.Sprintf("Generated %d domains (requested %d; limited by %d available combinations)", finalProcessed, requestedTotal, availableCombos)
+	}
+
+	finalProgress := PhaseProgress{
+		CampaignID:     campaignID,
+		Phase:          models.PhaseTypeDomainGeneration,
+		Status:         models.PhaseStatusCompleted,
+		ProgressPct:    finalProgressPct,
+		ItemsTotal:     finalTotal,
+		ItemsProcessed: finalProcessed,
+		Message:        finalMessage,
+		Timestamp:      time.Now(),
+	}
+
+	select {
+	case execution.progressCh <- finalProgress:
+	case <-ctx.Done():
+	}
+
+	if s.deps.EventBus != nil {
+		if err := s.deps.EventBus.PublishProgress(ctx, finalProgress); err != nil {
+			if s.deps.Logger != nil {
+				s.deps.Logger.Warn(ctx, "Failed to publish progress event", map[string]interface{}{
+					"campaign_id": campaignID,
+					"error":       err.Error(),
+				})
+			}
+		}
+	}
+
+	completionMessage := "Domain generation completed successfully"
+	if truncated {
+		completionMessage = fmt.Sprintf("Domain generation completed with %d domains (requested %d; limited by available combinations)", finalProcessed, requestedTotal)
+	}
+
+	// Mark as completed
+	s.updateExecutionStatus(campaignID, models.PhaseStatusCompleted, completionMessage)
+
+	logFields := map[string]interface{}{
 		"campaign_id":       campaignID,
 		"domains_generated": processedCount,
-	})
+	}
+	if truncated {
+		logFields["requested_domains"] = requestedTotal
+		logFields["available_domains"] = availableCombos
+		logFields["limited_by_available"] = true
+	}
+
+	s.deps.Logger.Info(ctx, "Domain generation completed", logFields)
 }
 
 // GetStatus returns the current status of domain generation
@@ -726,6 +852,26 @@ func (s *domainGenerationService) updateExecutionStatus(campaignID uuid.UUID, st
 					"error":       err.Error(),
 				})
 			}
+		}
+	}
+}
+
+func (s *domainGenerationService) clearDomainGenerationConfigState(ctx context.Context, configHash string) {
+	if s.store == nil {
+		return
+	}
+
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+
+	if err := s.store.DeleteDomainGenerationPhaseConfigState(ctx, exec, configHash); err != nil && !errors.Is(err, store.ErrNotFound) {
+		if s.deps.Logger != nil {
+			s.deps.Logger.Warn(ctx, "Failed to clear domain generation config state", map[string]interface{}{
+				"config_hash": configHash,
+				"error":       err.Error(),
+			})
 		}
 	}
 }

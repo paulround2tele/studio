@@ -23,6 +23,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -76,20 +77,27 @@ func (a *eventBusAdapter) PublishProgress(ctx context.Context, progress domainse
 	if a == nil || a.sse == nil {
 		return nil
 	}
+	campaignID := progress.CampaignID
 	evt := services.SSEEvent{
 		Event: services.SSEEventCampaignProgress,
 		Data: map[string]interface{}{
-			"phase":          progress.Phase,
-			"status":         progress.Status,
-			"progressPct":    progress.ProgressPct,
-			"itemsTotal":     progress.ItemsTotal,
-			"itemsProcessed": progress.ItemsProcessed,
-			"message":        progress.Message,
-			"error":          progress.Error,
-			"timestamp":      progress.Timestamp,
+			"phase":           string(progress.Phase),
+			"status":          string(progress.Status),
+			"progressPct":     progress.ProgressPct,
+			"progress_pct":    progress.ProgressPct,
+			"itemsTotal":      progress.ItemsTotal,
+			"items_total":     progress.ItemsTotal,
+			"itemsProcessed":  progress.ItemsProcessed,
+			"items_processed": progress.ItemsProcessed,
+			"message":         progress.Message,
+			"error":           progress.Error,
+			"timestamp":       progress.Timestamp,
+			"currentPhase":    string(progress.Phase),
+			"current_phase":   string(progress.Phase),
 		},
 		Timestamp: time.Now(),
 	}
+	a.enrichSSEIdentifiers(ctx, &evt, campaignID)
 	a.sse.BroadcastEvent(evt)
 	return nil
 }
@@ -105,18 +113,23 @@ func (a *eventBusAdapter) PublishStatusChange(ctx context.Context, status domain
 	case "failed":
 		evtType = services.SSEEventPhaseFailed
 	}
+	campaignID := status.CampaignID
 	evt := services.SSEEvent{
 		Event: evtType,
 		Data: map[string]interface{}{
-			"phase":          status.Phase,
-			"status":         status.Status,
-			"progressPct":    status.ProgressPct,
-			"itemsTotal":     status.ItemsTotal,
-			"itemsProcessed": status.ItemsProcessed,
-			"lastError":      status.LastError,
+			"phase":           string(status.Phase),
+			"status":          string(status.Status),
+			"progressPct":     status.ProgressPct,
+			"progress_pct":    status.ProgressPct,
+			"itemsTotal":      status.ItemsTotal,
+			"items_total":     status.ItemsTotal,
+			"itemsProcessed":  status.ItemsProcessed,
+			"items_processed": status.ItemsProcessed,
+			"lastError":       status.LastError,
 		},
 		Timestamp: time.Now(),
 	}
+	a.enrichSSEIdentifiers(ctx, &evt, campaignID)
 	a.sse.BroadcastEvent(evt)
 	return nil
 }
@@ -126,8 +139,66 @@ func (a *eventBusAdapter) PublishSystemEvent(ctx context.Context, name string, p
 		return nil
 	}
 	evt := services.SSEEvent{Event: services.SSEEventType(name), Data: payload, Timestamp: time.Now()}
+	if campaignID, ok := extractCampaignIDFromPayload(payload); ok {
+		a.enrichSSEIdentifiers(ctx, &evt, campaignID)
+	} else {
+		// Still attempt to attach user context even without campaign identifier
+		a.enrichSSEIdentifiers(ctx, &evt, uuid.Nil)
+	}
 	a.sse.BroadcastEvent(evt)
 	return nil
+}
+
+func (a *eventBusAdapter) enrichSSEIdentifiers(ctx context.Context, evt *services.SSEEvent, campaignID uuid.UUID) {
+	if evt == nil {
+		return
+	}
+	if campaignID != uuid.Nil {
+		// Attach campaign context on both envelope and payload for client routing
+		clone := campaignID
+		evt.CampaignID = &clone
+		if evt.Data == nil {
+			evt.Data = make(map[string]interface{})
+		}
+		evt.Data["campaign_id"] = campaignID.String()
+	}
+
+	if ctx == nil {
+		return
+	}
+	if raw := ctx.Value("user_id"); raw != nil {
+		switch v := raw.(type) {
+		case uuid.UUID:
+			if v != uuid.Nil {
+				clone := v
+				evt.UserID = &clone
+			}
+		case string:
+			if parsed, err := uuid.Parse(v); err == nil {
+				clone := parsed
+				evt.UserID = &clone
+			}
+		}
+	}
+}
+
+func extractCampaignIDFromPayload(payload map[string]interface{}) (uuid.UUID, bool) {
+	if payload == nil {
+		return uuid.Nil, false
+	}
+	if raw, ok := payload["campaign_id"]; ok {
+		switch v := raw.(type) {
+		case uuid.UUID:
+			if v != uuid.Nil {
+				return v, true
+			}
+		case string:
+			if parsed, err := uuid.Parse(v); err == nil {
+				return parsed, true
+			}
+		}
+	}
+	return uuid.Nil, false
 }
 
 // initAppDependencies loads environment/config and returns core dependencies for the Chi strict server.

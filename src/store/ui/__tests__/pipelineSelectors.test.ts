@@ -23,7 +23,7 @@ function makeStore(campaignId: string, statuses: Record<string,string|undefined>
 		reducer: {
 			campaignUI: campaignUIReducer,
 			pipelineExec: pipelineExecReducer,
-			// @ts-expect-error
+			// @ts-expect-error - injects minimalist mocked query slice for selector tests
 			campaignApi: (s = { queries: makeQueries(campaignId, statuses) }) => s,
 		}
 	});
@@ -36,7 +36,7 @@ describe('pipeline overview selector', () => {
 			reducer: {
 				campaignUI: campaignUIReducer,
 				// omit pipelineExec intentionally
-				// @ts-expect-error
+				// @ts-expect-error - provide minimal mocked campaign API slice for selector behavior
 				campaignApi: (s = { queries: makeQueries(campaignId, { discovery: undefined, validation: undefined, enrichment: undefined, extraction: undefined, analysis: undefined }) }) => s,
 			}
 		});

@@ -33,22 +33,27 @@ export interface ExtendedWorkerMessage {
 /**
  * Worker task queue item with improved type safety
  */
-interface WorkerTask {
+interface WorkerComputationResult {
+  aggregates: Record<string, number>;
+  classifiedCounts: Record<string, number>;
+  movers?: Record<string, unknown>[];
+  deltas?: Record<string, number>;
+  timings: {
+    queueTimeMs: number;
+    execTimeMs: number;
+    total: number;
+  };
+}
+
+interface WorkerTask<T = WorkerComputationResult> {
   id: string;
   message: ExtendedWorkerMessage;
-  resolve: (result: unknown) => void;
+  resolve: (result: T) => void;
   reject: (error: Error) => void;
   queuedAt: number;
   startedAt?: number;
   timeout?: number;
 }
-
-/**
- * Result wrapper for safe worker operations
- */
-type WorkerResult<T> = 
-  | { success: true; data: T }
-  | { success: false; error: string };
 
 /**
  * Worker coordinator class
@@ -121,14 +126,18 @@ class WorkerCoordinator {
     const execTimeMs = now - (task.startedAt || now);
 
     if (type === 'result') {
-      task.resolve({
-        ...result,
+      const finalResult: WorkerComputationResult = {
+        aggregates: result.aggregates ?? {},
+        classifiedCounts: result.classifiedCounts ?? {},
+        movers: result.movers,
+        deltas: result.deltas,
         timings: {
           queueTimeMs,
           execTimeMs,
           total: queueTimeMs + execTimeMs
         }
-      });
+      };
+      task.resolve(finalResult);
     } else if (type === 'error') {
       task.reject(new Error(error || 'Worker computation failed'));
     }
@@ -209,14 +218,14 @@ class WorkerCoordinator {
     domains: DomainMetricsInput[],
     previousDomains?: DomainMetricsInput[],
     includeMovers?: boolean
-  ): Promise<any> {
+  ): Promise<WorkerComputationResult> {
     if (!isWorkerEnabled()) {
       return Promise.reject(new Error('Worker metrics disabled'));
     }
 
     this.initWorker();
 
-    return new Promise((resolve, reject) => {
+    return new Promise<WorkerComputationResult>((resolve, reject) => {
       const taskId = `task_${++this.requestIdCounter}_${Date.now()}`;
       
       const message: ExtendedWorkerMessage = {
@@ -341,17 +350,7 @@ export async function computeAllMetrics(
   domains: DomainMetricsInput[],
   previousDomains?: DomainMetricsInput[],
   includeMovers: boolean = false
-): Promise<{
-  aggregates: Record<string, number>;
-  classifiedCounts: Record<string, number>;
-  movers?: Record<string, unknown>[];
-  deltas?: Record<string, number>;
-  timings: {
-    queueTimeMs: number;
-    execTimeMs: number;
-    total: number;
-  };
-}> {
+): Promise<WorkerComputationResult> {
   return workerCoordinator.queueTask(domains, previousDomains, includeMovers);
 }
 

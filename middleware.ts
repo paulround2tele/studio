@@ -14,7 +14,9 @@ function isPublicPath(pathname: string) {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const method = req.method;
-  const clientIp = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  const realIp = req.headers.get('x-real-ip');
+  const clientIp = forwardedFor?.split(',')[0]?.trim() || realIp?.trim() || 'unknown';
 
   // Skip Next.js internals and static assets explicitly (also handled by matcher)
   if (

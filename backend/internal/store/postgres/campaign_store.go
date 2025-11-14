@@ -531,6 +531,22 @@ func (s *campaignStorePostgres) CreateOrUpdateDomainGenerationPhaseConfigState(c
 	return err
 }
 
+func (s *campaignStorePostgres) DeleteDomainGenerationPhaseConfigState(ctx context.Context, exec store.Querier, configHash string) error {
+	if exec == nil {
+		exec = s.db
+	}
+
+	query := `DELETE FROM domain_generation_config_states WHERE config_hash = $1`
+	result, err := exec.ExecContext(ctx, query, configHash)
+	if err != nil {
+		return err
+	}
+	if rows, err := result.RowsAffected(); err == nil && rows == 0 {
+		return store.ErrNotFound
+	}
+	return err
+}
+
 // --- Generated Domains --- //
 
 func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec store.Querier, domains []*models.GeneratedDomain) error {
@@ -1085,6 +1101,35 @@ func (s *campaignStorePostgres) UpdateDomainHTTPStatus(ctx context.Context, exec
 	return nil
 }
 
+func (s *campaignStorePostgres) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64) error {
+	if exec == nil {
+		exec = s.db
+	}
+
+	var scoreParam interface{}
+	if score != nil {
+		scoreParam = *score
+	}
+
+	updateQuery := `UPDATE generated_domains
+		SET lead_status = $1,
+		    lead_score = COALESCE($2, lead_score)
+		WHERE id = $3`
+
+	result, err := exec.ExecContext(ctx, updateQuery, status, scoreParam, domainID)
+	if err != nil {
+		return fmt.Errorf("failed to update domain lead status: %w", err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return store.ErrNotFound
+	}
+
+	log.Printf("DEBUG [UpdateDomainLeadStatus]: Updated domain %s lead_status=%s score=%v", domainID, status, scoreParam)
+	return nil
+}
+
 func (s *campaignStorePostgres) GetHTTPKeywordResultsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, filter store.ListValidationResultsFilter) ([]*models.HTTPKeywordResult, error) {
 	// Convert generated_domains data to HTTPKeywordResult format
 	domains := []*models.GeneratedDomain{}
@@ -1629,6 +1674,9 @@ func (s *campaignStorePostgres) UpdatePhaseProgress(ctx context.Context, exec st
 }
 
 func (s *campaignStorePostgres) UpdatePhaseConfiguration(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, config json.RawMessage) error {
+	if exec == nil {
+		exec = s.db
+	}
 	now := time.Now()
 	query := `
 		UPDATE campaign_phases 
@@ -1643,6 +1691,18 @@ func (s *campaignStorePostgres) UpdatePhaseConfiguration(ctx context.Context, ex
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
+		// Attempt to insert missing phase row and retry once. This keeps configuration idempotent even
+		// when the phase set has not been pre-seeded (common for migration paths and legacy data).
+		if err := s.ensurePhaseRow(ctx, exec, campaignID, phaseType); err == nil {
+			if retryRes, retryErr := exec.ExecContext(ctx, query, config, now, campaignID, phaseType); retryErr == nil {
+				if retryRows, _ := retryRes.RowsAffected(); retryRows > 0 {
+					log.Printf("Inserted missing phase %s and persisted configuration for campaign %s", phaseType, campaignID)
+					return nil
+				}
+			} else {
+				log.Printf("Failed to persist configuration for phase %s in campaign %s after inserting phase row: %v", phaseType, campaignID, retryErr)
+			}
+		}
 		return fmt.Errorf("no phase %s found for campaign %s", phaseType, campaignID)
 	}
 
@@ -1681,6 +1741,45 @@ func (s *campaignStorePostgres) CompletePhase(ctx context.Context, exec store.Qu
 		}
 	} else {
 		log.Printf("Completed phase %s for campaign %s", phaseType, campaignID)
+	}
+
+	return nil
+}
+
+func (s *campaignStorePostgres) SkipPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, reason string) error {
+	now := time.Now()
+	query := `
+		UPDATE campaign_phases
+		SET status = 'skipped',
+		    progress_percentage = COALESCE(progress_percentage, 0.0),
+		    completed_at = $1,
+		    updated_at = $1,
+		    error_message = NULLIF($2, '')
+		WHERE campaign_id = $3 AND phase_type = $4 AND status != 'skipped'`
+
+	if exec == nil {
+		exec = s.db
+	}
+
+	result, err := exec.ExecContext(ctx, query, now, reason, campaignID, phaseType)
+	if err != nil {
+		return fmt.Errorf("failed to skip phase %s for campaign %s: %w", phaseType, campaignID, err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		if err := s.ensurePhaseRow(ctx, exec, campaignID, phaseType); err == nil {
+			if _, err2 := exec.ExecContext(ctx, query, now, reason, campaignID, phaseType); err2 != nil {
+				log.Printf("Failed to mark newly inserted phase %s as skipped for campaign %s: %v", phaseType, campaignID, err2)
+			} else {
+				log.Printf("Inserted & skipped missing phase %s for campaign %s", phaseType, campaignID)
+				return nil
+			}
+		} else {
+			log.Printf("No phase %s found to skip for campaign %s and insertion failed: %v", phaseType, campaignID, err)
+		}
+	} else {
+		log.Printf("Skipped phase %s for campaign %s (reason=%s)", phaseType, campaignID, reason)
 	}
 
 	return nil

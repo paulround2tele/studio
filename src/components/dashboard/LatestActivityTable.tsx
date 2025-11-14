@@ -83,19 +83,15 @@ const convertBackendStatus = (backendStatus?: string): DomainActivityStatus => {
 export default function LatestActivityTable() {
   // RTK Query: Use centralized campaign data
   const { campaigns: enrichedCampaigns, loading } = useRTKCampaignsList();
-  // For each campaign, request domains if not already present
-  const domainsByCampaign = new Map<string, GeneratedDomainLite[]>();
-  enrichedCampaigns.forEach((c) => {
-    const hasDomains = Array.isArray(c.domains) && c.domains.length > 0;
-    if (!hasDomains && c.id) {
-      // Fire-and-forget style; hooks must be static, so we can't call conditionally inside a loop.
-      // We'll rely on a derived list of up to first 5 campaigns to avoid excessive hooks.
-    }
-  });
-
   // Fetch domains for up to 5 campaigns without domains (to keep hooks count bounded)
-  const campaignsNeedingDomains = enrichedCampaigns.filter(c => (!Array.isArray(c.domains) || c.domains.length === 0) && !!c.id).slice(0, 5);
-  const domainsQueries = campaignsNeedingDomains.map(c => ({ id: c.id as string }));
+  const campaignsNeedingDomains = useMemo(
+    () => enrichedCampaigns.filter(c => (!Array.isArray(c.domains) || c.domains.length === 0) && !!c.id).slice(0, 5),
+    [enrichedCampaigns]
+  );
+  const domainsQueries = useMemo(
+    () => campaignsNeedingDomains.map(c => ({ id: c.id as string })),
+    [campaignsNeedingDomains]
+  );
   const q1 = useGetCampaignDomainsQuery(
     { campaignId: domainsQueries[0]?.id || '', limit: DASHBOARD_RECENT_DOMAINS_LIMIT, offset: 0 },
     { skip: !domainsQueries[0] }
@@ -118,11 +114,15 @@ export default function LatestActivityTable() {
   );
 
   // Build a quick lookup for fetched domains
-  if (domainsQueries[0] && q1?.data?.items) domainsByCampaign.set(domainsQueries[0].id, q1.data.items as GeneratedDomainLite[]);
-  if (domainsQueries[1] && q2?.data?.items) domainsByCampaign.set(domainsQueries[1].id, q2.data.items as GeneratedDomainLite[]);
-  if (domainsQueries[2] && q3?.data?.items) domainsByCampaign.set(domainsQueries[2].id, q3.data.items as GeneratedDomainLite[]);
-  if (domainsQueries[3] && q4?.data?.items) domainsByCampaign.set(domainsQueries[3].id, q4.data.items as GeneratedDomainLite[]);
-  if (domainsQueries[4] && q5?.data?.items) domainsByCampaign.set(domainsQueries[4].id, q5.data.items as GeneratedDomainLite[]);
+  const fetchedDomainsByCampaign = useMemo(() => {
+    const map = new Map<string, GeneratedDomainLite[]>();
+    if (domainsQueries[0] && q1?.data?.items) map.set(domainsQueries[0].id, q1.data.items as GeneratedDomainLite[]);
+    if (domainsQueries[1] && q2?.data?.items) map.set(domainsQueries[1].id, q2.data.items as GeneratedDomainLite[]);
+    if (domainsQueries[2] && q3?.data?.items) map.set(domainsQueries[2].id, q3.data.items as GeneratedDomainLite[]);
+    if (domainsQueries[3] && q4?.data?.items) map.set(domainsQueries[3].id, q4.data.items as GeneratedDomainLite[]);
+    if (domainsQueries[4] && q5?.data?.items) map.set(domainsQueries[4].id, q5.data.items as GeneratedDomainLite[]);
+    return map;
+  }, [domainsQueries, q1?.data?.items, q2?.data?.items, q3?.data?.items, q4?.data?.items, q5?.data?.items]);
 
   // Process campaigns into activity data
   const allActivityData = useMemo(() => {
@@ -131,7 +131,7 @@ export default function LatestActivityTable() {
     enrichedCampaigns.forEach((campaign) => {
       const apiDomains: unknown[] = (Array.isArray(campaign.domains) && campaign.domains.length > 0)
         ? (campaign.domains as unknown[])
-        : ((domainsByCampaign.get(campaign.id) as unknown[]) || []);
+        : ((fetchedDomainsByCampaign.get(campaign.id) as unknown[]) || []);
       
       if (!Array.isArray(apiDomains) || apiDomains.length === 0) {
         return;
@@ -173,7 +173,7 @@ export default function LatestActivityTable() {
     return processedActivities
       .sort((a, b) => new Date(b.generatedDate).getTime() - new Date(a.generatedDate).getTime())
       .slice(0, MAX_ITEMS_DISPLAY_INITIAL_LOAD);
-  }, [enrichedCampaigns, domainsByCampaign]);
+  }, [enrichedCampaigns, fetchedDomainsByCampaign]);
 
   const displayedActivities = allActivityData;
 

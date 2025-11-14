@@ -3,7 +3,7 @@
  * Transforms server responses to internal types with graceful fallbacks
  */
 
-import { AggregateSnapshot, AggregateMetrics, ClassificationBuckets } from '@/types/campaignMetrics';
+import { AggregateSnapshot, AggregateMetrics } from '@/types/campaignMetrics';
 
 // Expected server response structure (adjust when actual endpoints are available)
 export interface ServerMetricsResponse {

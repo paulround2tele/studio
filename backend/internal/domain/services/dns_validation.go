@@ -258,12 +258,16 @@ func (s *dnsValidationService) Configure(ctx context.Context, campaignID uuid.UU
 
 	// Persist configuration in campaign phases
 	if s.store != nil {
-		if raw, mErr := json.Marshal(dnsConfig); mErr == nil {
-			var exec store.Querier
-			if q, ok := s.deps.DB.(store.Querier); ok {
-				exec = q
-			}
-			_ = s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeDNSValidation, raw)
+		raw, marshalErr := json.Marshal(dnsConfig)
+		if marshalErr != nil {
+			return fmt.Errorf("failed to marshal dns validation config: %w", marshalErr)
+		}
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		if err := s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeDNSValidation, raw); err != nil {
+			return fmt.Errorf("failed to persist dns validation config: %w", err)
 		}
 	}
 

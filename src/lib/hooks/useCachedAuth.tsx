@@ -48,7 +48,8 @@ const DEFAULT_CONFIG: CachedAuthConfig = {
  */
 export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
   const router = useRouter();
-  const authApi = new AuthApi(apiConfiguration);
+  const authApiRef = useRef<AuthApi>(new AuthApi(apiConfiguration));
+  const authApi = authApiRef.current;
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
   
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -144,7 +145,7 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
       console.log('[useCachedAuth] 🚨 Backend validation failed:', error instanceof Error ? error.message : 'Unknown error');
       return { isAuthenticated: false, user: null };
     }
-  }, []);
+  }, [authApi]);
 
   // Validate session (with intelligent caching)
   const validateSession = useCallback(async (forceRefresh = false): Promise<void> => {
@@ -221,15 +222,15 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
         email: credentials.email,
         password: credentials.password
       };
-      
-  const response = await authApi.authLogin(loginRequest);
-  const loginData: SessionResponse | null = response.data ?? null;
+
+      const response = await authApi.authLogin(loginRequest);
+      const loginData: SessionResponse | null = response.data ?? null;
       
       if (loginData) {
         console.log('[useCachedAuth] Login successful');
-        
+
         // Extract user data from SessionResponse
-  const sessionUser = (loginData as SessionResponse)?.user;
+        const sessionUser = (loginData as SessionResponse)?.user;
         let userData: User;
         
         if (sessionUser) {
@@ -277,7 +278,7 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
     } finally {
       setIsLoginLoading(false);
     }
-  }, [setCachedAuthState]);
+  }, [authApi, setCachedAuthState]);
 
   // Logout with proper cleanup
   const logout = useCallback(async () => {
@@ -294,10 +295,10 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
       clearCachedAuthState();
       setIsLogoutLoading(false);
 
-  // Navigate client-side; middleware will enforce auth gating on next loads
-  router.push('/login');
+      // Navigate client-side; middleware will enforce auth gating on next loads
+      router.push('/login');
     }
-  }, [clearCachedAuthState]);
+  }, [authApi, clearCachedAuthState, router]);
 
   // Background validation to keep cache fresh
   const startBackgroundValidation = useCallback(() => {

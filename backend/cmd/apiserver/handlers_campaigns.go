@@ -743,6 +743,24 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 						"execution_mode": "manual",
 					})
 				}
+				// Seed canonical phase rows once the campaign exists
+				if phaseErr := h.deps.Stores.Campaign.CreateCampaignPhases(ctx, h.deps.DB, campaign.ID); phaseErr != nil {
+					if h.deps.Logger != nil {
+						h.deps.Logger.Error(ctx, "campaign.create.phases_failed", phaseErr, map[string]interface{}{
+							"correlation_id": correlationID.String(),
+							"campaign_id":    campaign.ID.String(),
+						})
+					}
+					_ = h.deps.Stores.Campaign.DeleteCampaign(ctx, h.deps.DB, campaign.ID)
+					return gen.CampaignsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to initialize campaign phases", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+				}
+				if h.deps.Logger != nil {
+					h.deps.Logger.Info(ctx, "campaign.create.phases_seeded", map[string]interface{}{
+						"correlation_id": correlationID.String(),
+						"campaign_id":    campaign.ID.String(),
+						"phase_count":    5,
+					})
+				}
 				return gen.CampaignsCreate201JSONResponse{Body: resp, Headers: gen.CampaignsCreate201ResponseHeaders{XRequestId: reqID()}}, nil
 			} else {
 				log.Printf("ERROR CampaignsCreate: retry without user_id failed: %v correlation_id=%s", rerr, correlationID.String())
@@ -758,6 +776,25 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 			"campaign_id":    campaign.ID.String(),
 			"campaign_name":  campaign.Name,
 			"execution_mode": "manual",
+		})
+	}
+
+	// Seed canonical campaign phase rows immediately so downstream configuration persists cleanly
+	if err := h.deps.Stores.Campaign.CreateCampaignPhases(ctx, h.deps.DB, campaign.ID); err != nil {
+		if h.deps.Logger != nil {
+			h.deps.Logger.Error(ctx, "campaign.create.phases_failed", err, map[string]interface{}{
+				"correlation_id": correlationID.String(),
+				"campaign_id":    campaign.ID.String(),
+			})
+		}
+		_ = h.deps.Stores.Campaign.DeleteCampaign(ctx, h.deps.DB, campaign.ID)
+		return gen.CampaignsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to initialize campaign phases", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if h.deps.Logger != nil {
+		h.deps.Logger.Info(ctx, "campaign.create.phases_seeded", map[string]interface{}{
+			"correlation_id": correlationID.String(),
+			"campaign_id":    campaign.ID.String(),
+			"phase_count":    5,
 		})
 	}
 
@@ -975,10 +1012,41 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 			for _, id := range personaIDs {
 				personaStrs = append(personaStrs, id.String())
 			}
+			if h.deps.Logger != nil {
+				kraw, _ := json.Marshal(incoming["keywords"])
+				adhocRaw, _ := json.Marshal(incoming["adHocKeywords"])
+				h.deps.Logger.Info(ctx, "HTTP phase configure payload", map[string]interface{}{
+					"campaign_id":  r.CampaignId,
+					"persona_ids":  personaStrs,
+					"keywords_raw": string(kraw),
+					"adhoc_raw":    string(adhocRaw),
+				})
+			}
 			httpCfg := &models.HTTPPhaseConfigRequest{PersonaIDs: personaStrs}
-			// Optional keyword arrays
-			httpCfg.Keywords = sliceString(incoming["keywords"])
-			httpCfg.AdHocKeywords = sliceString(incoming["adHocKeywords"])
+			keywords := extractStringArray(incoming, "keywords", "includeKeywords")
+			if len(keywords) == 0 {
+				if nested, ok := incoming["targeting"].(map[string]interface{}); ok {
+					keywords = extractStringArray(nested, "keywords", "includeKeywords")
+				}
+			}
+			httpCfg.Keywords = keywords
+			adHoc := extractStringArray(incoming, "adHocKeywords", "adHoc", "customKeywords")
+			if len(adHoc) == 0 {
+				if nested, ok := incoming["targeting"].(map[string]interface{}); ok {
+					adHoc = extractStringArray(nested, "adHocKeywords", "adHoc", "customKeywords")
+				}
+			}
+			httpCfg.AdHocKeywords = adHoc
+			if len(httpCfg.Keywords) == 0 {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "at least one keyword is required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			if h.deps.Logger != nil {
+				h.deps.Logger.Info(ctx, "HTTP phase configure parsed", map[string]interface{}{
+					"campaign_id":  r.CampaignId,
+					"keywords_len": len(httpCfg.Keywords),
+					"adhoc_len":    len(httpCfg.AdHocKeywords),
+				})
+			}
 			cfg = httpCfg
 		case models.PhaseTypeAnalysis:
 			// Build typed AnalysisConfig with extended symmetry (personaIds, includeExternal, keywordRules, name)
@@ -1119,12 +1187,86 @@ func sliceString(v interface{}) []string {
 		return arr
 	case []interface{}:
 		for _, elem := range arr {
-			if s, ok := elem.(string); ok && strings.TrimSpace(s) != "" {
-				out = append(out, s)
+			if s, ok := elem.(string); ok {
+				if trimmed := strings.TrimSpace(s); trimmed != "" {
+					out = append(out, trimmed)
+				}
+			}
+		}
+	case string:
+		trimmedAll := strings.TrimSpace(arr)
+		if trimmedAll == "" || strings.EqualFold(trimmedAll, "null") || strings.EqualFold(trimmedAll, "undefined") {
+			return out
+		}
+		if strings.HasPrefix(trimmedAll, "[") && strings.HasSuffix(trimmedAll, "]") {
+			// Best effort handle JSON array encoded as a string
+			var parsed []string
+			if err := json.Unmarshal([]byte(trimmedAll), &parsed); err == nil {
+				return dedupeStrings(parsed)
+			}
+		}
+		for _, part := range strings.FieldsFunc(trimmedAll, func(r rune) bool { return r == ',' || r == '\n' || r == ';' }) {
+			if trimmed := strings.TrimSpace(part); trimmed != "" {
+				out = append(out, trimmed)
 			}
 		}
 	}
 	return out
+}
+
+// dedupeStrings returns unique non-empty strings preserving order of first appearance.
+func dedupeStrings(in []string) []string {
+	if len(in) == 0 {
+		return []string{}
+	}
+	seen := make(map[string]struct{}, len(in))
+	out := make([]string, 0, len(in))
+	for _, raw := range in {
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" {
+			continue
+		}
+		if _, ok := seen[trimmed]; ok {
+			continue
+		}
+		seen[trimmed] = struct{}{}
+		out = append(out, trimmed)
+	}
+	return out
+}
+
+// extractStringArray attempts to gather a list of strings using the provided keys and fallbacks.
+// It understands common payload shapes (plain slice, delimited string, or nested object with items/values keys).
+func extractStringArray(source map[string]interface{}, primary string, fallbacks ...string) []string {
+	if source == nil {
+		return []string{}
+	}
+	candidates := append([]string{primary}, fallbacks...)
+	acc := []string{}
+	for _, key := range candidates {
+		val, ok := source[key]
+		if !ok || val == nil {
+			continue
+		}
+		acc = append(acc, gatherStringValues(val)...)
+	}
+	return dedupeStrings(acc)
+}
+
+// gatherStringValues flattens supported string container shapes.
+func gatherStringValues(val interface{}) []string {
+	switch typed := val.(type) {
+	case map[string]interface{}:
+		collected := []string{}
+		for _, candidateKey := range []string{"items", "values", "keywords", "list"} {
+			if nested, ok := typed[candidateKey]; ok {
+				collected = append(collected, gatherStringValues(nested)...)
+			}
+		}
+		return dedupeStrings(collected)
+	default:
+		return sliceString(val)
+	}
 }
 
 // CampaignsPhaseStart implements POST /campaigns/{campaignId}/phase/{phase}/start
@@ -1321,7 +1463,7 @@ func mapCampaignToResponse(c *models.LeadGenerationCampaign) gen.CampaignRespons
 func mapAPIPhaseToModel(p string) (models.PhaseTypeEnum, error) {
 	internal := phases.ToInternal(p)
 	switch internal {
-	case string(models.PhaseTypeDomainGeneration), string(models.PhaseTypeDNSValidation), string(models.PhaseTypeHTTPKeywordValidation), string(models.PhaseTypeAnalysis):
+	case string(models.PhaseTypeDomainGeneration), string(models.PhaseTypeDNSValidation), string(models.PhaseTypeHTTPKeywordValidation), string(models.PhaseTypeEnrichment), string(models.PhaseTypeAnalysis):
 		return models.PhaseTypeEnum(internal), nil
 	default:
 		return "", fmt.Errorf("unknown phase: %s", p)

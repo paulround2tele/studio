@@ -194,7 +194,7 @@ class DifferentialPrivacyService {
   applyDPToAggregates(
     aggregates: { count: number; sum: number; avg: number },
     epsilon: number = this.defaultEpsilon,
-    domain: string = 'aggregates'
+    _domain: string = 'aggregates'
   ): {
     count: DPResult;
     sum: DPResult;

@@ -390,7 +390,7 @@ class DegradationEvaluatorService {
   /**
    * Ping server domain for health check
    */
-  private async pingServerDomain(domain: string): Promise<{ ok: boolean; errorRate?: number }> {
+  private async pingServerDomain(_domain: string): Promise<{ ok: boolean; errorRate?: number }> {
     // Mock health check - in practice would ping actual endpoints
     // For now, assume server domains are healthy if capabilities resolve to server
     return { ok: true, errorRate: 0 };

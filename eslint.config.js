@@ -8,6 +8,8 @@ import next from '@next/eslint-plugin-next';
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
+  next.flatConfig.recommended,
+  next.flatConfig.coreWebVitals,
   js.configs.recommended,
   {
     // Exclude build directories and other files that shouldn't be linted
@@ -19,9 +21,10 @@ export default [
       '.vercel/**/*',
       'out/**/*',
       'coverage/**/*',
-      '*.config.js',
-      '*.config.ts',
       'next.config.mjs',
+      'next.config.ts',
+      'postcss.config.js',
+      'tailwind.config.ts',
       'jest.setup.ts',
       'scripts/**/*',
       '**/__snapshots__/**/*'
@@ -158,8 +161,6 @@ export default [
       ...typescript.configs.recommended.rules,
       ...react.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      ...next.configs.recommended.rules,
-      ...next.configs['core-web-vitals'].rules,
       // Enforce direct imports for generated API client model files to avoid relying on barrel stability
       'no-restricted-imports': [
         'error',

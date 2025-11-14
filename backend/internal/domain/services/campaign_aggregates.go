@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/fntelecomllc/studio/backend/internal/domain/constants"
+	"github.com/fntelecomllc/studio/backend/internal/models"
 )
 
 // TTL for funnel & metrics caches
@@ -177,6 +180,15 @@ type PhaseStatusItem struct {
 	CompletedAt        *time.Time `json:"completedAt"`
 }
 
+type campaignPhaseRecord struct {
+	PhaseType   models.PhaseTypeEnum
+	PhaseOrder  int
+	Status      string
+	Progress    float64
+	StartedAt   *time.Time
+	CompletedAt *time.Time
+}
+
 // Repository abstraction (minimal) – adapt if broader store layer exists
 // We accept *sql.DB to keep it simple; if a store interface exists we can swap later.
 
@@ -239,6 +251,69 @@ func GetCampaignFunnel(ctx context.Context, repo AggregatesRepository, cache *Ag
 	cache.mu.Unlock()
 
 	return dto, nil
+}
+
+func buildPhaseStatusItem(fallbackType models.PhaseTypeEnum, record *campaignPhaseRecord) PhaseStatusItem {
+	phaseName := string(fallbackType)
+	status := string(models.PhaseStatusNotStarted)
+	progress := 0.0
+	var startedAt *time.Time
+	var completedAt *time.Time
+
+	if record != nil {
+		if record.PhaseType != "" {
+			phaseName = string(record.PhaseType)
+		}
+		rawStatus := strings.TrimSpace(record.Status)
+		if rawStatus != "" {
+			status = rawStatus
+		}
+		progress = record.Progress
+		startedAt = record.StartedAt
+		completedAt = record.CompletedAt
+	}
+
+	progress = clampProgress(progress)
+
+	if status == string(models.PhaseStatusCompleted) && progress < 100 {
+		progress = 100
+	}
+
+	if progress >= 100 {
+		switch status {
+		case string(models.PhaseStatusFailed), string(models.PhaseStatusPaused):
+			// Preserve failure/paused terminal states even with 100% progress.
+		default:
+			status = string(models.PhaseStatusCompleted)
+		}
+	} else if progress > 0 {
+		switch status {
+		case string(models.PhaseStatusNotStarted), "":
+			status = string(models.PhaseStatusInProgress)
+		}
+	}
+
+	if status == "" {
+		status = string(models.PhaseStatusNotStarted)
+	}
+
+	return PhaseStatusItem{
+		Phase:              phaseName,
+		Status:             status,
+		ProgressPercentage: progress,
+		StartedAt:          startedAt,
+		CompletedAt:        completedAt,
+	}
+}
+
+func clampProgress(value float64) float64 {
+	if value != value || value < 0 { // NaN check via self-comparison.
+		return 0
+	}
+	if value > 100 {
+		return 100
+	}
+	return value
 }
 
 // GetCampaignMetrics executes / caches the metrics aggregation.
@@ -391,53 +466,120 @@ func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *Ag
 	campaignAggregationCacheHits.WithLabelValues("status", "miss").Inc()
 
 	start := time.Now()
+	query := `SELECT phase_type, phase_order, status, progress_percentage, started_at, completed_at
+			   FROM campaign_phases
+			   WHERE campaign_id = $1
+			   ORDER BY phase_order ASC`
 
-	// For now, return mock data until we implement the full phase status logic
-	// TODO: Implement real phase status tracking based on campaign state and executions
-	phases := []PhaseStatusItem{
-		{
-			Phase:              "generation",
-			Status:             "completed",
-			ProgressPercentage: 100.0,
-			StartedAt:          timePtr(time.Now().Add(-2 * time.Hour)),
-			CompletedAt:        timePtr(time.Now().Add(-90 * time.Minute)),
-		},
-		{
-			Phase:              "dns",
-			Status:             "completed",
-			ProgressPercentage: 100.0,
-			StartedAt:          timePtr(time.Now().Add(-90 * time.Minute)),
-			CompletedAt:        timePtr(time.Now().Add(-60 * time.Minute)),
-		},
-		{
-			Phase:              "http",
-			Status:             "in_progress",
-			ProgressPercentage: 75.0,
-			StartedAt:          timePtr(time.Now().Add(-60 * time.Minute)),
-			CompletedAt:        nil,
-		},
-		{
-			Phase:              "analysis",
-			Status:             "ready",
-			ProgressPercentage: 0.0,
-			StartedAt:          nil,
-			CompletedAt:        nil,
-		},
-		{
-			Phase:              "leads",
-			Status:             "not_started",
-			ProgressPercentage: 0.0,
-			StartedAt:          nil,
-			CompletedAt:        nil,
-		},
+	phaseRecords := make(map[models.PhaseTypeEnum]*campaignPhaseRecord)
+
+	queryCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
+	rows, err := repo.DB().QueryContext(queryCtx, query, campaignID)
+	if err != nil {
+		return StatusDTO{}, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			phaseTypeStr string
+			phaseOrder   int
+			status       string
+			progressRaw  sql.NullFloat64
+			startedRaw   sql.NullTime
+			completedRaw sql.NullTime
+		)
+
+		if err := rows.Scan(&phaseTypeStr, &phaseOrder, &status, &progressRaw, &startedRaw, &completedRaw); err != nil {
+			return StatusDTO{}, err
+		}
+
+		record := &campaignPhaseRecord{
+			PhaseType:  models.PhaseTypeEnum(phaseTypeStr),
+			PhaseOrder: phaseOrder,
+			Status:     status,
+		}
+		if progressRaw.Valid {
+			record.Progress = progressRaw.Float64
+		}
+		if startedRaw.Valid {
+			started := startedRaw.Time
+			record.StartedAt = &started
+		}
+		if completedRaw.Valid {
+			completed := completedRaw.Time
+			record.CompletedAt = &completed
+		}
+
+		phaseRecords[record.PhaseType] = record
 	}
 
-	// Calculate overall progress as average of phase progress
+	if err := rows.Err(); err != nil {
+		return StatusDTO{}, err
+	}
+
+	defaultOrder := []models.PhaseTypeEnum{
+		models.PhaseTypeDomainGeneration,
+		models.PhaseTypeDNSValidation,
+		models.PhaseTypeHTTPKeywordValidation,
+		models.PhaseTypeEnrichment,
+		models.PhaseTypeAnalysis,
+	}
+
+	phases := make([]PhaseStatusItem, 0, len(defaultOrder)+len(phaseRecords))
 	totalProgress := 0.0
-	for _, phase := range phases {
-		totalProgress += phase.ProgressPercentage
+	phaseCount := 0
+
+	for _, phaseType := range defaultOrder {
+		var record *campaignPhaseRecord
+		if existing, ok := phaseRecords[phaseType]; ok {
+			record = existing
+			delete(phaseRecords, phaseType)
+		}
+
+		item := buildPhaseStatusItem(phaseType, record)
+		phases = append(phases, item)
+		totalProgress += item.ProgressPercentage
+		phaseCount++
 	}
-	overallProgress := totalProgress / float64(len(phases))
+
+	if len(phaseRecords) > 0 {
+		leftovers := make([]*campaignPhaseRecord, 0, len(phaseRecords))
+		for _, record := range phaseRecords {
+			leftovers = append(leftovers, record)
+		}
+		sort.SliceStable(leftovers, func(i, j int) bool {
+			oi := leftovers[i].PhaseOrder
+			oj := leftovers[j].PhaseOrder
+			switch {
+			case oi == 0 && oj == 0:
+				return strings.Compare(string(leftovers[i].PhaseType), string(leftovers[j].PhaseType)) < 0
+			case oi == 0:
+				return false
+			case oj == 0:
+				return true
+			default:
+				if oi == oj {
+					return strings.Compare(string(leftovers[i].PhaseType), string(leftovers[j].PhaseType)) < 0
+				}
+				return oi < oj
+			}
+		})
+
+		for _, record := range leftovers {
+			item := buildPhaseStatusItem(record.PhaseType, record)
+			phases = append(phases, item)
+			totalProgress += item.ProgressPercentage
+			phaseCount++
+		}
+	}
+
+	overallProgress := 0.0
+	if phaseCount > 0 {
+		overallProgress = clampProgress(totalProgress / float64(phaseCount))
+	}
 
 	dto := StatusDTO{
 		CampaignID:                openapi_types.UUID(campaignID),

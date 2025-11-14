@@ -30,8 +30,8 @@ describe('TaskSchedulerService Safety Improvements', () => {
     (featureFlags.useEdgeProcessing as jest.Mock).mockReturnValue(true);
     
     // Reimport to get fresh instance
-    const module = await import('../taskSchedulerService');
-    taskScheduler = module.taskScheduler;
+    const taskSchedulerModule = await import('../taskSchedulerService');
+    taskScheduler = taskSchedulerModule.taskScheduler;
   });
 
   describe('Queue Safety Operations', () => {
@@ -89,8 +89,8 @@ describe('TaskSchedulerService Safety Improvements', () => {
 
       // Should not throw during initialization
       expect(() => {
-        const module = require('../taskSchedulerService');
-        return module.taskScheduler;
+        const taskSchedulerModule = require('../taskSchedulerService');
+        return taskSchedulerModule.taskScheduler;
       }).not.toThrow();
     });
 

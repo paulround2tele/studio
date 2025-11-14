@@ -52,7 +52,8 @@ export default function AdvancedConditionalLayout({ children }: AdvancedConditio
   
   // Render logic with optimistic updates
   const publicPaths = ['/login', '/signup'];
-  const _isPublicPath = publicPaths.includes(pathname);
+  const currentPath = pathname ?? '';
+  const _isPublicPath = publicPaths.includes(currentPath);
 
   // Do not gate here; middleware/server components handle redirects.
   // Only wrap authenticated areas in AppLayout based on path heuristics.

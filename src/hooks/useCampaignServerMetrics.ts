@@ -3,7 +3,7 @@
  * RTK Query integration with graceful fallback to client services
  */
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { AggregateSnapshot, DomainMetricsInput } from '@/types/campaignMetrics';
 import { 
@@ -87,7 +87,7 @@ export function useCampaignServerMetrics(
   const shouldUseServer = USE_SERVER_METRICS && serverSnapshot && !serverError;
   
   // Log fallback usage (only once per session)
-  useMemo(() => {
+  useEffect(() => {
     if (USE_SERVER_METRICS && serverError) {
       logServerWarning('Server metrics failed, using client fallback', { 
         campaignId, 
@@ -98,7 +98,7 @@ export function useCampaignServerMetrics(
         campaignId 
       });
     }
-  }, [USE_SERVER_METRICS, serverError, campaignId]);
+  }, [serverError, campaignId]);
 
   return useMemo(() => {
     if (shouldUseServer && serverSnapshot) {

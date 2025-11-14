@@ -168,6 +168,9 @@ func (f *fakeCampaignStoreForDomains) UpdatePhaseConfiguration(ctx context.Conte
 func (f *fakeCampaignStoreForDomains) CompletePhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
 	return nil
 }
+func (f *fakeCampaignStoreForDomains) SkipPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, reason string) error {
+	return nil
+}
 func (f *fakeCampaignStoreForDomains) StartPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
 	return nil
 }
@@ -195,6 +198,9 @@ func (f *fakeCampaignStoreForDomains) GetDomainGenerationPhaseConfigStateByHash(
 	return nil, store.ErrNotFound
 }
 func (f *fakeCampaignStoreForDomains) CreateOrUpdateDomainGenerationPhaseConfigState(ctx context.Context, exec store.Querier, state *models.DomainGenerationPhaseConfigState) error {
+	return nil
+}
+func (f *fakeCampaignStoreForDomains) DeleteDomainGenerationPhaseConfigState(ctx context.Context, exec store.Querier, configHash string) error {
 	return nil
 }
 func (f *fakeCampaignStoreForDomains) CountCampaignsWithPatternHash(ctx context.Context, exec store.Querier, patternHash string) (int, error) {
@@ -279,6 +285,9 @@ func (f *fakeCampaignStoreForDomains) UpdateDomainsBulkDNSStatus(ctx context.Con
 	return nil
 }
 func (f *fakeCampaignStoreForDomains) UpdateDomainsBulkHTTPStatus(ctx context.Context, exec store.Querier, results []models.HTTPKeywordResult) error {
+	return nil
+}
+func (f *fakeCampaignStoreForDomains) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64) error {
 	return nil
 }
 func (f *fakeCampaignStoreForDomains) GetPhaseConfig(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) (*json.RawMessage, error) {

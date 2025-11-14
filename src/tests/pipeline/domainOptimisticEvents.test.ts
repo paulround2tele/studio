@@ -62,7 +62,7 @@ function makeStore(initial: MockApiState) {
   };
   return configureStore({
     reducer: {
-      // @ts-expect-error
+      // @ts-expect-error - mocked campaign API slice provides minimal reducer for tests
       campaignApi: campaignApiReducer,
     }
   });

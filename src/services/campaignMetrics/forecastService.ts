@@ -15,8 +15,7 @@ import { safeAt, safeLast, safeFirst, hasMinElements } from '@/lib/utils/arrayUt
 import { 
   ForecastPoint, 
   NormalizedForecastResult as _NormalizedForecastResult,
-  normalizeForecastResult as _normalizeForecastResult,
-  createForecastPoint 
+  normalizeForecastResult as _normalizeForecastResult
 } from '@/types/forecasting';
 
 // Re-export ForecastPoint (value-less type export) for UI components
@@ -573,7 +572,7 @@ export async function getForecast(
   // Use worker for large datasets (> 400 points)
   if (timeSeries.length > 400) {
     try {
-      const workerPoints = await computeForecastInWorker(timeSeries, horizon, metricKey);
+      const workerPoints = await computeForecastInWorker(timeSeries, horizon);
       return {
         horizon,
         points: workerPoints,
@@ -661,8 +660,7 @@ function computeClientConfidenceBands(
  */
 async function computeForecastInWorker(
   timeSeries: TimeSeriesPoint[],
-  horizon: number,
-  metricKey: string
+  horizon: number
 ): Promise<ForecastPoint[]> {
   return new Promise((resolve, reject) => {
     const worker = new Worker('/workers/metricsWorker.js');
@@ -743,7 +741,6 @@ function calculateMAPE(actual: number[], predicted: number[]): number {
 async function performModelArbitration(
   timeSeries: TimeSeriesPoint[],
   horizon: number,
-  metricKey: string,
   campaignId: string,
   options: ClientForecastOptions = { method: 'simpleExp' }
 ): Promise<{
@@ -936,7 +933,6 @@ export async function getMultiModelForecast(
       modelArbitration = await performModelArbitration(
         timeSeries,
         horizon,
-        metricKey,
         campaignId,
         options
       );

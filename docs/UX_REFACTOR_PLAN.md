@@ -99,19 +99,19 @@ SSE Implementation:
 
 ## 5. Migration & Decommission
 Remove / Delete:
-- Legacy campaign creation form components (`src/app/campaigns/new/legacy` route and associated components) once wizard ships (guard behind feature flag `ENABLE_NEW_CAMPAIGN_WIZARD` for one release; then remove flag & old components in same sprint).
+- Legacy campaign creation form components removed; the unified wizard is now canonical (no `/campaigns/new/legacy` fallback route).
 - Polling interval code in `src/services/campaignMetrics/progressChannel.ts` replaced by SSE hook (remove fallback polling after SSE stability validation).
 - Redundant feature flags controlling partial extraction UI surfaces (`NEXT_PUBLIC_CAMPAIGN_OVERVIEW_V2`, `NEXT_PUBLIC_SHOW_LEGACY_DOMAINS_TABLE`) replaced by unified experience flag above (final removal after one release with metrics validation).
 - Legacy status polling hooks in `src/lib/hooks/useCampaignState.ts` (mutation-heavy approach) replaced by SSE-driven state management.
 - Obsolete markdown placeholder docs replaced by this comprehensive plan.
 
 Feature Flag Strategy:
-- Single flag `ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE` controls entire refactored experience.
+- Single flag `ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE` controls the refactored experience.
 - Default disabled for initial rollout; gradual rollout to 10% → 50% → 100% over 3 releases.
-- Existing Phase 1/2 flags (`CAMPAIGN_WIZARD_V1`, `CAMPAIGN_OVERVIEW_V2`) deprecated after unified experience reaches 100%.
+- Historical flags (`CAMPAIGN_WIZARD_V1`, `CAMPAIGN_OVERVIEW_V2`) removed; wizard no longer behind a kill switch.
 
 Legacy Route Preservation:
-- Maintain `/campaigns/new/legacy` route for 2 releases post-launch for emergency fallback.
+- Fallback route retired; all campaign creation flows route through the wizard.
 - Maintain existing domains table view as fallback under advanced settings during transition.
 
 ## 6. Telemetry & Metrics Integration

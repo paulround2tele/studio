@@ -48,8 +48,13 @@ export function useInfiniteScrollActivity(
 
     try {
       const result = await fetchFn(currentPage);
-      
-      setData(prev => [...prev, ...result.data]);
+
+      let nextLength = 0;
+      setData(prev => {
+        const updated = [...prev, ...result.data];
+        nextLength = updated.length;
+        return updated;
+      });
       setCurrentPage(prev => prev + 1);
       
       // Determine continuation:
@@ -65,7 +70,7 @@ export function useInfiniteScrollActivity(
           hasMore = result.pageInfo.current < result.pageInfo.total;
         }
       } else if (typeof result.totalCount === 'number') {
-        hasMore = (data.length + result.data.length) < result.totalCount;
+        hasMore = nextLength < result.totalCount;
       } else {
         hasMore = result.data.length > 0;
       }

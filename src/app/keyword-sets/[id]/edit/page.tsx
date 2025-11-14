@@ -12,14 +12,14 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { KeywordSetsApi, Configuration } from '@/lib/api-client';
+import type { KeywordSetResponse, UpdateKeywordSetRequest } from '@/lib/api-client/models';
+import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
 const keywordSetsApi = new KeywordSetsApi(new Configuration());
 
-// Updated to use the actual request type from auto-generated client
-interface UpdateKeywordSetPayload {
+type UpdateKeywordSetPayload = UpdateKeywordSetRequest & {
   name: string;
-  description?: string;
   isEnabled: boolean;
-}
+};
 
 export default function EditKeywordSetPage() {
   const params = useParams();
@@ -28,15 +28,26 @@ export default function EditKeywordSetPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const rawKeywordSetId = params?.id;
+  const keywordSetId = Array.isArray(rawKeywordSetId) ? rawKeywordSetId[0] : rawKeywordSetId;
+
   const form = useForm<UpdateKeywordSetPayload>({
     defaultValues: { name: '', description: '', isEnabled: true },
   });
 
   useEffect(() => {
     async function load() {
+      if (!keywordSetId) {
+        setErrorMessage('Keyword set identifier is missing.');
+        setIsLoading(false);
+        return;
+      }
       try {
-        const resp = await keywordSetsApi.keywordSetsGet(params.id as string);
-        const payload = resp.data; // KeywordSetResponse
+        const resp = await keywordSetsApi.keywordSetsGet(keywordSetId);
+        const payload = unwrapApiResponse<KeywordSetResponse>(resp);
+        if (!payload) {
+          throw new Error('Empty keyword set response');
+        }
         form.reset({
           name: payload.name,
           description: payload.description || '',
@@ -50,15 +61,23 @@ export default function EditKeywordSetPage() {
       }
     }
     load();
-  }, [params.id, form]);
+  }, [keywordSetId, form]);
 
   const onSubmit = useCallback(async (data: UpdateKeywordSetPayload) => {
-    if (!params.id) return;
+    if (!keywordSetId) {
+      setErrorMessage('Keyword set identifier is missing.');
+      return;
+    }
     setIsLoading(true);
     setErrorMessage(null);
     try {
       // Use the correct method name from the generated API
-  await keywordSetsApi.keywordSetsUpdate(params.id as string, data);
+      const request: UpdateKeywordSetRequest = {
+        name: data.name,
+        description: data.description,
+        isEnabled: data.isEnabled,
+      };
+      await keywordSetsApi.keywordSetsUpdate(keywordSetId, request);
       setSuccessMessage('Keyword set updated');
       // PERFORMANCE FIX: Immediate navigation instead of 500ms delay
       router.push('/keyword-sets');
@@ -68,7 +87,7 @@ export default function EditKeywordSetPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [params.id, router]);
+  }, [keywordSetId, router]);
 
   if (isLoading) {
     return <div className="flex justify-center p-6"><Loader2 className="h-4 w-4 animate-spin" /></div>;

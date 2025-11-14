@@ -63,14 +63,14 @@ export const RichnessContributionBar: React.FC<Props> = ({ richness, bonusCap = 
     const totalNegative = negativesRaw.reduce((a,b)=>a+b.value,0);
     const totalMagnitude = totalPositive + totalNegative;
 
-    return { positivesRaw, negativesRaw, totalPositive, totalNegative, totalMagnitude };
+    return { positivesRaw, negativesRaw, totalNegative, totalMagnitude };
   }, [richness, bonusCap, dedCap]);
 
   if (!data || data.totalMagnitude === 0) {
     return <div className="text-xs text-muted-foreground" data-testid="richness-contrib-empty">No components available.</div>;
   }
 
-  const { positivesRaw, negativesRaw, totalPositive, totalNegative, totalMagnitude } = data;
+  const { positivesRaw, negativesRaw, totalNegative, totalMagnitude } = data;
 
   const MIN_PCT = 3; // minimum visible percent
   const pct = (value: number) => (value / totalMagnitude) * 100;

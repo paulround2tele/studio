@@ -73,7 +73,7 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
       const only = activeDns[0];
       if (only?.id) form.setValue('personaIds', [only.id]);
     }
-  } catch(e){ console.error(e); toast({ title:'Load failed', description:'Could not load DNS data', variant:'destructive'});} finally { setLoadingData(false);} })(); },[campaignId, readOnly, toast]);
+  } catch(e){ console.error(e); toast({ title:'Load failed', description:'Could not load DNS data', variant:'destructive'});} finally { setLoadingData(false);} })(); },[campaignId, form, readOnly, toast]);
 
   const handlePersonaToggle = (id:string) => { 
     console.log('handlePersonaToggle called with id:', id);

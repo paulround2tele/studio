@@ -31,6 +31,7 @@ type stubCampaignStore struct {
 	mu              sync.Mutex
 	failed          bool
 	completed       bool
+	skipped         bool
 	progressUpdates int
 }
 
@@ -73,6 +74,9 @@ func (s *stubCampaignStore) GetDomainGenerationPhaseConfigStateByHash(ctx contex
 func (s *stubCampaignStore) CreateOrUpdateDomainGenerationPhaseConfigState(ctx context.Context, exec store.Querier, st *models.DomainGenerationPhaseConfigState) error {
 	return nil
 }
+func (s *stubCampaignStore) DeleteDomainGenerationPhaseConfigState(ctx context.Context, exec store.Querier, h string) error {
+	return nil
+}
 func (s *stubCampaignStore) CountCampaignsWithPatternHash(ctx context.Context, exec store.Querier, h string) (int, error) {
 	return 0, nil
 }
@@ -103,6 +107,12 @@ func (s *stubCampaignStore) UpdatePhaseConfiguration(ctx context.Context, exec s
 func (s *stubCampaignStore) CompletePhase(ctx context.Context, exec store.Querier, id uuid.UUID, pt models.PhaseTypeEnum) error {
 	s.mu.Lock()
 	s.completed = true
+	s.mu.Unlock()
+	return nil
+}
+func (s *stubCampaignStore) SkipPhase(ctx context.Context, exec store.Querier, id uuid.UUID, pt models.PhaseTypeEnum, reason string) error {
+	s.mu.Lock()
+	s.skipped = true
 	s.mu.Unlock()
 	return nil
 }
@@ -224,6 +234,9 @@ func (s *stubCampaignStore) UpdateDomainsBulkDNSStatus(ctx context.Context, exec
 	return nil
 }
 func (s *stubCampaignStore) UpdateDomainsBulkHTTPStatus(ctx context.Context, exec store.Querier, r []models.HTTPKeywordResult) error {
+	return nil
+}
+func (s *stubCampaignStore) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64) error {
 	return nil
 }
 func (s *stubCampaignStore) UpsertPhaseConfig(ctx context.Context, exec store.Querier, id uuid.UUID, pt models.PhaseTypeEnum, cfg json.RawMessage) error {

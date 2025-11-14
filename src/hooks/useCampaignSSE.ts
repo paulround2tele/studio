@@ -1,5 +1,5 @@
 // File: src/hooks/useCampaignSSE.ts
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSSE, type SSEEvent } from './useSSE';
 import { useAppDispatch } from '@/store/hooks';
 import { phaseStarted, phaseCompleted, phaseFailed } from '@/store/slices/pipelineExecSlice';
@@ -21,6 +21,79 @@ import type {
   PhaseEvent as ImportedPhaseEvent
 } from '@/types/sse';
 import type { CampaignPhase } from '@/types/domain';
+import { getApiBasePath } from '@/lib/api/config';
+
+const joinUrl = (base: string, path: string): string => {
+  const trimmedBase = base.replace(/\/+$/, '');
+  const trimmedPath = path.replace(/^\/+/, '');
+  return `${trimmedBase}/${trimmedPath}`;
+};
+
+const inferBackendOrigin = (): string | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const { protocol, hostname, port } = window.location;
+
+  if (hostname.endsWith('.app.github.dev')) {
+    const altHost = hostname.replace('-3000.', '-8080.');
+    if (altHost !== hostname) {
+      return `${protocol}//${altHost}`;
+    }
+    return `${protocol}//${hostname}`;
+  }
+
+  if ((hostname === 'localhost' || hostname === '127.0.0.1') && port === '3000') {
+    return `${protocol}//${hostname}:8080`;
+  }
+
+  if (port) {
+    return `${protocol}//${hostname}:${port}`;
+  }
+
+  return `${protocol}//${hostname}`;
+};
+
+const resolveSseBasePath = (): string => {
+  let base = '/api/v2';
+  try {
+    const resolved = getApiBasePath();
+    if (resolved) {
+      base = resolved;
+    }
+  } catch (error) {
+    console.warn('Failed to resolve API base path for SSE, defaulting to /api/v2', error);
+  }
+
+  const trimmed = base.replace(/\/$/, '');
+  const isAbsolute = /^https?:\/\//i.test(trimmed);
+
+  if (typeof window === 'undefined') {
+    return trimmed;
+  }
+
+  if (isAbsolute) {
+    try {
+      const parsed = new URL(trimmed);
+      const isMixedContent = window.location.protocol === 'https:' && parsed.protocol === 'http:';
+      if (isMixedContent) {
+        const backendOrigin = inferBackendOrigin();
+        if (backendOrigin) {
+          return joinUrl(backendOrigin, parsed.pathname).replace(/\/$/, '');
+        }
+        const secureOrigin = `https://${parsed.host}`;
+        return joinUrl(secureOrigin, parsed.pathname).replace(/\/$/, '');
+      }
+    } catch (error) {
+      console.warn('Failed to normalize SSE base path, falling back to resolved value', error);
+    }
+    return trimmed;
+  }
+
+  const normalized = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return normalized.replace(/\/$/, '');
+};
 
 // Map backend phase identifiers to internal pipeline phase keys used in selectors/ordering.
 // Backend examples: domain_generation (discovery), dns_validation (validation), http_validation (extraction), analytics/analysis.
@@ -28,10 +101,10 @@ import type { CampaignPhase } from '@/types/domain';
 const BACKEND_TO_INTERNAL_PHASE: Record<string, PipelinePhase> = {
   domain_generation: 'discovery',
   dns_validation: 'validation',
-  http_validation: 'enrichment',
-  http_keyword_validation: 'enrichment',
-  enrichment: 'extraction',
+  http_validation: 'extraction',
+  http_keyword_validation: 'extraction',
   analysis: 'analysis',
+  enrichment: 'enrichment',
   analytics: 'analysis',
 };
 
@@ -39,6 +112,10 @@ const mapPhase = (raw: string | undefined): PipelinePhase | string => {
   if (!raw || typeof raw !== 'string') return raw || 'unknown';
   return BACKEND_TO_INTERNAL_PHASE[raw] || raw;
 };
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 // Coerce backend mapped phase to internal pipeline phase union when possible.
 const toPipelinePhase = (phase: string | PipelinePhase): PipelinePhaseKey | undefined => {
@@ -219,34 +296,68 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
   const [lastProgress, setLastProgress] = useState<CampaignProgress | null>(null);
   // Track phases we've already marked completed to avoid double updates when both progress & phase_completed arrive.
   const completedRef = React.useRef<Set<string>>(new Set());
+  const eventsRef = useRef<CampaignSSEEvents>({ ...events });
+
+  useEffect(() => {
+    eventsRef.current = { ...events };
+  }, [events]);
+
+  const [sseBasePath, setSseBasePath] = useState<string | null>(() => (typeof window === 'undefined' ? null : resolveSseBasePath()));
+
+  useEffect(() => {
+    const resolved = resolveSseBasePath();
+    setSseBasePath(prev => (prev === resolved ? prev : resolved));
+  }, []);
+
+  const buildSseUrl = useCallback((suffix: string) => joinUrl(sseBasePath ?? '/api/v2', suffix), [sseBasePath]);
   
   // Construct the SSE URL based on whether we're watching a specific campaign
-  const sseUrl = autoConnect 
+  const sseUrl = autoConnect && sseBasePath
     ? campaignId 
-      ? `/api/v2/sse/campaigns/${campaignId}/events`
-      : '/api/v2/sse/events'
+      ? buildSseUrl(`/sse/campaigns/${campaignId}/events`)
+      : buildSseUrl('/sse/events')
     : null;
 
   // Event handler for all SSE events
   const handleSSEEvent = useCallback((event: SSEEvent) => {
-    const dataObj = (event.data && typeof event.data === 'object') ? (event.data as Record<string, unknown>) : undefined;
-    const campaignIdFromEventRaw = event.campaign_id || (dataObj?.campaign_id as string | undefined);
-    if (!campaignIdFromEventRaw || typeof campaignIdFromEventRaw !== 'string') {
+    const dataObj = isPlainObject(event.data) ? (event.data as Record<string, unknown>) : undefined;
+    const payload = isPlainObject(dataObj?.data)
+      ? (dataObj!.data as Record<string, unknown>)
+      : dataObj;
+
+    const campaignIdFromEvent =
+      typeof event.campaign_id === 'string'
+        ? event.campaign_id
+        : typeof payload?.campaign_id === 'string'
+          ? payload.campaign_id
+          : typeof dataObj?.campaign_id === 'string'
+            ? dataObj.campaign_id
+            : '';
+
+    if (!campaignIdFromEvent) {
       console.warn('⚠️ Received SSE event without campaign_id:', event);
       return;
     }
-    const campaignIdFromEvent = campaignIdFromEventRaw;
+
+    const handlers = eventsRef.current;
 
     switch (event.event) {
       case 'campaign_progress': {
-        const progressCandidate = (dataObj && typeof dataObj.progress === 'object') ? (dataObj.progress as object) : null;
-        const progressData = (progressCandidate && isCampaignProgress(progressCandidate) ? (progressCandidate as CampaignProgress) : undefined) ||
-          (dataObj && isCampaignProgress(dataObj as object) ? (dataObj as unknown as CampaignProgress) : undefined);
+        const progressCandidate = isPlainObject(payload?.progress) ? (payload?.progress as object) : null;
+        const progressData =
+          (progressCandidate && isCampaignProgress(progressCandidate)
+            ? (progressCandidate as CampaignProgress)
+            : undefined) ||
+          (payload && isCampaignProgress(payload as object)
+            ? (payload as unknown as CampaignProgress)
+            : undefined);
         if (progressData) {
           setLastProgress(progressData);
-          events.onProgress?.(campaignIdFromEvent, progressData);
+          handlers.onProgress?.(campaignIdFromEvent, progressData);
           // If backend provides current_phase & 100% progress but no explicit phase_completed yet, synthesize completion.
-          const rawPhase = progressData.current_phase || (dataObj?.current_phase as string | undefined);
+          const rawPhase =
+            progressData.current_phase ||
+            (typeof payload?.current_phase === 'string' ? (payload.current_phase as string) : undefined);
           const pct = progressData.progress_pct;
           if (rawPhase && typeof pct === 'number' && pct >= 100) {
             const phase = mapPhase(rawPhase);
@@ -275,7 +386,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
         break; }
 
       case 'phase_started': {
-        const backendPhase = dataObj?.phase as string | undefined;
+        const backendPhase = (payload?.phase as string | undefined) || (dataObj?.phase as string | undefined);
         const phase = mapPhase(backendPhase);
                 const pipelinePhase = toPipelinePhase(phase);
                 if (pipelinePhase) {
@@ -293,16 +404,16 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
                     return ps;
                   }
                 ));
-        events.onPhaseStarted?.(campaignIdFromEvent, {
+        handlers.onPhaseStarted?.(campaignIdFromEvent, {
           campaign_id: campaignIdFromEvent,
           phase: phase as string,
-          message: (dataObj?.message as string) || 'Phase started',
-          results: dataObj?.results as Record<string, unknown> | undefined
+          message: (payload?.message as string) || (dataObj?.message as string) || 'Phase started',
+          results: (payload?.results as Record<string, unknown> | undefined) || (dataObj?.results as Record<string, unknown> | undefined)
         });
         break; }
 
       case 'phase_completed': {
-        const backendPhase = dataObj?.phase as string | undefined;
+        const backendPhase = (payload?.phase as string | undefined) || (dataObj?.phase as string | undefined);
         const phase = mapPhase(backendPhase);
         if (!completedRef.current.has(`${campaignIdFromEvent}:${phase}`)) {
           completedRef.current.add(`${campaignIdFromEvent}:${phase}`);
@@ -324,18 +435,21 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
                       }
                     ));
         }
-        events.onPhaseCompleted?.(campaignIdFromEvent, {
+        handlers.onPhaseCompleted?.(campaignIdFromEvent, {
           campaign_id: campaignIdFromEvent,
           phase: phase as string,
-          message: (dataObj?.message as string) || 'Phase completed',
-          results: dataObj?.results as Record<string, unknown> | undefined
+          message: (payload?.message as string) || (dataObj?.message as string) || 'Phase completed',
+          results: (payload?.results as Record<string, unknown> | undefined) || (dataObj?.results as Record<string, unknown> | undefined)
         });
         break; }
 
       case 'phase_failed': {
-        const backendPhase = dataObj?.phase as string | undefined;
+        const backendPhase = (payload?.phase as string | undefined) || (dataObj?.phase as string | undefined);
         const phase = mapPhase(backendPhase);
-        const error = (dataObj?.error as string | undefined) || 'Phase failed';
+        const error =
+          (payload?.error as string | undefined) ||
+          (dataObj?.error as string | undefined) ||
+          'Phase failed';
                 const pipelinePhase = toPipelinePhase(phase);
                 if (pipelinePhase) {
                   dispatch(phaseFailed({ campaignId: campaignIdFromEvent, phase: pipelinePhase, error }));
@@ -352,49 +466,80 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
                     return ps;
                   }
                 ));
-        events.onPhaseFailed?.(campaignIdFromEvent, {
+        handlers.onPhaseFailed?.(campaignIdFromEvent, {
           campaign_id: campaignIdFromEvent,
           phase: phase as string,
-          message: (dataObj?.message as string) || 'Phase failed',
+          message: (payload?.message as string) || (dataObj?.message as string) || 'Phase failed',
           error,
-          results: dataObj?.results as Record<string, unknown> | undefined
+          results: (payload?.results as Record<string, unknown> | undefined) || (dataObj?.results as Record<string, unknown> | undefined)
         });
         break; }
 
       case 'domain_generated':
-        events.onDomainGenerated?.(campaignIdFromEvent, (event.data || {}) as Record<string, unknown>);
+        handlers.onDomainGenerated?.(
+          campaignIdFromEvent,
+          (payload || dataObj || {}) as Record<string, unknown>
+        );
         break;
 
       case 'domain_validated':
-        events.onDomainValidated?.(campaignIdFromEvent, (event.data || {}) as Record<string, unknown>);
+        handlers.onDomainValidated?.(
+          campaignIdFromEvent,
+          (payload || dataObj || {}) as Record<string, unknown>
+        );
         break;
 
       case 'analysis_completed':
-        events.onAnalysisCompleted?.(campaignIdFromEvent, (event.data || {}) as Record<string, unknown>);
+        handlers.onAnalysisCompleted?.(
+          campaignIdFromEvent,
+          (payload || dataObj || {}) as Record<string, unknown>
+        );
         break;
       case 'analysis_reuse_enrichment': {
         // Provide normalized shape
-        const featureVectorCount = (dataObj?.featureVectorCount as number | undefined) || (dataObj?.feature_vector_count as number | undefined);
-        events.onAnalysisReuseEnrichment?.(campaignIdFromEvent, { featureVectorCount, raw: (event.data || {}) as Record<string, unknown> });
+        const featureVectorCount =
+          (payload?.featureVectorCount as number | undefined) ||
+          (payload?.feature_vector_count as number | undefined) ||
+          (dataObj?.featureVectorCount as number | undefined) ||
+          (dataObj?.feature_vector_count as number | undefined);
+        handlers.onAnalysisReuseEnrichment?.(campaignIdFromEvent, {
+          featureVectorCount,
+          raw: (payload || dataObj || {}) as Record<string, unknown>,
+        });
         break;
       }
       case 'analysis_failed': {
-        const error = (dataObj?.error as string | undefined) || (dataObj?.message as string | undefined);
-        const errorCode = dataObj?.errorCode as string | undefined;
+        const error =
+          (payload?.error as string | undefined) ||
+          (payload?.message as string | undefined) ||
+          (dataObj?.error as string | undefined) ||
+          (dataObj?.message as string | undefined);
+        const errorCode =
+          (payload?.errorCode as string | undefined) ||
+          (dataObj?.errorCode as string | undefined);
         // Dispatch phaseFailed for analysis to integrate with existing runtime slice (phase field may be absent on backend custom event)
         dispatch(phaseFailed({ campaignId: campaignIdFromEvent, phase: 'analysis', error }));
-        events.onAnalysisFailed?.(campaignIdFromEvent, { error, errorCode, raw: (event.data || {}) as Record<string, unknown> });
+        handlers.onAnalysisFailed?.(campaignIdFromEvent, {
+          error,
+          errorCode,
+          raw: (payload || dataObj || {}) as Record<string, unknown>,
+        });
         break;
       }
       case 'counters_reconciled':
         // Provide callback, plus optionally consumer could choose to invalidate queries externally.
-        events.onCountersReconciled?.(campaignIdFromEvent, (event.data || {}) as Record<string, unknown>);
+        handlers.onCountersReconciled?.(
+          campaignIdFromEvent,
+          (payload || dataObj || {}) as Record<string, unknown>
+        );
         break;
 
       case 'mode_changed': {
-        const mode = (dataObj?.mode as string | undefined);
+        const mode =
+          (payload?.mode as string | undefined) ||
+          (dataObj?.mode as string | undefined);
         if (mode === 'full_sequence' || mode === 'step_by_step') {
-          events.onModeChanged?.(campaignIdFromEvent, mode);
+          handlers.onModeChanged?.(campaignIdFromEvent, mode);
         } else {
           console.warn('⚠️ mode_changed event with invalid mode value', dataObj);
         }
@@ -403,8 +548,13 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
 
       case 'error':
-        const errorMessage = (dataObj?.error as string | undefined) || (dataObj?.message as string | undefined) || 'Unknown error';
-        events.onError?.(campaignIdFromEvent, errorMessage);
+        const errorMessage =
+          (payload?.error as string | undefined) ||
+          (payload?.message as string | undefined) ||
+          (dataObj?.error as string | undefined) ||
+          (dataObj?.message as string | undefined) ||
+          'Unknown error';
+        handlers.onError?.(campaignIdFromEvent, errorMessage);
         break;
 
       case 'keep_alive':
@@ -414,7 +564,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
       default:
         console.log('📡 Received unknown SSE event type:', event.event, event.data);
     }
-  }, [events]);
+  }, [dispatch]);
 
   // Use the generic SSE hook
   const sseConnection = useSSE(sseUrl, handleSSEEvent, {

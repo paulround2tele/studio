@@ -5,7 +5,7 @@
  * from other campaigns instead of using proper domain generation phases.
  * 
  * The professional architecture handles domain generation through:
- * - CampaignFormV2.tsx: Creates campaigns with DomainGenerationPhaseConfig
+ * - CampaignCreateWizard.tsx: Creates campaigns with DomainGenerationPhaseConfig
  * - CampaignControls.tsx: Authoritative phase orchestration UI (config + start)
  * - Phase-specific config modals/components in /configuration/ and /modals
  * 

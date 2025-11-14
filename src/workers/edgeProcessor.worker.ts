@@ -78,7 +78,7 @@ function handleCausalRecompute(payload: {
   existingGraph?: unknown;
 }): unknown {
   // Simplified causal inference computation
-  const { observations, existingGraph } = payload;
+  const { observations, existingGraph: _existingGraph } = payload;
   
   // Group observations by metric
   const metricGroups = new Map<string, typeof observations>();

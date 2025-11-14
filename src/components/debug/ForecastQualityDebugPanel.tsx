@@ -3,7 +3,7 @@
  * Flag-gated debug UI for forecast quality, model arbitration, and degradation state
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // Feature flags for debug panel sections
 const isForecastDebugEnabled = () => 
@@ -125,7 +125,7 @@ export const ForecastQualityDebugPanel: React.FC<ForecastQualityDebugPanelProps>
   });
 
   // Simplified load functions for demonstration
-  const loadForecastDebug = async () => {
+  const loadForecastDebug = useCallback(async () => {
     if (!isForecastDebugEnabled()) return;
     setForecastDebug(prev => ({ ...prev, loading: true, error: undefined }));
     
@@ -151,9 +151,9 @@ export const ForecastQualityDebugPanel: React.FC<ForecastQualityDebugPanelProps>
         }
       });
     }, 500);
-  };
+  }, []);
 
-  const loadDegradationDebug = async () => {
+  const loadDegradationDebug = useCallback(async () => {
     if (!isDegradationDebugEnabled()) return;
     setDegradationDebug(prev => ({ ...prev, loading: true }));
     
@@ -175,9 +175,9 @@ export const ForecastQualityDebugPanel: React.FC<ForecastQualityDebugPanelProps>
         lastRefresh: new Date().toISOString()
       });
     }, 300);
-  };
+  }, []);
 
-  const loadAuditDebug = async () => {
+  const loadAuditDebug = useCallback(async () => {
     if (!isAuditDebugEnabled()) return;
     setAuditDebug(prev => ({ ...prev, loading: true }));
     
@@ -206,14 +206,14 @@ export const ForecastQualityDebugPanel: React.FC<ForecastQualityDebugPanelProps>
         ]
       });
     }, 400);
-  };
+  }, [campaignId]);
 
   // Initial load
   useEffect(() => {
     loadForecastDebug();
     loadDegradationDebug();
     loadAuditDebug();
-  }, [campaignId]);
+  }, [campaignId, loadAuditDebug, loadDegradationDebug, loadForecastDebug]);
 
   // Get degradation tier badge style
   const getDegradationBadgeStyle = (tier: number) => {

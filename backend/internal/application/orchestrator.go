@@ -271,7 +271,7 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		// Strict model A: all configs must be present before any start (handled at API layer earlier ideally).
 		configs, _ := o.store.ListPhaseConfigs(ctx, querier, campaignID)
 		missingList := []string{}
-		for _, required := range []models.PhaseTypeEnum{models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation, models.PhaseTypeEnrichment, models.PhaseTypeAnalysis} {
+		for _, required := range []models.PhaseTypeEnum{models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation, models.PhaseTypeAnalysis, models.PhaseTypeEnrichment} {
 			if _, ok := configs[required]; !ok {
 				missingList = append(missingList, string(required))
 			}
@@ -434,8 +434,8 @@ func (o *CampaignOrchestrator) GetCampaignStatus(ctx context.Context, campaignID
 		models.PhaseTypeDomainGeneration,
 		models.PhaseTypeDNSValidation,
 		models.PhaseTypeHTTPKeywordValidation,
-		models.PhaseTypeEnrichment,
 		models.PhaseTypeAnalysis,
+		models.PhaseTypeEnrichment,
 	}
 
 	for _, phase := range phases {
@@ -721,6 +721,8 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 				phaseKey = "http_keyword_validation"
 			case models.PhaseTypeAnalysis:
 				phaseKey = "analysis"
+			case models.PhaseTypeEnrichment:
+				phaseKey = "enrichment"
 			}
 			if phaseKey != "" {
 				o.metrics.RecordPhaseDuration(phaseKey, elapsed)
@@ -792,7 +794,7 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 
 // isLastPhase checks if the given phase is the last phase in the campaign
 func (o *CampaignOrchestrator) isLastPhase(phase models.PhaseTypeEnum) bool {
-	return phase == models.PhaseTypeAnalysis
+	return phase == models.PhaseTypeEnrichment
 }
 
 // nextPhase returns the next phase in the standard sequence
@@ -803,9 +805,9 @@ func (o *CampaignOrchestrator) nextPhase(current models.PhaseTypeEnum) (models.P
 	case models.PhaseTypeDNSValidation:
 		return models.PhaseTypeHTTPKeywordValidation, true
 	case models.PhaseTypeHTTPKeywordValidation:
-		return models.PhaseTypeEnrichment, true
-	case models.PhaseTypeEnrichment:
 		return models.PhaseTypeAnalysis, true
+	case models.PhaseTypeAnalysis:
+		return models.PhaseTypeEnrichment, true
 	default:
 		return "", false
 	}
