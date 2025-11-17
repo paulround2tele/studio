@@ -74,6 +74,9 @@ type featureVectorMetrics struct {
 	LinkExternalCount    float64
 	LinkInternalCount    float64
 	HeadingOneCount      float64
+	KeywordUnique        float64
+	KeywordHitsTotal     float64
+	KeywordSignalsSeen   bool
 }
 
 // NewEnrichmentService constructs the enrichment phase controller. The initial
@@ -445,6 +448,13 @@ func (s *enrichmentService) fetchEnrichmentBatch(ctx context.Context, exec store
 }
 
 func (s *enrichmentService) evaluateCandidate(cfg enrichmentConfig, candidate enrichmentCandidate) evaluationResult {
+	scorePtr := func() *float64 {
+		if candidate.DomainScore.Valid {
+			v := candidate.DomainScore.Float64
+			return &v
+		}
+		return nil
+	}
 	switch candidate.HTTPStatus {
 	case models.DomainHTTPStatusTimeout:
 		return evaluationResult{status: models.DomainLeadStatusTimeout}
@@ -468,21 +478,15 @@ func (s *enrichmentService) evaluateCandidate(cfg enrichmentConfig, candidate en
 		parkedConfidence = candidate.ParkedConfidence.Float64
 	}
 	if (candidate.IsParked.Valid && candidate.IsParked.Bool) || parkedConfidence >= cfg.ParkedConfidenceFloor {
-		var scorePtr *float64
-		if candidate.DomainScore.Valid {
-			v := candidate.DomainScore.Float64
-			scorePtr = &v
-		}
-		return evaluationResult{status: models.DomainLeadStatusNoMatch, leadScore: scorePtr}
+		return evaluationResult{status: models.DomainLeadStatusNoMatch, leadScore: scorePtr()}
 	}
 
 	if cfg.RequireStructuralSignals && !metrics.HasStructuralSignals {
-		var scorePtr *float64
-		if candidate.DomainScore.Valid {
-			v := candidate.DomainScore.Float64
-			scorePtr = &v
-		}
-		return evaluationResult{status: models.DomainLeadStatusNoMatch, leadScore: scorePtr}
+		return evaluationResult{status: models.DomainLeadStatusNoMatch, leadScore: scorePtr()}
+	}
+
+	if metrics.KeywordSignalsSeen && metrics.KeywordUnique <= 0 && metrics.KeywordHitsTotal <= 0 {
+		return evaluationResult{status: models.DomainLeadStatusNoMatch, leadScore: scorePtr()}
 	}
 
 	if !candidate.DomainScore.Valid {
@@ -526,6 +530,14 @@ func parseFeatureVector(raw json.RawMessage) featureVectorMetrics {
 	metrics.LinkExternalCount = floatFrom(payload["link_external_count"])
 	metrics.LinkInternalCount = floatFrom(payload["link_internal_count"])
 	metrics.HeadingOneCount = floatFrom(payload["h1_count"])
+	if _, ok := payload["kw_unique"]; ok {
+		metrics.KeywordSignalsSeen = true
+		metrics.KeywordUnique = floatFrom(payload["kw_unique"])
+	}
+	if _, ok := payload["kw_hits_total"]; ok {
+		metrics.KeywordSignalsSeen = true
+		metrics.KeywordHitsTotal = floatFrom(payload["kw_hits_total"])
+	}
 	return metrics
 }
 

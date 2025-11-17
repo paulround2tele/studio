@@ -1,4 +1,4 @@
--- 000052_remove_keyword_profiles.down.sql
+-- 000067_remove_keyword_profiles.down.sql
 -- Recreate tables (for backwards migration) matching the original structure from 000051.
 
 CREATE TABLE IF NOT EXISTS keyword_profiles (

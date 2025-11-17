@@ -152,6 +152,7 @@ type ListCampaignDomainsFilter struct {
 	HTTPStatus *string
 	DNSReason  *string
 	HTTPReason *string
+	LeadStatus *string
 }
 
 // ListCampaignsFilter and ListValidationResultsFilter remain the same

@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"net/url"
 	"os"
+	"regexp"
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 	"github.com/fntelecomllc/studio/backend/internal/application"
 	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
@@ -50,8 +52,9 @@ func (a *dualReadAnalysisStub) ScoreDomains(ctx context.Context, campaignID uuid
 
 // minimal fake campaign store implementing only methods we exercise
 type fakeCampaignStoreForDomains struct {
-	domains  []*models.GeneratedDomain
-	counters *models.CampaignDomainCounters
+	domains     []*models.GeneratedDomain
+	counters    *models.CampaignDomainCounters
+	countersErr error
 }
 
 func newFakeCampaignStoreForDomains() *fakeCampaignStoreForDomains {
@@ -73,6 +76,9 @@ func (f *fakeCampaignStoreForDomains) GetGeneratedDomainsByCampaign(ctx context.
 	return out, nil
 }
 func (f *fakeCampaignStoreForDomains) GetCampaignDomainCounters(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.CampaignDomainCounters, error) {
+	if f.countersErr != nil {
+		return nil, f.countersErr
+	}
 	return f.counters, nil
 }
 
@@ -323,6 +329,88 @@ func (f *fakeCampaignStoreForDomains) BeginTxx(ctx context.Context, opts *sql.Tx
 	return nil, nil
 }
 func (f *fakeCampaignStoreForDomains) UnderlyingDB() *sqlx.DB { return nil }
+
+func TestCampaignsDomainsListRebuildsCountersWhenMissing(t *testing.T) {
+	mdb, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("sqlmock init: %v", err)
+	}
+	sqlxDB := sqlx.NewDb(mdb, "sqlmock")
+	defer sqlxDB.Close()
+	campaignID := uuid.New()
+	fakeStore := newFakeCampaignStoreForDomains()
+	fakeStore.counters = nil
+	fakeStore.countersErr = store.ErrNotFound
+	fakeStore.domains = []*models.GeneratedDomain{{ID: uuid.New(), CampaignID: campaignID, DomainName: "lead-match", CreatedAt: time.Now()}}
+	deps := &AppDeps{}
+	deps.DB = sqlxDB
+	deps.Stores.Campaign = fakeStore
+	h := &strictHandlers{deps: deps}
+
+	aggRows := sqlmock.NewRows([]string{
+		"total_domains", "dns_pending", "dns_ok", "dns_error", "dns_timeout",
+		"http_pending", "http_ok", "http_error", "http_timeout",
+		"lead_pending", "lead_match", "lead_no_match", "lead_error", "lead_timeout",
+	}).AddRow(
+		int64(5000), int64(100), int64(4800), int64(50), int64(50),
+		int64(200), int64(4500), int64(250), int64(50),
+		int64(100), int64(7), int64(4971), int64(22), int64(0),
+	)
+	mock.ExpectQuery(regexp.QuoteMeta(campaignDomainCountersAggregationSQL)).
+		WithArgs(campaignID).
+		WillReturnRows(aggRows)
+
+	now := time.Now()
+	upsertRows := sqlmock.NewRows([]string{
+		"campaign_id", "total_domains", "dns_pending", "dns_ok", "dns_error", "dns_timeout",
+		"http_pending", "http_ok", "http_error", "http_timeout",
+		"lead_pending", "lead_match", "lead_no_match", "lead_error", "lead_timeout",
+		"updated_at", "created_at",
+	}).AddRow(
+		campaignID, int64(5000), int64(100), int64(4800), int64(50), int64(50),
+		int64(200), int64(4500), int64(250), int64(50),
+		int64(100), int64(7), int64(4971), int64(22), int64(0),
+		now, now,
+	)
+	mock.ExpectQuery(regexp.QuoteMeta(campaignDomainCountersUpsertSQL)).
+		WithArgs(
+			campaignID,
+			int64(5000),
+			int64(100),
+			int64(4800),
+			int64(50),
+			int64(50),
+			int64(200),
+			int64(4500),
+			int64(250),
+			int64(50),
+			int64(100),
+			int64(7),
+			int64(4971),
+			int64(22),
+			int64(0),
+		).
+		WillReturnRows(upsertRows)
+
+	req := gen.CampaignsDomainsListRequestObject{CampaignId: openapi_types.UUID(campaignID), Params: gen.CampaignsDomainsListParams{}}
+	resp, err := h.CampaignsDomainsList(context.Background(), req)
+	if err != nil {
+		t.Fatalf("handler returned error: %v", err)
+	}
+	list := extractList(t, resp)
+	if list.Aggregates == nil || list.Aggregates.Lead == nil || list.Aggregates.Lead.Match == nil {
+		t.Fatalf("expected lead match aggregates present: %+v", list.Aggregates)
+	}
+	if match := *list.Aggregates.Lead.Match; match != 7 {
+		t.Fatalf("expected lead match=7 got %d", match)
+	}
+	if list.Total != 5000 {
+		t.Fatalf("expected total=5000 got %d", list.Total)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("sql expectations not met: %v", err)
+	}
+}
 
 // Test server-side sorting & filtering integration
 func TestCampaignsDomainsListServerSortIntegration(t *testing.T) {

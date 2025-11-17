@@ -1701,10 +1701,40 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		}
 	}
 
-	// Fetch current counters (for total + aggregates). Continue on error.
+	// Fetch current counters (for total + aggregates). Continue on error, but attempt to rebuild on cache miss.
 	var counters *models.CampaignDomainCounters
 	if c, cerr := h.deps.Stores.Campaign.GetCampaignDomainCounters(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); cerr == nil {
 		counters = c
+	} else {
+		logFields := map[string]interface{}{"campaign_id": uuid.UUID(r.CampaignId)}
+		if h.deps.Logger != nil {
+			// store.ErrNotFound happens when counters row has not been materialized yet; rebuild below
+			if errors.Is(cerr, store.ErrNotFound) {
+				h.deps.Logger.Warn(ctx, "campaigns.domains.counters.missing", logFields)
+			} else {
+				h.deps.Logger.Error(ctx, "campaigns.domains.counters.fetch_failed", cerr, logFields)
+			}
+		} else {
+			if errors.Is(cerr, store.ErrNotFound) {
+				log.Printf("WARN campaigns.domains.counters.missing campaign=%s", uuid.UUID(r.CampaignId))
+			} else {
+				log.Printf("ERROR campaigns.domains.counters.fetch_failed campaign=%s err=%v", uuid.UUID(r.CampaignId), cerr)
+			}
+		}
+		if rebuilt, rebuildErr := h.rebuildCampaignDomainCounters(ctx, uuid.UUID(r.CampaignId)); rebuildErr == nil {
+			counters = rebuilt
+			if h.deps.Logger != nil {
+				h.deps.Logger.Info(ctx, "campaigns.domains.counters.rebuilt", map[string]interface{}{"campaign_id": uuid.UUID(r.CampaignId)})
+			} else {
+				log.Printf("INFO campaigns.domains.counters.rebuilt campaign=%s", uuid.UUID(r.CampaignId))
+			}
+		} else {
+			if h.deps.Logger != nil {
+				h.deps.Logger.Error(ctx, "campaigns.domains.counters.rebuild_failed", rebuildErr, map[string]interface{}{"campaign_id": uuid.UUID(r.CampaignId)})
+			} else {
+				log.Printf("ERROR campaigns.domains.counters.rebuild_failed campaign=%s err=%v", uuid.UUID(r.CampaignId), rebuildErr)
+			}
+		}
 	}
 
 	// Build optional filter
@@ -1851,7 +1881,6 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed domain listing", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
-	items := make([]gen.DomainListItem, 0, len(rows))
 	var featureMap map[string]map[string]any
 	if h.deps != nil && h.deps.Orchestrator != nil {
 		if fm, err := h.deps.Orchestrator.FetchAnalysisReadyFeatures(ctx, uuid.UUID(r.CampaignId)); err == nil {
@@ -1859,43 +1888,66 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		}
 	}
 
-	for _, gd := range rows { // initial translation irrespective of sort flag (we may resort later)
-		if gd == nil {
-			continue
+	buildDomainItems := func(domains []*models.GeneratedDomain) []gen.DomainListItem {
+		items := make([]gen.DomainListItem, 0, len(domains))
+		for _, gd := range domains {
+			if gd == nil {
+				continue
+			}
+			var offsetPtr *int64
+			if gd.OffsetIndex >= 0 {
+				tmp := gd.OffsetIndex
+				offsetPtr = &tmp
+			}
+			var dnsStatusPtr, httpStatusPtr, leadStatusPtr *string
+			if gd.DNSStatus != nil {
+				v := string(*gd.DNSStatus)
+				dnsStatusPtr = &v
+			}
+			if gd.HTTPStatus != nil {
+				v := string(*gd.HTTPStatus)
+				httpStatusPtr = &v
+			}
+			if gd.LeadStatus != nil {
+				v := string(*gd.LeadStatus)
+				leadStatusPtr = &v
+			}
+			var dnsReasonPtr, httpReasonPtr *string
+			if gd.DNSReason.Valid {
+				dnsReasonPtr = &gd.DNSReason.String
+			}
+			if gd.HTTPReason.Valid {
+				httpReasonPtr = &gd.HTTPReason.String
+			}
+			id := openapi_types.UUID(gd.ID)
+			createdAt := gd.CreatedAt
+			domainCopy := gd.DomainName
+			var features *gen.DomainAnalysisFeatures
+			if fv, ok := featureMap[domainCopy]; ok {
+				features = mapRawToDomainAnalysisFeatures(fv)
+			}
+			items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr, Features: features})
 		}
-		var offsetPtr *int64
-		if gd.OffsetIndex >= 0 {
-			tmp := gd.OffsetIndex
-			offsetPtr = &tmp
+		return items
+	}
+
+	leadStatusMatch := string(models.DomainLeadStatusMatch)
+	hasLeadMatches := func(list []gen.DomainListItem) bool {
+		for _, it := range list {
+			if it.LeadStatus != nil && strings.EqualFold(*it.LeadStatus, leadStatusMatch) {
+				return true
+			}
 		}
-		var dnsStatusPtr, httpStatusPtr, leadStatusPtr *string
-		if gd.DNSStatus != nil {
-			v := string(*gd.DNSStatus)
-			dnsStatusPtr = &v
+		return false
+	}
+
+	items := buildDomainItems(rows)
+	fallbackEligible := startOffset == 0 && domainFilter == nil && counters != nil && counters.LeadMatch > 0
+	if fallbackEligible && !hasLeadMatches(items) {
+		leadFilter := &store.ListCampaignDomainsFilter{LeadStatus: &leadStatusMatch}
+		if leadRows, err := h.deps.Stores.Campaign.GetGeneratedDomainsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId), limit, 0, leadFilter); err == nil && len(leadRows) > 0 {
+			items = buildDomainItems(leadRows)
 		}
-		if gd.HTTPStatus != nil {
-			v := string(*gd.HTTPStatus)
-			httpStatusPtr = &v
-		}
-		if gd.LeadStatus != nil {
-			v := string(*gd.LeadStatus)
-			leadStatusPtr = &v
-		}
-		var dnsReasonPtr, httpReasonPtr *string
-		if gd.DNSReason.Valid {
-			dnsReasonPtr = &gd.DNSReason.String
-		}
-		if gd.HTTPReason.Valid {
-			httpReasonPtr = &gd.HTTPReason.String
-		}
-		id := openapi_types.UUID(gd.ID)
-		createdAt := gd.CreatedAt
-		domainCopy := gd.DomainName
-		var features *gen.DomainAnalysisFeatures
-		if fv, ok := featureMap[domainCopy]; ok {
-			features = mapRawToDomainAnalysisFeatures(fv)
-		}
-		items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr, Features: features})
 	}
 
 	// legacy metadata wrapper removed; pagination info is embedded in response model
@@ -2773,4 +2825,121 @@ func buildDomainAggregates(counters *models.CampaignDomainCounters) *struct {
 			Timeout *int `json:"timeout,omitempty"`
 		} `json:"lead,omitempty"`
 	}{Dns: agg.Dns, Http: agg.Http, Lead: agg.Lead}
+}
+
+type domainCounterSnapshot struct {
+	TotalDomains int64 `db:"total_domains"`
+	DNSPending   int64 `db:"dns_pending"`
+	DNSOk        int64 `db:"dns_ok"`
+	DNSError     int64 `db:"dns_error"`
+	DNSTimeout   int64 `db:"dns_timeout"`
+	HTTPPending  int64 `db:"http_pending"`
+	HTTPOk       int64 `db:"http_ok"`
+	HTTPError    int64 `db:"http_error"`
+	HTTPTimeout  int64 `db:"http_timeout"`
+	LeadPending  int64 `db:"lead_pending"`
+	LeadMatch    int64 `db:"lead_match"`
+	LeadNoMatch  int64 `db:"lead_no_match"`
+	LeadError    int64 `db:"lead_error"`
+	LeadTimeout  int64 `db:"lead_timeout"`
+}
+
+const campaignDomainCountersAggregationSQL = `
+SELECT
+    COUNT(*) AS total_domains,
+    COUNT(*) FILTER (WHERE dns_status = 'pending') AS dns_pending,
+    COUNT(*) FILTER (WHERE dns_status = 'ok') AS dns_ok,
+    COUNT(*) FILTER (WHERE dns_status = 'error') AS dns_error,
+    COUNT(*) FILTER (WHERE dns_status = 'timeout') AS dns_timeout,
+    COUNT(*) FILTER (WHERE http_status = 'pending') AS http_pending,
+    COUNT(*) FILTER (WHERE http_status = 'ok') AS http_ok,
+    COUNT(*) FILTER (WHERE http_status = 'error') AS http_error,
+    COUNT(*) FILTER (WHERE http_status = 'timeout') AS http_timeout,
+    COUNT(*) FILTER (WHERE lead_status = 'pending') AS lead_pending,
+    COUNT(*) FILTER (WHERE lead_status = 'match') AS lead_match,
+    COUNT(*) FILTER (WHERE lead_status = 'no_match') AS lead_no_match,
+    COUNT(*) FILTER (WHERE lead_status = 'error') AS lead_error,
+    COUNT(*) FILTER (WHERE lead_status = 'timeout') AS lead_timeout
+FROM generated_domains
+WHERE campaign_id = $1;
+`
+
+const campaignDomainCountersUpsertSQL = `
+INSERT INTO campaign_domain_counters (
+    campaign_id,
+    total_domains,
+    dns_pending,
+    dns_ok,
+    dns_error,
+    dns_timeout,
+    http_pending,
+    http_ok,
+    http_error,
+    http_timeout,
+    lead_pending,
+    lead_match,
+    lead_no_match,
+    lead_error,
+    lead_timeout
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+)
+ON CONFLICT (campaign_id) DO UPDATE SET
+    total_domains = EXCLUDED.total_domains,
+    dns_pending = EXCLUDED.dns_pending,
+    dns_ok = EXCLUDED.dns_ok,
+    dns_error = EXCLUDED.dns_error,
+    dns_timeout = EXCLUDED.dns_timeout,
+    http_pending = EXCLUDED.http_pending,
+    http_ok = EXCLUDED.http_ok,
+    http_error = EXCLUDED.http_error,
+    http_timeout = EXCLUDED.http_timeout,
+    lead_pending = EXCLUDED.lead_pending,
+    lead_match = EXCLUDED.lead_match,
+    lead_no_match = EXCLUDED.lead_no_match,
+    lead_error = EXCLUDED.lead_error,
+    lead_timeout = EXCLUDED.lead_timeout,
+    updated_at = NOW()
+RETURNING campaign_id, total_domains, dns_pending, dns_ok, dns_error, dns_timeout,
+          http_pending, http_ok, http_error, http_timeout,
+          lead_pending, lead_match, lead_no_match, lead_error, lead_timeout,
+          updated_at, created_at;
+`
+
+func (h *strictHandlers) rebuildCampaignDomainCounters(ctx context.Context, campaignID uuid.UUID) (*models.CampaignDomainCounters, error) {
+	if h == nil || h.deps == nil || h.deps.DB == nil {
+		return nil, fmt.Errorf("database dependency not initialized")
+	}
+	tCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	var snapshot domainCounterSnapshot
+	if err := h.deps.DB.GetContext(tCtx, &snapshot, campaignDomainCountersAggregationSQL, campaignID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			snapshot = domainCounterSnapshot{}
+		} else {
+			return nil, err
+		}
+	}
+	args := []interface{}{
+		campaignID,
+		snapshot.TotalDomains,
+		snapshot.DNSPending,
+		snapshot.DNSOk,
+		snapshot.DNSError,
+		snapshot.DNSTimeout,
+		snapshot.HTTPPending,
+		snapshot.HTTPOk,
+		snapshot.HTTPError,
+		snapshot.HTTPTimeout,
+		snapshot.LeadPending,
+		snapshot.LeadMatch,
+		snapshot.LeadNoMatch,
+		snapshot.LeadError,
+		snapshot.LeadTimeout,
+	}
+	var stored models.CampaignDomainCounters
+	if err := h.deps.DB.GetContext(tCtx, &stored, campaignDomainCountersUpsertSQL, args...); err != nil {
+		return nil, err
+	}
+	return &stored, nil
 }

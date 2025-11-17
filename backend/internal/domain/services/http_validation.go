@@ -812,7 +812,13 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 				if phase, perr := s.store.GetCampaignPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation); perr == nil && phase != nil && phase.Configuration != nil {
 					var cfg models.HTTPPhaseConfigRequest
 					_ = json.Unmarshal(*phase.Configuration, &cfg)
-					keywordSetIDs = append(keywordSetIDs, cfg.Keywords...)
+					setIDs, inlineKeywords := partitionKeywordInputs(cfg.Keywords)
+					if len(setIDs) > 0 {
+						keywordSetIDs = append(keywordSetIDs, setIDs...)
+					}
+					if len(inlineKeywords) > 0 {
+						adHocKeywords = append(adHocKeywords, inlineKeywords...)
+					}
 					adHocKeywords = append(adHocKeywords, cfg.AdHocKeywords...)
 				}
 			}
@@ -1859,6 +1865,32 @@ func (s *httpValidationService) microCrawlEnhance(ctx context.Context, campaignI
 		merged = append(merged, k)
 	}
 	return pagesExamined, exhausted, totalUnique, merged
+}
+
+func partitionKeywordInputs(inputs []string) ([]string, []string) {
+	if len(inputs) == 0 {
+		return nil, nil
+	}
+	setIDs := make([]string, 0, len(inputs))
+	inlineKeywords := make([]string, 0, len(inputs))
+	for _, raw := range inputs {
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" {
+			continue
+		}
+		if _, err := uuid.Parse(trimmed); err == nil {
+			setIDs = append(setIDs, trimmed)
+			continue
+		}
+		inlineKeywords = append(inlineKeywords, trimmed)
+	}
+	if len(setIDs) == 0 {
+		setIDs = nil
+	}
+	if len(inlineKeywords) == 0 {
+		inlineKeywords = nil
+	}
+	return setIDs, inlineKeywords
 }
 
 // isFeatureEnabled checks if a feature flag environment variable is enabled (1 or true, case-insensitive).

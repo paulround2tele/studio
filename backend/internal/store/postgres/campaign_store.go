@@ -629,6 +629,11 @@ func (s *campaignStorePostgres) GetGeneratedDomainsByCampaign(ctx context.Contex
 			args = append(args, *filter.HTTPReason)
 			argPos++
 		}
+		if filter.LeadStatus != nil {
+			conditions = append(conditions, fmt.Sprintf("lead_status = $%d", argPos))
+			args = append(args, *filter.LeadStatus)
+			argPos++
+		}
 	}
 	query := base + " WHERE " + strings.Join(conditions, " AND ") + " ORDER BY offset_index ASC LIMIT $" + fmt.Sprint(argPos)
 	args = append(args, limit)
@@ -1547,6 +1552,10 @@ func (s *campaignStorePostgres) UpdateDomainsBulkDNSStatus(ctx context.Context, 
 	q := fmt.Sprintf(`UPDATE generated_domains gd
 		SET dns_status = v.validation_status::domain_dns_status_enum,
 		    last_validated_at = v.last_checked_at::timestamptz,
+		    lead_status = CASE
+		        WHEN v.validation_status NOT IN ('ok','pending') THEN 'no_match'::domain_lead_status_enum
+		        ELSE gd.lead_status
+		    END,
 		    dns_reason = CASE WHEN v.validation_status = 'ok' THEN NULL ELSE COALESCE(v.reason, gd.dns_reason) END
 		FROM (VALUES %s) AS v(domain_name,validation_status,last_checked_at,reason)
 		WHERE gd.domain_name = v.domain_name`, tmp)
@@ -1578,6 +1587,10 @@ func (s *campaignStorePostgres) UpdateDomainsBulkHTTPStatus(ctx context.Context,
 		SET http_status = v.validation_status::domain_http_status_enum,
 			http_status_code = v.http_status_code::integer,
 			last_validated_at = v.last_checked_at::timestamptz,
+			lead_status = CASE
+				WHEN v.validation_status NOT IN ('ok','pending') THEN 'no_match'::domain_lead_status_enum
+				ELSE gd.lead_status
+			END,
 			http_reason = CASE WHEN v.validation_status = 'ok' THEN NULL ELSE COALESCE(v.reason, gd.http_reason) END
 		FROM (VALUES %s) AS v(domain_name,validation_status,http_status_code,last_checked_at,reason)
 		WHERE gd.domain_name = v.domain_name`, tmp)
