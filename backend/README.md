@@ -408,4 +408,4 @@ These enrich observability and support UI filtering/context without extra pollin
 
 ---
 
-**Backend Architecture**: High-performance Go API with PostgreSQL, real-time WebSocket support, and comprehensive OpenAPI documentation.
+**Backend Architecture**: High-performance Go API with PostgreSQL, real-time SSE streaming, and comprehensive OpenAPI documentation.

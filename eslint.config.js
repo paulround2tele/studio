@@ -77,7 +77,6 @@ export default [
         URLSearchParams: 'readonly',
         AbortController: 'readonly',
         AbortSignal: 'readonly',
-        WebSocket: 'readonly',
         Event: 'readonly',
         EventTarget: 'readonly',
         MessageEvent: 'readonly',

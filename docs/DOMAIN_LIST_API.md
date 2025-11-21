@@ -10,7 +10,7 @@ Server‑side in‑memory sorting/filtering is gated by the environment variable
 ```
 ANALYSIS_SERVER_SORT=true
 ```
-If disabled, results are unsorted with respect to richness metrics (client performs sorting) and no `X-Domains-Sort-Version` header or `meta.extra.sort` object is emitted.
+If disabled, results are unsorted with respect to richness metrics (client performs sorting) and no `X-Domains-Sort-Version` header is emitted.
 
 ## Query Parameters
 | Name | Type | Description | Default | Notes |
@@ -32,16 +32,12 @@ If disabled, results are unsorted with respect to richness metrics (client perfo
 | after | string | Cursor continuation token | – | Cursor pagination path |
 
 ## Server-Side Sorting Metadata
-When server sorting is active the success envelope metadata contains:
-```json
-{
-  "extra": {
-    "sort": { "field": "richness_score", "direction": "desc" },
-    "filter": { "warnings": "has" }
-  }
-}
-```
-`filter.warnings` is omitted if no warnings filter applied.
+When server sorting is active the body remains a plain `CampaignDomainsListResponse`. Sorting metadata moved to:
+
+1. `X-Domains-Sort-Version`: Indicates the server applied the canonical sorter/filters.
+2. `pageInfo.sortBy` / `pageInfo.sortOrder`: Echo the effective ordering so the UI can represent it without consulting headers.
+
+Filtering metadata (e.g., `warnings=has`) is encoded by the request parameters; no separate `meta.extra` object exists after the success envelope was removed.
 
 ## Response Header
 When server-side sorting/filtering is applied the response includes:
@@ -71,7 +67,7 @@ Warnings indicators:
 | A | anchor_share | anchor_share > 0.40 | High anchor share proportion (>40%) |
 
 ## Client Detection Logic
-Frontend should detect server sorting by presence of `meta.extra.sort` OR the header `X-Domains-Sort-Version`. When detected, it should:
+Frontend should detect server sorting by presence of the `X-Domains-Sort-Version` header (preferred) or non-empty `pageInfo.sortBy`. When detected, it should:
 1. Skip client-side re-sorting of richness/microcrawl/keywords metrics.
 2. (Optional) Still allow client-only *display* filtering toggles (current implementation retains local warnings filter for UX, but future iterations may offload fully to server).
 
@@ -83,7 +79,7 @@ domains_list_server_sort_requests_total{sort_field, warnings_filter}
 `warnings_filter` label empty when no filter applied.
 
 ## Fallback / Invalid Parameters
-If an unsupported `sort` or `dir` value is provided the server falls back silently to `richness_score` / `desc` and reflects canonical values in `meta.extra.sort` so the client can reconcile UI state.
+If an unsupported `sort` or `dir` value is provided the server falls back silently to `richness_score` / `desc` and reflects canonical values in `pageInfo.sortBy` / `pageInfo.sortOrder` so the client can reconcile UI state.
 
 ## Future Work
 - Persist richness & microcrawl metrics in the database to push sorting into SQL (eliminating memory sort and large payload fetching).
@@ -95,14 +91,19 @@ If an unsupported `sort` or `dir` value is provided the server falls back silent
 GET /campaigns/11111111-1111-1111-1111-111111111111/domains?sort=keywords_unique&dir=asc&warnings=none&limit=50
 X-Domains-Sort-Version: 1
 {
-  "data": { "campaignId": "...", "items": [ ... ], "total": 500 },
-  "metadata": {
-    "extra": {
-      "sort": { "field": "keywords_unique", "direction": "asc" },
-      "filter": { "warnings": "none" }
-    }
+  "campaignId": "11111111-1111-1111-1111-111111111111",
+  "items": [ /* DomainListItem[] */ ],
+  "total": 500,
+  "aggregates": {
+    "dns": { "ok": 480, "error": 20 },
+    "http": { "ok": 470, "error": 30 },
+    "leads": { "qualified": 42 }
   },
-  "success": true,
-  "requestId": "..."
+  "pageInfo": {
+    "hasNextPage": true,
+    "sortBy": "keywords_unique",
+    "sortOrder": "ASC",
+    "first": 50
+  }
 }
 ```

@@ -131,6 +131,12 @@ export interface AnalysisConfig {
   name?: string;
 }
 
+type KeywordTargetingInput = {
+  keywords?: string[];
+  includeKeywords?: string[];
+  adHocKeywords?: string[];
+};
+
 const DEFAULT_DNS_BATCH_SIZE = 100;
 const DEFAULT_DNS_TIMEOUT_SECONDS = 30;
 const DEFAULT_DNS_MAX_RETRIES = 2;
@@ -138,6 +144,36 @@ const DEFAULT_DNS_VALIDATION_TYPES = ['A', 'AAAA'];
 
 const DEFAULT_HTTP_MICRO_PAGES = 5;
 const DEFAULT_HTTP_MICRO_BUDGET = 1024 * 1024; // 1 MB
+
+function sanitizeKeywordList(list?: string[]): string[] {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+
+  return list
+    .map((keyword) => (typeof keyword === 'string' ? keyword.trim() : ''))
+    .filter((keyword): keyword is string => keyword.length > 0);
+}
+
+function collectWizardKeywords(targeting: KeywordTargetingInput): string[] {
+  const ordered: string[] = [];
+  const seen = new Set<string>();
+
+  const pushList = (list?: string[]) => {
+    for (const keyword of sanitizeKeywordList(list)) {
+      if (!seen.has(keyword)) {
+        seen.add(keyword);
+        ordered.push(keyword);
+      }
+    }
+  };
+
+  pushList(targeting.keywords);
+  pushList(targeting.includeKeywords);
+  pushList(targeting.adHocKeywords);
+
+  return ordered;
+}
 
 // Map wizard pattern step to domain generation configuration
 export function mapPatternToDomainGeneration(pattern: {
@@ -282,9 +318,8 @@ export function mapTargetingToHTTPValidation(targeting: {
   httpMicroCrawlMaxPages?: number;
   httpMicroCrawlByteBudget?: number;
 }): HTTPValidationConfig {
-  const keywords = targeting.keywords && targeting.keywords.length > 0
-    ? targeting.keywords
-    : (targeting.includeKeywords || []);
+  const keywords = collectWizardKeywords(targeting);
+  const adHocKeywords = sanitizeKeywordList(targeting.adHocKeywords);
   const enrichmentEnabled = targeting.httpEnrichmentEnabled ?? true;
   const microEnabled = targeting.httpMicroCrawlEnabled ?? true;
   const microPages = Math.max(1, targeting.httpMicroCrawlMaxPages ?? DEFAULT_HTTP_MICRO_PAGES);
@@ -292,7 +327,7 @@ export function mapTargetingToHTTPValidation(targeting: {
   return {
     personaIds: targeting.httpPersonas || [],
     keywords,
-    adHocKeywords: targeting.adHocKeywords || [],
+    adHocKeywords,
     name: 'HTTP Keyword Validation Phase',
     enrichmentEnabled,
     microCrawlEnabled: microEnabled,
@@ -307,6 +342,7 @@ export function mapTargetingToAnalysis(targeting: {
   httpPersonas?: string[];
   includeKeywords?: string[];
   keywords?: string[];
+  adHocKeywords?: string[];
 }): AnalysisConfig | null {
   const personaIds = targeting.analysisPersonas && targeting.analysisPersonas.length > 0
     ? targeting.analysisPersonas
@@ -316,9 +352,7 @@ export function mapTargetingToAnalysis(targeting: {
     return null;
   }
 
-  const baseKeywords = targeting.keywords && targeting.keywords.length > 0
-    ? targeting.keywords
-    : (targeting.includeKeywords || []);
+  const baseKeywords = collectWizardKeywords(targeting);
 
   const keywordRules = baseKeywords.length === 0
     ? undefined

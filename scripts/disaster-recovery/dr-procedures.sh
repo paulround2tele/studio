@@ -9,6 +9,8 @@ BACKUP_DIR="/var/backups/domainflow"
 S3_BUCKET="${S3_BACKUP_BUCKET:-domainflow-backups}"
 AZURE_CONTAINER="${AZURE_BACKUP_CONTAINER:-domainflow-dr}"
 DR_SITE="${DR_SITE:-us-west-2}"
+# Override DR_SSE_HEALTH_PATH with a known long-lived stream (ex: campaign progress SSE)
+DR_SSE_HEALTH_PATH="${DR_SSE_HEALTH_PATH:-/api/v2/campaigns/demo/progress/stream}"
 
 # Color codes
 RED='\033[0;31m'
@@ -306,6 +308,28 @@ update_dns_records() {
     fi
 }
 
+# Check SSE connectivity (replaces legacy WebSocket check)
+check_sse_connectivity() {
+    local endpoint=$1
+    local tmp_file
+    tmp_file=$(mktemp /tmp/domainflow-sse.XXXXXX)
+
+    if curl -sf --max-time 4 -H "Accept: text/event-stream" "$endpoint" -o "$tmp_file" >/dev/null 2>&1; then
+        rm -f "$tmp_file"
+        return 0
+    fi
+
+    local status=$?
+    rm -f "$tmp_file"
+
+    if [[ $status -eq 28 ]]; then
+        # curl exits with 28 when the SSE stream stays open past --max-time; treat as success
+        return 0
+    fi
+
+    return $status
+}
+
 # Verify DR site
 verify_dr_site() {
     local site=$1
@@ -327,9 +351,12 @@ verify_dr_site() {
         ((checks_passed++))
     fi
     
-    # Check WebSocket connectivity
-    if timeout 5 websocat "wss://$site-dr.domainflow.studio/ws" --ping-interval 1; then
+    # Check SSE connectivity
+    local sse_endpoint="https://$site-dr.domainflow.studio${DR_SSE_HEALTH_PATH}"
+    if check_sse_connectivity "$sse_endpoint"; then
         ((checks_passed++))
+    else
+        log "SSE connectivity check failed for $sse_endpoint" "$YELLOW"
     fi
     
     # Check critical business function

@@ -69,7 +69,12 @@ class ContentSecurityPolicy {
   private getDefaultDirectives(): CSPDirectives {
     const isDevelopment = process.env.NODE_ENV === 'development';
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || process.env.WS_URL || '';
+    const sseUrl =
+      process.env.NEXT_PUBLIC_SSE_URL
+      || process.env.NEXT_PUBLIC_WS_URL
+      || process.env.SSE_URL
+      || process.env.WS_URL
+      || '';
 
     const directives: CSPDirectives = {
       'default-src': ["'self'"],
@@ -96,7 +101,7 @@ class ContentSecurityPolicy {
       'connect-src': [
         "'self'",
         apiUrl,
-        wsUrl,
+        sseUrl,
         isDevelopment ? 'ws://*:*' : '', // WebSocket for HMR in dev (any host)
         ...(process.env.NEXT_PUBLIC_ANALYTICS_DOMAINS?.split(',') || []), // ✅ UNIFIED: Configurable analytics
       ].filter(Boolean),

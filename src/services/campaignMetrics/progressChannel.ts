@@ -302,10 +302,18 @@ export class ProgressChannel {
    * Build SSE URL
    */
   private buildSSEUrl(): string {
-    const baseUrl = typeof process !== 'undefined' 
-      ? process.env?.NEXT_PUBLIC_WS_URL?.replace('ws://', 'http://').replace('wss://', 'https://')
-      : 'http://localhost:8080';
-    return `${baseUrl}/campaigns/${this.options.campaignId}/progress/stream`;
+    const fallbackBase = 'http://localhost:8080/api/v2';
+    const baseUrl = typeof process !== 'undefined'
+      ? (
+          process.env?.NEXT_PUBLIC_SSE_URL
+          || process.env?.NEXT_PUBLIC_API_URL
+          || process.env?.NEXT_PUBLIC_WS_URL?.replace('ws://', 'http://').replace('wss://', 'https://')
+          || fallbackBase
+        )
+      : fallbackBase;
+
+    const normalizedBase = baseUrl.replace(/\/$/, '');
+    return `${normalizedBase}/campaigns/${this.options.campaignId}/progress/stream`;
   }
 
   /**

@@ -110,7 +110,7 @@ Declared in `backend/internal/services/sse_service.go`:
 | `campaign_completed` | All phases finished | `campaign_id`, `message`, meta extras | Invalidate campaign & domains, toast |
 | `domain_generated` | New domain or interim status | Domain fields (id/domain/status etc.) | Optimistic multi-page cache patch + virtualization refresh |
 | `domain_validated` | DNS validation batch update | Domain fields (id/domain/status etc.) | Same optimistic patch routine |
-| `counters_reconciled` | Post reconciliation adjustments | Aggregated counters | (No explicit consumer yet) |
+| `counters_reconciled` | Post reconciliation adjustments | Aggregated counters | `useCampaignPhaseEvents` + `useCampaignSSE` invalidate Campaign, CampaignProgress, CampaignDomains and raise toast |
 | `analysis_reuse_enrichment` | Analysis preflight succeeded; HTTP feature vectors being reused (scoring-only) | `campaignId`, `featureVectorCount`, `timestamp` | (NEW) Optional toast/log; can trigger progress jump |
 | `analysis_failed` | Analysis preflight failed (no feature vectors) | `campaignId`, `error`, `errorCode`, `timestamp` | (NEW) Show structured error; guide user to run extraction |
 | `analysis_completed` | Final analysis metrics ready | Analysis payload | Handled by hook; can refresh scoring views |
@@ -119,7 +119,7 @@ Declared in `backend/internal/services/sse_service.go`:
 
 NOTES:
 - `domain_generated` / `domain_validated` patch across cached domain pages for limits 25/50/100 via probing until cache miss or total coverage.
-- No direct consumer for `counters_reconciled` in provided hooks (gap; consider invalidating domains + progress when received).
+- `counters_reconciled` events invalidate `Campaign`, `CampaignProgress`, and `CampaignDomains` tags so aggregates refresh immediately.
 
 ---
 ## 6. Frontend State / Caching Mechanics
@@ -244,7 +244,7 @@ Optimistic Patch Risks:
 | Pagination Consistency | Offsets stable while domains append | Cache patch only updates existing pages | Late pages need user scroll or manual refetch |
 | Multi-Limit Caches | 25/50/100 pages patched separately | Iterative probing until miss or total pages | Extra CPU vs selective targeted page caching |
 | SSE Ordering | Events may arrive out of order under latency | Runtime slice overwrites status logically (completed after started) | Potential race if `phase_failed` then `phase_completed` emitted erroneously (not observed) |
-| Counters Reconcile | `counters_reconciled` not consumed | No UI invalidation | Add handler to refresh domain + progress |
+| Counters Reconcile | `counters_reconciled` events fire after reconciliation | `useCampaignPhaseEvents` invalidates Campaign-related tags | Ensure toast copy links to reconciliation log |
 | Mode Change Sync | `mode_changed` updates UI via SSE | Handler validates mode string | Ensure persisted mode reflects after race with manual toggle |
 | Large Domain Export | Bulk export loop (limit=1000) capped by 500 pages | Prevents runaway requests | Document memory usage for huge campaigns |
 
@@ -272,13 +272,13 @@ During extraction, worker error -> SSE `phase_failed` -> runtime status=failed -
 ---
 ## 11. Known Gaps / Improvement Opportunities
 
-1. (RESOLVED) `counters_reconciled` SSE now handled: invalidates Campaign, CampaignProgress, CampaignDomains + toast.
-2. Analysis Config: No explicit configuration form; if future tunables exist, need uniform schema + UI.
-3. Event Deduplication: Consider correlation IDs to tie `phase_started` / `phase_completed` pairs.
-4. Domain Patch Efficiency: Track last known total & page counts per limit to reduce repeated probing per event.
-5. Error Surface: Standardize error codes in `PhaseStatusResponse.errors[]` for automated UI guidance messaging.
-6. Auto-Start Preconditions: Explicit SSE when auto-start skipped due to missing config (currently would fail start— ensure transparency).
-7. SSE Backpressure: Consider buffering metrics for high-frequency `domain_generated` storms (batch events) to cut network chatter.
+1. Analysis Config: No explicit configuration form; if future tunables exist, need uniform schema + UI.
+2. Event Deduplication: Consider correlation IDs to tie `phase_started` / `phase_completed` pairs.
+3. Domain Patch Efficiency: Track last known total & page counts per limit to reduce repeated probing per event.
+4. Error Surface: Standardize error codes in `PhaseStatusResponse.errors[]` for automated UI guidance messaging.
+5. Auto-Start Preconditions: Explicit SSE when auto-start skipped due to missing config (currently would fail start— ensure transparency).
+6. SSE Backpressure: Consider buffering metrics for high-frequency `domain_generated` storms (batch events) to cut network chatter.
+7. Reconciliation UX: Surface the reconciliation delta payload (counts adjusted, reason) in the toast/modal so operators know what changed.
 
 ---
 ## 12. Validation Checklist (For Future E2E Test Authoring)
@@ -293,7 +293,7 @@ During extraction, worker error -> SSE `phase_failed` -> runtime status=failed -
 | Failure surfacing | Inject simulated error -> SSE `phase_failed`, runtime slice updated |
 | Retry success | After failure reconfigure & start -> `phase_started` followed by `phase_completed` |
 | Mode toggle event | Update mode -> SSE `mode_changed` & UI reflects new mode |
-| Reconciliation event (future) | Emit synthetic `counters_reconciled` -> invalidations & refreshed aggregates |
+| Reconciliation event | Emit synthetic `counters_reconciled` -> observe toast + Campaign/CampaignProgress/CampaignDomains invalidations |
 
 ---
 ## 13. Source Traceability Index
@@ -317,11 +317,11 @@ The pipeline architecture cleanly separates: (1) configuration (persisted + stat
 
 ---
 ## 15. Next Steps (Recommended Fast Wins)
-1. Implement frontend handler for `counters_reconciled` SSE.
-2. Add correlation/sequence IDs to phase events for stricter E2E validation.
-3. Memoize discovered domain list pages per limit across event bursts.
-4. Provide frontend pre-validation for required persona selection before POST configure.
-5. Formalize analysis phase config (even if empty) for symmetry & future extensibility.
+1. Add correlation/sequence IDs to phase events for stricter E2E validation.
+2. Memoize discovered domain list pages per limit across event bursts.
+3. Provide frontend pre-validation for required persona selection before POST configure.
+4. Formalize analysis phase config (even if empty) for symmetry & future extensibility.
+5. Surface reconciliation payload details (what changed, counts) directly in the toast/modal emitted on `counters_reconciled`.
 
 ---
 ## 16. Authentication / Session Flow (For Test Scaffolding)

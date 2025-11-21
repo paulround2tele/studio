@@ -73,13 +73,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
     switch (phase) {
       case 'discovery': return <DiscoveryConfigForm {...common} readOnly={isConfigured} />;
       case 'validation': return <DNSValidationConfigForm {...common} readOnly={isConfigured} />;
-      case 'enrichment': return <HTTPValidationConfigForm {...common} readOnly={isConfigured} />;
-      case 'extraction':
-        return (
-          <div className="text-sm text-muted-foreground">
-            HTTP keyword validation determines which domains qualify for deeper analysis. Automated campaigns configure this phase with the targeting defaults.
-          </div>
-        );
+      case 'extraction': return <HTTPValidationConfigForm {...common} readOnly={isConfigured} />;
       case 'analysis': return <AnalysisConfigForm {...common} readOnly={isConfigured} />;
       case 'enrichment':
         return (

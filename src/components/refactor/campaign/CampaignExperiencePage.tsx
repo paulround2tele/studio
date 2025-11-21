@@ -81,17 +81,27 @@ function extractErrorMessage(error?: FetchBaseQueryError | SerializedError | und
   return 'Failed to load lead details';
 }
 
+const LEAD_DOMAIN_DEFAULT_LIMIT = 200;
+const LEAD_DOMAIN_INCREMENT = 200;
+const LEAD_DOMAIN_MAX = 1000;
+
 export function CampaignExperiencePage({ className: _className, role: _role = "region" }: CampaignExperiencePageProps) {
   const params = useParams();
   const campaignId = params?.id as string;
+
+  const [leadResultLimit, setLeadResultLimit] = React.useState(LEAD_DOMAIN_DEFAULT_LIMIT);
+
+  React.useEffect(() => {
+    setLeadResultLimit(LEAD_DOMAIN_DEFAULT_LIMIT);
+  }, [campaignId]);
 
   // Fetch campaign data with caching optimizations
   const { data: metricsData, isLoading: metricsLoading, error: metricsError } = useGetCampaignMetricsQuery(campaignId);
   const { data: funnelData, isLoading: funnelLoading, error: funnelError } = useGetCampaignFunnelQuery(campaignId);
   const { data: recommendationsData, isLoading: recsLoading } = useGetCampaignRecommendationsQuery(campaignId);
   const { data: enrichedData } = useGetCampaignEnrichedQuery(campaignId);
-  const { data: domainsList, isLoading: domainsLoading, error: domainsError } = useGetCampaignDomainsQuery(
-    { campaignId, limit: 200, offset: 0 },
+  const { data: domainsList, isLoading: domainsLoading, isFetching: domainsFetching, error: domainsError } = useGetCampaignDomainsQuery(
+    { campaignId, limit: leadResultLimit, offset: 0 },
     { skip: !campaignId }
   );
   const { data: _classificationsData } = useGetCampaignClassificationsQuery({ campaignId });
@@ -115,6 +125,32 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     () => extractErrorMessage(domainsError),
     [domainsError]
   );
+  const totalLeadDomains = domainsList?.total ?? 0;
+  const pageInfoHasNext = domainsList?.pageInfo?.hasNextPage;
+  const hasMoreLeadData = React.useMemo(() => {
+    if (typeof pageInfoHasNext === 'boolean') {
+      if (pageInfoHasNext) {
+        return true;
+      }
+      if (totalLeadDomains > 0) {
+        return domainItems.length < totalLeadDomains;
+      }
+      return false;
+    }
+    if (totalLeadDomains === 0) {
+      return false;
+    }
+    return domainItems.length < totalLeadDomains;
+  }, [pageInfoHasNext, totalLeadDomains, domainItems.length]);
+
+  const canLoadMoreLeadData = hasMoreLeadData && leadResultLimit < LEAD_DOMAIN_MAX;
+
+  const handleLoadMoreLeads = React.useCallback(() => {
+    setLeadResultLimit((prev) => {
+      if (prev >= LEAD_DOMAIN_MAX) return prev;
+      return Math.min(prev + LEAD_DOMAIN_INCREMENT, LEAD_DOMAIN_MAX);
+    });
+  }, []);
 
   const pipelinePhases = React.useMemo(() => mergeCampaignPhases({
     statusSnapshot,
@@ -342,6 +378,11 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
               domains={domainItems}
               aggregates={leadAggregates}
               isLoading={domainsLoading}
+              isUpdating={domainsFetching}
+              loadedCount={domainItems.length}
+              totalAvailable={totalLeadDomains}
+              canLoadMore={canLoadMoreLeadData}
+              onLoadMore={canLoadMoreLeadData ? handleLoadMoreLeads : undefined}
               error={leadPanelError}
             />
           </div>

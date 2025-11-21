@@ -678,8 +678,7 @@ func (s *campaignStorePostgres) GetCampaignDomainCounters(ctx context.Context, e
 		exec = s.db
 	}
 	var row models.CampaignDomainCounters
-	q := `SELECT campaign_id, total_domains, dns_pending, dns_ok, dns_error, dns_timeout,\n                 http_pending, http_ok, http_error, http_timeout,\n                 lead_pending, lead_match, lead_no_match, lead_error, lead_timeout,\n                 updated_at, created_at\n          FROM campaign_domain_counters WHERE campaign_id = $1`
-	if err := exec.GetContext(ctx, &row, q, campaignID); err != nil {
+	if err := exec.GetContext(ctx, &row, getCampaignDomainCountersSQL, campaignID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, store.ErrNotFound
 		}
@@ -687,6 +686,28 @@ func (s *campaignStorePostgres) GetCampaignDomainCounters(ctx context.Context, e
 	}
 	return &row, nil
 }
+
+const getCampaignDomainCountersSQL = `
+SELECT
+	campaign_id,
+	total_domains,
+	dns_pending,
+	dns_ok,
+	dns_error,
+	dns_timeout,
+	http_pending,
+	http_ok,
+	http_error,
+	http_timeout,
+	lead_pending,
+	lead_match,
+	lead_no_match,
+	lead_error,
+	lead_timeout,
+	updated_at,
+	created_at
+FROM campaign_domain_counters
+WHERE campaign_id = $1`
 
 // GetCampaignDomainCounters returns aggregated counters for a campaign (campaign_domain_counters row)
 // (duplicate GetCampaignDomainCounters removed)
@@ -1604,8 +1625,18 @@ func (s *campaignStorePostgres) UpdateDomainsBulkHTTPStatus(ctx context.Context,
 
 func (s *campaignStorePostgres) GetCampaignPhases(ctx context.Context, exec store.Querier, campaignID uuid.UUID) ([]*models.CampaignPhase, error) {
 	query := `
-		SELECT id, campaign_id, phase_type, phase_order, status, progress_percentage,
-		       started_at, completed_at, error_message, created_at, updated_at
+		SELECT id,
+		       campaign_id,
+		       phase_type,
+		       phase_order,
+		       status,
+		       progress_percentage,
+		       started_at,
+		       completed_at,
+		       error_message,
+		       configuration,
+		       created_at,
+		       updated_at
 		FROM campaign_phases
 		WHERE campaign_id = $1
 		ORDER BY phase_order ASC`
@@ -1621,8 +1652,18 @@ func (s *campaignStorePostgres) GetCampaignPhases(ctx context.Context, exec stor
 
 func (s *campaignStorePostgres) GetCampaignPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) (*models.CampaignPhase, error) {
 	query := `
-		SELECT id, campaign_id, phase_type, phase_order, status, progress_percentage,
-		       started_at, completed_at, error_message, created_at, updated_at
+		SELECT id,
+		       campaign_id,
+		       phase_type,
+		       phase_order,
+		       status,
+		       progress_percentage,
+		       started_at,
+		       completed_at,
+		       error_message,
+		       configuration,
+		       created_at,
+		       updated_at
 		FROM campaign_phases
 		WHERE campaign_id = $1 AND phase_type = $2`
 

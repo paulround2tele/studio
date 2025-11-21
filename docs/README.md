@@ -1,158 +1,33 @@
 # Documentation Directory
 
-## Primary Documentation
+The planning documents that previously lived in this folder have been retired. Everything listed below reflects the current, implemented state of the platform.
 
-- **[API System Documentation](./API_SYSTEM_DOCUMENTATION.md)**: Complete API architecture, endpoints, and client integration patterns
-- **[openapi-3.json](./openapi-3.json)**: OpenAPI 3.1 specification (JSON format)  
-- **[openapi-3.yaml](./openapi-3.yaml)**: OpenAPI 3.1 specification (YAML format)
+## Primary References
 
-## Auto-Generated Documentation
+| file | Why it matters |
+|------|----------------|
+| `../README.md` | High-level overview, setup, and troubleshooting entry points |
+| `../architecture.md` | System architecture, campaign orchestrator, and infra notes |
+| `../PIPELINE_CHANGELOG.md` | Chronological pipeline + API contract changes |
+| `./PIPELINE_DATAFLOW_FULL.md` | Authoritative phase-by-phase lifecycle, SSE events, and datastore shape |
+| `./KEYWORD_DATA_FLOW.md` | HTTP keyword configuration, persistence, and verification recipes |
+| `./DOMAIN_LIST_API.md` | Contract for `/campaigns/{id}/domains`, including filtering + server sorting |
+| `./API_SYSTEM_DOCUMENTATION.md` | API architecture, client usage, and RTK Query integration |
+| `./API_AUTOGEN.md` | How the OpenAPI bundle + client generation pipeline works |
+| `../CAMPAIGN_WORKFLOW_ANALYSIS.md` | UX-focused explanation of campaign state transitions |
+| `../TESTING_PLAN.md` | Unit, integration, and E2E coverage targets |
 
-- **[API Client Docs](../src/lib/api-client/docs/)**: Auto-generated documentation for all TypeScript interfaces and API methods
+## Generated + Spec Artifacts
 
-## Legacy Files
+- `../backend/openapi/dist/openapi.yaml` – Bundled OpenAPI 3.1 spec consumed by codegen
+- `../backend/openapi/dist/openapi.json` – Same bundle in JSON form for tooling
+- `../src/lib/api-client/docs/` – Auto-generated TypeScript client docs (kept in sync via `npm run gen:all`)
 
-- **[API_ARCHITECTURE.md](./API_ARCHITECTURE.md)**: Legacy documentation (superseded by API_SYSTEM_DOCUMENTATION.md)
+## How to Navigate
 
----
+1. **Understanding the pipeline** – Start with `PIPELINE_DATAFLOW_FULL.md`, then drill into `KEYWORD_DATA_FLOW.md` for HTTP-specific behavior.
+2. **Investigating API questions** – Use `API_SYSTEM_DOCUMENTATION.md` alongside the generated docs; fall back to the OpenAPI bundle for schema trivia.
+3. **Tracking regressions or refactors** – `PIPELINE_CHANGELOG.md` captures why a behavior changed and which flags/configs disappeared.
+4. **Keeping docs current** – When code paths change, update the relevant markdown and add the file to the table above so discoverability stays high.
 
-## Domain Flow System Overview (Legacy Content)
-
-*Note: The content below represents legacy documentation. Refer to API_SYSTEM_DOCUMENTATION.md for current architecture.*
-   - **Purpose**: Generate domain variations using algorithmic patterns
-   - **Input**: Patterns (prefix, suffix, both), character sets, TLDs, generation parameters
-   - **Process**: Systematic domain generation with configurable batch processing
-   - **Output**: Generated domain list stored in campaign database
-   - **Completion**: Enables "Start DNS Validation" button for phase transition
-
-2. **DNS Validation Phase** (`dns_validation`) 
-   - **Purpose**: Validate DNS resolution and availability of generated domains
-   - **Input**: Generated domains from completed domain generation phase
-   - **Process**: DNS resolution testing with persona-based validation strategies
-   - **Output**: DNS validation status updated on existing domains
-   - **Transition**: User-initiated via configuration panel with tunable parameters
-
-3. **HTTP Keyword Validation Phase** (`http_keyword_validation`)
-   - **Purpose**: Analyze HTTP responses and extract keyword-rich content
-   - **Input**: DNS-validated domains from previous phase
-   - **Process**: HTTP probing, content scraping, keyword matching with proxy support
-   - **Output**: Content analysis results with keyword match scoring
-
-### 🎯 Orchestrated Phase Progression
-
-**User-Controlled Workflow:**
-- Domain Generation completes → **User configures DNS validation parameters** → Updates existing campaign for DNS validation
-- DNS Validation completes → **User configures HTTP keyword parameters** → Updates existing campaign for keyword analysis
-- Each phase updates the same campaign record with additional validation data
-
-**Key Orchestration Features:**
-- **Single Campaign Lifecycle**: All phases operate on the same campaign record
-- **Manual Phase Control**: Users configure each transition with custom parameters
-- **Parameter Tuning**: Full control over batch size, concurrency, timeouts, and retry logic
-- **Real-time Monitoring**: Live progress tracking across all phases
-
-### 🏗️ Technical Architecture
-
-**Core Infrastructure:**
-- **Campaign Orchestrator**: Manages multi-phase campaign lifecycle and transitions
-- **Phase Configuration System**: User-configurable parameters for each validation phase
-- **Worker Pool Architecture**: Distributed processing with configurable concurrency
-- **Real-time Updates**: WebSocket-based live progress monitoring
-- **Persona Management**: Behavioral profiles for DNS and HTTP validation strategies
-- **Proxy Integration**: Intelligent routing through proxy pools for scale and stealth
-
-**Data Flow Architecture:**
-```
-User Interface → Campaign Orchestrator → Worker Pool → Validation Services
-      ↓                    ↓                ↓              ↓
-Configuration Panel → Phase Updates → Domain Processing → Results Storage
-      ↓                    ↓                ↓              ↓
-WebSocket Updates ← Progress Tracking ← Batch Processing ← Data Pipeline
-```
-
-### 🎯 Platform Capabilities
-
-**Domain Intelligence:**
-- **Pattern-based Generation**: Algorithmic domain creation with prefix/suffix/both strategies
-- **DNS Resolution Validation**: Comprehensive DNS testing with configurable personas
-- **HTTP Content Analysis**: Advanced keyword extraction and content classification
-- **Proxy-based Processing**: Distributed analysis through managed proxy pools
-
-**Orchestration Features:**
-- **Multi-phase Campaigns**: Seamless progression through domain generation to content analysis
-- **Parameter Tuning**: Fine-grained control over processing speed, batch sizes, and retry logic
-- **Session-based Security**: Streamlined authentication without complex permission systems
-- **Real-time Monitoring**: Live campaign progress with detailed metrics and error tracking
-
-## 📚 Documentation Structure
-
-### Essential Guides
-- **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)** - Complete setup and installation instructions
-- **[ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md)** - Environment configuration (shared .env setup)
-- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** - Development workflows and best practices
-- **[USER_GUIDE.md](USER_GUIDE.md)** - End-user documentation and tutorials
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutions
-
-### Architecture & API Documentation
-- **[API_ARCHITECTURE.md](API_ARCHITECTURE.md)** - RTK Query implementation and unified API patterns
-
-### Security & Operations
-- **[API_AUTHENTICATION.md](API_AUTHENTICATION.md)** - Session-based authentication system
-- **[SECURITY.md](SECURITY.md)** - Security guidelines and best practices
-- **[COMPLIANCE.md](COMPLIANCE.md)** - Compliance and regulatory information
-- **[OPERATIONAL_RUNBOOK.md](OPERATIONAL_RUNBOOK.md)** - Production operations guide
-- **[DEPLOYMENT_VALIDATION_CHECKLIST.md](DEPLOYMENT_VALIDATION_CHECKLIST.md)** - Pre-deployment checks
-
-### System Design
-- **[architecture/](architecture/)** - System architecture documentation
-- **[design-system/](design-system/)** - UI/UX design system documentation
-
-## 🚀 Quick Start
-
-### Getting Started with DomainFlow V3.0
-
-1. **Environment Setup**: [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) - Shared .env configuration
-2. **Installation**: [INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md) - Complete setup guide
-3. **Development**: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) - Development workflows
-4. **Authentication**: [API_AUTHENTICATION.md](API_AUTHENTICATION.md) - Session-based auth
-5. **Troubleshooting**: [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues
-
-### Creating Your First Multi-Phase Campaign
-
-1. **Phase 1 - Domain Generation**: Create domains using patterns (prefix, suffix, both) with configurable parameters
-2. **Phase 2 - DNS Validation**: Configure DNS validation parameters and update campaign for DNS testing
-3. **Phase 3 - HTTP Analysis**: Configure keyword analysis parameters and update campaign for content validation
-4. **Monitor Progress**: Track real-time progress through campaign metrics dashboard
-
-Each phase builds upon the previous, creating a comprehensive domain intelligence pipeline from generation to analysis.
-
-## ✅ DomainFlow V3.0 Stable Features
-
-**Production-Ready Platform:**
-- ✅ Multi-phase campaign orchestration with user-controlled progression
-- ✅ Session-based authentication for simplified security model
-- ✅ Centralized environment configuration with shared .env management
-- ✅ Real-time WebSocket updates for live campaign monitoring
-- ✅ Advanced parameter tuning for batch processing and concurrency control
-- ✅ Comprehensive proxy management with health monitoring
-- ✅ Production-grade error handling and retry logic
-
-**Version 3.0 Enhancements:**
-- ✅ Streamlined campaign lifecycle management
-- ✅ Enhanced user interface with phase configuration panels
-- ✅ Improved orchestration with single-campaign multi-phase processing
-- ✅ Advanced persona management for validation strategies
-- ✅ Real-time progress tracking with detailed metrics
-
-## 📝 Documentation Standards
-
-**Version 3.0 Documentation Principles:**
-- All documentation reflects the current stable architecture
-- Environment setup is centralized and production-ready
-- Authentication uses session-based model only
-- Focus on operational excellence and user experience
-- Comprehensive troubleshooting and best practices guidance
-
----
-
-**DomainFlow V3.0 Stable** - Advanced Domain Intelligence Platform
+Everything else in this directory is either auto-generated or legacy and slated for deletion; do not resurrect the deprecated WebSocket/dual-read guidance.

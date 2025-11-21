@@ -1,640 +1,156 @@
 # DomainFlow Studio
 
-A sophisticated full-stack application for intelligent domain generation, validation, and lead extraction campaigns. Built with Next.js frontend and Go backend, featuring real-time Server-Sent Events (SSE) communications, multi-phase campaign orchestration, and advanced domain status tracking.
+DomainFlow Studio orchestrates end-to-end domain discovery, validation, and lead enrichment campaigns with a Next.js frontend and a Go/Chi backend. The system streams real-time progress over SSE, persists detailed per-domain telemetry, and exposes a tightly typed OpenAPI contract for both the UI and external tooling.
 
-> Type Usage Governance: See `docs/TYPE_INVENTORY.md` for the authoritative list of generated OpenAPI models and rules banning ad-hoc `any`/`unknown` wrappers. All new types must either come from codegen or be listed in that document.
+## 📚 Contents
 
-## 🏗️ Architecture Overview
+1. [System Overview](#system-overview)
+2. [Technology Stack](#technology-stack)
+3. [Prerequisites](#prerequisites)
+4. [Local Setup](#local-setup)
+5. [Campaign Lifecycle](#campaign-lifecycle)
+6. [Keyword Detection & Data Flow](#keyword-detection--data-flow)
+7. [Observability & Troubleshooting](#observability--troubleshooting)
+8. [Documentation Map](#documentation-map)
 
-### Frontend (Next.js 15 + TypeScript)
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript with strict type safety
-- **UI Framework**: Tailwind CSS + shadcn/ui components
-- **State Management**: Redux Toolkit (RTK) with RTK Query for API state
-- **API Client**: Auto-generated from OpenAPI specification with RTK Query integration
-- **Real-time**: Server-Sent Events (SSE) integration for live campaign updates
-- **Architecture**: Unified RTK Query pattern with centralized API state management
+## System Overview
+
+### Frontend (Next.js 15)
+- Next.js 15 App Router with TypeScript strict mode
+- Tailwind CSS + shadcn/ui for layout and theming
+- Redux Toolkit + RTK Query for API state, cache invalidation, and mutation orchestration
+- Generated OpenAPI client (RTK Query aware) under `src/lib/api-client`
+- SSE bridge for live campaign updates (phase transitions, counter deltas)
 
 ### Backend (Go + PostgreSQL)
-- **Language**: Go with Chi web framework (strict OpenAPI via oapi-codegen)
-- **Database**: PostgreSQL with migration system
-- **API**: Strict REST API with OpenAPI 3.1 specification and request/response validation
-- **Real-time**: Server-Sent Events (SSE) endpoints for campaign broadcasting
-- **Architecture**: Clean architecture with service layers
-- **Validation**: DNS validation, HTTP keyword scanning, lead extraction
-
-## 🚀 Key Features
-
-### Multi-Phase Campaign System
-```
-Domain Generation → DNS Validation → HTTP Keyword Validation → Lead Extraction
-     (0-33%)           (33-66%)           (66-100%)            (Analysis)
-```
-
-### Domain Status Architecture
-- **Individual Domain Tracking**: Each domain has `dns_status`, `http_status`, and `lead_score`
-- **Real-time Updates**: Server-Sent Events (SSE) stream for status changes
-- **Cumulative Progress**: Multi-phase progress tracking across campaign lifecycle
-- **Status Persistence**: Database-backed status updates with audit trail
-
-### Advanced Features
-- **Personas**: Configurable DNS and HTTP validation profiles
-- **Proxy Management**: Rotation and health monitoring
-- **Keyword Sets**: Intelligent content scanning and lead extraction
-- **Real-time Dashboard**: Live campaign monitoring and statistics
-- **Bulk Operations**: Efficient batch processing with streaming responses
-
-## 📊 Domain Status System
-
-### Status Enums
-```go
-type DomainStatus string
-
-const (
-    StatusPending  DomainStatus = "pending"
-    StatusOK       DomainStatus = "ok"
-    StatusError    DomainStatus = "error"
-    StatusTimeout  DomainStatus = "timeout"
-)
-```
-
-### Data Flow
-```
-GeneratedDomain {
-    ID           string
-    DomainName   string
-    DNSStatus    DomainStatus
-    HTTPStatus   DomainStatus
-    LeadScore    float64
-    CreatedAt    time.Time
-    UpdatedAt    time.Time
-}
-```
-
-### Frontend Compatibility Layer
-```typescript
-// Helper functions for backward compatibility
-getCampaignDomains(campaign): string[]
-getCampaignDnsValidatedDomains(campaign): string[]
-getCampaignHTTPKeywordValidatedDomains(campaign): string[]
-getCampaignLeads(campaign): CampaignLead[]
-```
-
-## 🛠️ Technology Stack
-
-### Frontend
-- **Next.js 15**: React framework with App Router
-- **TypeScript**: Static type checking
-- **Tailwind CSS**: Utility-first CSS framework
-- **shadcn/ui**: Modern React component library
-- **Redux Toolkit (RTK)**: Predictable state container with RTK Query
-- **RTK Query**: Data fetching and caching solution
-- **React Hook Form**: Form validation and management
-- **Zod**: Runtime type validation
-- **Lucide React**: Icon library
-
-### Backend
-- **Go 1.22+**: Backend language
-- **Chi**: HTTP web framework (strict OpenAPI via oapi-codegen)
-- **PostgreSQL**: Primary database
-- **GORM**: ORM for database operations
-- **golang-migrate**: Database migration tool
-- **Server-Sent Events (SSE)**: Real-time streaming endpoints
-- **oapi-codegen**: Strict server generation and request/response validation
-
-### Development Tools
-- **OpenAPI Generator**: Auto-generated API clients
-- **Air**: Hot reload for Go development
-- **ESLint + Prettier**: Code formatting and linting
-- **Jest**: Testing framework
-- **Playwright**: E2E testing
-
-## 🚀 Quick Start
-
-### Prerequisites
-- **Node.js** 18+ and npm
-- **Go** 1.22+
-- **PostgreSQL** 14+
-- **Git**
-
-### Installation
-
-1. **Clone the repository**
-```bash
-git clone <repository-url>
-cd domainflow-studio
-```
-
-2. **Setup Backend**
-```bash
-cd backend
-cp config.template.json config.json
-# Edit config.json with your database credentials
-go mod download
-```
-
-3. **Setup Database**
-```bash
-# Create database
-createdb domainflow
-
-# Run migrations
-go run cmd/migrate/main.go up
-```
-
-4. **Setup Frontend**
-```bash
-cd ../
-npm install
-cp .env.example .env.local
-# Edit .env.local with your configuration
-```
-
-5. **Generate API Client**
-```bash
-npm run gen:all
-```
-
-### Development
-
-**Start Backend**
-```bash
-cd backend
-air
-# Backend runs on http://localhost:8080
-```
-
-**Start Frontend**
-```bash
-npm run dev
-# Frontend runs on http://localhost:3000
-```
-
-### E2E Smoke Test
-
-With the backend running on :8080, validate core flows with:
-
-```bash
-scripts/smoke-e2e-campaign.sh
-```
-
-Environment overrides:
-
-- `BASE_URL` (default http://localhost:8080/api/v2)
-- `USER_EMAIL` (default test@example.com)
-- `USER_PASSWORD` (default password)
-
-### Production Build
-
-**Backend**
-```bash
-cd backend
-go build -o apiserver cmd/apiserver/main.go
-./apiserver
-```
-
-**Frontend**
-```bash
-npm run build
-npm start
-```
-
-## 📁 Project Structure
-
-```
-domainflow-studio/
-├── frontend/
-│   ├── src/
-│   │   ├── app/                 # Next.js App Router pages
-│   │   ├── components/          # React components
-│   │   │   ├── campaigns/       # Campaign-related components
-│   │   │   ├── dashboard/       # Dashboard components
-│   │   │   ├── ui/             # Reusable UI components
-│   │   │   └── shared/         # Shared components
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── lib/                # Utilities and configurations
-│   │   │   ├── api-client/     # Auto-generated API client
-│   │   │   ├── services/       # Business logic services
-│   │   │   └── utils/          # Helper functions
-│   │   ├── store/              # Redux Toolkit store configuration
-│   │   │   ├── api/            # RTK Query API endpoints
-│   │   │   ├── slices/         # Redux slices for app state
-│   │   │   └── index.ts        # Store configuration
-│   │   ├── providers/          # React context providers
-│   │   └── types/              # TypeScript type definitions
-│   │   │   └── utils/          # Helper functions
-│   │   └── types/              # TypeScript type definitions
-│   ├── public/                 # Static assets
-│   └── package.json
-├── backend/
-│   ├── cmd/                    # Entry points and CLI tools
-│   ├── internal/
-│   │   ├── api/               # HTTP handlers and routes
-│   │   ├── services/          # Business logic
-│   │   ├── store/             # Database access layer
-│   │   ├── models/            # Data models
-│   │   ├── sse/               # Server-Sent Events handlers
-│   │   └── config/            # Configuration management
-│   ├── database/
-│   │   ├── migrations/        # Database migrations
-│   │   └── seeds/            # Database seed data
-│   ├── docs/                 # OpenAPI specification
-│   └── go.mod
-└── scripts/                  # Build and deployment scripts
-```
-
-## 🔌 API Documentation
-
-## 🔄 Unified Pipeline Orchestration
-The campaign execution pipeline auto-advances through ordered phases when launched in full sequence mode:
-
-```
-Domain Generation → DNS Validation → HTTP Keyword Validation → Analysis
-```
-
-### Execution Model (Strict Model A)
-- All required configurations (personas, proxies, keyword set, etc.) must be present before the initial start.
-- Missing configuration produces an HTTP 409 on start (no mid-chain blocking events).
-- Orchestrator emits structured Server-Sent Events (SSE) at each transition.
-
-### SSE Event Taxonomy
-| Event | Meaning |
-|-------|---------|
-| `phase_started` | User-initiated phase start. |
-| `phase_auto_started` | Auto chain advanced to next phase. |
-| `phase_failed` | Phase terminated with failure; auto-advance pauses. |
-| `phase_completed` | Phase finished successfully. |
-| `campaign_progress` | Incremental progress update (percentage + phase context). |
-| `campaign_completed` | Final phase completed; campaign terminal. |
-| `mode_changed` | Execution mode toggled (step_by_step ↔ full_sequence). |
-
-### Retry Semantics
-When a phase fails:
-1. UI derives `retryEligiblePhases` from last failed phase onward.
-2. User triggers a retry; orchestrator restarts the failed phase.
-3. On success, auto-advance resumes for remaining phases.
-
-### Metrics Collected
-- `phaseStarts`, `phaseAutoStarts`, `phaseFailures`, `phaseCompletions`, `campaignCompletions`, and per-phase duration metrics.
-
-#### HTTP Validation & Micro-Crawl ROI Metrics
-The HTTP keyword validation phase exposes Prometheus metrics to evaluate performance and ROI of the adaptive micro-crawl subsystem.
-
-Core fetch & phase metrics:
-- `http_validation_fetch_outcomes_total{status=ok|error|timeout}` – Root page fetch outcomes
-- `http_fetch_result_total{status=...}` – Alias of above for legacy dashboards
-- `http_validation_batch_seconds` – Duration per bulk validator batch
-- `http_validation_phase_seconds` / `campaign_phase_duration_seconds{phase="http_validation"}` – Phase durations
-
-Micro-crawl operational metrics:
-- `http_validation_microcrawl_triggers_total` – (legacy) raw trigger count
-- `microcrawl_trigger_total{reason=...}` – Triggers partitioned by reason (e.g. `low_kw_and_not_parked`)
-- `http_microcrawl_pages_total{result=partial|exhausted}` – Secondary pages fetched aggregated by exhaustion state
-- `http_microcrawl_pages_per_domain` – Histogram of pages examined per trigger
-
-Micro-crawl ROI / effectiveness metrics:
-- `http_microcrawl_successes_total` – Triggers that yielded one or more new unique keywords
-- `http_microcrawl_zero_success_total` – Triggers that fetched pages but produced zero new keywords (denominator for success rate)
-- `http_microcrawl_added_keywords_total` – Total new unique keywords contributed (sum)
-- `http_microcrawl_new_patterns_total` – Alias of added keywords (reserved for future pattern normalization divergence)
-- `http_microcrawl_kw_growth_ratio` – Histogram of post/baseline keyword unique growth (baseline > 0)
-
-Derived suggestion examples (not exported as metrics):
-- Success Rate = successes_total / (successes_total + zero_success_total)
-- Avg Added Keywords per Success = added_keywords_total / successes_total
-
-Micro-crawl diminishing returns heuristic flags `feature_vector.diminishing_returns` when pages >=2 and growth ratio <1.15 (or baseline=0 and added <2). This can be combined with `kw_growth_ratio` histogram to tune future early-stop strategies.
-
-### Frontend Selector Guarantees
-- Derived overview always supplies ordered phases with status & (when available) `durationMs`.
-- `nextUserAction` indicates the highest-priority user intervention (start, retry, or none).
-- Failure → retry path covered by dedicated unit tests ensuring correctness after each transition.
-
-Refer to `PIPELINE_CHANGELOG.md` for historical evolution and removal of legacy `chain_blocked` semantics.
-
-### RTK Query Architecture
-
-The frontend uses **Redux Toolkit Query (RTK Query)** for unified API state management, providing:
-
-- **Centralized API State**: All server data managed through RTK Query
-- **Automatic Caching**: Intelligent request deduplication and caching
-- **Background Refetching**: Automatic data synchronization
-- **Optimistic Updates**: Immediate UI updates with automatic rollback on errors
-- **Unified Error Handling**: Consistent error states across all API calls
-
-#### Unified API Response Structure
-
-All backend endpoints return a standardized `APIResponse` wrapper:
-
-```typescript
-interface APIResponse<T = any> {
-  success: boolean;
-  data: T;
-  error?: ErrorInfo;
-  requestId: string;
-}
-```
-
-**RTK Query Integration Example:**
-```typescript
-// RTK Query endpoint with APIResponse handling
-getCampaignsStandalone: builder.query<Campaign[], void>({
-  queryFn: async () => {
-    const response = await fetch('/api/v2/campaigns/standalone');
-    const apiResponse = response.data as APIResponse;
-    
-    if (apiResponse.success && apiResponse.data) {
-      return { data: apiResponse.data };
-    }
-    
-    return { 
-      error: apiResponse.error || { message: 'Failed to fetch campaigns' }
-    };
-  },
-  providesTags: ['Campaign']
-})
-```
-
-#### API Store Structure
-
-```typescript
-// Store configuration with RTK Query APIs
-src/store/
-├── api/
-│   ├── campaignApi.ts        # Campaign CRUD operations
-│   ├── bulkOperationsApi.ts  # Bulk operation endpoints
-│   └── baseApi.ts           # Base API configuration
-├── slices/
-│   ├── campaignSlice.ts      # Campaign UI state
-│   ├── bulkOperationsSlice.ts # Bulk operations tracking
-│   └── authSlice.ts         # Authentication state
-└── index.ts                 # Store configuration
-```
-
-#### RTK Query Hooks Pattern
-
-```typescript
-// Component usage with RTK Query hooks
-const CampaignsList = () => {
-  const { 
-    data: campaigns, 
-    isLoading, 
-    error, 
-    refetch 
-  } = useGetCampaignsStandaloneQuery();
-
-  const [startCampaign] = useStartCampaignMutation();
-
-  const handleStart = async (campaignId: string) => {
-    try {
-      await startCampaign({ campaignId }).unwrap();
-      // Automatic cache invalidation triggers refetch
-    } catch (error) {
-      // Unified error handling through RTK Query
-    }
-  };
-
-  return (
-    <div>
-      {isLoading && <LoadingSpinner />}
-      {error && <ErrorDisplay error={error} />}
-      {campaigns?.map(campaign => (
-        <CampaignCard 
-          key={campaign.id} 
-          campaign={campaign}
-          onStart={() => handleStart(campaign.id)}
-        />
-      ))}
-    </div>
-  );
-};
-```
-
-### Core Endpoints
-
-#### Campaigns
-```http
-GET    /api/v2/campaigns                    # List campaigns
-POST   /api/v2/campaigns                    # Create campaign
-GET    /api/v2/campaigns/{id}               # Get campaign details
-PUT    /api/v2/campaigns/{id}               # Update campaign
-DELETE /api/v2/campaigns/{id}               # Delete campaign
-```
-
-#### Domain Operations
-```http
-POST   /api/v2/campaigns/{id}/start         # Start campaign
-POST   /api/v2/campaigns/{id}/dns           # Start DNS validation
-POST   /api/v2/campaigns/{id}/http          # Start HTTP validation
-GET    /api/v2/campaigns/{id}/domains       # Get domain list
-GET    /api/v2/campaigns/{id}/leads         # Get extracted leads
-```
-
-#### Real-time SSE
-```http
-GET    /api/v2/sse/events                   # All-system events stream
-GET    /api/v2/sse/campaigns/{id}/events    # Campaign-scoped events stream
-GET    /api/v2/sse/events/stats             # Stream stats snapshot
-```
-
-Events are streamed as `text/event-stream` with `data:` JSON payloads per line.
-
-### Authentication
-```http
-POST   /api/v2/auth/login                   # User login
-POST   /api/v2/auth/logout                  # User logout
-GET    /api/v2/auth/me                      # Current user info
-POST   /api/v2/auth/change-password         # Change password
-```
-
-### Resource Management
-```http
-GET    /api/v2/personas                     # List personas
-GET    /api/v2/proxies                      # List proxies  
-GET    /api/v2/keyword-sets                 # List keyword sets
-```
-
-## 🗃️ Database Schema
-
-### Core Tables
-
-**campaigns**
-```sql
-CREATE TABLE campaigns (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR NOT NULL,
-    current_phase VARCHAR NOT NULL,
-    phase_status VARCHAR NOT NULL,
-    progress_percentage FLOAT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-**generated_domains**
-```sql
-CREATE TABLE generated_domains (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    campaign_id UUID REFERENCES campaigns(id),
-    domain_name VARCHAR NOT NULL,
-    dns_status domain_status_enum DEFAULT 'pending',
-    http_status domain_status_enum DEFAULT 'pending', 
-    lead_score FLOAT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-**domain_status_enum**
-```sql
-CREATE TYPE domain_status_enum AS ENUM (
-    'pending',
-    'ok', 
-    'error',
-    'timeout'
-);
-```
-
-## 🔧 Development Guidelines
-
-### Code Generation
-```bash
-# Regenerate API client after backend changes
-npm run gen:all
-
-# Individual commands
-npm run gen:openapi     # Generate OpenAPI spec
-npm run gen:types       # Generate TypeScript types
-npm run gen:clients     # Generate API clients
-npm run gen:docs        # Generate documentation
-```
-
-### Database Migrations
-```bash
-# Create new migration
-cd backend
-go run cmd/migrate/main.go create migration_name
-
-# Run migrations
-go run cmd/migrate/main.go up
-
-# Rollback migrations  
-go run cmd/migrate/main.go down
-```
-
-### Testing
-```bash
-# Frontend tests
-npm test
-npm run test:e2e
-
-# Backend tests
-cd backend
-go test ./...
-```
-
-### Type Safety
-- Always regenerate API client after backend schema changes
-- Use RTK Query hooks for all API interactions to maintain cache consistency
-- Implement proper error boundaries for React components
-- Validate WebSocket message types with Zod schemas
-- Ensure all API endpoints respect the unified `APIResponse` wrapper structure
-
-### RTK Query Best Practices
-- Use `providesTags` and `invalidatesTags` for automatic cache management
-- Implement optimistic updates for better user experience
-- Leverage RTK Query's automatic request deduplication
-- Use `queryFn` for complex API response transformations
-- Implement proper error handling with unified error states
-
-### Real-time Features
-- Use Server-Sent Events (SSE) streams for campaign progress updates
-- Implement retry/backoff on event stream disconnects
-- Reflect connection state in Redux slices alongside RTK Query cache
-- Debounce frequent updates to prevent UI thrashing
-- Integrate SSE updates with RTK Query cache invalidation
-
-## 🚨 Common Issues
-
-### Domain Status Not Updating
-1. Check SSE stream connection status
-2. Verify backend emits events for target campaign
-3. Ensure frontend helper functions handle new domain/event format
-4. Check database status field updates
-
-### API Type Mismatches
-1. Regenerate API client: `npm run gen:all`
-2. Check OpenAPI specification is up to date
-3. Verify backend response models match frontend expectations
-
-### Build Failures
-1. Run TypeScript check: `npm run typecheck`
-2. Check for missing dependencies: `npm install`
-3. Verify environment variables are set correctly
-
-## 📈 Performance Optimization
-
-### Frontend
-- Use React.memo for expensive components
-- Implement virtual scrolling for large domain lists
-- Debounce search and filter operations
-- Leverage RTK Query's built-in caching and request deduplication
-- Use RTK Query's `keepUnusedDataFor` option for optimal cache retention
-- Implement proper loading states with RTK Query's `isLoading` and `isFetching` flags
-
-### Backend
-- Database connection pooling
-- Efficient bulk operations for domain processing
-- SSE connection management
-- Response caching for static data
-
-## 🔒 Security
-
-### Authentication
-- JWT-based authentication
-- Session management with secure cookies
-- Password hashing with bcrypt
-- CSRF protection
-
-### Data Protection
-- SQL injection prevention with parameterized queries
-- Input validation on all endpoints
-- Rate limiting on API endpoints
-- Enforce credentialed CORS and CSRF sentinel headers for sensitive endpoints
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📞 Support
-
-For support and questions, please refer to the project documentation or create an issue in the repository.
-
-## 🏆 Contributors
-
-### Architecture & System Design
-- **Bertram Gilfoyle** - Phase 4 Service Layer Reorganization & Stealth Integration Architecture
-  - Migrated 7,000+ lines of legacy monolithic services to clean domain service architecture
-  - Integrated critical stealth detection avoidance capabilities with validation phases
-  - Designed orchestrator pattern coordinating DNS/HTTP validation engines
-  - Preserved business-critical global offset tracking while enabling stealth randomization
-
-### Frontend State Management Consolidation
-- **Bertram Gilfoyle** - RTK Query Implementation & API Architecture Unification
-  - Eliminated 3 competing frontend patterns (RTK Query, Direct API, Hook Abstractions)
-  - Implemented unified `APIResponse` wrapper compliance across all frontend endpoints
-  - Consolidated campaign and bulk operations state management into centralized RTK Query APIs
-  - Designed enterprise-scale bulk operation request structures matching backend contracts
-  - Established type-safe API client integration with automatic cache invalidation patterns
-
----
-
-**Built with ❤️ by the DomainFlow Team**
+- Go 1.24+ with Chi HTTP router generated through `oapi-codegen`
+- PostgreSQL 16+ with sqlx access layer and timestamped migrations
+- Campaign orchestrator that sequences phases in full-sequence or manual mode
+- Keyword scanner + enrichment service that emits structured feature vectors (`feature_vector` JSONB)
+- SSE publisher + event bus for UI/state-sync and Prometheus metrics for every phase
+
+## Technology Stack
+
+| Area      | Tooling |
+|-----------|---------|
+| Frontend  | Next.js 15, React 18, TypeScript, Tailwind, shadcn/ui, Redux Toolkit, RTK Query |
+| Backend   | Go 1.24+, Chi, sqlx, PostgreSQL 16+, oapi-codegen, SSE |
+| Tooling   | Node.js 20.19+, npm 10+, Air (Go hot reload), Jest, Playwright |
+| Observability | Prometheus metrics, SSE logs, campaign domain counters |
+
+## Prerequisites
+
+Ensure the versions below before attempting to build or run any part of the stack:
+
+| Dependency | Version |
+|------------|---------|
+| Node.js    | 20.19+ |
+| npm        | 10+ |
+| Go         | 1.24+ |
+| PostgreSQL | 16+ |
+| Git        | latest |
+
+> **Tip:** The devcontainer already ships with the required toolchain. Local bare-metal setups should follow the same versions to avoid subtle dependency mismatches.
+
+## Local Setup
+
+1. **Install npm dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Bootstrap PostgreSQL**
+   ```bash
+   sudo service postgresql start
+   sudo -u postgres psql <<'EOS'
+   CREATE DATABASE domainflow_production;
+   CREATE USER domainflow WITH PASSWORD 'pNpTHxEWr2SmY270p1IjGn3dP';
+   GRANT ALL PRIVILEGES ON DATABASE domainflow_production TO domainflow;
+   ALTER USER domainflow CREATEDB;
+   \q
+   EOS
+   cd backend && sudo -u postgres psql -d domainflow_production < database/schema.sql
+   ```
+
+3. **Backend build + tests**
+   ```bash
+   cd backend
+   go mod download
+   make build
+   make test
+   ```
+
+4. **Frontend codegen + build**
+   ```bash
+   npm run gen:all
+   npm run lint
+   npm run typecheck
+   npm run build
+   ```
+
+5. **Run services**
+   ```bash
+   # Backend :8080
+   cd backend && ./bin/apiserver
+
+   # Frontend :3000
+   npm run dev
+   ```
+
+6. **Smoke test** (requires backend running on :8080)
+   ```bash
+   scripts/smoke-e2e-campaign.sh
+   ```
+
+## Campaign Lifecycle
+
+Campaigns advance through ordered phases. In full-sequence mode the orchestrator auto-starts each phase after the previous completes; step-by-step mode lets operators trigger phases manually.
+
+| Order | Phase | Description | Key Outputs |
+|-------|-------|-------------|-------------|
+| 1 | Domain Generation | Pattern-driven domain synthesis seeded by campaign config | `generated_domains` rows with `offset_index` |
+| 2 | DNS Validation | Persona + proxy-driven DNS sweeps (Chi service) | `dns_status`, `dns_ip`, DNS counters |
+| 3 | HTTP Keyword Validation | Persona/proxy selection, keyword scanning, enrichment/micro-crawl | `http_status`, `feature_vector` JSON, keyword hits |
+| 4 | Analysis & Scoring | Reuses HTTP feature vectors to compute lead relevance | `relevance_score`, `domain_score`, aggregate counters |
+
+**Counters & SSE:** Each phase writes to `campaign_domain_counters` ensuring UI funnels stay synchronized. SSE events (`phase_started`, `phase_completed`, `domain_status_delta`, etc.) feed the dashboard.
+
+## Keyword Detection & Data Flow
+
+The HTTP Keyword Validation phase consumes the phase configuration stored under `campaign_phases.configuration` (type `HTTPPhaseConfigRequest`). When the phase executes:
+
+1. **Configuration Load:** Persona IDs, keyword set IDs, and ad-hoc keywords are pulled from the phase configuration before each batch. Missing configuration now halts the phase before execution, preventing silent "no keyword" runs.
+2. **Validation + Enrichment:** Successful fetches build `feature_vector` entries that contain structure counts, micro-crawl metadata, and keyword metrics (e.g., `kw_top3`, `kw_unique`, `kw_hits_total`).
+3. **Persistence:**
+   - `generated_domains.http_status` (enum) and `http_reason` capture transport outcomes.
+   - `generated_domains.http_keywords` is legacy text; the UI instead reads from `feature_vector->'kw_top3'`.
+   - `generated_domains.feature_vector` stores JSONB with keyword arrays, signals, parked flags, etc.
+4. **Frontend Rendering:** `LeadResultsPanel` maps `DomainListItem.features.keywords.top3` to the "Found keywords" pill. If `kw_top3` is empty, the UI surfaces "No keywords detected" even though the HTTP phase succeeded.
+
+For deeper details (DB schemas, validator behaviour, and verification queries) see [`docs/KEYWORD_DATA_FLOW.md`](docs/KEYWORD_DATA_FLOW.md).
+
+## Observability & Troubleshooting
+
+| Scenario | Checks |
+|----------|--------|
+| HTTP phase reports "No keywords detected" | Run `SELECT domain_name, http_status, feature_vector->'kw_top3' FROM generated_domains WHERE campaign_id = '<id>' AND http_status='ok';`. Empty arrays mean the validator either had no keyword config or the page content lacked matches. Verify the `campaign_phases.configuration` JSON includes `keywordSetIds`/`adHocKeywords`. |
+| Analysis fails immediately | Listen for the `analysis_failed` SSE event with `errorCode=E_ANALYSIS_MISSING_FEATURES` and confirm `SELECT COUNT(*) FROM generated_domains WHERE feature_vector IS NOT NULL` > 0 before retrying. |
+| DNS phase stalls | Inspect `backend/logs/apiserver.log` for `DNS validation cancelled` or persona/proxy errors. Counters remain in `dns_pending`. |
+| SSE not updating UI | Ensure backend SSE service is running (`deps.SSE`) and no reverse proxy is buffering responses. Browser devtools should show the `/events` stream alive. |
+| Micro-crawl ROI concerns | Scrape Prometheus metrics `http_microcrawl_*` to inspect triggers, added keywords, and growth ratios before tuning heuristics. |
+
+## Documentation Map
+
+| Doc | Purpose |
+|-----|---------|
+| `README.md` (this file) | High-level system overview & setup |
+| `architecture.md` | Current backend/frontend architecture plus orchestration notes |
+| `docs/PIPELINE_DATAFLOW_FULL.md` | Authoritative reference for per-phase flows, SSE events, and data contracts |
+| `docs/KEYWORD_DATA_FLOW.md` | Deep dive into HTTP keyword configuration, storage, and verification |
+| `docs/DOMAIN_LIST_API.md` | Domain listing API contract, filtering, and server-side sorting semantics |
+| `PIPELINE_CHANGELOG.md` | Historical changes to the orchestrator + pipeline semantics |
+| `CAMPAIGN_WORKFLOW_ANALYSIS.md` | Detailed walkthrough of campaign states and counters |
+| `TESTING_PLAN.md` | Strategy for unit, integration, and E2E test coverage |
+| `.github/copilot-instructions.md` | Workspace-specific bootstrap, build, and validation requirements |
+
+If you discover stale guidance, update the relevant doc and cross-link it here so future teams can locate the canonical source quickly.

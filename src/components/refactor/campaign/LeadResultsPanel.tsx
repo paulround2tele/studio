@@ -28,6 +28,7 @@ const STATUS_STYLES: Record<LeadStatusKey, string> = {
 };
 
 const TABLE_ROW_LIMIT = 8;
+const TABLE_ROW_INCREMENT = 6;
 
 const defaultCounts: LeadCounts = {
   match: 0,
@@ -112,18 +113,29 @@ interface LeadResultsPanelProps {
   domains?: DomainListItem[] | null;
   aggregates?: CampaignDomainsListResponseAggregatesLead;
   isLoading?: boolean;
+  isUpdating?: boolean;
   error?: string | null;
+  totalAvailable?: number;
+  loadedCount?: number;
+  canLoadMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 export function LeadResultsPanel({
   domains = [],
   aggregates,
   isLoading = false,
-  error
+  isUpdating = false,
+  error,
+  totalAvailable,
+  loadedCount,
+  canLoadMore = false,
+  onLoadMore
 }: LeadResultsPanelProps) {
   const domainList = React.useMemo(() => (Array.isArray(domains) ? domains : []), [domains]);
   const counts = React.useMemo(() => deriveCounts(domainList, aggregates), [domainList, aggregates]);
   const totalTracked = React.useMemo(() => STATUS_ORDER.reduce((sum, key) => sum + counts[key], 0), [counts]);
+  const [rowLimit, setRowLimit] = React.useState(TABLE_ROW_LIMIT);
 
   const leadMatches = React.useMemo(
     () =>
@@ -147,20 +159,28 @@ export function LeadResultsPanel({
     [domainList]
   );
 
-  const rows = React.useMemo(() => {
-    const source = leadMatches.length > 0 ? leadMatches : validatedFallback;
-    return source.slice(0, TABLE_ROW_LIMIT);
-  }, [leadMatches, validatedFallback]);
+  const prioritizedKey = leadMatches.length > 0 ? 'match' : 'validated';
+  const prioritizedSource = leadMatches.length > 0 ? leadMatches : validatedFallback;
+
+  React.useEffect(() => {
+    setRowLimit(TABLE_ROW_LIMIT);
+  }, [prioritizedKey, domainList.length]);
+
+  const rows = React.useMemo(() => prioritizedSource.slice(0, rowLimit), [prioritizedSource, rowLimit]);
 
   const showingFallback = leadMatches.length === 0 && validatedFallback.length > 0;
   const hasAnyRows = rows.length > 0;
+  const canShowMoreRows = prioritizedSource.length > rowLimit;
+  const canCollapseRows = rowLimit > TABLE_ROW_LIMIT;
+  const appliedLoadedCount = loadedCount ?? domainList.length;
+  const totalKnown = typeof totalAvailable === 'number' && totalAvailable > 0 ? totalAvailable : undefined;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Lead Results</h3>
-          <p className="text-sm text-gray-500">Latest domains surfaced by lead enrichment.</p>
+          <p className="text-sm text-gray-500">Prioritized by enrichment confidence, richness, and keyword coverage.</p>
         </div>
         {isLoading && (
           <span className="inline-flex items-center gap-2 text-xs text-gray-500">
@@ -195,100 +215,129 @@ export function LeadResultsPanel({
 
       {showingFallback && (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-700/50 dark:bg-amber-900/10 dark:text-amber-200">
-          Lead enrichment has not confirmed matches yet. These domains are the most validated candidates to review next.
+          Lead enrichment has not confirmed matches yet. Showing the most validated and keyword-aligned candidates so you can review next actions.
         </div>
       )}
 
       {!isLoading && !hasAnyRows && (
         <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500 dark:border-gray-700/60 dark:bg-gray-900/30 dark:text-gray-300">
           {totalTracked > 0
-            ? 'Lead enrichment is still processing. Check back in a moment for confirmed results.'
-            : 'Lead results will appear once the campaign finishes analysis and enrichment.'}
+            ? 'Lead enrichment is still processing. Check back soon for confirmed matches or load additional rows below.'
+            : 'Lead results will appear once analysis and enrichment complete. Configure targeting to unlock faster results.'}
         </div>
       )}
 
       {hasAnyRows && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              <tr className="border-b border-gray-200 dark:border-gray-800">
-                <th scope="col" className="py-2 pr-3 text-left font-medium">Domain</th>
-                <th scope="col" className="py-2 pr-3 text-left font-medium">Keywords</th>
-                <th scope="col" className="py-2 pr-3 text-left font-medium">Validation</th>
-                <th scope="col" className="py-2 pr-3 text-left font-medium">Lead Status</th>
-                <th scope="col" className="py-2 text-left font-medium">Last Seen</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {rows.map((domain) => {
-                const statusKey = normalizeLeadStatus(domain.leadStatus);
-                const keywords = getKeywordPreview(domain);
-                const richness = getRichnessScore(domain);
-                const dnsStatus = formatStatus(domain.dnsStatus);
-                const httpStatus = formatStatus(domain.httpStatus);
-                const lastSeen = domain.createdAt;
-                const rowKey = domain.id || domain.domain || `${domain.offset ?? 'row'}`;
+        <>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <tr className="border-b border-gray-200 dark:border-gray-800">
+                  <th scope="col" className="py-2 pr-3 text-left font-medium">Domain</th>
+                  <th scope="col" className="py-2 pr-3 text-left font-medium">Keywords</th>
+                  <th scope="col" className="py-2 pr-3 text-left font-medium">Validation</th>
+                  <th scope="col" className="py-2 pr-3 text-left font-medium">Lead Status</th>
+                  <th scope="col" className="py-2 text-left font-medium">Last Seen</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {rows.map((domain) => {
+                  const statusKey = normalizeLeadStatus(domain.leadStatus);
+                  const keywords = getKeywordPreview(domain);
+                  const richness = getRichnessScore(domain);
+                  const dnsStatus = formatStatus(domain.dnsStatus);
+                  const httpStatus = formatStatus(domain.httpStatus);
+                  const lastSeen = domain.createdAt;
+                  const rowKey = domain.id || domain.domain || `${domain.offset ?? 'row'}`;
 
-                return (
-                  <tr key={rowKey} className="bg-white/60 transition hover:bg-gray-50 dark:bg-gray-900/20 dark:hover:bg-gray-900/40">
-                    <td className="py-3 pr-3 align-top">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                          {domain.domain ?? 'Unknown domain'}
-                        </span>
-                        {richness > 0 && (
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            Richness score: {richness.toFixed(0)}
+                  return (
+                    <tr key={rowKey} className="bg-white/60 transition hover:bg-gray-50 dark:bg-gray-900/20 dark:hover:bg-gray-900/40">
+                      <td className="py-3 pr-3 align-top">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium text-gray-900 dark:text-gray-100">
+                            {domain.domain ?? 'Unknown domain'}
                           </span>
+                          {richness > 0 && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              Richness score: {richness.toFixed(0)}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 pr-3 align-top">
+                        {keywords ? (
+                          <span className="line-clamp-2 text-sm text-gray-700 dark:text-gray-300" title={keywords}>
+                            {keywords}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400 dark:text-gray-500">No keywords detected</span>
                         )}
-                      </div>
-                    </td>
-                    <td className="py-3 pr-3 align-top">
-                      {keywords ? (
-                        <span className="line-clamp-2 text-sm text-gray-700 dark:text-gray-300" title={keywords}>
-                          {keywords}
+                      </td>
+                      <td className="py-3 pr-3 align-top text-sm text-gray-600 dark:text-gray-300">
+                        <div className="space-y-1">
+                          <span>DNS: {dnsStatus}</span>
+                          <span>HTTP: {httpStatus}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-3 align-top">
+                        <span
+                          className={cn(
+                            'inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium',
+                            STATUS_STYLES[statusKey]
+                          )}
+                        >
+                          {STATUS_LABELS[statusKey]}
                         </span>
-                      ) : (
-                        <span className="text-xs text-gray-400 dark:text-gray-500">No keywords detected</span>
-                      )}
-                    </td>
-                    <td className="py-3 pr-3 align-top text-sm text-gray-600 dark:text-gray-300">
-                      <div className="space-y-1">
-                        <span>DNS: {dnsStatus}</span>
-                        <span>HTTP: {httpStatus}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 pr-3 align-top">
-                      <span
-                        className={cn(
-                          'inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium',
-                          STATUS_STYLES[statusKey]
-                        )}
-                      >
-                        {STATUS_LABELS[statusKey]}
-                      </span>
-                    </td>
-                    <td className="py-3 align-top text-sm text-gray-600 dark:text-gray-300">
-                      {formatRelativeTime(lastSeen)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                      </td>
+                      <td className="py-3 align-top text-sm text-gray-600 dark:text-gray-300">
+                        {formatRelativeTime(lastSeen)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
-      {hasAnyRows && leadMatches.length > TABLE_ROW_LIMIT && (
-        <div className="text-xs text-gray-500 dark:text-gray-400">
-          Showing top {TABLE_ROW_LIMIT} of {leadMatches.length.toLocaleString()} confirmed leads.
-        </div>
-      )}
-
-      {hasAnyRows && leadMatches.length === 0 && validatedFallback.length > TABLE_ROW_LIMIT && (
-        <div className="text-xs text-gray-500 dark:text-gray-400">
-          Showing top {TABLE_ROW_LIMIT} validated domains while leads are pending.
-        </div>
+          <div className="flex flex-col gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <div>
+              Showing {rows.length} of {prioritizedSource.length} {prioritizedKey === 'match' ? 'confirmed leads' : 'validated candidates'} ranked for review.
+              {totalKnown && totalKnown > prioritizedSource.length && (
+                <span className="ml-1">Loaded {appliedLoadedCount.toLocaleString()} of {totalKnown.toLocaleString()} campaign domains.</span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {canShowMoreRows && (
+                <button
+                  type="button"
+                  onClick={() => setRowLimit((prev) => Math.min(prev + TABLE_ROW_INCREMENT, prioritizedSource.length))}
+                  className="inline-flex items-center rounded border border-blue-200 px-2 py-1 font-medium text-blue-700 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-blue-500/40 dark:text-blue-200 dark:hover:bg-blue-900/30"
+                >
+                  Show more rows
+                </button>
+              )}
+              {canCollapseRows && (
+                <button
+                  type="button"
+                  onClick={() => setRowLimit(TABLE_ROW_LIMIT)}
+                  className="inline-flex items-center rounded border border-gray-200 px-2 py-1 font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 dark:border-gray-600/60 dark:text-gray-200 dark:hover:bg-gray-900/40"
+                >
+                  Collapse
+                </button>
+              )}
+              {canLoadMore && onLoadMore && (
+                <button
+                  type="button"
+                  onClick={onLoadMore}
+                  disabled={isUpdating}
+                  className="inline-flex items-center rounded border border-emerald-200 px-2 py-1 font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-emerald-500/40 dark:text-emerald-200 dark:hover:bg-emerald-900/30"
+                >
+                  {isUpdating ? 'Loading more…' : 'Load additional leads'}
+                </button>
+              )}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

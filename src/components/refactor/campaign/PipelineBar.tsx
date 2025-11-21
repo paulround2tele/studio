@@ -69,7 +69,25 @@ const statusConfig = {
     bgColor: 'bg-red-50 dark:bg-red-900/20',
     label: 'Failed'
   }
-};
+} satisfies Record<string, {
+  icon: typeof CheckCircle;
+  color: string;
+  bgColor: string;
+  label: string;
+}>;
+
+function resolveStatusConfig(status: PipelinePhase['status']) {
+  const config = statusConfig[status];
+  if (config) return config;
+
+  const normalized = (status || 'not_started').replace(/_/g, ' ');
+  return {
+    icon: AlertCircle,
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-100 dark:bg-gray-800',
+    label: normalized.length > 0 ? normalized.replace(/\b\w/g, (char) => char.toUpperCase()) : 'Unknown'
+  };
+}
 
 function PipelinePhaseCard({ 
   phase, 
@@ -82,7 +100,7 @@ function PipelinePhaseCard({
   isAutoMode?: boolean; 
   showAutoStartBadge?: boolean;
 }) {
-  const config = statusConfig[phase.status];
+  const config = resolveStatusConfig(phase.status);
   const Icon = config.icon;
 
   const showBadge = showAutoStartBadge && isAutoMode && (

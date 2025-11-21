@@ -12,10 +12,13 @@ The API system is built on OpenAPI 3.1 specifications with auto-generated TypeSc
 
 - Strict OpenAPI 3.1 contracts with generated Chi server (oapi-codegen strict server)
 - Type-safe generated TypeScript client (Axios-based)
-- Unified `APIResponse<T>`/envelope structure with request/response validation
+- Hybrid response model: modern endpoints return resource bodies directly, legacy endpoints still emit `APIResponse<T>` envelopes during the migration window
 - Frontend integration via RTK Query and shared Axios configuration
 
-### Unified Response Structure
+### Response Shapes
+
+- **Resource-first (preferred)**: The majority of updated endpoints return the resource or collection directly (e.g., `CampaignResponse`, `CampaignDomainsListResponse[]`). No success envelope is present, which keeps payloads lean and matches the generated client types one-to-one.
+- **Legacy envelope (transitional)**: A shrinking set of endpoints still emit `{ success, data, error?, requestId }`. The TypeScript client keeps an `APIResponse<T>` type for these cases so the UI can unwrap data predictably.
 
 ```typescript
 interface APIResponse<T> {
@@ -31,6 +34,8 @@ interface ErrorInfo {
   details?: Record<string, any>;
 }
 ```
+
+> Frontend helpers such as `unwrap<T>` in `campaignApi.ts` accept either shape, so new resource-first handlers do not require additional plumbing.
 
 ## API Endpoints and Client Methods
 
@@ -141,7 +146,6 @@ The system includes these additional API categories:
 - **Resources API**: Resource allocation
 - **Server Settings API**: Configuration management
 - **SSE API**: Server-sent events for real-time updates
-- **WebSocket API**: WebSocket connection management
 - **Proxy Pools API**: Proxy pool management
 
 ## Frontend Integration

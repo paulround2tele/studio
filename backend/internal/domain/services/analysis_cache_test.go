@@ -36,6 +36,7 @@ func TestFeatureCacheMetrics(t *testing.T) {
 		t.Fatalf("sqlmock new: %v", err)
 	}
 	defer db.Close()
+	t.Setenv("ANALYSIS_READS_FEATURE_TABLE", "false")
 	// Expect one query for first fetch only
 	rows := sqlmock.NewRows([]string{"domain_id", "domain_name", "feature_vector"}).
 		AddRow("111", "example.com", []byte(`{"kw_top3":["a","b","c"],"kw_signal_distribution":{"a":3,"b":2},"richness_weights_version":2,"prominence_norm":0.4,"diversity_effective_unique":0.5,"diversity_norm":0.6,"enrichment_norm":0.7,"applied_bonus":0.1,"applied_deductions_total":0.05,"stuffing_penalty":0.0,"repetition_index":0.02,"anchor_share":0.15,"kw_unique":5,"kw_hits_total":9,"kw_weight_sum":12.3,"richness":0.8,"microcrawl_gain_ratio":0.25}`))

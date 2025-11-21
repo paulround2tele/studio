@@ -19,6 +19,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
 	"golang.org/x/net/html"
 
@@ -87,6 +88,41 @@ type httpValidationService struct {
 	mu         sync.RWMutex
 	executions map[uuid.UUID]*httpValidationExecution
 	status     models.PhaseStatusEnum
+}
+
+type keywordCount struct {
+	keyword string
+	count   int
+}
+
+func topKeywordsFromCounts(counts map[string]int, limit int) []string {
+	if len(counts) == 0 || limit <= 0 {
+		return nil
+	}
+	list := make([]keywordCount, 0, len(counts))
+	for k, v := range counts {
+		if v <= 0 || k == "" {
+			continue
+		}
+		list = append(list, keywordCount{keyword: k, count: v})
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	sort.Slice(list, func(i, j int) bool {
+		if list[i].count == list[j].count {
+			return list[i].keyword < list[j].keyword
+		}
+		return list[i].count > list[j].count
+	})
+	if len(list) > limit {
+		list = list[:limit]
+	}
+	out := make([]string, len(list))
+	for i, kv := range list {
+		out[i] = kv.keyword
+	}
+	return out
 }
 
 // ensureMetricsRegistered wraps metricsOnce.Do for testability (allows unit tests to trigger registration
@@ -884,16 +920,16 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 					if q, ok := s.deps.DB.(store.Querier); ok {
 						exec = q
 					}
-					kwSetHits := 0
-					uniqueSetPatterns := make(map[string]struct{}, 32)
+					patternCounts := make(map[string]int, 32)
+					uniquePatterns := make(map[string]struct{}, 32)
 					if len(keywordSetIDs) > 0 {
 						if hitsBySet, err := s.kwScanner.ScanBySetIDs(ctx, exec, r.RawBody, keywordSetIDs); err == nil && len(hitsBySet) > 0 {
 							perSet := make(map[string]int, len(hitsBySet))
 							for setID, patterns := range hitsBySet {
 								perSet[setID] = len(patterns)
-								kwSetHits += len(patterns)
 								for _, p := range patterns {
-									uniqueSetPatterns[p] = struct{}{}
+									uniquePatterns[p] = struct{}{}
+									patternCounts[p]++
 								}
 							}
 							fv["keyword_set_hits"] = perSet
@@ -904,14 +940,15 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 						if adhHits, err := s.kwScanner.ScanAdHocKeywords(ctx, r.RawBody, adHocKeywords); err == nil && len(adhHits) > 0 {
 							fv["ad_hoc_hits"] = adhHits
 							for _, p := range adhHits {
-								uniqueSetPatterns[p] = struct{}{}
+								uniquePatterns[p] = struct{}{}
+								patternCounts[p]++
 							}
 						}
 					}
 					if r.ExtractedTitle != "" {
 						tl := strings.ToLower(r.ExtractedTitle)
 						hasTitleKeyword := false
-						for k := range uniqueSetPatterns {
+						for k := range uniquePatterns {
 							if strings.Contains(tl, strings.ToLower(k)) {
 								hasTitleKeyword = true
 								break
@@ -919,8 +956,11 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 						}
 						fv["title_has_keyword"] = hasTitleKeyword
 					}
-					fv["kw_hits_total"] = len(uniqueSetPatterns)
-					fv["kw_unique"] = len(uniqueSetPatterns)
+					fv["kw_hits_total"] = len(uniquePatterns)
+					fv["kw_unique"] = len(uniquePatterns)
+					if top := topKeywordsFromCounts(patternCounts, 3); len(top) > 0 {
+						fv["kw_top3"] = top
+					}
 				}
 				// Parked heuristic
 				isParked, conf := parkedHeuristic(r.ExtractedTitle, r.ExtractedContentSnippet)
@@ -1042,6 +1082,12 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 				errStatus = "error"
 				s.deps.Logger.Warn(ctx, "Failed to persist feature vectors", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
 			} else {
+				// Dual-write into domain_extraction_features when enabled
+				if featureflags.IsExtractionFeatureTableEnabled() {
+					if err := s.persistExtractionFeatureRows(ctx, campaignID, enrichmentVectors); err != nil && s.deps.Logger != nil {
+						s.deps.Logger.Warn(ctx, "Failed to persist analysis-ready feature rows", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
+					}
+				}
 				// Emit SSE enrichment sample
 				if s.deps.SSE != nil {
 					limit := 25
@@ -1735,6 +1781,373 @@ WHERE gd.campaign_id = $1 AND gd.domain_name = incoming.domain_name`, strings.Jo
 		return fmt.Errorf("bulk feature vector update failed: %w", err)
 	}
 	return nil
+}
+
+const upsertExtractionFeatureSQL = `
+INSERT INTO domain_extraction_features (
+	campaign_id,
+	domain_id,
+	domain_name,
+	processing_state,
+	attempt_count,
+	http_status,
+	http_status_code,
+	content_bytes,
+	page_lang,
+	kw_unique_count,
+	kw_total_occurrences,
+	kw_weight_sum,
+	kw_top3,
+	kw_signal_distribution,
+	microcrawl_enabled,
+	microcrawl_pages,
+	microcrawl_base_kw_count,
+	microcrawl_added_kw_count,
+	microcrawl_gain_ratio,
+	diminishing_returns,
+	is_parked,
+	parked_confidence,
+	content_richness_score,
+	feature_vector,
+	extraction_version,
+	keyword_dictionary_version,
+	updated_at,
+	created_at
+)
+SELECT
+	$1,
+	gd.id,
+	gd.domain_name,
+	'ready',
+	1,
+	'ok',
+	$2,
+	$3,
+	$4,
+	$5,
+	$6,
+	$7,
+	$8::jsonb,
+	$9::jsonb,
+	$10,
+	$11,
+	$12,
+	$13,
+	$14,
+	$15,
+	$16,
+	$17,
+	$18,
+	$19::jsonb,
+	$20,
+	$21,
+	now(),
+	now()
+FROM generated_domains gd
+WHERE gd.campaign_id = $1 AND gd.domain_name = $22
+ON CONFLICT (campaign_id, domain_id) DO UPDATE SET
+	domain_name = EXCLUDED.domain_name,
+	processing_state = EXCLUDED.processing_state,
+	attempt_count = EXCLUDED.attempt_count,
+	http_status = EXCLUDED.http_status,
+	http_status_code = EXCLUDED.http_status_code,
+	content_bytes = EXCLUDED.content_bytes,
+	page_lang = EXCLUDED.page_lang,
+	kw_unique_count = EXCLUDED.kw_unique_count,
+	kw_total_occurrences = EXCLUDED.kw_total_occurrences,
+	kw_weight_sum = EXCLUDED.kw_weight_sum,
+	kw_top3 = EXCLUDED.kw_top3,
+	kw_signal_distribution = EXCLUDED.kw_signal_distribution,
+	microcrawl_enabled = EXCLUDED.microcrawl_enabled,
+	microcrawl_pages = EXCLUDED.microcrawl_pages,
+	microcrawl_base_kw_count = EXCLUDED.microcrawl_base_kw_count,
+	microcrawl_added_kw_count = EXCLUDED.microcrawl_added_kw_count,
+	microcrawl_gain_ratio = EXCLUDED.microcrawl_gain_ratio,
+	diminishing_returns = EXCLUDED.diminishing_returns,
+	is_parked = EXCLUDED.is_parked,
+	parked_confidence = EXCLUDED.parked_confidence,
+	content_richness_score = EXCLUDED.content_richness_score,
+	feature_vector = EXCLUDED.feature_vector,
+	extraction_version = EXCLUDED.extraction_version,
+	keyword_dictionary_version = EXCLUDED.keyword_dictionary_version,
+	updated_at = now();`
+
+func (s *httpValidationService) persistExtractionFeatureRows(ctx context.Context, campaignID uuid.UUID, vectors map[string]map[string]interface{}) error {
+	if len(vectors) == 0 {
+		return nil
+	}
+	sqlxDB, ok := s.deps.DB.(*sqlx.DB)
+	if !ok || sqlxDB == nil {
+		return fmt.Errorf("sqlx DB unavailable for extraction feature persistence")
+	}
+	domains := make([]string, 0, len(vectors))
+	for domain := range vectors {
+		domains = append(domains, domain)
+	}
+	sort.Strings(domains)
+	var lastErr error
+	for _, domain := range domains {
+		row, err := buildExtractionFeatureRow(domain, vectors[domain])
+		if err != nil {
+			lastErr = err
+			if s.deps.Logger != nil {
+				s.deps.Logger.Warn(ctx, "Skipping extraction feature row", map[string]interface{}{"campaign_id": campaignID, "domain": domain, "error": err.Error()})
+			}
+			continue
+		}
+		args := []interface{}{
+			campaignID,
+			row.HTTPStatusCode,
+			row.ContentBytes,
+			row.PageLang,
+			row.KwUniqueCount,
+			row.KwTotalOccurrences,
+			row.KwWeightSum,
+			row.KwTop3JSON,
+			row.KwSignalJSON,
+			row.MicrocrawlEnabled,
+			row.MicrocrawlPages,
+			row.MicrocrawlBaseKwCount,
+			row.MicrocrawlAddedKwCount,
+			row.MicrocrawlGainRatio,
+			row.DiminishingReturns,
+			row.IsParked,
+			row.ParkedConfidence,
+			row.ContentRichnessScore,
+			row.FeatureVectorJSON,
+			row.ExtractionVersion,
+			row.KeywordDictionaryVersion,
+			domain,
+		}
+		if _, err := sqlxDB.ExecContext(ctx, upsertExtractionFeatureSQL, args...); err != nil {
+			lastErr = err
+			if s.deps.Logger != nil {
+				s.deps.Logger.Warn(ctx, "Failed to persist extraction feature row", map[string]interface{}{"campaign_id": campaignID, "domain": domain, "error": err.Error()})
+			}
+		}
+	}
+	return lastErr
+}
+
+type extractionFeatureRow struct {
+	DomainName               string
+	HTTPStatusCode           *int
+	ContentBytes             *int
+	PageLang                 *string
+	KwUniqueCount            *int
+	KwTotalOccurrences       *int
+	KwWeightSum              *float64
+	KwTop3JSON               *string
+	KwSignalJSON             *string
+	MicrocrawlEnabled        bool
+	MicrocrawlPages          *int
+	MicrocrawlBaseKwCount    *int
+	MicrocrawlAddedKwCount   *int
+	MicrocrawlGainRatio      *float64
+	DiminishingReturns       bool
+	IsParked                 bool
+	ParkedConfidence         *float64
+	ContentRichnessScore     *float64
+	FeatureVectorJSON        string
+	ExtractionVersion        int
+	KeywordDictionaryVersion int
+}
+
+func buildExtractionFeatureRow(domain string, fv map[string]interface{}) (*extractionFeatureRow, error) {
+	if len(fv) == 0 {
+		return nil, fmt.Errorf("feature vector empty for domain %s", domain)
+	}
+	raw, err := json.Marshal(fv)
+	if err != nil {
+		return nil, fmt.Errorf("marshal feature vector: %w", err)
+	}
+	row := &extractionFeatureRow{
+		DomainName:               domain,
+		FeatureVectorJSON:        string(raw),
+		ExtractionVersion:        1,
+		KeywordDictionaryVersion: 1,
+	}
+	row.HTTPStatusCode = toIntPtr(fv["status_code"])
+	row.ContentBytes = toIntPtr(fv["content_bytes"])
+	row.PageLang = toStringPtr(fv["primary_lang"])
+	row.KwUniqueCount = toIntPtr(fv["kw_unique"])
+	row.KwTotalOccurrences = toIntPtr(fv["kw_hits_total"])
+	row.KwWeightSum = toFloatPtr(fv["kw_weight_sum"])
+	if top := vectorStringSlice(fv["kw_top3"]); len(top) > 0 {
+		if encoded, err := json.Marshal(top); err == nil {
+			s := string(encoded)
+			row.KwTop3JSON = &s
+		}
+	}
+	if dist := vectorStringIntMap(fv["kw_signal_distribution"]); len(dist) > 0 {
+		if encoded, err := json.Marshal(dist); err == nil {
+			s := string(encoded)
+			row.KwSignalJSON = &s
+		}
+	}
+	row.MicrocrawlPages = toIntPtr(fv["microcrawl_pages"])
+	if row.MicrocrawlPages == nil {
+		row.MicrocrawlPages = toIntPtr(fv["secondary_pages_examined"])
+	}
+	row.MicrocrawlBaseKwCount = toIntPtr(fv["kw_unique_root"])
+	row.MicrocrawlAddedKwCount = toIntPtr(fv["kw_unique_added"])
+	row.MicrocrawlGainRatio = toFloatPtr(fv["kw_growth_ratio"])
+	if row.MicrocrawlGainRatio == nil {
+		row.MicrocrawlGainRatio = toFloatPtr(fv["microcrawl_gain_ratio"])
+	}
+	if val, ok := boolFromAny(fv["microcrawl_used"]); ok {
+		row.MicrocrawlEnabled = val
+	} else if row.MicrocrawlPages != nil && *row.MicrocrawlPages > 0 {
+		row.MicrocrawlEnabled = true
+	}
+	if val, ok := boolFromAny(fv["diminishing_returns"]); ok {
+		row.DiminishingReturns = val
+	}
+	if val, ok := boolFromAny(fv["is_parked"]); ok {
+		row.IsParked = val
+	}
+	row.ParkedConfidence = toFloatPtr(fv["parked_confidence"])
+	row.ContentRichnessScore = toFloatPtr(fv["richness"])
+	if row.ContentRichnessScore == nil {
+		row.ContentRichnessScore = toFloatPtr(fv["richness_score"])
+	}
+	return row, nil
+}
+
+func toIntPtr(v interface{}) *int {
+	if val, ok := intFromAny(v); ok {
+		ptr := val
+		return &ptr
+	}
+	return nil
+}
+
+func toFloatPtr(v interface{}) *float64 {
+	if val, ok := floatFromAny(v); ok {
+		ptr := val
+		return &ptr
+	}
+	return nil
+}
+
+func toStringPtr(v interface{}) *string {
+	if val, ok := stringFromAny(v); ok && val != "" {
+		ptr := val
+		return &ptr
+	}
+	return nil
+}
+
+func intFromAny(v interface{}) (int, bool) {
+	switch t := v.(type) {
+	case int:
+		return t, true
+	case int32:
+		return int(t), true
+	case int64:
+		return int(t), true
+	case float64:
+		return int(t), true
+	case float32:
+		return int(t), true
+	case json.Number:
+		if val, err := t.Int64(); err == nil {
+			return int(val), true
+		}
+	case string:
+		if val, err := strconv.Atoi(strings.TrimSpace(t)); err == nil {
+			return val, true
+		}
+	}
+	return 0, false
+}
+
+func floatFromAny(v interface{}) (float64, bool) {
+	switch t := v.(type) {
+	case float64:
+		return t, true
+	case float32:
+		return float64(t), true
+	case int:
+		return float64(t), true
+	case int32:
+		return float64(t), true
+	case int64:
+		return float64(t), true
+	case json.Number:
+		if val, err := t.Float64(); err == nil {
+			return val, true
+		}
+	case string:
+		if val, err := strconv.ParseFloat(strings.TrimSpace(t), 64); err == nil {
+			return val, true
+		}
+	}
+	return 0, false
+}
+
+func boolFromAny(v interface{}) (bool, bool) {
+	switch t := v.(type) {
+	case bool:
+		return t, true
+	case string:
+		lv := strings.ToLower(strings.TrimSpace(t))
+		switch lv {
+		case "true", "1", "yes", "on":
+			return true, true
+		case "false", "0", "no", "off":
+			return false, true
+		}
+	case int, int32, int64, float32, float64:
+		if val, ok := intFromAny(v); ok {
+			return val != 0, true
+		}
+	}
+	return false, false
+}
+
+func stringFromAny(v interface{}) (string, bool) {
+	switch t := v.(type) {
+	case string:
+		return t, true
+	case []byte:
+		return string(t), true
+	}
+	return "", false
+}
+
+func vectorStringSlice(v interface{}) []string {
+	switch val := v.(type) {
+	case []string:
+		return val
+	case []interface{}:
+		out := make([]string, 0, len(val))
+		for _, item := range val {
+			if s, ok := item.(string); ok {
+				out = append(out, s)
+			}
+		}
+		return out
+	default:
+		return nil
+	}
+}
+
+func vectorStringIntMap(v interface{}) map[string]int {
+	out := map[string]int{}
+	switch val := v.(type) {
+	case map[string]int:
+		for k, v := range val {
+			out[k] = v
+		}
+	case map[string]interface{}:
+		for k, raw := range val {
+			if i, ok := intFromAny(raw); ok {
+				out[k] = i
+			}
+		}
+	}
+	return out
 }
 
 // microCrawlEnhance performs a bounded depth-1 crawl of internal links for a single domain result.

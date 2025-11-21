@@ -65,14 +65,12 @@ type analysisService struct {
 	executions map[uuid.UUID]*analysisExecution
 	status     models.PhaseStatusEnum
 
-	// lightweight memo cache of feature vectors per campaign (invalidated implicitly by new executions)
-	featureCache map[uuid.UUID]map[string]map[string]any
 	// TTL side-cache (campaign -> cachedEntry). Using interface{} field naming avoided; explicit field clearer.
 	_featureCacheTTL map[uuid.UUID]struct {
 		at   time.Time
 		data map[string]map[string]any
 	}
-	featureCacheMu sync.RWMutex // guards featureCache and _featureCacheTTL
+	featureCacheMu sync.RWMutex // guards _featureCacheTTL
 }
 
 // DomainAnalysisFeaturesTyped provides a strongly typed internal view of domain analysis features.
@@ -315,7 +313,6 @@ func NewAnalysisService(
 		contentFetcher: contentFetcher,
 		executions:     make(map[uuid.UUID]*analysisExecution),
 		status:         models.PhaseStatusNotStarted,
-		featureCache:   make(map[uuid.UUID]map[string]map[string]any),
 		_featureCacheTTL: map[uuid.UUID]struct {
 			at   time.Time
 			data map[string]map[string]any
@@ -1647,6 +1644,12 @@ func clamp(v, lo, hi float64) float64 {
 	return v
 }
 
+// DualReadFetch satisfies the optional dual-read interface the orchestrator probes for and simply
+// forwards to FetchAnalysisReadyFeatures so keyword/richness data is returned with domain listings.
+func (s *analysisService) DualReadFetch(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
+	return s.FetchAnalysisReadyFeatures(ctx, campaignID)
+}
+
 func (s *analysisService) FetchAnalysisReadyFeatures(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
 	// Phase P3: Analysis read switch implementation
 	// Decide whether to use new feature table or legacy feature_vector path
@@ -1786,21 +1789,15 @@ func (s *analysisService) fetchFeaturesNewPath(ctx context.Context, campaignID u
 	const ttl = 30 * time.Second
 	// Read lock fast path
 	s.featureCacheMu.RLock()
-	if ce, ok := s._featureCacheTTL[campaignID]; ok && time.Since(ce.at) < ttl {
-		data := ce.data
-		if s.mtx.featureCacheHits != nil {
-			s.mtx.featureCacheHits.Inc()
+	if ce, ok := s._featureCacheTTL[campaignID]; ok {
+		if time.Since(ce.at) < ttl {
+			data := ce.data
+			if s.mtx.featureCacheHits != nil {
+				s.mtx.featureCacheHits.Inc()
+			}
+			s.featureCacheMu.RUnlock()
+			return data, nil
 		}
-		s.featureCacheMu.RUnlock()
-		return data, nil
-	}
-	if cached, ok := s.featureCache[campaignID]; ok {
-		data := cached
-		if s.mtx.featureCacheHits != nil {
-			s.mtx.featureCacheHits.Inc()
-		}
-		s.featureCacheMu.RUnlock()
-		return data, nil
 	}
 	s.featureCacheMu.RUnlock()
 
@@ -1921,21 +1918,15 @@ func (s *analysisService) fetchFeaturesLegacyPath(ctx context.Context, campaignI
 	const ttl = 30 * time.Second
 	// Read lock fast path
 	s.featureCacheMu.RLock()
-	if ce, ok := s._featureCacheTTL[campaignID]; ok && time.Since(ce.at) < ttl {
-		data := ce.data
-		if s.mtx.featureCacheHits != nil {
-			s.mtx.featureCacheHits.Inc()
+	if ce, ok := s._featureCacheTTL[campaignID]; ok {
+		if time.Since(ce.at) < ttl {
+			data := ce.data
+			if s.mtx.featureCacheHits != nil {
+				s.mtx.featureCacheHits.Inc()
+			}
+			s.featureCacheMu.RUnlock()
+			return data, nil
 		}
-		s.featureCacheMu.RUnlock()
-		return data, nil
-	}
-	if cached, ok := s.featureCache[campaignID]; ok {
-		data := cached
-		if s.mtx.featureCacheHits != nil {
-			s.mtx.featureCacheHits.Inc()
-		}
-		s.featureCacheMu.RUnlock()
-		return data, nil
 	}
 	s.featureCacheMu.RUnlock()
 
@@ -2022,7 +2013,12 @@ func (s *analysisService) fetchFeaturesLegacyPath(ctx context.Context, campaignI
 
 	// Cache the results
 	s.featureCacheMu.Lock()
-	s.featureCache[campaignID] = res
+	if s._featureCacheTTL == nil {
+		s._featureCacheTTL = make(map[uuid.UUID]struct {
+			at   time.Time
+			data map[string]map[string]any
+		})
+	}
 	s._featureCacheTTL[campaignID] = struct {
 		at   time.Time
 		data map[string]map[string]any
@@ -2058,7 +2054,6 @@ func getFloatFromFV(fv map[string]any, key string) interface{} {
 // InvalidateFeatureCache removes cached features for a campaign (called after new analysis results stored)
 func (s *analysisService) InvalidateFeatureCache(campaignID uuid.UUID) {
 	s.featureCacheMu.Lock()
-	delete(s.featureCache, campaignID)
 	delete(s._featureCacheTTL, campaignID)
 	s.featureCacheMu.Unlock()
 	if s.mtx.featureCacheInvalidations != nil {
