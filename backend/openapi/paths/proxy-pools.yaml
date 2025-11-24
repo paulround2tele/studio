@@ -1,5 +1,6 @@
 	/proxy-pools:
 		get:
+  description: GET operation for proxy pools.
 			tags: [proxy-pools]
 			security:
 				- cookieAuth: []
@@ -17,6 +18,7 @@
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
 		post:
+  description: POST operation for proxy pools.
 			tags: [proxy-pools]
 			security:
 				- cookieAuth: []
@@ -37,6 +39,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/proxy-pools/{poolId}:
 		put:
+  description: PUT operation for proxy pools.
 			tags: [proxy-pools]
 			security:
 				- cookieAuth: []
@@ -62,6 +65,7 @@
 				'404': { $ref: '#/components/responses/NotFound' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
 		delete:
+  description: DELETE operation for proxy pools.
 			tags: [proxy-pools]
 			security:
 				- cookieAuth: []
@@ -73,16 +77,14 @@
 					required: true
 					schema: { type: string, format: uuid }
 			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-        schema: { $ref: '#/components/schemas/ProxyPoolDeleteResponse' }
+				'204':
+					description: No Content
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'404': { $ref: '#/components/responses/NotFound' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/proxy-pools/{poolId}/proxies:
 		post:
+  description: POST operation for proxy pools.
 			tags: [proxy-pools]
 			security:
 				- cookieAuth: []
@@ -113,6 +115,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/proxy-pools/{poolId}/proxies/{proxyId}:
 		delete:
+  description: DELETE operation for proxy pools.
 			tags: [proxy-pools]
 			security:
 				- cookieAuth: []
@@ -128,8 +131,5 @@
 					required: true
 					schema: { type: string, format: uuid }
 			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-        schema: { $ref: '#/components/schemas/ProxyPoolMembershipResponse' }
+				'204':
+					description: No Content

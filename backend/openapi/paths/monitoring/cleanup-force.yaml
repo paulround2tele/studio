@@ -1,6 +1,7 @@
 post:
   tags: [monitoring]
   summary: Force cleanup
+  description: Force cleanup
   operationId: monitoring_cleanup_force
   parameters:
     - name: campaignId

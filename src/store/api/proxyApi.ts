@@ -30,11 +30,11 @@ export const proxyApi = createApi({
   tagTypes: ['Proxy', 'BulkOperation'],
   endpoints: (builder) => ({
     // Bulk operations - because professionals batch their operations
-    bulkDeleteProxies: builder.mutation<BulkProxyOperationResponse, BulkDeleteProxiesRequest>({
+    bulkDeleteProxies: builder.mutation<void, BulkDeleteProxiesRequest>({
       queryFn: async (request) => {
         try {
-          const response = await proxiesApi.proxiesBulkDelete(request);
-          return { data: response.data };
+          await proxiesApi.proxiesBulkDelete(request);
+          return { data: undefined };
         } catch (error) {
           const err = error as AxiosError<ErrorEnvelope>;
           const status = err.response?.status ?? 500;

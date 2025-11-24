@@ -1,5 +1,6 @@
 	/extract/keywords:
 		post:
+  description: POST operation for extraction.
 			tags: [keyword-extraction]
 			security:
 				- cookieAuth: []
@@ -24,6 +25,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/extract/keywords/stream:
 		get:
+  description: GET operation for extraction.
 			tags: [keyword-extraction]
 			security:
 				- cookieAuth: []

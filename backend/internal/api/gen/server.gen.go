@@ -597,7 +597,7 @@ type ApiError struct {
 		Code ErrorCode `json:"code"`
 
 		// Context Structured error context values constrained to primitive/array/object envelope.
-		Context *map[string]FlexibleValue `json:"context,omitempty"`
+		Context *map[string]*FlexibleValue `json:"context,omitempty"`
 
 		// Field JSON pointer or field path
 		Field   *string `json:"field,omitempty"`
@@ -1316,13 +1316,13 @@ type CampaignSseProgressEventType string
 
 // CampaignState defines model for CampaignState.
 type CampaignState struct {
-	CampaignId    openapi_types.UUID        `json:"campaignId"`
-	Configuration *map[string]FlexibleValue `json:"configuration,omitempty"`
-	CreatedAt     time.Time                 `json:"createdAt"`
-	CurrentState  CampaignStateEnum         `json:"currentState"`
-	Mode          CampaignModeEnum          `json:"mode"`
-	UpdatedAt     time.Time                 `json:"updatedAt"`
-	Version       int                       `json:"version"`
+	CampaignId    openapi_types.UUID         `json:"campaignId"`
+	Configuration *map[string]*FlexibleValue `json:"configuration,omitempty"`
+	CreatedAt     time.Time                  `json:"createdAt"`
+	CurrentState  CampaignStateEnum          `json:"currentState"`
+	Mode          CampaignModeEnum           `json:"mode"`
+	UpdatedAt     time.Time                  `json:"updatedAt"`
+	Version       int                        `json:"version"`
 }
 
 // CampaignStateEnum defines model for CampaignStateEnum.
@@ -1330,9 +1330,9 @@ type CampaignStateEnum string
 
 // CampaignStateUpdate defines model for CampaignStateUpdate.
 type CampaignStateUpdate struct {
-	Configuration *map[string]FlexibleValue `json:"configuration,omitempty"`
-	CurrentState  *CampaignStateEnum        `json:"currentState,omitempty"`
-	Mode          *CampaignModeEnum         `json:"mode,omitempty"`
+	Configuration *map[string]*FlexibleValue `json:"configuration,omitempty"`
+	CurrentState  *CampaignStateEnum         `json:"currentState,omitempty"`
+	Mode          *CampaignModeEnum          `json:"mode,omitempty"`
 
 	// Version Optional optimistic concurrency version; if provided must match current
 	Version *int `json:"version,omitempty"`
@@ -1628,50 +1628,10 @@ type ExtendedPageInfoSortOrder string
 type FeatureFlags map[string]bool
 
 // FlexibleArray Array of primitive flexible values.
-type FlexibleArray = []FlexibleArray_Item
-
-// FlexibleArray0 defines model for .
-type FlexibleArray0 = string
-
-// FlexibleArray1 defines model for .
-type FlexibleArray1 = float32
-
-// FlexibleArray2 defines model for .
-type FlexibleArray2 = int
-
-// FlexibleArray3 defines model for .
-type FlexibleArray3 = bool
-
-// FlexibleArray4 defines model for .
-type FlexibleArray4 = interface{}
-
-// FlexibleArray_Item defines model for FlexibleArray.Item.
-type FlexibleArray_Item struct {
-	union json.RawMessage
-}
+type FlexibleArray = []FlexiblePrimitive
 
 // FlexibleObject Nested object whose values are flexible primitives (one-level nesting only).
-type FlexibleObject map[string]FlexibleObject_AdditionalProperties
-
-// FlexibleObject0 defines model for .
-type FlexibleObject0 = string
-
-// FlexibleObject1 defines model for .
-type FlexibleObject1 = float32
-
-// FlexibleObject2 defines model for .
-type FlexibleObject2 = int
-
-// FlexibleObject3 defines model for .
-type FlexibleObject3 = bool
-
-// FlexibleObject4 defines model for .
-type FlexibleObject4 = interface{}
-
-// FlexibleObject_AdditionalProperties defines model for FlexibleObject.AdditionalProperties.
-type FlexibleObject_AdditionalProperties struct {
-	union json.RawMessage
-}
+type FlexibleObject map[string]*FlexiblePrimitive
 
 // FlexiblePrimitive Primitive value allowed in flexible configuration maps.
 type FlexiblePrimitive struct {
@@ -1689,9 +1649,6 @@ type FlexiblePrimitive2 = int
 
 // FlexiblePrimitive3 defines model for .
 type FlexiblePrimitive3 = bool
-
-// FlexiblePrimitive4 defines model for .
-type FlexiblePrimitive4 = interface{}
 
 // FlexibleValue Union of acceptable flexible configuration / context value shapes.
 type FlexibleValue struct {
@@ -1908,13 +1865,6 @@ type PersonaConfigHttpTlsClientHelloMaxVersion string
 // PersonaConfigHttpTlsClientHelloMinVersion defines model for PersonaConfigHttp.TlsClientHello.MinVersion.
 type PersonaConfigHttpTlsClientHelloMinVersion string
 
-// PersonaDeleteResponse defines model for PersonaDeleteResponse.
-type PersonaDeleteResponse struct {
-	Deleted   bool               `json:"deleted"`
-	Message   *string            `json:"message,omitempty"`
-	PersonaId openapi_types.UUID `json:"personaId"`
-}
-
 // PersonaResponse defines model for PersonaResponse.
 type PersonaResponse struct {
 	ConfigDetails *PersonaConfigDetails `json:"configDetails,omitempty"`
@@ -1959,16 +1909,16 @@ type PhaseConfigurationRequest struct {
 
 // PhaseExecution defines model for PhaseExecution.
 type PhaseExecution struct {
-	CampaignId    openapi_types.UUID        `json:"campaignId"`
-	CompletedAt   *time.Time                `json:"completedAt"`
-	Configuration *map[string]interface{}   `json:"configuration"`
-	CreatedAt     time.Time                 `json:"createdAt"`
-	ErrorDetails  *map[string]FlexibleValue `json:"errorDetails"`
-	FailedAt      *time.Time                `json:"failedAt"`
-	FailedItems   *int64                    `json:"failedItems,omitempty"`
-	Id            openapi_types.UUID        `json:"id"`
-	Metrics       *map[string]FlexibleValue `json:"metrics"`
-	PausedAt      *time.Time                `json:"pausedAt"`
+	CampaignId    openapi_types.UUID         `json:"campaignId"`
+	CompletedAt   *time.Time                 `json:"completedAt"`
+	Configuration *map[string]interface{}    `json:"configuration"`
+	CreatedAt     time.Time                  `json:"createdAt"`
+	ErrorDetails  *map[string]*FlexibleValue `json:"errorDetails"`
+	FailedAt      *time.Time                 `json:"failedAt"`
+	FailedItems   *int64                     `json:"failedItems,omitempty"`
+	Id            openapi_types.UUID         `json:"id"`
+	Metrics       *map[string]*FlexibleValue `json:"metrics"`
+	PausedAt      *time.Time                 `json:"pausedAt"`
 
 	// PhaseType Phase identifier
 	PhaseType          PhaseExecutionPhaseType `json:"phaseType"`
@@ -1986,19 +1936,19 @@ type PhaseExecutionPhaseType string
 
 // PhaseExecutionUpdate defines model for PhaseExecutionUpdate.
 type PhaseExecutionUpdate struct {
-	CompletedAt        *time.Time                `json:"completedAt"`
-	Configuration      *map[string]interface{}   `json:"configuration"`
-	ErrorDetails       *map[string]FlexibleValue `json:"errorDetails"`
-	FailedAt           *time.Time                `json:"failedAt"`
-	FailedItems        *int64                    `json:"failedItems,omitempty"`
-	Metrics            *map[string]FlexibleValue `json:"metrics"`
-	PausedAt           *time.Time                `json:"pausedAt"`
-	ProcessedItems     *int64                    `json:"processedItems,omitempty"`
-	ProgressPercentage *float32                  `json:"progressPercentage,omitempty"`
-	StartedAt          *time.Time                `json:"startedAt"`
-	Status             *ExecutionStatusEnum      `json:"status,omitempty"`
-	SuccessfulItems    *int64                    `json:"successfulItems,omitempty"`
-	TotalItems         *int64                    `json:"totalItems,omitempty"`
+	CompletedAt        *time.Time                 `json:"completedAt"`
+	Configuration      *map[string]interface{}    `json:"configuration"`
+	ErrorDetails       *map[string]*FlexibleValue `json:"errorDetails"`
+	FailedAt           *time.Time                 `json:"failedAt"`
+	FailedItems        *int64                     `json:"failedItems,omitempty"`
+	Metrics            *map[string]*FlexibleValue `json:"metrics"`
+	PausedAt           *time.Time                 `json:"pausedAt"`
+	ProcessedItems     *int64                     `json:"processedItems,omitempty"`
+	ProgressPercentage *float32                   `json:"progressPercentage,omitempty"`
+	StartedAt          *time.Time                 `json:"startedAt"`
+	Status             *ExecutionStatusEnum       `json:"status,omitempty"`
+	SuccessfulItems    *int64                     `json:"successfulItems,omitempty"`
+	TotalItems         *int64                     `json:"totalItems,omitempty"`
 }
 
 // PhaseFailedEvent Phase failure event.
@@ -2104,10 +2054,10 @@ type ProxyHealthCheckResponse struct {
 
 // ProxyOperationResult Result object for a proxy operation containing a proxyId and optional error or metadata.
 type ProxyOperationResult struct {
-	Error    *string                   `json:"error"`
-	Metadata *map[string]FlexibleValue `json:"metadata"`
-	ProxyId  openapi_types.UUID        `json:"proxyId"`
-	Success  bool                      `json:"success"`
+	Error    *string                    `json:"error"`
+	Metadata *map[string]*FlexibleValue `json:"metadata"`
+	ProxyId  openapi_types.UUID         `json:"proxyId"`
+	Success  bool                       `json:"success"`
 }
 
 // ProxyPool defines model for ProxyPool.
@@ -2126,13 +2076,6 @@ type ProxyPool struct {
 	UpdatedAt                  *time.Time                `json:"updatedAt,omitempty"`
 }
 
-// ProxyPoolDeleteResponse defines model for ProxyPoolDeleteResponse.
-type ProxyPoolDeleteResponse struct {
-	Deleted *bool               `json:"deleted,omitempty"`
-	Message *string             `json:"message,omitempty"`
-	PoolId  *openapi_types.UUID `json:"poolId,omitempty"`
-}
-
 // ProxyPoolMembership defines model for ProxyPoolMembership.
 type ProxyPoolMembership struct {
 	AddedAt  *time.Time          `json:"addedAt,omitempty"`
@@ -2140,15 +2083,6 @@ type ProxyPoolMembership struct {
 	PoolId   *openapi_types.UUID `json:"poolId,omitempty"`
 	ProxyId  *openapi_types.UUID `json:"proxyId,omitempty"`
 	Weight   *int                `json:"weight,omitempty"`
-}
-
-// ProxyPoolMembershipResponse defines model for ProxyPoolMembershipResponse.
-type ProxyPoolMembershipResponse struct {
-	Added   *bool               `json:"added,omitempty"`
-	Message *string             `json:"message,omitempty"`
-	PoolId  *openapi_types.UUID `json:"poolId,omitempty"`
-	ProxyId *openapi_types.UUID `json:"proxyId,omitempty"`
-	Removed *bool               `json:"removed,omitempty"`
 }
 
 // ProxyPoolRequest defines model for ProxyPoolRequest.
@@ -3105,286 +3039,6 @@ func (t *CampaignSseEvent) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-// AsFlexibleArray0 returns the union data inside the FlexibleArray_Item as a FlexibleArray0
-func (t FlexibleArray_Item) AsFlexibleArray0() (FlexibleArray0, error) {
-	var body FlexibleArray0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromFlexibleArray0 overwrites any union data inside the FlexibleArray_Item as the provided FlexibleArray0
-func (t *FlexibleArray_Item) FromFlexibleArray0(v FlexibleArray0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeFlexibleArray0 performs a merge with any union data inside the FlexibleArray_Item, using the provided FlexibleArray0
-func (t *FlexibleArray_Item) MergeFlexibleArray0(v FlexibleArray0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsFlexibleArray1 returns the union data inside the FlexibleArray_Item as a FlexibleArray1
-func (t FlexibleArray_Item) AsFlexibleArray1() (FlexibleArray1, error) {
-	var body FlexibleArray1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromFlexibleArray1 overwrites any union data inside the FlexibleArray_Item as the provided FlexibleArray1
-func (t *FlexibleArray_Item) FromFlexibleArray1(v FlexibleArray1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeFlexibleArray1 performs a merge with any union data inside the FlexibleArray_Item, using the provided FlexibleArray1
-func (t *FlexibleArray_Item) MergeFlexibleArray1(v FlexibleArray1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsFlexibleArray2 returns the union data inside the FlexibleArray_Item as a FlexibleArray2
-func (t FlexibleArray_Item) AsFlexibleArray2() (FlexibleArray2, error) {
-	var body FlexibleArray2
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromFlexibleArray2 overwrites any union data inside the FlexibleArray_Item as the provided FlexibleArray2
-func (t *FlexibleArray_Item) FromFlexibleArray2(v FlexibleArray2) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeFlexibleArray2 performs a merge with any union data inside the FlexibleArray_Item, using the provided FlexibleArray2
-func (t *FlexibleArray_Item) MergeFlexibleArray2(v FlexibleArray2) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsFlexibleArray3 returns the union data inside the FlexibleArray_Item as a FlexibleArray3
-func (t FlexibleArray_Item) AsFlexibleArray3() (FlexibleArray3, error) {
-	var body FlexibleArray3
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromFlexibleArray3 overwrites any union data inside the FlexibleArray_Item as the provided FlexibleArray3
-func (t *FlexibleArray_Item) FromFlexibleArray3(v FlexibleArray3) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeFlexibleArray3 performs a merge with any union data inside the FlexibleArray_Item, using the provided FlexibleArray3
-func (t *FlexibleArray_Item) MergeFlexibleArray3(v FlexibleArray3) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsFlexibleArray4 returns the union data inside the FlexibleArray_Item as a FlexibleArray4
-func (t FlexibleArray_Item) AsFlexibleArray4() (FlexibleArray4, error) {
-	var body FlexibleArray4
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromFlexibleArray4 overwrites any union data inside the FlexibleArray_Item as the provided FlexibleArray4
-func (t *FlexibleArray_Item) FromFlexibleArray4(v FlexibleArray4) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeFlexibleArray4 performs a merge with any union data inside the FlexibleArray_Item, using the provided FlexibleArray4
-func (t *FlexibleArray_Item) MergeFlexibleArray4(v FlexibleArray4) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t FlexibleArray_Item) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *FlexibleArray_Item) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsFlexibleObject0 returns the union data inside the FlexibleObject_AdditionalProperties as a FlexibleObject0
-func (t FlexibleObject_AdditionalProperties) AsFlexibleObject0() (FlexibleObject0, error) {
-	var body FlexibleObject0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromFlexibleObject0 overwrites any union data inside the FlexibleObject_AdditionalProperties as the provided FlexibleObject0
-func (t *FlexibleObject_AdditionalProperties) FromFlexibleObject0(v FlexibleObject0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeFlexibleObject0 performs a merge with any union data inside the FlexibleObject_AdditionalProperties, using the provided FlexibleObject0
-func (t *FlexibleObject_AdditionalProperties) MergeFlexibleObject0(v FlexibleObject0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsFlexibleObject1 returns the union data inside the FlexibleObject_AdditionalProperties as a FlexibleObject1
-func (t FlexibleObject_AdditionalProperties) AsFlexibleObject1() (FlexibleObject1, error) {
-	var body FlexibleObject1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromFlexibleObject1 overwrites any union data inside the FlexibleObject_AdditionalProperties as the provided FlexibleObject1
-func (t *FlexibleObject_AdditionalProperties) FromFlexibleObject1(v FlexibleObject1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeFlexibleObject1 performs a merge with any union data inside the FlexibleObject_AdditionalProperties, using the provided FlexibleObject1
-func (t *FlexibleObject_AdditionalProperties) MergeFlexibleObject1(v FlexibleObject1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsFlexibleObject2 returns the union data inside the FlexibleObject_AdditionalProperties as a FlexibleObject2
-func (t FlexibleObject_AdditionalProperties) AsFlexibleObject2() (FlexibleObject2, error) {
-	var body FlexibleObject2
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromFlexibleObject2 overwrites any union data inside the FlexibleObject_AdditionalProperties as the provided FlexibleObject2
-func (t *FlexibleObject_AdditionalProperties) FromFlexibleObject2(v FlexibleObject2) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeFlexibleObject2 performs a merge with any union data inside the FlexibleObject_AdditionalProperties, using the provided FlexibleObject2
-func (t *FlexibleObject_AdditionalProperties) MergeFlexibleObject2(v FlexibleObject2) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsFlexibleObject3 returns the union data inside the FlexibleObject_AdditionalProperties as a FlexibleObject3
-func (t FlexibleObject_AdditionalProperties) AsFlexibleObject3() (FlexibleObject3, error) {
-	var body FlexibleObject3
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromFlexibleObject3 overwrites any union data inside the FlexibleObject_AdditionalProperties as the provided FlexibleObject3
-func (t *FlexibleObject_AdditionalProperties) FromFlexibleObject3(v FlexibleObject3) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeFlexibleObject3 performs a merge with any union data inside the FlexibleObject_AdditionalProperties, using the provided FlexibleObject3
-func (t *FlexibleObject_AdditionalProperties) MergeFlexibleObject3(v FlexibleObject3) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsFlexibleObject4 returns the union data inside the FlexibleObject_AdditionalProperties as a FlexibleObject4
-func (t FlexibleObject_AdditionalProperties) AsFlexibleObject4() (FlexibleObject4, error) {
-	var body FlexibleObject4
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromFlexibleObject4 overwrites any union data inside the FlexibleObject_AdditionalProperties as the provided FlexibleObject4
-func (t *FlexibleObject_AdditionalProperties) FromFlexibleObject4(v FlexibleObject4) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeFlexibleObject4 performs a merge with any union data inside the FlexibleObject_AdditionalProperties, using the provided FlexibleObject4
-func (t *FlexibleObject_AdditionalProperties) MergeFlexibleObject4(v FlexibleObject4) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t FlexibleObject_AdditionalProperties) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *FlexibleObject_AdditionalProperties) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
 // AsFlexiblePrimitive0 returns the union data inside the FlexiblePrimitive as a FlexiblePrimitive0
 func (t FlexiblePrimitive) AsFlexiblePrimitive0() (FlexiblePrimitive0, error) {
 	var body FlexiblePrimitive0
@@ -3479,32 +3133,6 @@ func (t *FlexiblePrimitive) FromFlexiblePrimitive3(v FlexiblePrimitive3) error {
 
 // MergeFlexiblePrimitive3 performs a merge with any union data inside the FlexiblePrimitive, using the provided FlexiblePrimitive3
 func (t *FlexiblePrimitive) MergeFlexiblePrimitive3(v FlexiblePrimitive3) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsFlexiblePrimitive4 returns the union data inside the FlexiblePrimitive as a FlexiblePrimitive4
-func (t FlexiblePrimitive) AsFlexiblePrimitive4() (FlexiblePrimitive4, error) {
-	var body FlexiblePrimitive4
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromFlexiblePrimitive4 overwrites any union data inside the FlexiblePrimitive as the provided FlexiblePrimitive4
-func (t *FlexiblePrimitive) FromFlexiblePrimitive4(v FlexiblePrimitive4) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeFlexiblePrimitive4 performs a merge with any union data inside the FlexiblePrimitive, using the provided FlexiblePrimitive4
-func (t *FlexiblePrimitive) MergeFlexiblePrimitive4(v FlexiblePrimitive4) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -15100,13 +14728,12 @@ type PersonasDeleteResponseObject interface {
 	VisitPersonasDeleteResponse(w http.ResponseWriter) error
 }
 
-type PersonasDelete200JSONResponse PersonaDeleteResponse
+type PersonasDelete204Response struct {
+}
 
-func (response PersonasDelete200JSONResponse) VisitPersonasDeleteResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response PersonasDelete204Response) VisitPersonasDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type PersonasDelete401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -15617,13 +15244,12 @@ type ProxiesBulkDeleteResponseObject interface {
 	VisitProxiesBulkDeleteResponse(w http.ResponseWriter) error
 }
 
-type ProxiesBulkDelete200JSONResponse BulkProxyOperationResponse
+type ProxiesBulkDelete204Response struct {
+}
 
-func (response ProxiesBulkDelete200JSONResponse) VisitProxiesBulkDeleteResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response ProxiesBulkDelete204Response) VisitProxiesBulkDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type ProxiesBulkDelete400JSONResponse struct{ BadRequestJSONResponse }
@@ -16149,13 +15775,12 @@ type ProxyPoolsDeleteResponseObject interface {
 	VisitProxyPoolsDeleteResponse(w http.ResponseWriter) error
 }
 
-type ProxyPoolsDelete200JSONResponse ProxyPoolDeleteResponse
+type ProxyPoolsDelete204Response struct {
+}
 
-func (response ProxyPoolsDelete200JSONResponse) VisitProxyPoolsDeleteResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response ProxyPoolsDelete204Response) VisitProxyPoolsDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type ProxyPoolsDelete400JSONResponse struct{ BadRequestJSONResponse }
@@ -16281,13 +15906,12 @@ type ProxyPoolsRemoveProxyResponseObject interface {
 	VisitProxyPoolsRemoveProxyResponse(w http.ResponseWriter) error
 }
 
-type ProxyPoolsRemoveProxy200JSONResponse ProxyPoolMembershipResponse
+type ProxyPoolsRemoveProxy204Response struct {
+}
 
-func (response ProxyPoolsRemoveProxy200JSONResponse) VisitProxyPoolsRemoveProxyResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response ProxyPoolsRemoveProxy204Response) VisitProxyPoolsRemoveProxyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type ProxyPoolsRemoveProxy400JSONResponse struct{ BadRequestJSONResponse }

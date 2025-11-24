@@ -121,7 +121,7 @@ const { status, data } = await apiInstance.proxyPoolsCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxyPoolsDelete**
-> ProxyPoolDeleteResponse proxyPoolsDelete()
+> proxyPoolsDelete()
 
 
 ### Example
@@ -151,7 +151,7 @@ const { status, data } = await apiInstance.proxyPoolsDelete(
 
 ### Return type
 
-**ProxyPoolDeleteResponse**
+void (empty response body)
 
 ### Authorization
 
@@ -166,7 +166,7 @@ const { status, data } = await apiInstance.proxyPoolsDelete(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
+|**204** | No Content |  -  |
 |**400** | Bad Request |  -  |
 |**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
@@ -220,7 +220,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxyPoolsRemoveProxy**
-> ProxyPoolMembershipResponse proxyPoolsRemoveProxy()
+> proxyPoolsRemoveProxy()
 
 
 ### Example
@@ -253,7 +253,7 @@ const { status, data } = await apiInstance.proxyPoolsRemoveProxy(
 
 ### Return type
 
-**ProxyPoolMembershipResponse**
+void (empty response body)
 
 ### Authorization
 
@@ -268,7 +268,7 @@ const { status, data } = await apiInstance.proxyPoolsRemoveProxy(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
+|**204** | No Content |  -  |
 |**400** | Bad Request |  -  |
 |**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |

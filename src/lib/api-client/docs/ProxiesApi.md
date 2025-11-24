@@ -17,7 +17,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**proxiesUpdate**](#proxiesupdate) | **PUT** /proxies/{proxyId} | Update proxy|
 
 # **proxiesBulkDelete**
-> BulkProxyOperationResponse proxiesBulkDelete(bulkDeleteProxiesRequest)
+> proxiesBulkDelete(bulkDeleteProxiesRequest)
 
 
 ### Example
@@ -48,7 +48,7 @@ const { status, data } = await apiInstance.proxiesBulkDelete(
 
 ### Return type
 
-**BulkProxyOperationResponse**
+void (empty response body)
 
 ### Authorization
 
@@ -63,7 +63,7 @@ const { status, data } = await apiInstance.proxiesBulkDelete(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
+|**204** | No Content |  -  |
 |**400** | Bad Request |  -  |
 |**500** | Internal Server Error |  -  |
 

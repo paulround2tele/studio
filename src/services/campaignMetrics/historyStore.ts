@@ -17,6 +17,19 @@ interface CampaignHistory {
   lastServerSync?: string; // Phase 5: Last server sync timestamp
 }
 
+function enforceCapacity(history: CampaignHistory): void {
+  if (history.entries.length <= history.maxSnapshots) return;
+
+  const pinnedEntries = history.entries.filter((entry) => entry.pinned);
+  const unpinnedEntries = history.entries
+    .filter((entry) => !entry.pinned)
+    .sort((a, b) => b.timestamp - a.timestamp);
+  const maxUnpinned = Math.max(0, history.maxSnapshots - pinnedEntries.length);
+  const keepUnpinned = maxUnpinned > 0 ? unpinnedEntries.slice(0, maxUnpinned) : [];
+
+  history.entries = [...pinnedEntries, ...keepUnpinned].sort((a, b) => a.timestamp - b.timestamp);
+}
+
 // In-memory store
 const store = new Map<string, CampaignHistory>();
 
@@ -61,20 +74,7 @@ export function addSnapshot(
   history.entries.push(entry);
 
   // Prune by size (keep pinned entries)
-  if (history.entries.length > history.maxSnapshots) {
-    const pinnedEntries = history.entries.filter(e => e.pinned);
-    const unpinnedEntries = history.entries.filter(e => !e.pinned);
-    
-    // Calculate how many unpinned entries we can keep
-    const maxUnpinned = Math.max(0, history.maxSnapshots - pinnedEntries.length);
-    
-    if (unpinnedEntries.length > maxUnpinned) {
-      // Keep the most recent unpinned entries
-      const sortedUnpinned = unpinnedEntries.sort((a, b) => b.timestamp - a.timestamp);
-      const keepUnpinned = sortedUnpinned.slice(0, maxUnpinned);
-      history.entries = [...pinnedEntries, ...keepUnpinned];
-    }
-  }
+  enforceCapacity(history);
 
   // Prune by TTL
   pruneByTTL(campaignId);
@@ -156,12 +156,9 @@ export function setMaxSnapshots(campaignId: string, maxSnapshots: number): void 
   const history = store.get(campaignId);
   if (history) {
     history.maxSnapshots = Math.max(1, maxSnapshots);
-    // Re-prune if necessary
-    if (history.entries.length > history.maxSnapshots) {
-      const lastEntry = history.entries[history.entries.length - 1];
-      if (lastEntry) {
-        addSnapshot(campaignId, lastEntry.snapshot);
-      }
+    enforceCapacity(history);
+    if (ENABLE_LOCALSTORAGE) {
+      updateLocalStorage(campaignId, history);
     }
   }
 }

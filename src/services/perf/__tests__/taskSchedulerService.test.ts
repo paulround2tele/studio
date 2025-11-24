@@ -27,7 +27,7 @@ describe('TaskSchedulerService Safety Improvements', () => {
     
     // Mock feature flags
     const featureFlags = await import('../../../lib/feature-flags-simple');
-    (featureFlags.useEdgeProcessing as jest.Mock).mockReturnValue(true);
+    (featureFlags.isEdgeProcessingEnabled as jest.Mock).mockReturnValue(true);
     
     // Reimport to get fresh instance
     const taskSchedulerModule = await import('../taskSchedulerService');

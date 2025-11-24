@@ -76,10 +76,7 @@ func (h *strictHandlers) ProxyPoolsDelete(ctx context.Context, r gen.ProxyPoolsD
 	if err := h.deps.Stores.ProxyPools.DeleteProxyPool(ctx, h.deps.DB, uuid.UUID(r.PoolId)); err != nil {
 		return gen.ProxyPoolsDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete proxy pool", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	deleted := true
-	msg := "proxy pool deleted"
-	id := openapi_types.UUID(r.PoolId)
-	return gen.ProxyPoolsDelete200JSONResponse(gen.ProxyPoolDeleteResponse{Deleted: &deleted, Message: &msg, PoolId: &id}), nil
+	return gen.ProxyPoolsDelete204Response{}, nil
 }
 
 func (h *strictHandlers) ProxyPoolsUpdate(ctx context.Context, r gen.ProxyPoolsUpdateRequestObject) (gen.ProxyPoolsUpdateResponseObject, error) {
@@ -156,8 +153,5 @@ func (h *strictHandlers) ProxyPoolsRemoveProxy(ctx context.Context, r gen.ProxyP
 	if err := h.deps.Stores.ProxyPools.RemoveProxyFromPool(ctx, h.deps.DB, uuid.UUID(r.PoolId), uuid.UUID(r.ProxyId)); err != nil {
 		return gen.ProxyPoolsRemoveProxy400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "failed to remove proxy from pool", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	removed := true
-	pid := openapi_types.UUID(r.PoolId)
-	xid := openapi_types.UUID(r.ProxyId)
-	return gen.ProxyPoolsRemoveProxy200JSONResponse(gen.ProxyPoolMembershipResponse{Removed: &removed, PoolId: &pid, ProxyId: &xid}), nil
+	return gen.ProxyPoolsRemoveProxy204Response{}, nil
 }

@@ -50,8 +50,8 @@ export function extractMovers(
   // Sort by absolute delta magnitude and take top N
   return movers
     .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
-    .slice(0, maxMovers * 2) // Allow for both richness and gain movers
-    .filter(mover => Math.abs(mover.delta) > getMinimumThreshold(mover.metric));
+    .filter(mover => Math.abs(mover.delta) > getMinimumThreshold(mover.metric))
+    .slice(0, maxMovers);
 }
 
 /**

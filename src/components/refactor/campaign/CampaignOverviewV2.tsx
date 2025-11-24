@@ -39,19 +39,47 @@ interface CampaignOverviewV2Props {
   className?: string;
 }
 
+type WarningSummaryItems = React.ComponentProps<typeof WarningSummary>['warnings'];
+type ConfigSummaryItems = React.ComponentProps<typeof ConfigSummary>['config'];
+
+interface CampaignMeta {
+  createdAt?: string;
+  updatedAt?: string;
+  currentPhase?: string;
+  owner?: string;
+  pattern?: string;
+  maxDomains?: number;
+}
+
 // Convert API domains to our lightweight interface
+function normalizeStatus(value: unknown): 'ok' | 'pending' | 'error' | 'timeout' {
+  switch (value) {
+    case 'ok':
+    case 'pending':
+    case 'error':
+    case 'timeout':
+      return value;
+    default:
+      return 'pending';
+  }
+}
+
 function convertDomains(apiDomains: DomainListItem[] | undefined | null): CampaignDomain[] {
   if (!apiDomains || !Array.isArray(apiDomains)) return [];
-  return apiDomains.map(d => ({
-    id: d.id || '',
-    domain_name: d.domain || '',
-    dns_status: (d.dnsStatus === 'ok' || d.dnsStatus === 'pending' || d.dnsStatus === 'error' || d.dnsStatus === 'timeout') ? d.dnsStatus : 'pending',
-    http_status: (d.httpStatus === 'ok' || d.httpStatus === 'pending' || d.httpStatus === 'error' || d.httpStatus === 'timeout') ? d.httpStatus : 'pending',
-    // lead score not provided directly by DomainListItem – default to 0 (could be enriched later)
-    lead_score: 0,
-    created_at: d.createdAt || new Date().toISOString(),
-    updated_at: d.createdAt || new Date().toISOString()
-  }));
+  return apiDomains.map((domainRecord) => {
+    const record = domainRecord as Record<string, unknown>;
+    const createdAt = (record.createdAt || record.created_at || new Date().toISOString()) as string;
+
+    return {
+      id: (record.id as string) || '',
+      domain_name: (record.domain as string) || (record.domain_name as string) || '',
+      dns_status: normalizeStatus(record.dnsStatus || record.dns_status),
+      http_status: normalizeStatus(record.httpStatus || record.http_status),
+      lead_score: (record.lead_score as number) || 0,
+      created_at: createdAt,
+      updated_at: (record.updatedAt as string) || (record.updated_at as string) || createdAt
+    };
+  });
 }
 
 // Convert to new service input format
@@ -67,15 +95,94 @@ function convertToMetricsInput(domains: CampaignDomain[]): DomainMetricsInput[] 
   }));
 }
 
+function buildWarningSummary(domains: CampaignDomain[]): WarningSummaryItems {
+  if (domains.length === 0) return [];
+
+  const warnings: WarningSummaryItems = [];
+  const dnsFailures = domains.filter(domain => domain.dns_status === 'error').length;
+  const httpFailures = domains.filter(domain => domain.http_status === 'error').length;
+
+  if (dnsFailures > 0) {
+    warnings.push({
+      id: 'dns-errors',
+      type: 'warning',
+      title: 'DNS Resolution Issues',
+      message: `${dnsFailures} domain${dnsFailures === 1 ? '' : 's'} failing DNS checks`,
+      count: dnsFailures
+    });
+  }
+
+  if (httpFailures > 0) {
+    warnings.push({
+      id: 'http-errors',
+      type: 'warning',
+      title: 'HTTP Validation Failures',
+      message: `${httpFailures} domain${httpFailures === 1 ? '' : 's'} returned HTTP errors`,
+      count: httpFailures
+    });
+  }
+
+  return warnings;
+}
+
+function buildConfigSummary(meta: CampaignMeta, domains: CampaignDomain[]): ConfigSummaryItems {
+  const config: ConfigSummaryItems = [];
+
+  const createdValue = meta.createdAt || meta.updatedAt || domains[0]?.created_at || '1970-01-01T00:00:00Z';
+  config.push({
+    label: 'Created',
+    value: createdValue,
+    type: 'date'
+  });
+
+  const maxDomains = meta.maxDomains ?? domains.length ?? 0;
+  config.push({
+    label: 'Max Domains',
+    value: maxDomains,
+    type: 'number'
+  });
+
+  config.push({
+    label: 'Pattern',
+    value: meta.pattern || 'Keyword Match',
+    type: 'badge'
+  });
+
+  if (meta.currentPhase) {
+    config.push({
+      label: 'Phase',
+      value: meta.currentPhase,
+      type: 'badge'
+    });
+  }
+
+  if (meta.owner) {
+    config.push({
+      label: 'Owner',
+      value: meta.owner,
+      type: 'text'
+    });
+  }
+
+  return config;
+}
+
 /**
  * Inner component that consumes metrics context
  */
-function CampaignOverviewV2Inner({ className }: { className?: string }) {
+function CampaignOverviewV2Inner({ 
+  className,
+  domains,
+  campaignMeta
+}: { 
+  className?: string;
+  domains: CampaignDomain[];
+  campaignMeta: CampaignMeta;
+}) {
   const metrics = useMetricsContext();
   
-  // Use real campaign data instead of mock data  
-  const warnings: never[] = []; // Remove mock warnings for now - should come from metrics context
-  const config: never[] = []; // Remove mock config for now - should come from actual campaign data
+  const warnings = React.useMemo(() => buildWarningSummary(domains), [domains]);
+  const config = React.useMemo(() => buildConfigSummary(campaignMeta, domains), [campaignMeta, domains]);
   
   // Type assertion for aggregates
   const aggregates = (metrics.aggregates || {}) as Record<string, number>;
@@ -146,7 +253,7 @@ function CampaignOverviewV2Inner({ className }: { className?: string }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column */}
         <div className="space-y-6">
-          <PipelineBarContainer domains={[]} />
+          <PipelineBarContainer domains={domains} />
           <ClassificationBuckets buckets={(metrics.uiBuckets as unknown) as ClassificationBucket[]} />
           
           {/* Phase 3: Movers Panel */}
@@ -217,7 +324,7 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
   if (isLoading) {
     return (
       <div className={cn("flex items-center justify-center py-8", className)}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" role="status" aria-live="polite">
           <Loader2 className="w-5 h-5 animate-spin" />
           <span className="text-sm text-gray-600 dark:text-gray-400">Loading overview...</span>
         </div>
@@ -242,6 +349,15 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
   const rawDomains = listObj?.items || [];
   const domains = convertDomains(rawDomains);
   const metricsInput: DomainMetricsInput[] = convertToMetricsInput(domains);
+  const campaignDetails = (_enrichedObj?.campaign ?? {}) as any;
+  const campaignMeta: CampaignMeta = {
+    createdAt: campaignDetails.created_at || campaignDetails.createdAt,
+    updatedAt: campaignDetails.updated_at || campaignDetails.updatedAt,
+    currentPhase: campaignDetails.current_phase || campaignDetails.phase,
+    owner: campaignDetails.owner?.email || campaignDetails.owner_email || campaignDetails.owner,
+    pattern: campaignDetails.pattern || campaignDetails.domain_pattern || campaignDetails.domainPattern,
+    maxDomains: campaignDetails.max_domains || campaignDetails.target_count || campaignDetails.maxDomains
+  };
   
   return (
     <MetricsProvider
@@ -249,7 +365,11 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
       domains={metricsInput}
       previousDomains={[]}
     >
-      <CampaignOverviewV2Inner className={className} />
+      <CampaignOverviewV2Inner 
+        className={className} 
+        domains={domains} 
+        campaignMeta={campaignMeta}
+      />
     </MetricsProvider>
   );
 }

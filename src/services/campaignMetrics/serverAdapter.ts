@@ -38,12 +38,12 @@ export function transformServerResponse(
   // Extract aggregates with safe defaults
   const serverAggregates = response.aggregates || {};
   const aggregates: AggregateMetrics = {
-    totalDomains: serverAggregates.totalDomains || 0,
-    successRate: serverAggregates.successRate || 0,
-    avgLeadScore: serverAggregates.avgLeadScore || 0,
-    dnsSuccessRate: serverAggregates.dnsSuccessRate || 0,
-    httpSuccessRate: serverAggregates.httpSuccessRate || 0,
-    runtime: serverAggregates.runtime
+    totalDomains: serverAggregates.totalDomains ?? 0,
+    successRate: serverAggregates.successRate ?? 0,
+    avgLeadScore: serverAggregates.avgLeadScore ?? 0,
+    dnsSuccessRate: serverAggregates.dnsSuccessRate ?? 0,
+    httpSuccessRate: serverAggregates.httpSuccessRate ?? 0,
+    runtime: serverAggregates.runtime ?? undefined
   };
 
   // Add extended fields if available
@@ -90,9 +90,11 @@ export function validateServerResponse(response: unknown): response is ServerMet
  */
 export function createDefaultSnapshot(): AggregateSnapshot {
   const now = new Date().toISOString();
+  defaultSnapshotCounter = (defaultSnapshotCounter + 1) % Number.MAX_SAFE_INTEGER;
+  const uniqueSuffix = `${Date.now()}${defaultSnapshotCounter}`;
   
   return {
-    id: `fallback-${Date.now()}`,
+    id: `fallback-${uniqueSuffix}`,
     timestamp: now,
     aggregates: {
       totalDomains: 0,
@@ -120,3 +122,5 @@ export function logServerWarning(message: string, details?: unknown) {
     loggedWarnings.add(message);
   }
 }
+
+let defaultSnapshotCounter = 0;

@@ -26,11 +26,27 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const { data: enriched } = useGetCampaignEnrichedQuery(campaignId, { skip: !campaignId });
   const enrichedTyped: EnrichedCampaignResponse | undefined = enriched;
   const { data: scoringProfiles } = useListScoringProfilesQuery(undefined, { skip: !campaignId });
+  const scoringNode = ((): Record<string, unknown> | undefined => {
+    if (enrichedTyped && typeof enrichedTyped === 'object') {
+      const node = (enrichedTyped as Record<string, unknown>).scoring;
+      if (node && typeof node === 'object') return node as Record<string, unknown>;
+    }
+    return undefined;
+  })();
   // Determine scoring profile id using known possible fields with type guards
   const scoringProfileId: string | undefined = (() => {
     if (enrichedTyped && typeof enrichedTyped === 'object') {
-      if ('scoringProfileId' in enrichedTyped) return String(enrichedTyped.scoringProfileId);
-      if ('scoringProfile' in enrichedTyped) return String(enrichedTyped.scoringProfile);
+      const enrichedRecord = enrichedTyped as Record<string, unknown>;
+      const directId = enrichedRecord['scoringProfileId'];
+      if (directId) return String(directId);
+      const directName = enrichedRecord['scoringProfile'];
+      if (directName) return String(directName);
+    }
+    if (scoringNode) {
+      const profileId = scoringNode['profileId'];
+      if (profileId) return String(profileId);
+      const profile = scoringNode['profile'];
+      if (profile) return String(profile);
     }
     return undefined;
   })();
@@ -38,18 +54,29 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const profileName = profileObj?.name || scoringProfileId || '—';
   const avgScore: number | undefined = (() => {
     if (enrichedTyped && typeof enrichedTyped === 'object') {
-      if ('averageScore' in enrichedTyped && typeof enrichedTyped.averageScore === 'number') {
-        return enrichedTyped.averageScore;
-      }
-      if ('score' in enrichedTyped && typeof enrichedTyped.score === 'number') {
-        return enrichedTyped.score;
-      }
+      const enrichedRecord = enrichedTyped as Record<string, unknown>;
+      const avg = enrichedRecord['averageScore'];
+      if (typeof avg === 'number') return avg;
+      const mono = enrichedRecord['score'];
+      if (typeof mono === 'number') return mono;
+    }
+    if (scoringNode) {
+      const avg = scoringNode['averageScore'];
+      if (typeof avg === 'number') return avg;
+      const mono = scoringNode['score'];
+      if (typeof mono === 'number') return mono;
     }
     return undefined;
   })();
   const lastRescoreAt: string | undefined = (() => {
-    if (enrichedTyped && typeof enrichedTyped === 'object' && 'lastRescoreAt' in enrichedTyped && typeof enrichedTyped.lastRescoreAt === 'string') {
-      return enrichedTyped.lastRescoreAt;
+    if (enrichedTyped && typeof enrichedTyped === 'object') {
+      const enrichedRecord = enrichedTyped as Record<string, unknown>;
+      const direct = enrichedRecord['lastRescoreAt'];
+      if (typeof direct === 'string') return direct;
+    }
+    if (scoringNode) {
+      const nested = scoringNode['lastRescoreAt'];
+      if (typeof nested === 'string') return nested;
     }
     return undefined;
   })();

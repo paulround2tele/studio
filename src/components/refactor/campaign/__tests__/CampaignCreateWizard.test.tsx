@@ -194,23 +194,14 @@ describe('CampaignCreateWizard', () => {
         expect(mockCreateCampaign).toHaveBeenCalled();
 
         // Verify phases were configured before auto-start
-        expect(mockConfigurePhase).toHaveBeenCalledTimes(5);
-        expect(mockConfigurePhase).toHaveBeenNthCalledWith(1, expect.objectContaining({
-          campaignId: 'test-campaign-id',
-          phase: 'discovery',
-        }));
-        expect(mockConfigurePhase).toHaveBeenNthCalledWith(2, expect.objectContaining({
-          phase: 'validation',
-        }));
-        expect(mockConfigurePhase).toHaveBeenNthCalledWith(3, expect.objectContaining({
-          phase: 'enrichment',
-        }));
-        expect(mockConfigurePhase).toHaveBeenNthCalledWith(4, expect.objectContaining({
-          phase: 'extraction',
-        }));
-        expect(mockConfigurePhase).toHaveBeenNthCalledWith(5, expect.objectContaining({
-          phase: 'analysis',
-        }));
+        const configuredPhases = mockConfigurePhase.mock.calls.map(([args]) => args.phase);
+        expect(configuredPhases).toEqual([
+          'discovery',
+          'validation',
+          'extraction',
+          'analysis',
+          'enrichment',
+        ]);
         
         // Verify mode was updated to full_sequence
         expect(mockUpdateCampaignMode).toHaveBeenCalledWith({

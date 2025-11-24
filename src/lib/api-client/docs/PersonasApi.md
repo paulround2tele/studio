@@ -71,7 +71,7 @@ const { status, data } = await apiInstance.personasCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **personasDelete**
-> PersonaDeleteResponse personasDelete()
+> personasDelete()
 
 
 ### Example
@@ -101,7 +101,7 @@ const { status, data } = await apiInstance.personasDelete(
 
 ### Return type
 
-**PersonaDeleteResponse**
+void (empty response body)
 
 ### Authorization
 
@@ -116,7 +116,7 @@ const { status, data } = await apiInstance.personasDelete(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Deleted |  -  |
+|**204** | No Content |  -  |
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |
 |**404** | Not Found |  -  |

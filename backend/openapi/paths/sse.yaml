@@ -1,5 +1,6 @@
 	/sse/events:
 		get:
+  description: GET operation for sse.
 			tags: [sse]
 			security:
 				- cookieAuth: []
@@ -19,6 +20,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/sse/campaigns/{campaignId}/events:
 		get:
+  description: GET operation for sse.
 			tags: [sse]
 			security:
 				- cookieAuth: []
@@ -47,6 +49,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/sse/events/stats:
 		get:
+  description: GET operation for sse.
 			tags: [sse]
 			security:
 				- cookieAuth: []

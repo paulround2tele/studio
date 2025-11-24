@@ -952,7 +952,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Set campaign resource limits */
+        /**
+         * Set campaign resource limits
+         * @description Set campaign resource limits
+         */
         post: operations["monitoring_campaign_limits"];
         delete?: never;
         options?: never;
@@ -1003,7 +1006,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Force cleanup */
+        /**
+         * Force cleanup
+         * @description Force cleanup
+         */
         post: operations["monitoring_cleanup_force"];
         delete?: never;
         options?: never;
@@ -1130,6 +1136,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/debug/network-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ingest frontend network log entry */
+        post: operations["debug_network_log_ingest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -1245,7 +1268,10 @@ export interface paths {
         /** Update campaign */
         put: operations["campaigns_update"];
         post?: never;
-        /** Delete campaign */
+        /**
+         * Delete campaign
+         * @description Delete campaign
+         */
         delete: operations["campaigns_delete"];
         options?: never;
         head?: never;
@@ -1315,7 +1341,10 @@ export interface paths {
         /** Update campaign state */
         put: operations["campaigns_state_put"];
         post?: never;
-        /** Delete campaign state */
+        /**
+         * Delete campaign state
+         * @description Delete campaign state
+         */
         delete: operations["campaigns_state_delete"];
         options?: never;
         head?: never;
@@ -1351,7 +1380,10 @@ export interface paths {
         /** Update phase execution by phase type */
         put: operations["campaigns_phase_execution_put"];
         post?: never;
-        /** Delete phase execution by phase type */
+        /**
+         * Delete phase execution by phase type
+         * @description Delete phase execution by phase type
+         */
         delete: operations["campaigns_phase_execution_delete"];
         options?: never;
         head?: never;
@@ -1858,15 +1890,15 @@ export interface components {
          */
         ErrorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_ERROR" | "REQUIRED_FIELD" | "RATE_LIMIT_EXCEEDED" | "REQUEST_TIMEOUT" | "NOT_IMPLEMENTED" | "INTERNAL_SERVER_ERROR" | "DATABASE_ERROR" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "CAMPAIGN_IN_PROGRESS" | "QUOTA_EXCEEDED" | "INVALID_STATE";
         /** @description Primitive value allowed in flexible configuration maps. */
-        FlexiblePrimitive: string | number | boolean | Record<string, never>;
+        FlexiblePrimitive: (string | number | boolean) | null;
         /** @description Array of primitive flexible values. */
-        FlexibleArray: (string | number | boolean | Record<string, never>)[];
+        FlexibleArray: components["schemas"]["FlexiblePrimitive"][];
         /** @description Nested object whose values are flexible primitives (one-level nesting only). */
         FlexibleObject: {
-            [key: string]: string | number | boolean | Record<string, never>;
+            [key: string]: components["schemas"]["FlexiblePrimitive"];
         };
         /** @description Union of acceptable flexible configuration / context value shapes. */
-        FlexibleValue: components["schemas"]["FlexiblePrimitive"] | components["schemas"]["FlexibleArray"] | components["schemas"]["FlexibleObject"];
+        FlexibleValue: (components["schemas"]["FlexiblePrimitive"] | components["schemas"]["FlexibleArray"] | components["schemas"]["FlexibleObject"]) | null;
         ApiError: {
             code: components["schemas"]["ErrorCode"];
             message: string;
@@ -2210,12 +2242,6 @@ export interface components {
             configDetails?: components["schemas"]["PersonaConfigDetails"];
             isEnabled?: boolean;
         };
-        PersonaDeleteResponse: {
-            /** Format: uuid */
-            personaId: string;
-            deleted: boolean;
-            message?: string;
-        };
         PersonaTestResponse: {
             personaId?: string;
             personaType?: string;
@@ -2383,12 +2409,6 @@ export interface components {
             maxRetries?: number;
             timeoutSeconds?: number;
         };
-        ProxyPoolDeleteResponse: {
-            deleted?: boolean;
-            /** Format: uuid */
-            poolId?: string;
-            message?: string;
-        };
         ProxyPoolMembership: {
             /** Format: uuid */
             poolId?: string;
@@ -2398,15 +2418,6 @@ export interface components {
             isActive?: boolean;
             /** Format: date-time */
             addedAt?: string;
-        };
-        ProxyPoolMembershipResponse: {
-            /** Format: uuid */
-            poolId?: string;
-            /** Format: uuid */
-            proxyId?: string;
-            added?: boolean;
-            removed?: boolean;
-            message?: string;
         };
         KeywordRuleDTO: {
             /** Format: uuid */
@@ -4334,14 +4345,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Deleted */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["PersonaDeleteResponse"];
-                };
+                content?: never;
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
@@ -4702,14 +4711,12 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["BulkProxyOperationResponse"];
-                };
+                content?: never;
             };
             400: components["responses"]["BadRequest"];
             500: components["responses"]["InternalServerError"];
@@ -4832,14 +4839,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["ProxyPoolDeleteResponse"];
-                };
+                content?: never;
             };
             400: components["responses"]["BadRequest"];
             404: components["responses"]["NotFound"];
@@ -4890,14 +4895,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["ProxyPoolMembershipResponse"];
-                };
+                content?: never;
             };
             400: components["responses"]["BadRequest"];
             404: components["responses"]["NotFound"];
@@ -6197,6 +6200,58 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    debug_network_log_ingest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: date-time
+                     * @description ISO-8601 timestamp produced by the client
+                     */
+                    timestamp: string;
+                    /** @description Absolute or relative request URL observed by the browser */
+                    url: string;
+                    /** @description HTTP method used for the request */
+                    method: string;
+                    /** @description HTTP status code returned by the response */
+                    status?: number;
+                    /** @description Whether the browser considered the response successful */
+                    ok?: boolean;
+                    /** @description Duration of the request in milliseconds */
+                    durationMs: number;
+                    /** @description Error message captured when the request failed */
+                    error?: string;
+                    /** @description Request headers observed by the browser */
+                    requestHeaders?: {
+                        [key: string]: string;
+                    };
+                    /** @description Response headers observed by the browser */
+                    responseHeaders?: {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    /** @description Unique request identifier for log correlation */
+                    "X-Request-Id"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
             500: components["responses"]["InternalServerError"];
         };
     };

@@ -480,6 +480,7 @@ const { status, data } = await apiInstance.campaignsCreate(
 # **campaignsDelete**
 > campaignsDelete()
 
+Delete campaign
 
 ### Example
 
@@ -1276,6 +1277,7 @@ const { status, data } = await apiInstance.campaignsPhaseConfigure(
 # **campaignsPhaseExecutionDelete**
 > campaignsPhaseExecutionDelete()
 
+Delete phase execution by phase type
 
 ### Example
 
@@ -1774,6 +1776,7 @@ const { status, data } = await apiInstance.campaignsRecommendationsGet(
 # **campaignsStateDelete**
 > campaignsStateDelete()
 
+Delete campaign state
 
 ### Example
 

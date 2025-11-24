@@ -2,15 +2,33 @@ openapi: 3.1.0
 info:
   title: Domain Flow API
   version: 2.0.0
+  description: |
+    DomainFlow is a campaign-focused domain intelligence platform. The API manages
+    personas, proxies, keyword pipelines, monitoring, and campaign execution while
+    exposing configuration and scoring surfaces for both UI and automation clients.
+  contact:
+    name: DomainFlow Engineering
+    email: api@domainflow.dev
+    url: https://domainflow.dev
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: https://api.domainflow.dev/api/v2
-    description: Production server
-  - url: http://localhost:8080/api/v2
-    description: Local development server
+  - url: "{scheme}://{host}/api/v2"
+    description: Primary API base. Override host for staging or local testing.
+    variables:
+      scheme:
+        default: https
+        enum: [https, http]
+        description: Protocol used when calling the API (http allowed only for local dev)
+      host:
+        default: api.domainflow.dev
+        enum:
+          - api.domainflow.dev
+          - staging.domainflow.dev
+          - localhost:8080
+        description: Hostname (and optional port) for the API server
 
 tags:
   - name: health
@@ -21,16 +39,26 @@ tags:
     description: Manage proxies and run health checks
   - name: proxy-pools
     description: Group proxies into pools with weights and timeouts
+  - name: campaigns
+    description: Campaign orchestration, lifecycle, and progress endpoints
+  - name: keyword-extraction
+    description: Keyword extraction jobs and streaming progress feeds
+  - name: keyword-rules
+    description: Manage keyword rule catalog entries and filters
   - name: server-settings
     description: Server configuration surfaces (auth, logging, worker, rate limit, proxy manager, server)
   - name: keyword-sets
     description: Define and retrieve sets of keywords
+  - name: monitoring
+    description: System monitoring, performance dashboards, and resource telemetry
   - name: database
     description: Database utilities and bulk queries
   - name: sse
     description: Server-sent event streams for realtime updates
   - name: scoring
     description: Manage scoring profiles and trigger campaign rescoring
+  - name: auth
+    description: Session management, authentication, and account security endpoints
 
 paths:
   $ref: './paths/index.yaml'

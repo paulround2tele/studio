@@ -1,6 +1,7 @@
 post:
   tags: [monitoring]
   summary: Set campaign resource limits
+  description: Set campaign resource limits
   operationId: monitoring_campaign_limits
   parameters:
     - name: campaignId

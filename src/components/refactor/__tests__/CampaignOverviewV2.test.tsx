@@ -10,11 +10,90 @@ import { configureStore } from '@reduxjs/toolkit';
 import CampaignOverviewV2 from '../campaign/CampaignOverviewV2';
 import { campaignApi } from '@/store/api/campaignApi';
 
+jest.mock('@/hooks/useMetricsContext', () => {
+  const React = require('react');
+
+  const buildBuckets = (count: number) => {
+    const total = Math.max(count, 1);
+    const toPct = (value: number) => (count === 0 ? 0 : Math.round((value / count) * 100));
+    if (count === 0) {
+      return [
+        { label: 'High Quality', count: 0, percentage: 0, color: '#10b981' },
+        { label: 'Medium Quality', count: 0, percentage: 0, color: '#fbbf24' },
+        { label: 'Low Quality', count: 0, percentage: 0, color: '#f87171' },
+      ];
+    }
+    const high = Math.min(1, count);
+    const low = count > 1 ? 1 : 0;
+    const medium = Math.max(count - high - low, 0);
+    return [
+      { label: 'High Quality', count: high, percentage: toPct(high), color: '#10b981' },
+      { label: 'Medium Quality', count: medium, percentage: toPct(medium), color: '#fbbf24' },
+      { label: 'Low Quality', count: low, percentage: toPct(low), color: '#f87171' },
+    ];
+  };
+
+  const baseValue = {
+    currentSnapshot: null,
+    aggregates: { totalDomains: 0, successRate: 0, avgLeadScore: 0 },
+    classification: {},
+    uiBuckets: buildBuckets(0),
+    deltas: [],
+    significantDeltas: [],
+    hasPreviousData: false,
+    movers: [],
+    groupedMovers: { gainers: [], decliners: [] },
+    hasMovers: false,
+    progress: null,
+    isConnected: false,
+    progressStats: { percentage: 0, analyzedDomains: 0, totalDomains: 0 },
+    recommendations: [],
+    isLoading: false,
+    isServerData: false,
+    error: null,
+    features: {
+      useServerMetrics: false,
+      enableDeltas: false,
+      enableMoversPanel: false,
+      enableRealtimeProgress: false,
+    },
+  };
+
+  const MetricsContext = React.createContext(baseValue);
+
+  const MetricsProvider = ({ children, domains = [] }: { children: React.ReactNode; domains?: Array<unknown>; previousDomains?: Array<unknown> }) => {
+    const domainCount = Array.isArray(domains) ? domains.length : 0;
+    const value = React.useMemo(() => ({
+      ...baseValue,
+      aggregates: {
+        totalDomains: domainCount,
+        successRate: domainCount ? 0.75 : 0,
+        avgLeadScore: domainCount ? 72 : 0,
+      },
+      uiBuckets: buildBuckets(domainCount),
+      progressStats: {
+        percentage: 0,
+        analyzedDomains: 0,
+        totalDomains: domainCount,
+      },
+    }), [domainCount]);
+
+    return <MetricsContext.Provider value={value}>{children}</MetricsContext.Provider>;
+  };
+
+  return {
+    MetricsProvider,
+    useMetricsContext: () => React.useContext(MetricsContext),
+  };
+});
+
 // Mock the RTK Query hook
 const mockUseGetCampaignEnrichedQuery = jest.fn();
+const mockUseGetCampaignDomainsQuery = jest.fn();
 
 jest.mock('@/store/api/campaignApi', () => ({
   useGetCampaignEnrichedQuery: () => mockUseGetCampaignEnrichedQuery(),
+  useGetCampaignDomainsQuery: () => mockUseGetCampaignDomainsQuery(),
   campaignApi: {
     reducerPath: 'campaignApi',
     reducer: jest.fn(),
@@ -85,6 +164,11 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 describe('CampaignOverviewV2 Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseGetCampaignDomainsQuery.mockReturnValue({
+      data: { items: mockEnrichedCampaign.domains },
+      isLoading: false,
+      error: undefined
+    });
   });
 
   describe('Loading State', () => {
@@ -94,6 +178,7 @@ describe('CampaignOverviewV2 Component', () => {
         isLoading: true,
         error: undefined
       });
+      mockUseGetCampaignDomainsQuery.mockReturnValue({ data: { items: [] }, isLoading: true, error: undefined });
 
       render(
         <TestWrapper>
@@ -113,6 +198,7 @@ describe('CampaignOverviewV2 Component', () => {
         isLoading: false,
         error: { message: 'Failed to fetch' }
       });
+      mockUseGetCampaignDomainsQuery.mockReturnValue({ data: undefined, isLoading: false, error: { message: 'Failed to fetch' } });
 
       render(
         <TestWrapper>
@@ -128,6 +214,11 @@ describe('CampaignOverviewV2 Component', () => {
     beforeEach(() => {
       mockUseGetCampaignEnrichedQuery.mockReturnValue({
         data: mockEnrichedCampaign,
+        isLoading: false,
+        error: undefined
+      });
+      mockUseGetCampaignDomainsQuery.mockReturnValue({
+        data: { items: mockEnrichedCampaign.domains },
         isLoading: false,
         error: undefined
       });
@@ -158,7 +249,8 @@ describe('CampaignOverviewV2 Component', () => {
 
       await waitFor(() => {
         // Should show "3" as total domains (from mock data)
-        expect(screen.getByText('3')).toBeInTheDocument();
+        const totalCounts = screen.getAllByText(/^3$/);
+        expect(totalCounts.length).toBeGreaterThan(0);
       });
     });
 
@@ -232,6 +324,7 @@ describe('CampaignOverviewV2 Component', () => {
         isLoading: false,
         error: undefined
       });
+      mockUseGetCampaignDomainsQuery.mockReturnValue({ data: { items: [] }, isLoading: false, error: undefined });
 
       render(
         <TestWrapper>
@@ -241,7 +334,8 @@ describe('CampaignOverviewV2 Component', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Total Domains')).toBeInTheDocument();
-        expect(screen.getByText('0')).toBeInTheDocument(); // Zero domains
+        const zeroValues = screen.getAllByText(/^0$/);
+        expect(zeroValues.length).toBeGreaterThan(0);
       });
     });
   });
@@ -250,6 +344,11 @@ describe('CampaignOverviewV2 Component', () => {
     beforeEach(() => {
       mockUseGetCampaignEnrichedQuery.mockReturnValue({
         data: mockEnrichedCampaign,
+        isLoading: false,
+        error: undefined
+      });
+      mockUseGetCampaignDomainsQuery.mockReturnValue({
+        data: { items: mockEnrichedCampaign.domains },
         isLoading: false,
         error: undefined
       });
@@ -278,6 +377,7 @@ describe('CampaignOverviewV2 Component', () => {
         isLoading: true,
         error: undefined
       });
+      mockUseGetCampaignDomainsQuery.mockReturnValue({ data: undefined, isLoading: true, error: undefined });
 
       render(
         <TestWrapper>
@@ -293,6 +393,11 @@ describe('CampaignOverviewV2 Component', () => {
     beforeEach(() => {
       mockUseGetCampaignEnrichedQuery.mockReturnValue({
         data: mockEnrichedCampaign,
+        isLoading: false,
+        error: undefined
+      });
+      mockUseGetCampaignDomainsQuery.mockReturnValue({
+        data: { items: mockEnrichedCampaign.domains },
         isLoading: false,
         error: undefined
       });

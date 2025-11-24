@@ -70,34 +70,25 @@ ApiError:
 # Reusable flexible value (primitive or small structured) allowed in certain config / context maps
 FlexiblePrimitive:
   description: Primitive value allowed in flexible configuration maps.
+  nullable: true
   oneOf:
     - { type: string }
     - { type: number }
     - { type: integer }
     - { type: boolean }
-    - { type: null }
 FlexibleArray:
   description: Array of primitive flexible values.
   type: array
   items:
-    oneOf:
-      - { type: string }
-      - { type: number }
-      - { type: integer }
-      - { type: boolean }
-      - { type: null }
+    $ref: '#/FlexiblePrimitive'
 FlexibleObject:
   description: Nested object whose values are flexible primitives (one-level nesting only).
   type: object
   additionalProperties:
-    oneOf:
-      - { type: string }
-      - { type: number }
-      - { type: integer }
-      - { type: boolean }
-      - { type: null }
+    $ref: '#/FlexiblePrimitive'
 FlexibleValue:
   description: Union of acceptable flexible configuration / context value shapes.
+  nullable: true
   oneOf:
     - $ref: '#/FlexiblePrimitive'
     - $ref: '#/FlexibleArray'
@@ -577,14 +568,6 @@ PersonaTestResponse:
     testResults: { type: object }
     results: { type: object }
     timestamp: { type: string }
-PersonaDeleteResponse:
-  type: object
-  properties:
-    personaId: { type: string, format: uuid }
-    deleted: { type: boolean }
-    message: { type: string }
-  required: [personaId, deleted]
-
 # Proxies
 CreateProxyRequestAPI:
   type: object
@@ -771,20 +754,6 @@ ProxyPoolMembership:
     weight: { type: integer }
     isActive: { type: boolean }
     addedAt: { type: string, format: date-time }
-ProxyPoolMembershipResponse:
-  type: object
-  properties:
-    poolId: { type: string, format: uuid }
-    proxyId: { type: string, format: uuid }
-    added: { type: boolean }
-    removed: { type: boolean }
-    message: { type: string }
-ProxyPoolDeleteResponse:
-  type: object
-  properties:
-    deleted: { type: boolean }
-    poolId: { type: string, format: uuid }
-    message: { type: string }
 
 # Keyword sets / rules
 KeywordRuleRequest:

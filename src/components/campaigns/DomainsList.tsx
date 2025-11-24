@@ -168,20 +168,18 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
       <CardHeader className="flex flex-row items-center justify-between" data-testid="campaign-domains-header">
         <div data-testid="campaign-domains-header-left">
           <CardTitle data-testid="campaign-domains-title">Generated Domains</CardTitle>
-          <CardDescription className="space-y-0.5" data-testid="campaign-domains-description">
-            <div data-testid="campaign-domains-count-line">
-              {((total ?? items.length)).toLocaleString()} total{total == null && cursorMode ? ' (so far)' : ''} • showing {items.length.toLocaleString()} {loading ? '(loading...)' : ''}
-            </div>
-            <div className="text-xs text-muted-foreground flex flex-wrap gap-3" data-testid="campaign-domains-aggregates">
-              <span data-testid="campaign-domains-agg-discovered">Discovered: {discovered ?? '—'}</span>
-              {validated !== undefined && <span data-testid="campaign-domains-agg-validated">Validated: {validated}</span>}
-              {analyzed !== undefined && <span data-testid="campaign-domains-agg-analyzed">Analyzed: {analyzed}</span>}
-              <span data-testid="campaign-domains-agg-scoring-profile">Scoring Profile: {profileLabel}</span>
-              {avgScore !== undefined && <span data-testid="campaign-domains-agg-avg-score">Avg Score: {typeof avgScore === 'number' ? avgScore.toFixed(1) : avgScore}</span>}
-              {lastRescore && <span data-testid="campaign-domains-agg-last-rescore">Last Rescore: {new Date(lastRescore).toLocaleDateString()}</span>}
-              <span data-testid="campaign-domains-agg-penalty-prevalence" aria-label="Penalty prevalence">⚠ {prevalencePct.toFixed(0)}% flagged</span>
-            </div>
+          <CardDescription data-testid="campaign-domains-description">
+            {((total ?? items.length)).toLocaleString()} total{total == null && cursorMode ? ' (so far)' : ''} • showing {items.length.toLocaleString()} {loading ? '(loading...)' : ''}
           </CardDescription>
+          <div className="text-xs text-muted-foreground flex flex-wrap gap-3" data-testid="campaign-domains-aggregates">
+            <span data-testid="campaign-domains-agg-discovered">Discovered: {discovered ?? '—'}</span>
+            {validated !== undefined && <span data-testid="campaign-domains-agg-validated">Validated: {validated}</span>}
+            {analyzed !== undefined && <span data-testid="campaign-domains-agg-analyzed">Analyzed: {analyzed}</span>}
+            <span data-testid="campaign-domains-agg-scoring-profile">Scoring Profile: {profileLabel}</span>
+            {avgScore !== undefined && <span data-testid="campaign-domains-agg-avg-score">Avg Score: {typeof avgScore === 'number' ? avgScore.toFixed(1) : avgScore}</span>}
+            {lastRescore && <span data-testid="campaign-domains-agg-last-rescore">Last Rescore: {new Date(lastRescore).toLocaleDateString()}</span>}
+            <span data-testid="campaign-domains-agg-penalty-prevalence" aria-label="Penalty prevalence">⚠ {prevalencePct.toFixed(0)}% flagged</span>
+          </div>
         </div>
         <div className="flex gap-2 items-center" data-testid="campaign-domains-controls-cluster">
           <div className="flex flex-col gap-2 items-end" data-testid="campaign-domains-controls">

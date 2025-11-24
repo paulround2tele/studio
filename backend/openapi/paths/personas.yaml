@@ -48,6 +48,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/personas/{id}:
 	  get:
+  description: GET operation for personas.
 	    tags: [personas]
 	    security:
 	      - cookieAuth: []
@@ -121,6 +122,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/personas/{id}/test:
 	  post:
+  description: POST operation for personas.
 	    tags: [personas]
 	    security:
 	      - cookieAuth: []

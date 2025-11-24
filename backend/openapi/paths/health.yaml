@@ -1,5 +1,6 @@
 	/health:
 		get:
+  description: GET operation for health.
 			tags: [health]
 			summary: Health check
 			operationId: health_check
@@ -21,6 +22,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/ping:
 		get:
+  description: GET operation for health.
 			tags: [health]
 			summary: Ping server
 			operationId: ping
@@ -42,6 +44,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/health/ready:
 		get:
+  description: GET operation for health.
 			tags: [health]
 			summary: Readiness check
 			operationId: health_ready
@@ -63,6 +66,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/health/live:
 		get:
+  description: GET operation for health.
 			tags: [health]
 			summary: Liveness check
 			operationId: health_live

@@ -53,6 +53,7 @@ put:
 delete:
   tags: [campaigns]
   summary: Delete phase execution by phase type
+  description: Delete phase execution by phase type
   operationId: campaigns_phase_execution_delete
   parameters:
     - name: campaignId

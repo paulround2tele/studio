@@ -294,8 +294,7 @@ func (h *strictHandlers) PersonasDelete(ctx context.Context, r gen.PersonasDelet
 		}
 		return gen.PersonasDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	msg := fmt.Sprintf("persona %s deleted", existing.ID.String())
-	return gen.PersonasDelete200JSONResponse(gen.PersonaDeleteResponse{Deleted: true, Message: &msg, PersonaId: openapi_types.UUID(existing.ID)}), nil
+	return gen.PersonasDelete204Response{}, nil
 }
 
 func (h *strictHandlers) PersonasTest(ctx context.Context, r gen.PersonasTestRequestObject) (gen.PersonasTestResponseObject, error) {

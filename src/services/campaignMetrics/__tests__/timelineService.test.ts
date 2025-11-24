@@ -9,9 +9,8 @@ import {
   integrateServerSnapshotBatch 
 } from '@/services/campaignMetrics/timelineService';
 import { AggregateSnapshot } from '@/types/campaignMetrics';
-
-// Mock fetch
 const mockFetch = jest.fn();
+// @ts-expect-error global assignment for tests
 global.fetch = mockFetch;
 
 // Mock environment
@@ -21,6 +20,8 @@ process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8080/api/v2';
 describe('TimelineService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFetch.mockReset();
+    process.env.NEXT_PUBLIC_ENABLE_SERVER_TIMELINE = 'true';
   });
 
   const mockSnapshot1: AggregateSnapshot = {
@@ -59,18 +60,18 @@ describe('TimelineService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockResponse)
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers(),
+        json: () => Promise.resolve(mockResponse),
       });
 
       const result = await fetchServerTimeline('campaign1', undefined, 50);
 
       expect(result).toEqual(mockResponse);
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/v2/api/v2/campaigns/campaign1/timeline?limit=50',
-        expect.objectContaining({
-          method: 'GET',
-          credentials: 'include'
-        })
+        'http://localhost:8080/api/v2/campaigns/campaign1/timeline?limit=50',
+        expect.objectContaining({ method: 'GET' })
       );
     });
 

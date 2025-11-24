@@ -259,8 +259,8 @@ func TestProxiesAndPoolsCRUDSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("remove proxy from pool error: %v", err)
 	}
-	if _, ok := rpr.(gen.ProxyPoolsRemoveProxy200JSONResponse); !ok {
-		t.Fatalf("expected 200 for remove proxy from pool")
+	if _, ok := rpr.(gen.ProxyPoolsRemoveProxy204Response); !ok {
+		t.Fatalf("expected 204 for remove proxy from pool")
 	}
 
 	// Test single proxy
@@ -298,8 +298,8 @@ func TestProxiesAndPoolsCRUDSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("bulk delete error: %v", err)
 	}
-	if _, ok := bdr.(gen.ProxiesBulkDelete200JSONResponse); !ok {
-		t.Fatalf("expected 200 bulk delete")
+	if _, ok := bdr.(gen.ProxiesBulkDelete204Response); !ok {
+		t.Fatalf("expected 204 bulk delete")
 	}
 
 	// Delete pool
@@ -307,7 +307,7 @@ func TestProxiesAndPoolsCRUDSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("pool delete error: %v", err)
 	}
-	if _, ok := pdr.(gen.ProxyPoolsDelete200JSONResponse); !ok {
-		t.Fatalf("expected 200 pool delete")
+	if _, ok := pdr.(gen.ProxyPoolsDelete204Response); !ok {
+		t.Fatalf("expected 204 pool delete")
 	}
 }

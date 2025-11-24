@@ -10,10 +10,6 @@ delete:
       application/json:
           schema: { $ref: '../../components/schemas/all.yaml#/BulkDeleteProxiesRequest' }
   responses:
-    '200':
-      description: OK
-      content:
-        application/json:
-          schema: { $ref: '../../components/schemas/all.yaml#/BulkProxyOperationResponse' }
+    '204': { description: No Content }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

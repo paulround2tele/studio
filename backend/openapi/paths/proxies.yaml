@@ -50,6 +50,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/proxies/{proxyId}/test:
 	  post:
+  description: POST operation for proxies.
 	    tags: [proxies]
 	    security:
 	      - cookieAuth: []
@@ -75,6 +76,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	 /proxies/{proxyId}:
 	  put:
+  description: PUT operation for proxies.
 	    tags: [proxies]
 	    security:
 	      - cookieAuth: []
@@ -121,6 +123,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/proxies/status:
 	  get:
+  description: GET operation for proxies.
 	    tags: [proxies]
 	    security:
 	      - cookieAuth: []
@@ -140,6 +143,7 @@
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/proxies/{proxyId}/health-check:
 	  post:
+  description: POST operation for proxies.
 	    tags: [proxies]
 	    security:
 	      - cookieAuth: []

@@ -1,7 +1,7 @@
 package models
 
 // DEPRECATION NOTICE:
-// CampaignAPI is deprecated. Do NOT use in handlers or swagger annotations.
+// CampaignAPI is deprecated. Do NOT use in handlers or any legacy annotation pipelines.
 // Use API responses defined in backend/internal/api/response_models.go
 // for CampaignSummary and CampaignData instead.
 

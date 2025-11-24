@@ -6,8 +6,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { DomainMetricsInput } from '@/types/campaignMetrics';
 
-// Feature flags
-const ENABLE_WORKER_METRICS = process.env.NEXT_PUBLIC_ENABLE_WORKER_METRICS !== 'false';
 const DEFAULT_THRESHOLD = 4000;
 
 interface WorkerMessage {
@@ -46,13 +44,13 @@ export function useWorkerMetricsFallback(
   domains: DomainMetricsInput[],
   options: UseWorkerMetricsFallbackOptions = {}
 ): UseWorkerMetricsFallbackReturn {
-  const {
-    threshold = DEFAULT_THRESHOLD,
-    enabled = ENABLE_WORKER_METRICS
-  } = options;
+  const envEnabled = process.env.NEXT_PUBLIC_ENABLE_WORKER_METRICS !== 'false';
+  const threshold = options.threshold ?? DEFAULT_THRESHOLD;
+  const resolvedEnabled = options.enabled ?? envEnabled;
+  const shouldUseWorker = resolvedEnabled && domains.length >= threshold;
 
   const [result, setResult] = useState<WorkerResult | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(() => shouldUseWorker && domains.length > 0);
   const [error, setError] = useState<Error | null>(null);
   const [timingMs, setTimingMs] = useState<number | null>(null);
   
@@ -60,12 +58,19 @@ export function useWorkerMetricsFallback(
   const requestIdRef = useRef<number>(0);
   const pendingRequestRef = useRef<string | null>(null);
 
-  // Determine if we should use worker
-  const shouldUseWorker = enabled && domains.length >= threshold;
-
   // Initialize worker
   useEffect(() => {
-    if (!shouldUseWorker || typeof Worker === 'undefined') {
+    if (!shouldUseWorker) {
+      if (workerRef.current) {
+        workerRef.current.terminate();
+        workerRef.current = null;
+      }
+      return;
+    }
+
+    if (typeof Worker === 'undefined') {
+      setError(new Error('Worker not supported in this environment'));
+      setIsLoading(false);
       return;
     }
 
@@ -110,7 +115,10 @@ export function useWorkerMetricsFallback(
 
     } catch (err) {
       console.warn('Failed to create worker, falling back to main thread:', err);
+      setError(err instanceof Error ? err : new Error('Worker initialization failed'));
+      setIsLoading(false);
       workerRef.current = null;
+      return;
     }
 
     return () => {
@@ -124,6 +132,10 @@ export function useWorkerMetricsFallback(
   // Compute metrics
   const computeMetrics = useCallback(() => {
     if (!shouldUseWorker || !workerRef.current) {
+      if (shouldUseWorker && !workerRef.current) {
+        setError(new Error('Worker unavailable'));
+        setIsLoading(false);
+      }
       return;
     }
 
@@ -153,6 +165,12 @@ export function useWorkerMetricsFallback(
       pendingRequestRef.current = null;
     }
   }, [domains, shouldUseWorker]);
+
+  useEffect(() => {
+    if (shouldUseWorker && domains.length > 0) {
+      setIsLoading(true);
+    }
+  }, [shouldUseWorker, domains.length]);
 
   // Trigger computation when domains change
   useEffect(() => {

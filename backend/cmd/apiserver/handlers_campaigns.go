@@ -92,14 +92,9 @@ func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.Campaig
 		if len(st.Configuration) > 0 {
 			var m map[string]interface{}
 			_ = json.Unmarshal(st.Configuration, &m)
-			// Convert to FlexibleValue map
-			flexMap := make(map[string]gen.FlexibleValue)
+			flexMap := make(map[string]*gen.FlexibleValue)
 			for k, v := range m {
-				var fv gen.FlexibleValue
-				if jsonBytes, err := json.Marshal(v); err == nil {
-					fv.UnmarshalJSON(jsonBytes)
-				}
-				flexMap[k] = fv
+				flexMap[k] = flexibleValuePtrFromInterface(v)
 			}
 			s.Configuration = &flexMap
 		}
@@ -130,15 +125,10 @@ func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.Campaig
 				enriched.State = &st
 			}
 			if enriched.State.Configuration == nil {
-				flexMap := make(map[string]gen.FlexibleValue)
+				flexMap := make(map[string]*gen.FlexibleValue)
 				enriched.State.Configuration = &flexMap
 			}
-			// Convert present map to FlexibleValue
-			var presentFV gen.FlexibleValue
-			if jsonBytes, err := json.Marshal(present); err == nil {
-				presentFV.UnmarshalJSON(jsonBytes)
-			}
-			(*enriched.State.Configuration)["configsPresent"] = presentFV
+			(*enriched.State.Configuration)["configsPresent"] = flexibleValuePtrFromInterface(present)
 		}
 	}
 	if apiState != nil {
@@ -2338,14 +2328,9 @@ func (h *strictHandlers) CampaignsStateGet(ctx context.Context, r gen.CampaignsS
 	if len(st.Configuration) > 0 {
 		var m map[string]interface{}
 		if err := json.Unmarshal(st.Configuration, &m); err == nil {
-			// Convert to FlexibleValue map
-			flexMap := make(map[string]gen.FlexibleValue)
+			flexMap := make(map[string]*gen.FlexibleValue)
 			for k, v := range m {
-				var fv gen.FlexibleValue
-				if jsonBytes, err := json.Marshal(v); err == nil {
-					fv.UnmarshalJSON(jsonBytes)
-				}
-				flexMap[k] = fv
+				flexMap[k] = flexibleValuePtrFromInterface(v)
 			}
 			api.Configuration = &flexMap
 		}
@@ -2416,14 +2401,9 @@ func (h *strictHandlers) CampaignsStatePut(ctx context.Context, r gen.CampaignsS
 	if len(fresh.Configuration) > 0 {
 		var m map[string]interface{}
 		if err := json.Unmarshal(fresh.Configuration, &m); err == nil {
-			// Convert to FlexibleValue map
-			flexMap := make(map[string]gen.FlexibleValue)
+			flexMap := make(map[string]*gen.FlexibleValue)
 			for k, v := range m {
-				var fv gen.FlexibleValue
-				if jsonBytes, err := json.Marshal(v); err == nil {
-					fv.UnmarshalJSON(jsonBytes)
-				}
-				flexMap[k] = fv
+				flexMap[k] = flexibleValuePtrFromInterface(v)
 			}
 			api.Configuration = &flexMap
 		}
@@ -2465,14 +2445,9 @@ func (h *strictHandlers) CampaignsPhaseExecutionsList(ctx context.Context, r gen
 		if len(st.Configuration) > 0 {
 			var m map[string]interface{}
 			_ = json.Unmarshal(st.Configuration, &m)
-			// Convert to FlexibleValue map
-			flexMap := make(map[string]gen.FlexibleValue)
+			flexMap := make(map[string]*gen.FlexibleValue)
 			for k, v := range m {
-				var fv gen.FlexibleValue
-				if jsonBytes, err := json.Marshal(v); err == nil {
-					fv.UnmarshalJSON(jsonBytes)
-				}
-				flexMap[k] = fv
+				flexMap[k] = flexibleValuePtrFromInterface(v)
 			}
 			apiState.Configuration = &flexMap
 		}
@@ -2687,14 +2662,9 @@ func mapPhaseExecutionToAPI(pe models.PhaseExecution) gen.PhaseExecution {
 	if pe.ErrorDetails != nil && len(*pe.ErrorDetails) > 0 {
 		var m map[string]interface{}
 		if err := json.Unmarshal(*pe.ErrorDetails, &m); err == nil {
-			// Convert to FlexibleValue map
-			flexMap := make(map[string]gen.FlexibleValue)
+			flexMap := make(map[string]*gen.FlexibleValue)
 			for k, v := range m {
-				var fv gen.FlexibleValue
-				if jsonBytes, err := json.Marshal(v); err == nil {
-					fv.UnmarshalJSON(jsonBytes)
-				}
-				flexMap[k] = fv
+				flexMap[k] = flexibleValuePtrFromInterface(v)
 			}
 			api.ErrorDetails = &flexMap
 		}
@@ -2702,14 +2672,9 @@ func mapPhaseExecutionToAPI(pe models.PhaseExecution) gen.PhaseExecution {
 	if pe.Metrics != nil && len(*pe.Metrics) > 0 {
 		var m map[string]interface{}
 		if err := json.Unmarshal(*pe.Metrics, &m); err == nil {
-			// Convert to FlexibleValue map
-			flexMap := make(map[string]gen.FlexibleValue)
+			flexMap := make(map[string]*gen.FlexibleValue)
 			for k, v := range m {
-				var fv gen.FlexibleValue
-				if jsonBytes, err := json.Marshal(v); err == nil {
-					fv.UnmarshalJSON(jsonBytes)
-				}
-				flexMap[k] = fv
+				flexMap[k] = flexibleValuePtrFromInterface(v)
 			}
 			api.Metrics = &flexMap
 		}

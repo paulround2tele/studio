@@ -14,11 +14,7 @@ delete:
       required: true
       schema: { type: string, format: uuid }
   responses:
-    '200':
-      description: OK
-      content:
-        application/json:
-          schema: { $ref: '../../components/schemas/all.yaml#/ProxyPoolMembershipResponse' }
+    '204': { description: No Content }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

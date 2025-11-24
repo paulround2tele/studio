@@ -17,7 +17,7 @@ This entire file was causing OpenAPI schema pollution with duplicate response ty
 - ✅ No functional impact (code was unused)
 
 ## Required Fix
-Update swagger annotations that reference `StandardErrorResponse` to use `api.APIResponse`
+Update any remaining legacy annotations that reference `StandardErrorResponse` to use `api.APIResponse`
 
 ## Professional Pattern
 All responses now use: `api.APIResponse` with proper success/error envelopes

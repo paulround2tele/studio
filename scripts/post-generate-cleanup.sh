@@ -53,6 +53,7 @@ if [ -d "$MODEL_DIR" ]; then
     create-campaign-configuration.ts
     persona-update-request.ts
     activity-item.ts
+    debug-network-log-ingest-request.ts
   )
   for f in "${STRIP_FILES[@]}"; do
     FILE_PATH="$MODEL_DIR/$f"
@@ -70,6 +71,30 @@ if [ -d "$MODEL_DIR" ]; then
     if grep -q "Array&lt;" "$MODEL_DIR/flexible-array.ts"; then
       sed -i 's/Array&lt;/Array</g; s/&gt;/>/g' "$MODEL_DIR/flexible-array.ts"
       echo "[post-generate-cleanup] Fixed HTML entities in flexible-array.ts"
+    fi
+  fi
+
+  DEBUG_NET_FILE="$MODEL_DIR/debug-network-log-ingest-request.ts"
+  if [ -f "$DEBUG_NET_FILE" ]; then
+    if grep -q "\\[key: string\\]: Record<string, unknown>;" "$DEBUG_NET_FILE"; then
+      sed -i "/\\[key: string\\]: Record<string, unknown>;/d" "$DEBUG_NET_FILE"
+      echo "[post-generate-cleanup] Removed index signature from debug-network-log-ingest-request.ts"
+    fi
+  fi
+
+  FEATURE_FLAGS_FILE="$MODEL_DIR/feature-flags.ts"
+  if [ -f "$FEATURE_FLAGS_FILE" ]; then
+    if grep -q "\\[key: string\\]: Record<string, unknown>;" "$FEATURE_FLAGS_FILE"; then
+      sed -i "s/\\[key: string\\]: Record<string, unknown>;/  [key: string]: boolean;/" "$FEATURE_FLAGS_FILE"
+      echo "[post-generate-cleanup] Normalized feature-flags index signature"
+    fi
+  fi
+
+  FLEXIBLE_OBJECT_FILE="$MODEL_DIR/flexible-object.ts"
+  if [ -f "$FLEXIBLE_OBJECT_FILE" ]; then
+    if grep -q "\\[key: string\\]: Record<string, unknown>;" "$FLEXIBLE_OBJECT_FILE"; then
+      sed -i "s/\\[key: string\\]: Record<string, unknown>;/  [key: string]: FlexiblePrimitive | null | undefined;/" "$FLEXIBLE_OBJECT_FILE"
+      echo "[post-generate-cleanup] Normalized flexible-object definition"
     fi
   fi
 fi

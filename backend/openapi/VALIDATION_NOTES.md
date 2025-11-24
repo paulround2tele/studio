@@ -1,6 +1,6 @@
 Why this spec exists and how it will be validated
 
-- Spec is authored from handlers under backend/internal/api. The old swagger.yaml/json are gone; docs.go is swaggo-only and 3.0-ish.
+- Spec is authored from handlers under backend/internal/api. The old vendor-specific yaml/json dumps are gone; docs.go still targets the legacy generator and remains 3.0-ish.
 - We will validate with kin-openapi against OpenAPI 3.1.0 and refuse to generate servers/clients until it’s clean.
 - Envelope-first: Every response is APIResponse with success/data/error/metadata/requestId. Data is untyped here and refined per endpoint during migration.
 - Cookie auth: cookieAuth (domainflow_session). No bearer. SSE endpoints return text/event-stream.

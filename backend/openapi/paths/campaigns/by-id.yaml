@@ -48,6 +48,7 @@ put:
 delete:
   tags: [campaigns]
   summary: Delete campaign
+  description: Delete campaign
   operationId: campaigns_delete
   parameters:
     - name: campaignId

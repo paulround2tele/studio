@@ -146,6 +146,7 @@ docs/DNSValidatorConfigJSON.md
 docs/DatabaseApi.md
 docs/DatabaseStats.md
 docs/DatabaseValue.md
+docs/DebugNetworkLogIngestRequest.md
 docs/DomainAnalysisFeatures.md
 docs/DomainAnalysisFeaturesKeywords.md
 docs/DomainAnalysisFeaturesMicrocrawl.md
@@ -161,7 +162,6 @@ docs/ExecutionStatusEnum.md
 docs/ExtendedPageInfo.md
 docs/FeatureFlags.md
 docs/FlexibleArray.md
-docs/FlexibleArrayInner.md
 docs/FlexibleObject.md
 docs/FlexiblePrimitive.md
 docs/FlexibleValue.md
@@ -195,7 +195,6 @@ docs/PersonaConfigDns.md
 docs/PersonaConfigHttp.md
 docs/PersonaConfigHttpCookieHandling.md
 docs/PersonaConfigHttpTlsClientHello.md
-docs/PersonaDeleteResponse.md
 docs/PersonaResponse.md
 docs/PersonaTestResponse.md
 docs/PersonaType.md
@@ -226,9 +225,7 @@ docs/ProxyHealthCheckResponse.md
 docs/ProxyManagerConfigJSON.md
 docs/ProxyOperationResult.md
 docs/ProxyPool.md
-docs/ProxyPoolDeleteResponse.md
 docs/ProxyPoolMembership.md
-docs/ProxyPoolMembershipResponse.md
 docs/ProxyPoolProxyRef.md
 docs/ProxyPoolRequest.md
 docs/ProxyPoolsAddProxyRequest.md
@@ -387,6 +384,7 @@ models/create-proxy-request-api.ts
 models/create-scoring-profile-request.ts
 models/database-stats.ts
 models/database-value.ts
+models/debug-network-log-ingest-request.ts
 models/dnsvalidator-config-json.ts
 models/domain-analysis-features-keywords.ts
 models/domain-analysis-features-microcrawl.ts
@@ -402,7 +400,6 @@ models/error-envelope.ts
 models/execution-status-enum.ts
 models/extended-page-info.ts
 models/feature-flags.ts
-models/flexible-array-inner.ts
 models/flexible-array.ts
 models/flexible-object.ts
 models/flexible-primitive.ts
@@ -433,7 +430,6 @@ models/persona-config-dns.ts
 models/persona-config-http-cookie-handling.ts
 models/persona-config-http-tls-client-hello.ts
 models/persona-config-http.ts
-models/persona-delete-response.ts
 models/persona-response.ts
 models/persona-test-response.ts
 models/persona-type.ts
@@ -460,8 +456,6 @@ models/proxy-configuration-response.ts
 models/proxy-health-check-response.ts
 models/proxy-manager-config-json.ts
 models/proxy-operation-result.ts
-models/proxy-pool-delete-response.ts
-models/proxy-pool-membership-response.ts
 models/proxy-pool-membership.ts
 models/proxy-pool-proxy-ref.ts
 models/proxy-pool-request.ts

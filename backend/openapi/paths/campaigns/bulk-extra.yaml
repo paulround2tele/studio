@@ -1,6 +1,7 @@
 post:
   tags: [campaigns]
   summary: Cancel bulk operation
+  description: Cancel bulk operation
   operationId: campaigns_bulk_operation_cancel
   parameters:
     - name: operationId

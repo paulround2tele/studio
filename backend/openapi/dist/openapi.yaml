@@ -2,14 +2,34 @@ openapi: 3.1.0
 info:
   title: Domain Flow API
   version: 2.0.0
+  description: |
+    DomainFlow is a campaign-focused domain intelligence platform. The API manages
+    personas, proxies, keyword pipelines, monitoring, and campaign execution while
+    exposing configuration and scoring surfaces for both UI and automation clients.
+  contact:
+    name: DomainFlow Engineering
+    email: api@domainflow.dev
+    url: https://domainflow.dev
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
 servers:
-  - url: https://api.domainflow.dev/api/v2
-    description: Production server
-  - url: http://localhost:8080/api/v2
-    description: Local development server
+  - url: '{scheme}://{host}/api/v2'
+    description: Primary API base. Override host for staging or local testing.
+    variables:
+      scheme:
+        default: https
+        enum:
+          - https
+          - http
+        description: Protocol used when calling the API (http allowed only for local dev)
+      host:
+        default: api.domainflow.dev
+        enum:
+          - api.domainflow.dev
+          - staging.domainflow.dev
+          - localhost:8080
+        description: Hostname (and optional port) for the API server
 security:
   - cookieAuth: []
 tags:
@@ -21,16 +41,26 @@ tags:
     description: Manage proxies and run health checks
   - name: proxy-pools
     description: Group proxies into pools with weights and timeouts
+  - name: campaigns
+    description: Campaign orchestration, lifecycle, and progress endpoints
+  - name: keyword-extraction
+    description: Keyword extraction jobs and streaming progress feeds
+  - name: keyword-rules
+    description: Manage keyword rule catalog entries and filters
   - name: server-settings
     description: Server configuration surfaces (auth, logging, worker, rate limit, proxy manager, server)
   - name: keyword-sets
     description: Define and retrieve sets of keywords
+  - name: monitoring
+    description: System monitoring, performance dashboards, and resource telemetry
   - name: database
     description: Database utilities and bulk queries
   - name: sse
     description: Server-sent event streams for realtime updates
   - name: scoring
     description: Manage scoring profiles and trigger campaign rescoring
+  - name: auth
+    description: Session management, authentication, and account security endpoints
 paths:
   /health:
     get:
@@ -538,12 +568,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
-          description: Deleted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PersonaDeleteResponse'
+        '204':
+          description: No Content
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -945,12 +971,8 @@ paths:
             schema:
               $ref: '#/components/schemas/BulkDeleteProxiesRequest'
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BulkProxyOperationResponse'
+        '204':
+          description: No Content
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -1084,12 +1106,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProxyPoolDeleteResponse'
+        '204':
+          description: No Content
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1158,12 +1176,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProxyPoolMembershipResponse'
+        '204':
+          description: No Content
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -2323,6 +2337,7 @@ paths:
       tags:
         - monitoring
       summary: Set campaign resource limits
+      description: Set campaign resource limits
       operationId: monitoring_campaign_limits
       parameters:
         - name: campaignId
@@ -2397,6 +2412,7 @@ paths:
       tags:
         - monitoring
       summary: Force cleanup
+      description: Force cleanup
       operationId: monitoring_cleanup_force
       parameters:
         - name: campaignId
@@ -2843,6 +2859,7 @@ paths:
       tags:
         - campaigns
       summary: Delete campaign
+      description: Delete campaign
       operationId: campaigns_delete
       parameters:
         - name: campaignId
@@ -3120,6 +3137,7 @@ paths:
       tags:
         - campaigns
       summary: Delete campaign state
+      description: Delete campaign state
       operationId: campaigns_state_delete
       parameters:
         - name: campaignId
@@ -3240,6 +3258,7 @@ paths:
       tags:
         - campaigns
       summary: Delete phase execution by phase type
+      description: Delete phase execution by phase type
       operationId: campaigns_phase_execution_delete
       parameters:
         - name: campaignId
@@ -4430,34 +4449,25 @@ components:
         - INVALID_STATE
     FlexiblePrimitive:
       description: Primitive value allowed in flexible configuration maps.
+      nullable: true
       oneOf:
         - type: string
         - type: number
         - type: integer
         - type: boolean
-        - type: null
     FlexibleArray:
       description: Array of primitive flexible values.
       type: array
       items:
-        oneOf:
-          - type: string
-          - type: number
-          - type: integer
-          - type: boolean
-          - type: null
+        $ref: '#/components/schemas/FlexiblePrimitive'
     FlexibleObject:
       description: Nested object whose values are flexible primitives (one-level nesting only).
       type: object
       additionalProperties:
-        oneOf:
-          - type: string
-          - type: number
-          - type: integer
-          - type: boolean
-          - type: null
+        $ref: '#/components/schemas/FlexiblePrimitive'
     FlexibleValue:
       description: Union of acceptable flexible configuration / context value shapes.
+      nullable: true
       oneOf:
         - $ref: '#/components/schemas/FlexiblePrimitive'
         - $ref: '#/components/schemas/FlexibleArray'
@@ -5163,19 +5173,6 @@ components:
           $ref: '#/components/schemas/PersonaConfigDetails'
         isEnabled:
           type: boolean
-    PersonaDeleteResponse:
-      type: object
-      properties:
-        personaId:
-          type: string
-          format: uuid
-        deleted:
-          type: boolean
-        message:
-          type: string
-      required:
-        - personaId
-        - deleted
     PersonaTestResponse:
       type: object
       properties:
@@ -5521,16 +5518,6 @@ components:
           type: integer
       required:
         - name
-    ProxyPoolDeleteResponse:
-      type: object
-      properties:
-        deleted:
-          type: boolean
-        poolId:
-          type: string
-          format: uuid
-        message:
-          type: string
     ProxyPoolMembership:
       type: object
       properties:
@@ -5547,21 +5534,6 @@ components:
         addedAt:
           type: string
           format: date-time
-    ProxyPoolMembershipResponse:
-      type: object
-      properties:
-        poolId:
-          type: string
-          format: uuid
-        proxyId:
-          type: string
-          format: uuid
-        added:
-          type: boolean
-        removed:
-          type: boolean
-        message:
-          type: string
     KeywordRuleDTO:
       type: object
       properties:

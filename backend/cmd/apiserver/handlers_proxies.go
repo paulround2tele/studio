@@ -139,17 +139,16 @@ func (h *strictHandlers) ProxiesBulkDelete(ctx context.Context, r gen.ProxiesBul
 	if r.Body == nil || len(r.Body.ProxyIds) == 0 {
 		return gen.ProxiesBulkDelete400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing proxyIds", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	var success, errors int
+	var deleteErr error
 	for _, id := range r.Body.ProxyIds {
 		if err := h.deps.Stores.Proxy.DeleteProxy(ctx, h.deps.DB, uuid.UUID(id)); err != nil {
-			errors++
-			continue
-		} else {
-			success++
+			deleteErr = err
 		}
 	}
-	resp := gen.BulkProxyOperationResponse{SuccessCount: success, ErrorCount: errors}
-	return gen.ProxiesBulkDelete200JSONResponse(resp), nil
+	if deleteErr != nil {
+		return gen.ProxiesBulkDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete one or more proxies", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	return gen.ProxiesBulkDelete204Response{}, nil
 }
 
 func (h *strictHandlers) ProxiesBulkTest(ctx context.Context, r gen.ProxiesBulkTestRequestObject) (gen.ProxiesBulkTestResponseObject, error) {

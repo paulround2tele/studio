@@ -6,8 +6,12 @@
 import { AggregateSnapshot, ExtendedAggregateMetrics } from '@/types/campaignMetrics';
 
 // Feature flag for portfolio metrics
-const isPortfolioMetricsEnabled = () => 
-  process.env.NEXT_PUBLIC_ENABLE_PORTFOLIO_METRICS !== 'false';
+const isPortfolioMetricsEnabled = () => {
+  const raw = process.env.NEXT_PUBLIC_ENABLE_PORTFOLIO_METRICS;
+  if (!raw) return false;
+  const normalized = raw.toLowerCase();
+  return normalized === 'true' || normalized === '1' || normalized === 'on' || normalized === 'enabled';
+};
 
 /**
  * Portfolio aggregate summary

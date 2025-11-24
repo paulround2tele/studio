@@ -46,21 +46,9 @@ func (h *strictHandlers) BulkValidateHTTP(ctx context.Context, r gen.BulkValidat
 				errorMsg = err.Error()
 			}
 
-			metadata := make(map[string]gen.FlexibleValue)
-
-			// Create FlexiblePrimitive for campaign ID
-			var campaignIdPrim gen.FlexiblePrimitive
-			campaignIdPrim.FromFlexiblePrimitive0(op.CampaignId.String())
-			var campaignIdVal gen.FlexibleValue
-			campaignIdVal.FromFlexiblePrimitive(campaignIdPrim)
-			metadata["campaign_id"] = campaignIdVal
-
-			// Create FlexiblePrimitive for status
-			var statusPrim gen.FlexiblePrimitive
-			statusPrim.FromFlexiblePrimitive0("pending")
-			var statusVal gen.FlexibleValue
-			statusVal.FromFlexiblePrimitive(statusPrim)
-			metadata["status"] = statusVal
+			metadata := make(map[string]*gen.FlexibleValue)
+			metadata["campaign_id"] = flexibleValueFromString(op.CampaignId.String())
+			metadata["status"] = flexibleValueFromString("pending")
 
 			result := gen.ProxyOperationResult{
 				ProxyId:  op.CampaignId,

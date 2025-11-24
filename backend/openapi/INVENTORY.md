@@ -43,7 +43,7 @@
 
 - Tooling & CI
   - Spec source: modular files under backend/openapi (root: openapi.root.yaml; bundled: dist/openapi.yaml)
-  - Swagger fossils purged (imports, UI route, backend/docs/*)
+  - Legacy doc fossils purged (imports, UI route, generated legacy doc directories)
   - CI: scripts/validate-openapi-spec.sh runs kin-openapi + redocly; PRs fail on warnings/errors
   - Legacy monolith files (backend/openapi/openapi.yaml, backend/openapi/openapi_backup.yaml) removed; do not reintroduce.
 

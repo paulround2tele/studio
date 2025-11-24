@@ -55,6 +55,9 @@ export async function fetchServerTimeline(
       throw new Error('API URL not configured');
     }
 
+    const normalizedBase = apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`;
+    const requestUrl = new URL(`campaigns/${campaignId}/timeline`, normalizedBase);
+
     // Build query parameters
     const params = new URLSearchParams();
     if (since) params.set('since', since);
@@ -67,10 +70,10 @@ export async function fetchServerTimeline(
       if (paginationOptions.limit) params.set('limit', paginationOptions.limit.toString());
     }
 
-    const url = `${apiUrl}/campaigns/${campaignId}/timeline?${params.toString()}`;
+    requestUrl.search = params.toString();
 
     const response = await fetchWithPolicy<ServerTimelineResponse>(
-      url,
+      requestUrl.toString(),
       { method: 'GET' },
       {
         category: 'api',

@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { DomainsList } from '../../campaigns/DomainsList';
 
@@ -23,28 +24,28 @@ jest.mock('@/lib/hooks/usePaginatedDomains', () => ({
 describe('DomainsList warnings filter', () => {
   test('shows all by default', () => {
     render(<DomainsList campaignId="c1" />);
-    const rows = screen.getAllByTestId('campaign-domains-row');
-    expect(rows.map(r=>r.textContent)).toEqual(expect.arrayContaining(['warn1.com','clean.com','warn2.com']));
+    const cells = screen.getAllByTestId('campaign-domains-cell-domain');
+    expect(cells.map(c => c.textContent)).toEqual(expect.arrayContaining(['warn1.com','clean.com','warn2.com']));
   });
 
-  test('filter: With warnings', () => {
+  test('filter: With warnings', async () => {
+    const user = userEvent.setup();
     render(<DomainsList campaignId="c1" />);
     const trigger = screen.getByTestId('campaign-domains-warnings-filter-trigger');
-    fireEvent.mouseDown(trigger); // open select
-    fireEvent.click(screen.getByTestId('campaign-domains-warnings-filter-with'));
-    const rows = screen.getAllByTestId('campaign-domains-row');
-    const domains = rows.map(r=>r.textContent || '');
+    await user.click(trigger);
+    await user.click(await screen.findByTestId('campaign-domains-warnings-filter-with'));
+    const domains = screen.getAllByTestId('campaign-domains-cell-domain').map(cell => cell.textContent || '');
     expect(domains).toEqual(expect.arrayContaining(['warn1.com','warn2.com']));
     expect(domains.join(',')).not.toMatch(/clean\.com/);
   });
 
-  test('filter: Without warnings', () => {
+  test('filter: Without warnings', async () => {
+    const user = userEvent.setup();
     render(<DomainsList campaignId="c1" />);
     const trigger = screen.getByTestId('campaign-domains-warnings-filter-trigger');
-    fireEvent.mouseDown(trigger);
-    fireEvent.click(screen.getByTestId('campaign-domains-warnings-filter-without'));
-    const rows = screen.getAllByTestId('campaign-domains-row');
-    const domains = rows.map(r=>r.textContent || '');
+    await user.click(trigger);
+    await user.click(await screen.findByTestId('campaign-domains-warnings-filter-without'));
+    const domains = screen.getAllByTestId('campaign-domains-cell-domain').map(cell => cell.textContent || '');
     expect(domains).toEqual(expect.arrayContaining(['clean.com']));
     expect(domains.join(',')).not.toMatch(/warn1\.com|warn2\.com/);
   });
