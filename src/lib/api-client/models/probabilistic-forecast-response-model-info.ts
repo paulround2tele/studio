@@ -23,24 +23,17 @@ import type { ProbabilisticForecastResponseModelInfoArbitrationScores } from './
  * @interface ProbabilisticForecastResponseModelInfo
  */
 export interface ProbabilisticForecastResponseModelInfo {
-  /**
-   * 
-   * @memberof ProbabilisticForecastResponseModelInfo
-   */
-  'selectedModel'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProbabilisticForecastResponseModelInfo
-   */
-  'arbitrationScores'?: 
-        
-          
-          ProbabilisticForecastResponseModelInfoArbitrationScores
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProbabilisticForecastResponseModelInfo
+     */
+    'selectedModel'?: string;
+    /**
+     * 
+     * @type {ProbabilisticForecastResponseModelInfoArbitrationScores}
+     * @memberof ProbabilisticForecastResponseModelInfo
+     */
+    'arbitrationScores'?: ProbabilisticForecastResponseModelInfoArbitrationScores;
 }
-
 

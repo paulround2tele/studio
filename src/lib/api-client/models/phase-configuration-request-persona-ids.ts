@@ -20,24 +20,17 @@
  * @interface PhaseConfigurationRequestPersonaIds
  */
 export interface PhaseConfigurationRequestPersonaIds {
-  /**
-   * 
-   * @memberof PhaseConfigurationRequestPersonaIds
-   */
-  'httpPersonaId'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PhaseConfigurationRequestPersonaIds
-   */
-  'dnsPersonaId'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof PhaseConfigurationRequestPersonaIds
+     */
+    'httpPersonaId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PhaseConfigurationRequestPersonaIds
+     */
+    'dnsPersonaId'?: string;
 }
-
 

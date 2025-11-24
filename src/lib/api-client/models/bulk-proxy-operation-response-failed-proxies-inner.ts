@@ -20,24 +20,17 @@
  * @interface BulkProxyOperationResponseFailedProxiesInner
  */
 export interface BulkProxyOperationResponseFailedProxiesInner {
-  /**
-   * 
-   * @memberof BulkProxyOperationResponseFailedProxiesInner
-   */
-  'proxyId'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkProxyOperationResponseFailedProxiesInner
-   */
-  'error'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkProxyOperationResponseFailedProxiesInner
+     */
+    'proxyId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkProxyOperationResponseFailedProxiesInner
+     */
+    'error'?: string;
 }
-
 

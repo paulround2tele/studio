@@ -23,58 +23,41 @@ import type { DomainScoreBreakdownResponseComponents } from './domain-score-brea
  * @interface DomainScoreBreakdownResponse
  */
 export interface DomainScoreBreakdownResponse {
-  /**
-   * 
-   * @memberof DomainScoreBreakdownResponse
-   */
-  'campaignId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof DomainScoreBreakdownResponse
-   */
-  'domain': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof DomainScoreBreakdownResponse
-   */
-  'components': 
-        
-          
-          DomainScoreBreakdownResponseComponents
-    ;
-  /**
-   * Weighted final relevance score after penalties
-   * @memberof DomainScoreBreakdownResponse
-   */
-  'final': 
-        
-          
-          number
-    ;
-  /**
-   * Active scoring profile weights used for combination.
-   * @memberof DomainScoreBreakdownResponse
-   */
-  'weights'?: 
-        Record<string, unknown>
-    ;
-  /**
-   * Penalty factor applied when domain considered parked with low confidence (<0.9)
-   * @memberof DomainScoreBreakdownResponse
-   */
-  'parkedPenaltyFactor'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof DomainScoreBreakdownResponse
+     */
+    'campaignId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DomainScoreBreakdownResponse
+     */
+    'domain': string;
+    /**
+     * 
+     * @type {DomainScoreBreakdownResponseComponents}
+     * @memberof DomainScoreBreakdownResponse
+     */
+    'components': DomainScoreBreakdownResponseComponents;
+    /**
+     * Weighted final relevance score after penalties
+     * @type {number}
+     * @memberof DomainScoreBreakdownResponse
+     */
+    'final': number;
+    /**
+     * Active scoring profile weights used for combination.
+     * @type {{ [key: string]: number; }}
+     * @memberof DomainScoreBreakdownResponse
+     */
+    'weights'?: { [key: string]: number; };
+    /**
+     * Penalty factor applied when domain considered parked with low confidence (<0.9)
+     * @type {number}
+     * @memberof DomainScoreBreakdownResponse
+     */
+    'parkedPenaltyFactor'?: number;
 }
-
 

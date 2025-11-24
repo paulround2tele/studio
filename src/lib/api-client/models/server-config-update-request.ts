@@ -35,58 +35,43 @@ import type { WorkerConfigUpdate } from './worker-config-update';
  * @interface ServerConfigUpdateRequest
  */
 export interface ServerConfigUpdateRequest {
-  /**
-   * 
-   * @memberof ServerConfigUpdateRequest
-   */
-  'auth'?: 
-        
-          
-          AuthConfig
-    ;
-  /**
-   * 
-   * @memberof ServerConfigUpdateRequest
-   */
-  'logging'?: 
-        
-          
-          LoggingConfig
-    ;
-  /**
-   * 
-   * @memberof ServerConfigUpdateRequest
-   */
-  'rateLimiter'?: 
-        
-          
-          RateLimiterConfig
-    ;
-  /**
-   * 
-   * @memberof ServerConfigUpdateRequest
-   */
-  'proxyManager'?: 
-        
-          
-          ProxyManagerConfigJSON
-    ;
-  /**
-   * 
-   * @memberof ServerConfigUpdateRequest
-   */
-  'worker'?: 
-        
-          
-          WorkerConfigUpdate
-    ;
-  /**
-   * Additional configuration overrides
-   * @memberof ServerConfigUpdateRequest
-   */
-  'extras'?: 
-        Record<string, unknown>
-    ;
-}
+    [key: string]: any;
 
+    /**
+     * 
+     * @type {AuthConfig}
+     * @memberof ServerConfigUpdateRequest
+     */
+    'auth'?: AuthConfig;
+    /**
+     * 
+     * @type {LoggingConfig}
+     * @memberof ServerConfigUpdateRequest
+     */
+    'logging'?: LoggingConfig;
+    /**
+     * 
+     * @type {RateLimiterConfig}
+     * @memberof ServerConfigUpdateRequest
+     */
+    'rateLimiter'?: RateLimiterConfig;
+    /**
+     * 
+     * @type {ProxyManagerConfigJSON}
+     * @memberof ServerConfigUpdateRequest
+     */
+    'proxyManager'?: ProxyManagerConfigJSON;
+    /**
+     * 
+     * @type {WorkerConfigUpdate}
+     * @memberof ServerConfigUpdateRequest
+     */
+    'worker'?: WorkerConfigUpdate;
+    /**
+     * Additional configuration overrides
+     * @type {{ [key: string]: any; }}
+     * @memberof ServerConfigUpdateRequest
+     */
+    'extras'?: { [key: string]: any; };
+}
 

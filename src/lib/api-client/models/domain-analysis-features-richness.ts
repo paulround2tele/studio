@@ -20,105 +20,71 @@
  * @interface DomainAnalysisFeaturesRichness
  */
 export interface DomainAnalysisFeaturesRichness {
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesRichness
-   */
-  'score'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesRichness
-   */
-  'version'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesRichness
-   */
-  'prominence_norm'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesRichness
-   */
-  'diversity_effective_unique'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesRichness
-   */
-  'diversity_norm'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesRichness
-   */
-  'enrichment_norm'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesRichness
-   */
-  'applied_bonus'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesRichness
-   */
-  'applied_deductions_total'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesRichness
-   */
-  'stuffing_penalty'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesRichness
-   */
-  'repetition_index'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesRichness
-   */
-  'anchor_share'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesRichness
+     */
+    'score'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesRichness
+     */
+    'version'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesRichness
+     */
+    'prominence_norm'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesRichness
+     */
+    'diversity_effective_unique'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesRichness
+     */
+    'diversity_norm'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesRichness
+     */
+    'enrichment_norm'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesRichness
+     */
+    'applied_bonus'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesRichness
+     */
+    'applied_deductions_total'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesRichness
+     */
+    'stuffing_penalty'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesRichness
+     */
+    'repetition_index'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesRichness
+     */
+    'anchor_share'?: number;
 }
-
 

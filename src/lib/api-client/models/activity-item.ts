@@ -23,81 +23,81 @@ import type { FlexibleValue } from './flexible-value';
  * @interface ActivityItem
  */
 export interface ActivityItem {
-  /**
-   * Unique activity identifier
-   * @memberof ActivityItem
-   */
-  'id': 
-        
-          
-          string
-    ;
-  /**
-   * Event creation timestamp (UTC)
-   * @memberof ActivityItem
-   */
-  'timestamp': 
-        
-          
-          string
-    ;
-  /**
-   * Origin actor classification (e.g. system, user, job)
-   * @memberof ActivityItem
-   */
-  'actorType': 
-      'system' | 'user' | 'job'
-;
-  /**
-   * Identifier of user/job/system component (when applicable)
-   * @memberof ActivityItem
-   */
-  'actorId'?: 
-        
-          
-          string
-    ;
-  /**
-   * High-level grouping (e.g. campaign, proxy, scoring, system)
-   * @memberof ActivityItem
-   */
-  'category': 
-        
-          
-          string
-    ;
-  /**
-   * Specific activity event type key
-   * @memberof ActivityItem
-   */
-  'type': 
-        
-          
-          string
-    ;
-  /**
-   * Human-readable summary
-   * @memberof ActivityItem
-   */
-  'message': 
-        
-          
-          string
-    ;
-  /**
-   * Severity classification
-   * @memberof ActivityItem
-   */
-  'severity'?: 
-      'info' | 'warning' | 'error'
-;
-  /**
-   * Additional contextual structured values (forward-compatible)
-   * @memberof ActivityItem
-   */
-  'data'?: 
-        Record<string, unknown>
-    ;
+    [key: string]: any;
+
+    /**
+     * Unique activity identifier
+     * @type {string}
+     * @memberof ActivityItem
+     */
+    'id': string;
+    /**
+     * Event creation timestamp (UTC)
+     * @type {string}
+     * @memberof ActivityItem
+     */
+    'timestamp': string;
+    /**
+     * Origin actor classification (e.g. system, user, job)
+     * @type {string}
+     * @memberof ActivityItem
+     */
+    'actorType': ActivityItemActorTypeEnum;
+    /**
+     * Identifier of user/job/system component (when applicable)
+     * @type {string}
+     * @memberof ActivityItem
+     */
+    'actorId'?: string;
+    /**
+     * High-level grouping (e.g. campaign, proxy, scoring, system)
+     * @type {string}
+     * @memberof ActivityItem
+     */
+    'category': string;
+    /**
+     * Specific activity event type key
+     * @type {string}
+     * @memberof ActivityItem
+     */
+    'type': string;
+    /**
+     * Human-readable summary
+     * @type {string}
+     * @memberof ActivityItem
+     */
+    'message': string;
+    /**
+     * Severity classification
+     * @type {string}
+     * @memberof ActivityItem
+     */
+    'severity'?: ActivityItemSeverityEnum;
+    /**
+     * Additional contextual structured values (forward-compatible)
+     * @type {{ [key: string]: FlexibleValue; }}
+     * @memberof ActivityItem
+     */
+    'data'?: { [key: string]: FlexibleValue; };
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum ActivityItemActorTypeEnum {
+    system = 'system',
+    user = 'user',
+    job = 'job'
+}
+/**
+    * @export
+    * @enum {string}
+    */
+export enum ActivityItemSeverityEnum {
+    info = 'info',
+    warning = 'warning',
+    error = 'error'
 }
 
 

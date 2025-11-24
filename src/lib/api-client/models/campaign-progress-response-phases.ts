@@ -23,51 +23,35 @@ import type { PhaseProgressSummary } from './phase-progress-summary';
  * @interface CampaignProgressResponsePhases
  */
 export interface CampaignProgressResponsePhases {
-  /**
-   * 
-   * @memberof CampaignProgressResponsePhases
-   */
-  'discovery'?: 
-        
-          
-          PhaseProgressSummary
-    ;
-  /**
-   * 
-   * @memberof CampaignProgressResponsePhases
-   */
-  'validation'?: 
-        
-          
-          PhaseProgressSummary
-    ;
-  /**
-   * 
-   * @memberof CampaignProgressResponsePhases
-   */
-  'enrichment'?: 
-        
-          
-          PhaseProgressSummary
-    ;
-  /**
-   * 
-   * @memberof CampaignProgressResponsePhases
-   */
-  'extraction'?: 
-        
-          
-          PhaseProgressSummary
-    ;
-  /**
-   * 
-   * @memberof CampaignProgressResponsePhases
-   */
-  'analysis'?: 
-        
-          
-          PhaseProgressSummary
-    ;
+    /**
+     * 
+     * @type {PhaseProgressSummary}
+     * @memberof CampaignProgressResponsePhases
+     */
+    'discovery'?: PhaseProgressSummary;
+    /**
+     * 
+     * @type {PhaseProgressSummary}
+     * @memberof CampaignProgressResponsePhases
+     */
+    'validation'?: PhaseProgressSummary;
+    /**
+     * 
+     * @type {PhaseProgressSummary}
+     * @memberof CampaignProgressResponsePhases
+     */
+    'enrichment'?: PhaseProgressSummary;
+    /**
+     * 
+     * @type {PhaseProgressSummary}
+     * @memberof CampaignProgressResponsePhases
+     */
+    'extraction'?: PhaseProgressSummary;
+    /**
+     * 
+     * @type {PhaseProgressSummary}
+     * @memberof CampaignProgressResponsePhases
+     */
+    'analysis'?: PhaseProgressSummary;
 }
-
 

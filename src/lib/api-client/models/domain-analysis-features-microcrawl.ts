@@ -20,15 +20,11 @@
  * @interface DomainAnalysisFeaturesMicrocrawl
  */
 export interface DomainAnalysisFeaturesMicrocrawl {
-  /**
-   * 
-   * @memberof DomainAnalysisFeaturesMicrocrawl
-   */
-  'gain_ratio'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainAnalysisFeaturesMicrocrawl
+     */
+    'gain_ratio'?: number;
 }
-
 

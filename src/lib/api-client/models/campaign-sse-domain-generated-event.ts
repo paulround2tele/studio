@@ -23,31 +23,32 @@ import type { DomainStatusEvent } from './domain-status-event';
  * @interface CampaignSseDomainGeneratedEvent
  */
 export interface CampaignSseDomainGeneratedEvent {
-  /**
-   * 
-   * @memberof CampaignSseDomainGeneratedEvent
-   */
-  'type': 
-      'domain_generated'
-;
-  /**
-   * 
-   * @memberof CampaignSseDomainGeneratedEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSseDomainGeneratedEvent
-   */
-  'payload'?: 
-        
-          
-          DomainStatusEvent
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSseDomainGeneratedEvent
+     */
+    'type': CampaignSseDomainGeneratedEventTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSseDomainGeneratedEvent
+     */
+    'timestamp'?: string;
+    /**
+     * 
+     * @type {DomainStatusEvent}
+     * @memberof CampaignSseDomainGeneratedEvent
+     */
+    'payload'?: DomainStatusEvent;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CampaignSseDomainGeneratedEventTypeEnum {
+    domain_generated = 'domain_generated'
 }
 
 

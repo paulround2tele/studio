@@ -20,42 +20,31 @@
  * @interface BulkDatabaseStatsRequest
  */
 export interface BulkDatabaseStatsRequest {
-  /**
-   * 
-   * @memberof BulkDatabaseStatsRequest
-   */
-  'schemas'?: 
-        
-          
-          Array<string>
-    ;
-  /**
-   * 
-   * @memberof BulkDatabaseStatsRequest
-   */
-  'tables'?: 
-        
-          
-          Array<string>
-    ;
-  /**
-   * 
-   * @memberof BulkDatabaseStatsRequest
-   */
-  'includeIndexes'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof BulkDatabaseStatsRequest
-   */
-  'includeSize'?: 
-        
-          
-          boolean
-    ;
-}
+    [key: string]: any;
 
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BulkDatabaseStatsRequest
+     */
+    'schemas'?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BulkDatabaseStatsRequest
+     */
+    'tables'?: Array<string>;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof BulkDatabaseStatsRequest
+     */
+    'includeIndexes'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof BulkDatabaseStatsRequest
+     */
+    'includeSize'?: boolean;
+}
 

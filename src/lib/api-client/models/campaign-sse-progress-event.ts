@@ -23,31 +23,32 @@ import type { CampaignProgressResponse } from './campaign-progress-response';
  * @interface CampaignSseProgressEvent
  */
 export interface CampaignSseProgressEvent {
-  /**
-   * 
-   * @memberof CampaignSseProgressEvent
-   */
-  'type': 
-      'campaign_progress'
-;
-  /**
-   * 
-   * @memberof CampaignSseProgressEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSseProgressEvent
-   */
-  'payload'?: 
-        
-          
-          CampaignProgressResponse
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSseProgressEvent
+     */
+    'type': CampaignSseProgressEventTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSseProgressEvent
+     */
+    'timestamp'?: string;
+    /**
+     * 
+     * @type {CampaignProgressResponse}
+     * @memberof CampaignSseProgressEvent
+     */
+    'payload'?: CampaignProgressResponse;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CampaignSseProgressEventTypeEnum {
+    campaign_progress = 'campaign_progress'
 }
 
 

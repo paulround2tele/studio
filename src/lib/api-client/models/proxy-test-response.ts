@@ -20,51 +20,35 @@
  * @interface ProxyTestResponse
  */
 export interface ProxyTestResponse {
-  /**
-   * 
-   * @memberof ProxyTestResponse
-   */
-  'proxyId'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProxyTestResponse
-   */
-  'success'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof ProxyTestResponse
-   */
-  'statusCode'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ProxyTestResponse
-   */
-  'responseTime'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ProxyTestResponse
-   */
-  'error'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyTestResponse
+     */
+    'proxyId'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProxyTestResponse
+     */
+    'success'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProxyTestResponse
+     */
+    'statusCode'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProxyTestResponse
+     */
+    'responseTime'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyTestResponse
+     */
+    'error'?: string;
 }
-
 

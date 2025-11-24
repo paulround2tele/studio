@@ -20,15 +20,11 @@
  * @interface CampaignCompletedEvent
  */
 export interface CampaignCompletedEvent {
-  /**
-   * 
-   * @memberof CampaignCompletedEvent
-   */
-  'campaignId': 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignCompletedEvent
+     */
+    'campaignId': string;
 }
-
 

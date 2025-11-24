@@ -26,33 +26,23 @@ import type { CampaignDomainsListResponseAggregatesLead } from './campaign-domai
  * @interface CampaignDomainsListResponseAggregates
  */
 export interface CampaignDomainsListResponseAggregates {
-  /**
-   * 
-   * @memberof CampaignDomainsListResponseAggregates
-   */
-  'dns'?: 
-        
-          
-          CampaignDomainsListResponseAggregatesDns
-    ;
-  /**
-   * 
-   * @memberof CampaignDomainsListResponseAggregates
-   */
-  'http'?: 
-        
-          
-          CampaignDomainsListResponseAggregatesDns
-    ;
-  /**
-   * 
-   * @memberof CampaignDomainsListResponseAggregates
-   */
-  'lead'?: 
-        
-          
-          CampaignDomainsListResponseAggregatesLead
-    ;
+    /**
+     * 
+     * @type {CampaignDomainsListResponseAggregatesDns}
+     * @memberof CampaignDomainsListResponseAggregates
+     */
+    'dns'?: CampaignDomainsListResponseAggregatesDns;
+    /**
+     * 
+     * @type {CampaignDomainsListResponseAggregatesDns}
+     * @memberof CampaignDomainsListResponseAggregates
+     */
+    'http'?: CampaignDomainsListResponseAggregatesDns;
+    /**
+     * 
+     * @type {CampaignDomainsListResponseAggregatesLead}
+     * @memberof CampaignDomainsListResponseAggregates
+     */
+    'lead'?: CampaignDomainsListResponseAggregatesLead;
 }
-
 

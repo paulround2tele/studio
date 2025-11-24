@@ -20,31 +20,36 @@
  * @interface BulkDNSValidationRequestOperationsInnerValidationConfig
  */
 export interface BulkDNSValidationRequestOperationsInnerValidationConfig {
-  /**
-   * 
-   * @memberof BulkDNSValidationRequestOperationsInnerValidationConfig
-   */
-  'timeout'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkDNSValidationRequestOperationsInnerValidationConfig
-   */
-  'retries'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkDNSValidationRequestOperationsInnerValidationConfig
-   */
-  'recordTypes'?: 
-      'A' | 'AAAA' | 'MX' | 'NS' | 'CNAME'
-;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkDNSValidationRequestOperationsInnerValidationConfig
+     */
+    'timeout'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkDNSValidationRequestOperationsInnerValidationConfig
+     */
+    'retries'?: number;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BulkDNSValidationRequestOperationsInnerValidationConfig
+     */
+    'recordTypes'?: Array<BulkDNSValidationRequestOperationsInnerValidationConfigRecordTypesEnum>;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum BulkDNSValidationRequestOperationsInnerValidationConfigRecordTypesEnum {
+    A = 'A',
+    AAAA = 'AAAA',
+    MX = 'MX',
+    NS = 'NS',
+    CNAME = 'CNAME'
 }
 
 

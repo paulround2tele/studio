@@ -20,24 +20,17 @@
  * @interface ProxyPoolsAddProxyRequest
  */
 export interface ProxyPoolsAddProxyRequest {
-  /**
-   * 
-   * @memberof ProxyPoolsAddProxyRequest
-   */
-  'proxyId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProxyPoolsAddProxyRequest
-   */
-  'weight'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyPoolsAddProxyRequest
+     */
+    'proxyId': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProxyPoolsAddProxyRequest
+     */
+    'weight'?: number;
 }
-
 

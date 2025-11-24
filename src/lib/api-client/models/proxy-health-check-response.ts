@@ -20,60 +20,41 @@
  * @interface ProxyHealthCheckResponse
  */
 export interface ProxyHealthCheckResponse {
-  /**
-   * 
-   * @memberof ProxyHealthCheckResponse
-   */
-  'proxyId'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProxyHealthCheckResponse
-   */
-  'success'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof ProxyHealthCheckResponse
-   */
-  'status'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProxyHealthCheckResponse
-   */
-  'responseTime'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ProxyHealthCheckResponse
-   */
-  'message'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProxyHealthCheckResponse
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyHealthCheckResponse
+     */
+    'proxyId'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProxyHealthCheckResponse
+     */
+    'success'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyHealthCheckResponse
+     */
+    'status'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProxyHealthCheckResponse
+     */
+    'responseTime'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyHealthCheckResponse
+     */
+    'message'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyHealthCheckResponse
+     */
+    'timestamp'?: string;
 }
-
 

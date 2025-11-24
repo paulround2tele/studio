@@ -20,103 +20,83 @@
  * @interface WorkerConfigUpdate
  */
 export interface WorkerConfigUpdate {
-  /**
-   * Number of worker threads in the pool
-   * @memberof WorkerConfigUpdate
-   */
-  'poolSize'?: 
-        
-          
-          number
-    ;
-  /**
-   * Maximum number of jobs in queue
-   * @memberof WorkerConfigUpdate
-   */
-  'maxJobs'?: 
-        
-          
-          number
-    ;
-  /**
-   * Job execution timeout in seconds
-   * @memberof WorkerConfigUpdate
-   */
-  'jobTimeout'?: 
-        
-          
-          number
-    ;
-  /**
-   * Worker idle timeout in seconds
-   * @memberof WorkerConfigUpdate
-   */
-  'idleTimeout'?: 
-        
-          
-          number
-    ;
-  /**
-   * Number of retry attempts for failed jobs
-   * @memberof WorkerConfigUpdate
-   */
-  'retryAttempts'?: 
-        
-          
-          number
-    ;
-  /**
-   * Delay between retries in milliseconds
-   * @memberof WorkerConfigUpdate
-   */
-  'retryDelay'?: 
-        
-          
-          number
-    ;
-  /**
-   * Enable worker performance metrics collection
-   * @memberof WorkerConfigUpdate
-   */
-  'enableMetrics'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * Metrics collection interval in seconds
-   * @memberof WorkerConfigUpdate
-   */
-  'metricsInterval'?: 
-        
-          
-          number
-    ;
-  /**
-   * Worker pool priority level
-   * @memberof WorkerConfigUpdate
-   */
-  'priority'?: 
-      'low' | 'normal' | 'high' | 'critical'
-;
-  /**
-   * Enable worker health monitoring
-   * @memberof WorkerConfigUpdate
-   */
-  'enableHealthChecks'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * Health check interval in seconds
-   * @memberof WorkerConfigUpdate
-   */
-  'healthCheckInterval'?: 
-        
-          
-          number
-    ;
+    /**
+     * Number of worker threads in the pool
+     * @type {number}
+     * @memberof WorkerConfigUpdate
+     */
+    'poolSize'?: number;
+    /**
+     * Maximum number of jobs in queue
+     * @type {number}
+     * @memberof WorkerConfigUpdate
+     */
+    'maxJobs'?: number;
+    /**
+     * Job execution timeout in seconds
+     * @type {number}
+     * @memberof WorkerConfigUpdate
+     */
+    'jobTimeout'?: number;
+    /**
+     * Worker idle timeout in seconds
+     * @type {number}
+     * @memberof WorkerConfigUpdate
+     */
+    'idleTimeout'?: number;
+    /**
+     * Number of retry attempts for failed jobs
+     * @type {number}
+     * @memberof WorkerConfigUpdate
+     */
+    'retryAttempts'?: number;
+    /**
+     * Delay between retries in milliseconds
+     * @type {number}
+     * @memberof WorkerConfigUpdate
+     */
+    'retryDelay'?: number;
+    /**
+     * Enable worker performance metrics collection
+     * @type {boolean}
+     * @memberof WorkerConfigUpdate
+     */
+    'enableMetrics'?: boolean;
+    /**
+     * Metrics collection interval in seconds
+     * @type {number}
+     * @memberof WorkerConfigUpdate
+     */
+    'metricsInterval'?: number;
+    /**
+     * Worker pool priority level
+     * @type {string}
+     * @memberof WorkerConfigUpdate
+     */
+    'priority'?: WorkerConfigUpdatePriorityEnum;
+    /**
+     * Enable worker health monitoring
+     * @type {boolean}
+     * @memberof WorkerConfigUpdate
+     */
+    'enableHealthChecks'?: boolean;
+    /**
+     * Health check interval in seconds
+     * @type {number}
+     * @memberof WorkerConfigUpdate
+     */
+    'healthCheckInterval'?: number;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum WorkerConfigUpdatePriorityEnum {
+    low = 'low',
+    normal = 'normal',
+    high = 'high',
+    critical = 'critical'
 }
 
 

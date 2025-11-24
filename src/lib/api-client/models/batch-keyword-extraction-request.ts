@@ -23,15 +23,11 @@ import type { BatchKeywordExtractionRequestItemsInner } from './batch-keyword-ex
  * @interface BatchKeywordExtractionRequest
  */
 export interface BatchKeywordExtractionRequest {
-  /**
-   * 
-   * @memberof BatchKeywordExtractionRequest
-   */
-  'items': 
-        
-          
-          Array<BatchKeywordExtractionRequestItemsInner>
-    ;
+    /**
+     * 
+     * @type {Array<BatchKeywordExtractionRequestItemsInner>}
+     * @memberof BatchKeywordExtractionRequest
+     */
+    'items': Array<BatchKeywordExtractionRequestItemsInner>;
 }
-
 

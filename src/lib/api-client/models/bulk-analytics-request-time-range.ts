@@ -20,33 +20,23 @@
  * @interface BulkAnalyticsRequestTimeRange
  */
 export interface BulkAnalyticsRequestTimeRange {
-  /**
-   * 
-   * @memberof BulkAnalyticsRequestTimeRange
-   */
-  'startTime': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkAnalyticsRequestTimeRange
-   */
-  'endTime': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkAnalyticsRequestTimeRange
-   */
-  'timezone'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkAnalyticsRequestTimeRange
+     */
+    'startTime': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkAnalyticsRequestTimeRange
+     */
+    'endTime': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkAnalyticsRequestTimeRange
+     */
+    'timezone'?: string;
 }
-
 

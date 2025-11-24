@@ -26,33 +26,23 @@ import type { BulkDNSValidationRequestStealth } from './bulk-dnsvalidation-reque
  * @interface BulkDNSValidationRequest
  */
 export interface BulkDNSValidationRequest {
-  /**
-   * 
-   * @memberof BulkDNSValidationRequest
-   */
-  'operations': 
-        
-          
-          Array<BulkDNSValidationRequestOperationsInner>
-    ;
-  /**
-   * 
-   * @memberof BulkDNSValidationRequest
-   */
-  'batchSize'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkDNSValidationRequest
-   */
-  'stealth'?: 
-        
-          
-          BulkDNSValidationRequestStealth
-    ;
+    /**
+     * 
+     * @type {Array<BulkDNSValidationRequestOperationsInner>}
+     * @memberof BulkDNSValidationRequest
+     */
+    'operations': Array<BulkDNSValidationRequestOperationsInner>;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkDNSValidationRequest
+     */
+    'batchSize'?: number;
+    /**
+     * 
+     * @type {BulkDNSValidationRequestStealth}
+     * @memberof BulkDNSValidationRequest
+     */
+    'stealth'?: BulkDNSValidationRequestStealth;
 }
-
 

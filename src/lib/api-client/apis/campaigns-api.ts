@@ -14,7 +14,7 @@
 
 
 import type { Configuration } from '../configuration';
-import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig, AxiosHeaderValue, AxiosHeaders } from 'axios';
+import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
 // Some imports not used depending on template conditions
 // @ts-ignore
@@ -122,11 +122,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const localVarPath = `/campaigns/bulk/resources/allocate`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -135,15 +138,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(bulkResourceAllocationRequest, localVarRequestOptions, configuration)
 
             return {
@@ -164,11 +160,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const localVarPath = `/campaigns/bulk/domains/analyze`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -177,15 +176,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(bulkAnalyticsRequest, localVarRequestOptions, configuration)
 
             return {
@@ -206,11 +198,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const localVarPath = `/campaigns/bulk/domains/generate`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -219,15 +214,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(bulkDomainGenerationRequest, localVarRequestOptions, configuration)
 
             return {
@@ -248,11 +236,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const localVarPath = `/campaigns/bulk/domains/validate-dns`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -261,15 +252,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(bulkDNSValidationRequest, localVarRequestOptions, configuration)
 
             return {
@@ -290,11 +274,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const localVarPath = `/campaigns/bulk/domains/validate-http`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -303,15 +290,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(bulkHTTPValidationRequest, localVarRequestOptions, configuration)
 
             return {
@@ -329,26 +309,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const localVarPath = `/campaigns/bulk/operations`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -370,11 +346,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -385,15 +364,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -413,11 +385,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const localVarPath = `/campaigns`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -426,15 +401,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(createCampaignRequest, localVarRequestOptions, configuration)
 
             return {
@@ -456,26 +424,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'DELETE', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -495,11 +459,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const localVarPath = `/campaigns/domain-generation/pattern-offset`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -508,15 +475,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(patternOffsetRequest, localVarRequestOptions, configuration)
 
             return {
@@ -542,26 +502,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"domain"}}`, encodeURIComponent(String(domain)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -597,11 +553,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -668,15 +627,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -697,26 +649,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -737,26 +685,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -777,26 +721,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -817,26 +757,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -853,26 +789,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const localVarPath = `/campaigns`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -893,26 +825,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -936,11 +864,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'PUT', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -949,15 +880,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(campaignsModeUpdateRequest, localVarRequestOptions, configuration)
 
             return {
@@ -979,26 +903,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1019,26 +939,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1066,11 +982,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"phase"}}`, encodeURIComponent(String(phase)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -1079,15 +998,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(phaseConfigurationRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1113,26 +1025,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"phaseType"}}`, encodeURIComponent(String(phaseType)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'DELETE', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1157,26 +1065,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"phaseType"}}`, encodeURIComponent(String(phaseType)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1204,11 +1108,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"phaseType"}}`, encodeURIComponent(String(phaseType)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'PUT', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -1217,15 +1124,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(phaseExecutionUpdate, localVarRequestOptions, configuration)
 
             return {
@@ -1247,26 +1147,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1291,26 +1187,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"phase"}}`, encodeURIComponent(String(phase)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1335,26 +1227,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"phase"}}`, encodeURIComponent(String(phase)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1379,26 +1267,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"phase"}}`, encodeURIComponent(String(phase)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1419,26 +1303,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1459,26 +1339,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1499,26 +1375,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'DELETE', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1539,26 +1411,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1582,11 +1450,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'PUT', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -1595,15 +1466,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(campaignStateUpdate, localVarRequestOptions, configuration)
 
             return {
@@ -1625,26 +1489,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1668,11 +1528,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'PUT', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -1681,15 +1544,8 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(updateCampaignRequest, localVarRequestOptions, configuration)
 
             return {
@@ -1711,26 +1567,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"operationId"}}`, encodeURIComponent(String(operationId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1751,26 +1603,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"operationId"}}`, encodeURIComponent(String(operationId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1791,26 +1639,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 .replace(`{${"allocationId"}}`, encodeURIComponent(String(allocationId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),

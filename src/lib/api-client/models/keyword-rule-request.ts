@@ -23,51 +23,37 @@ import type { KeywordRuleType } from './keyword-rule-type';
  * @interface KeywordRuleRequest
  */
 export interface KeywordRuleRequest {
-  /**
-   * 
-   * @memberof KeywordRuleRequest
-   */
-  'pattern': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleRequest
-   */
-  'ruleType': 
-        
-          
-          KeywordRuleType
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleRequest
-   */
-  'isCaseSensitive'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleRequest
-   */
-  'category'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleRequest
-   */
-  'contextChars'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordRuleRequest
+     */
+    'pattern': string;
+    /**
+     * 
+     * @type {KeywordRuleType}
+     * @memberof KeywordRuleRequest
+     */
+    'ruleType': KeywordRuleType;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof KeywordRuleRequest
+     */
+    'isCaseSensitive'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordRuleRequest
+     */
+    'category'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof KeywordRuleRequest
+     */
+    'contextChars'?: number;
 }
+
 
 

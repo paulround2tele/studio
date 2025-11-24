@@ -20,49 +20,46 @@
  * @interface ProxyConfigurationRequest
  */
 export interface ProxyConfigurationRequest {
-  /**
-   * 
-   * @memberof ProxyConfigurationRequest
-   */
-  'poolId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProxyConfigurationRequest
-   */
-  'isEnabled'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof ProxyConfigurationRequest
-   */
-  'authMode'?: 
-      'none' | 'basic' | 'bearer'
-;
-  /**
-   * 
-   * @memberof ProxyConfigurationRequest
-   */
-  'maxFailures'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ProxyConfigurationRequest
-   */
-  'cooldownSeconds'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyConfigurationRequest
+     */
+    'poolId': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProxyConfigurationRequest
+     */
+    'isEnabled'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyConfigurationRequest
+     */
+    'authMode'?: ProxyConfigurationRequestAuthModeEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProxyConfigurationRequest
+     */
+    'maxFailures'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProxyConfigurationRequest
+     */
+    'cooldownSeconds'?: number;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum ProxyConfigurationRequestAuthModeEnum {
+    none = 'none',
+    basic = 'basic',
+    bearer = 'bearer'
 }
 
 

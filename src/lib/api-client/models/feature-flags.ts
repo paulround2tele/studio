@@ -20,7 +20,7 @@
  * @interface FeatureFlags
  */
 export interface FeatureFlags {
-  [key: string]: boolean;
-}
+    [key: string]: boolean;
 
+}
 

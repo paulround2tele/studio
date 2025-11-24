@@ -23,33 +23,23 @@ import type { BulkDatabaseQueryRequestQueriesInner } from './bulk-database-query
  * @interface BulkDatabaseQueryRequest
  */
 export interface BulkDatabaseQueryRequest {
-  /**
-   * 
-   * @memberof BulkDatabaseQueryRequest
-   */
-  'queries': 
-        
-          
-          Array<BulkDatabaseQueryRequestQueriesInner>
-    ;
-  /**
-   * 
-   * @memberof BulkDatabaseQueryRequest
-   */
-  'limit'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkDatabaseQueryRequest
-   */
-  'timeout'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {Array<BulkDatabaseQueryRequestQueriesInner>}
+     * @memberof BulkDatabaseQueryRequest
+     */
+    'queries': Array<BulkDatabaseQueryRequestQueriesInner>;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkDatabaseQueryRequest
+     */
+    'limit'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkDatabaseQueryRequest
+     */
+    'timeout'?: number;
 }
-
 

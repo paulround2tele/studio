@@ -20,42 +20,29 @@
  * @interface BatchKeywordExtractionRequestItemsInner
  */
 export interface BatchKeywordExtractionRequestItemsInner {
-  /**
-   * 
-   * @memberof BatchKeywordExtractionRequestItemsInner
-   */
-  'url': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BatchKeywordExtractionRequestItemsInner
-   */
-  'keywordSetId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BatchKeywordExtractionRequestItemsInner
-   */
-  'httpPersonaId'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BatchKeywordExtractionRequestItemsInner
-   */
-  'dnsPersonaId'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof BatchKeywordExtractionRequestItemsInner
+     */
+    'url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BatchKeywordExtractionRequestItemsInner
+     */
+    'keywordSetId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BatchKeywordExtractionRequestItemsInner
+     */
+    'httpPersonaId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BatchKeywordExtractionRequestItemsInner
+     */
+    'dnsPersonaId'?: string;
 }
-
 

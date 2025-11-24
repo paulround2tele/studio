@@ -23,65 +23,59 @@ import type { TimelineEventMetadataValue } from './timeline-event-metadata-value
  * @interface TimelineEvent
  */
 export interface TimelineEvent {
-  /**
-   * 
-   * @memberof TimelineEvent
-   */
-  'timestamp': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof TimelineEvent
-   */
-  'phase'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof TimelineEvent
-   */
-  'type': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof TimelineEvent
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof TimelineEvent
-   */
-  'status'?: 
-      'pending' | 'running' | 'completed' | 'failed'
-;
-  /**
-   * 
-   * @memberof TimelineEvent
-   */
-  'progress'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof TimelineEvent
-   */
-  'metadata'?: 
-        Record<string, unknown>
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof TimelineEvent
+     */
+    'timestamp': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TimelineEvent
+     */
+    'phase'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TimelineEvent
+     */
+    'type': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TimelineEvent
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TimelineEvent
+     */
+    'status'?: TimelineEventStatusEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof TimelineEvent
+     */
+    'progress'?: number;
+    /**
+     * 
+     * @type {{ [key: string]: TimelineEventMetadataValue; }}
+     * @memberof TimelineEvent
+     */
+    'metadata'?: { [key: string]: TimelineEventMetadataValue; };
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum TimelineEventStatusEnum {
+    pending = 'pending',
+    running = 'running',
+    completed = 'completed',
+    failed = 'failed'
 }
 
 

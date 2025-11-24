@@ -23,195 +23,133 @@ import type { ProxyProtocol } from './proxy-protocol';
  * @interface Proxy
  */
 export interface Proxy {
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'id': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'name': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'address': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'protocol'?: 
-        
-          
-          ProxyProtocol
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'username'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'host'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'port'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'isEnabled': 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'isHealthy': 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'lastStatus'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'lastCheckedAt'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'latencyMs'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'countryCode'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'successCount'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'failureCount'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'lastTested'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'lastError'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'notes'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'createdAt': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof Proxy
-   */
-  'updatedAt': 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'address': string;
+    /**
+     * 
+     * @type {ProxyProtocol}
+     * @memberof Proxy
+     */
+    'protocol'?: ProxyProtocol;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'username'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'host'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Proxy
+     */
+    'port'?: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Proxy
+     */
+    'isEnabled': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Proxy
+     */
+    'isHealthy': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'lastStatus'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'lastCheckedAt'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Proxy
+     */
+    'latencyMs'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'countryCode'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Proxy
+     */
+    'successCount'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof Proxy
+     */
+    'failureCount'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'lastTested'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'lastError'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'notes'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Proxy
+     */
+    'updatedAt': string;
 }
+
 
 

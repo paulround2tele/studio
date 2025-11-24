@@ -15,7 +15,7 @@ function run(cmd, args, opts = {}) {
 run('npm', ['run', 'api:bundle']);
 run('npm', ['run', 'api:validate-bundle']);
 // Dump routes fresh, just in case devs changed gin registration
-run('bash', ['-lc', 'cd backend && go run ./dump_routes.go | tee routes.dump.txt']);
+run('bash', ['-lc', 'cd backend && go run ./cmd/apiserver -dump-routes | tee routes.dump.txt']);
 run('node', ['scripts/check-routes.mjs']);
 run('npm', ['run', 'gen:types']);
 run('npm', ['run', 'gen:clients']);

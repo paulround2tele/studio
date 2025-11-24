@@ -29,33 +29,23 @@ import type { DomainAnalysisFeaturesRichness } from './domain-analysis-features-
  * @interface DomainAnalysisFeatures
  */
 export interface DomainAnalysisFeatures {
-  /**
-   * 
-   * @memberof DomainAnalysisFeatures
-   */
-  'keywords'?: 
-        
-          
-          DomainAnalysisFeaturesKeywords
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeatures
-   */
-  'richness'?: 
-        
-          
-          DomainAnalysisFeaturesRichness
-    ;
-  /**
-   * 
-   * @memberof DomainAnalysisFeatures
-   */
-  'microcrawl'?: 
-        
-          
-          DomainAnalysisFeaturesMicrocrawl
-    ;
+    /**
+     * 
+     * @type {DomainAnalysisFeaturesKeywords}
+     * @memberof DomainAnalysisFeatures
+     */
+    'keywords'?: DomainAnalysisFeaturesKeywords;
+    /**
+     * 
+     * @type {DomainAnalysisFeaturesRichness}
+     * @memberof DomainAnalysisFeatures
+     */
+    'richness'?: DomainAnalysisFeaturesRichness;
+    /**
+     * 
+     * @type {DomainAnalysisFeaturesMicrocrawl}
+     * @memberof DomainAnalysisFeatures
+     */
+    'microcrawl'?: DomainAnalysisFeaturesMicrocrawl;
 }
-
 

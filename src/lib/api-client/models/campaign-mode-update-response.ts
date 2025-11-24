@@ -23,33 +23,25 @@ import type { CampaignModeEnum } from './campaign-mode-enum';
  * @interface CampaignModeUpdateResponse
  */
 export interface CampaignModeUpdateResponse {
-  /**
-   * 
-   * @memberof CampaignModeUpdateResponse
-   */
-  'mode': 
-        
-          
-          CampaignModeEnum
-    ;
-  /**
-   * 
-   * @memberof CampaignModeUpdateResponse
-   */
-  'campaignId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignModeUpdateResponse
-   */
-  'updatedAt': 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {CampaignModeEnum}
+     * @memberof CampaignModeUpdateResponse
+     */
+    'mode': CampaignModeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignModeUpdateResponse
+     */
+    'campaignId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignModeUpdateResponse
+     */
+    'updatedAt': string;
 }
+
 
 

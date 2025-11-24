@@ -23,51 +23,35 @@ import type { BulkHTTPValidationRequestOperationsInnerValidationConfig } from '.
  * @interface BulkHTTPValidationRequestOperationsInner
  */
 export interface BulkHTTPValidationRequestOperationsInner {
-  /**
-   * 
-   * @memberof BulkHTTPValidationRequestOperationsInner
-   */
-  'campaignId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkHTTPValidationRequestOperationsInner
-   */
-  'personaIds': 
-        
-          
-          Array<string>
-    ;
-  /**
-   * 
-   * @memberof BulkHTTPValidationRequestOperationsInner
-   */
-  'keywords': 
-        
-          
-          Array<string>
-    ;
-  /**
-   * 
-   * @memberof BulkHTTPValidationRequestOperationsInner
-   */
-  'maxDomains'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkHTTPValidationRequestOperationsInner
-   */
-  'validationConfig'?: 
-        
-          
-          BulkHTTPValidationRequestOperationsInnerValidationConfig
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkHTTPValidationRequestOperationsInner
+     */
+    'campaignId': string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BulkHTTPValidationRequestOperationsInner
+     */
+    'personaIds': Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BulkHTTPValidationRequestOperationsInner
+     */
+    'keywords': Array<string>;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkHTTPValidationRequestOperationsInner
+     */
+    'maxDomains'?: number;
+    /**
+     * 
+     * @type {BulkHTTPValidationRequestOperationsInnerValidationConfig}
+     * @memberof BulkHTTPValidationRequestOperationsInner
+     */
+    'validationConfig'?: BulkHTTPValidationRequestOperationsInnerValidationConfig;
 }
-
 

@@ -20,31 +20,23 @@
  * @interface UpdateCampaignRequest
  */
 export interface UpdateCampaignRequest {
-  /**
-   * 
-   * @memberof UpdateCampaignRequest
-   */
-  'name'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof UpdateCampaignRequest
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * Campaign configuration settings (same structure as CreateCampaignRequest)
-   * @memberof UpdateCampaignRequest
-   */
-  'configuration'?: 
-        Record<string, unknown>
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateCampaignRequest
+     */
+    'name'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateCampaignRequest
+     */
+    'description'?: string;
+    /**
+     * Campaign configuration settings (same structure as CreateCampaignRequest)
+     * @type {object}
+     * @memberof UpdateCampaignRequest
+     */
+    'configuration'?: object;
 }
-
 

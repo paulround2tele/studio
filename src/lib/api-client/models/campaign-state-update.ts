@@ -29,40 +29,31 @@ import type { FlexibleValue } from './flexible-value';
  * @interface CampaignStateUpdate
  */
 export interface CampaignStateUpdate {
-  /**
-   * 
-   * @memberof CampaignStateUpdate
-   */
-  'currentState'?: 
-        
-          
-          CampaignStateEnum
-    ;
-  /**
-   * 
-   * @memberof CampaignStateUpdate
-   */
-  'mode'?: 
-        
-          
-          CampaignModeEnum
-    ;
-  /**
-   * 
-   * @memberof CampaignStateUpdate
-   */
-  'configuration'?: 
-        Record<string, unknown>
-    ;
-  /**
-   * Optional optimistic concurrency version; if provided must match current
-   * @memberof CampaignStateUpdate
-   */
-  'version'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {CampaignStateEnum}
+     * @memberof CampaignStateUpdate
+     */
+    'currentState'?: CampaignStateEnum;
+    /**
+     * 
+     * @type {CampaignModeEnum}
+     * @memberof CampaignStateUpdate
+     */
+    'mode'?: CampaignModeEnum;
+    /**
+     * 
+     * @type {{ [key: string]: FlexibleValue; }}
+     * @memberof CampaignStateUpdate
+     */
+    'configuration'?: { [key: string]: FlexibleValue; };
+    /**
+     * Optional optimistic concurrency version; if provided must match current
+     * @type {number}
+     * @memberof CampaignStateUpdate
+     */
+    'version'?: number;
 }
+
 
 

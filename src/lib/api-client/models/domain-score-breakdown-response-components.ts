@@ -20,69 +20,47 @@
  * @interface DomainScoreBreakdownResponseComponents
  */
 export interface DomainScoreBreakdownResponseComponents {
-  /**
-   * 
-   * @memberof DomainScoreBreakdownResponseComponents
-   */
-  'density': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainScoreBreakdownResponseComponents
-   */
-  'coverage': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainScoreBreakdownResponseComponents
-   */
-  'non_parked': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainScoreBreakdownResponseComponents
-   */
-  'content_length': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainScoreBreakdownResponseComponents
-   */
-  'title_keyword': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof DomainScoreBreakdownResponseComponents
-   */
-  'freshness': 
-        
-          
-          number
-    ;
-  /**
-   * Experimental TF-lite component (0 if disabled)
-   * @memberof DomainScoreBreakdownResponseComponents
-   */
-  'tf_lite': 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainScoreBreakdownResponseComponents
+     */
+    'density': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainScoreBreakdownResponseComponents
+     */
+    'coverage': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainScoreBreakdownResponseComponents
+     */
+    'non_parked': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainScoreBreakdownResponseComponents
+     */
+    'content_length': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainScoreBreakdownResponseComponents
+     */
+    'title_keyword': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainScoreBreakdownResponseComponents
+     */
+    'freshness': number;
+    /**
+     * Experimental TF-lite component (0 if disabled)
+     * @type {number}
+     * @memberof DomainScoreBreakdownResponseComponents
+     */
+    'tf_lite': number;
 }
-
 

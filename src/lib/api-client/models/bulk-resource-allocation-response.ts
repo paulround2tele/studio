@@ -29,49 +29,46 @@ import type { BulkResourceAllocationResponseResources } from './bulk-resource-al
  * @interface BulkResourceAllocationResponse
  */
 export interface BulkResourceAllocationResponse {
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponse
-   */
-  'allocationId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponse
-   */
-  'status': 
-      'allocating' | 'allocated' | 'failed'
-;
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponse
-   */
-  'resources': 
-        
-          
-          BulkResourceAllocationResponseResources
-    ;
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponse
-   */
-  'allocation': 
-        
-          
-          BulkResourceAllocationResponseAllocation
-    ;
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponse
-   */
-  'endpoints'?: 
-        
-          
-          BulkResourceAllocationResponseEndpoints
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkResourceAllocationResponse
+     */
+    'allocationId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkResourceAllocationResponse
+     */
+    'status': BulkResourceAllocationResponseStatusEnum;
+    /**
+     * 
+     * @type {BulkResourceAllocationResponseResources}
+     * @memberof BulkResourceAllocationResponse
+     */
+    'resources': BulkResourceAllocationResponseResources;
+    /**
+     * 
+     * @type {BulkResourceAllocationResponseAllocation}
+     * @memberof BulkResourceAllocationResponse
+     */
+    'allocation': BulkResourceAllocationResponseAllocation;
+    /**
+     * 
+     * @type {BulkResourceAllocationResponseEndpoints}
+     * @memberof BulkResourceAllocationResponse
+     */
+    'endpoints'?: BulkResourceAllocationResponseEndpoints;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum BulkResourceAllocationResponseStatusEnum {
+    allocating = 'allocating',
+    allocated = 'allocated',
+    failed = 'failed'
 }
 
 

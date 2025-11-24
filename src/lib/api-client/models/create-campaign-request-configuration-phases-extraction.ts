@@ -20,24 +20,17 @@
  * @interface CreateCampaignRequestConfigurationPhasesExtraction
  */
 export interface CreateCampaignRequestConfigurationPhasesExtraction {
-  /**
-   * 
-   * @memberof CreateCampaignRequestConfigurationPhasesExtraction
-   */
-  'enabled'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof CreateCampaignRequestConfigurationPhasesExtraction
-   */
-  'keywordSetIds'?: 
-        
-          
-          Array<string>
-    ;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CreateCampaignRequestConfigurationPhasesExtraction
+     */
+    'enabled'?: boolean;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof CreateCampaignRequestConfigurationPhasesExtraction
+     */
+    'keywordSetIds'?: Array<string>;
 }
-
 

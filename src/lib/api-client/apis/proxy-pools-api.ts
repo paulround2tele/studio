@@ -14,7 +14,7 @@
 
 
 import type { Configuration } from '../configuration';
-import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig, AxiosHeaderValue, AxiosHeaders } from 'axios';
+import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
 // Some imports not used depending on template conditions
 // @ts-ignore
@@ -54,11 +54,14 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
                 .replace(`{${"poolId"}}`, encodeURIComponent(String(poolId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -67,15 +70,8 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(proxyPoolsAddProxyRequest, localVarRequestOptions, configuration)
 
             return {
@@ -96,11 +92,14 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
             const localVarPath = `/proxy-pools`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -109,15 +108,8 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(proxyPoolRequest, localVarRequestOptions, configuration)
 
             return {
@@ -139,26 +131,22 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
                 .replace(`{${"poolId"}}`, encodeURIComponent(String(poolId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'DELETE', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -175,26 +163,22 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
             const localVarPath = `/proxy-pools`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -219,26 +203,22 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
                 .replace(`{${"proxyId"}}`, encodeURIComponent(String(proxyId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'DELETE', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -262,11 +242,14 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
                 .replace(`{${"poolId"}}`, encodeURIComponent(String(poolId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'PUT', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -275,15 +258,8 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(proxyPoolRequest, localVarRequestOptions, configuration)
 
             return {

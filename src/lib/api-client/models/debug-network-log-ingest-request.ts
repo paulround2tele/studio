@@ -20,83 +20,61 @@
  * @interface DebugNetworkLogIngestRequest
  */
 export interface DebugNetworkLogIngestRequest {
-  /**
-   * ISO-8601 timestamp produced by the client
-   * @memberof DebugNetworkLogIngestRequest
-   */
-  'timestamp': 
-        
-          
-          string
-    ;
-  /**
-   * Absolute or relative request URL observed by the browser
-   * @memberof DebugNetworkLogIngestRequest
-   */
-  'url': 
-        
-          
-          string
-    ;
-  /**
-   * HTTP method used for the request
-   * @memberof DebugNetworkLogIngestRequest
-   */
-  'method': 
-        
-          
-          string
-    ;
-  /**
-   * HTTP status code returned by the response
-   * @memberof DebugNetworkLogIngestRequest
-   */
-  'status'?: 
-        
-          
-          number
-    ;
-  /**
-   * Whether the browser considered the response successful
-   * @memberof DebugNetworkLogIngestRequest
-   */
-  'ok'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * Duration of the request in milliseconds
-   * @memberof DebugNetworkLogIngestRequest
-   */
-  'durationMs': 
-        
-          
-          number
-    ;
-  /**
-   * Error message captured when the request failed
-   * @memberof DebugNetworkLogIngestRequest
-   */
-  'error'?: 
-        
-          
-          string
-    ;
-  /**
-   * Request headers observed by the browser
-   * @memberof DebugNetworkLogIngestRequest
-   */
-  'requestHeaders'?: 
-        Record<string, unknown>
-    ;
-  /**
-   * Response headers observed by the browser
-   * @memberof DebugNetworkLogIngestRequest
-   */
-  'responseHeaders'?: 
-        Record<string, unknown>
-    ;
-}
+    [key: string]: any;
 
+    /**
+     * ISO-8601 timestamp produced by the client
+     * @type {string}
+     * @memberof DebugNetworkLogIngestRequest
+     */
+    'timestamp': string;
+    /**
+     * Absolute or relative request URL observed by the browser
+     * @type {string}
+     * @memberof DebugNetworkLogIngestRequest
+     */
+    'url': string;
+    /**
+     * HTTP method used for the request
+     * @type {string}
+     * @memberof DebugNetworkLogIngestRequest
+     */
+    'method': string;
+    /**
+     * HTTP status code returned by the response
+     * @type {number}
+     * @memberof DebugNetworkLogIngestRequest
+     */
+    'status'?: number;
+    /**
+     * Whether the browser considered the response successful
+     * @type {boolean}
+     * @memberof DebugNetworkLogIngestRequest
+     */
+    'ok'?: boolean;
+    /**
+     * Duration of the request in milliseconds
+     * @type {number}
+     * @memberof DebugNetworkLogIngestRequest
+     */
+    'durationMs': number;
+    /**
+     * Error message captured when the request failed
+     * @type {string}
+     * @memberof DebugNetworkLogIngestRequest
+     */
+    'error'?: string;
+    /**
+     * Request headers observed by the browser
+     * @type {{ [key: string]: string; }}
+     * @memberof DebugNetworkLogIngestRequest
+     */
+    'requestHeaders'?: { [key: string]: string; };
+    /**
+     * Response headers observed by the browser
+     * @type {{ [key: string]: string; }}
+     * @memberof DebugNetworkLogIngestRequest
+     */
+    'responseHeaders'?: { [key: string]: string; };
+}
 

@@ -23,33 +23,23 @@ import type { BulkDomainGenerationRequestOperationsInner } from './bulk-domain-g
  * @interface BulkDomainGenerationRequest
  */
 export interface BulkDomainGenerationRequest {
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequest
-   */
-  'operations': 
-        
-          
-          Array<BulkDomainGenerationRequestOperationsInner>
-    ;
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequest
-   */
-  'batchSize'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequest
-   */
-  'parallel'?: 
-        
-          
-          boolean
-    ;
+    /**
+     * 
+     * @type {Array<BulkDomainGenerationRequestOperationsInner>}
+     * @memberof BulkDomainGenerationRequest
+     */
+    'operations': Array<BulkDomainGenerationRequestOperationsInner>;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkDomainGenerationRequest
+     */
+    'batchSize'?: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof BulkDomainGenerationRequest
+     */
+    'parallel'?: boolean;
 }
-
 

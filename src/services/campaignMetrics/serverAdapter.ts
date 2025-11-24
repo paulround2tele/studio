@@ -34,16 +34,17 @@ export function transformServerResponse(
   response: ServerMetricsResponse
 ): AggregateSnapshot {
   const now = new Date().toISOString();
-  
+  const withDefault = <T>(value: T | undefined, fallback: T): T => (value === undefined ? fallback : value);
+
   // Extract aggregates with safe defaults
   const serverAggregates = response.aggregates || {};
   const aggregates: AggregateMetrics = {
-    totalDomains: serverAggregates.totalDomains ?? 0,
-    successRate: serverAggregates.successRate ?? 0,
-    avgLeadScore: serverAggregates.avgLeadScore ?? 0,
-    dnsSuccessRate: serverAggregates.dnsSuccessRate ?? 0,
-    httpSuccessRate: serverAggregates.httpSuccessRate ?? 0,
-    runtime: serverAggregates.runtime ?? undefined
+    totalDomains: withDefault(serverAggregates.totalDomains, 0),
+    successRate: withDefault(serverAggregates.successRate, 0),
+    avgLeadScore: withDefault(serverAggregates.avgLeadScore, 0),
+    dnsSuccessRate: withDefault(serverAggregates.dnsSuccessRate, 0),
+    httpSuccessRate: withDefault(serverAggregates.httpSuccessRate, 0),
+    runtime: serverAggregates.runtime === undefined ? undefined : serverAggregates.runtime
   };
 
   // Add extended fields if available

@@ -20,42 +20,29 @@
  * @interface BulkResourceAllocationResponseResources
  */
 export interface BulkResourceAllocationResponseResources {
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponseResources
-   */
-  'cpu'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponseResources
-   */
-  'memory'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponseResources
-   */
-  'networkBandwidth'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponseResources
-   */
-  'storage'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkResourceAllocationResponseResources
+     */
+    'cpu'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkResourceAllocationResponseResources
+     */
+    'memory'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkResourceAllocationResponseResources
+     */
+    'networkBandwidth'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkResourceAllocationResponseResources
+     */
+    'storage'?: number;
 }
-
 

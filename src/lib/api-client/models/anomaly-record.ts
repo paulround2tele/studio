@@ -20,72 +20,75 @@
  * @interface AnomalyRecord
  */
 export interface AnomalyRecord {
-  /**
-   * 
-   * @memberof AnomalyRecord
-   */
-  'id': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof AnomalyRecord
-   */
-  'timestamp': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof AnomalyRecord
-   */
-  'type': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof AnomalyRecord
-   */
-  'severity': 
-      'low' | 'medium' | 'high' | 'critical'
-;
-  /**
-   * 
-   * @memberof AnomalyRecord
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof AnomalyRecord
-   */
-  'status'?: 
-      'open' | 'investigating' | 'mitigated' | 'resolved'
-;
-  /**
-   * 
-   * @memberof AnomalyRecord
-   */
-  'metrics'?: 
-        Record<string, unknown>
-    ;
-  /**
-   * 
-   * @memberof AnomalyRecord
-   */
-  'tags'?: 
-        
-          
-          Array<string>
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof AnomalyRecord
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AnomalyRecord
+     */
+    'timestamp': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AnomalyRecord
+     */
+    'type': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AnomalyRecord
+     */
+    'severity': AnomalyRecordSeverityEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof AnomalyRecord
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AnomalyRecord
+     */
+    'status'?: AnomalyRecordStatusEnum;
+    /**
+     * 
+     * @type {{ [key: string]: number; }}
+     * @memberof AnomalyRecord
+     */
+    'metrics'?: { [key: string]: number; };
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof AnomalyRecord
+     */
+    'tags'?: Array<string>;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum AnomalyRecordSeverityEnum {
+    low = 'low',
+    medium = 'medium',
+    high = 'high',
+    critical = 'critical'
+}
+/**
+    * @export
+    * @enum {string}
+    */
+export enum AnomalyRecordStatusEnum {
+    open = 'open',
+    investigating = 'investigating',
+    mitigated = 'mitigated',
+    resolved = 'resolved'
 }
 
 

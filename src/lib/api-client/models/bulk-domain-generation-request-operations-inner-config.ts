@@ -20,85 +20,71 @@
  * @interface BulkDomainGenerationRequestOperationsInnerConfig
  */
 export interface BulkDomainGenerationRequestOperationsInnerConfig {
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-   */
-  'patternType': 
-      'prefix' | 'suffix' | 'both'
-;
-  /**
-   * Optional prefix-side variable length when patternType is prefix or both
-   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-   */
-  'prefixVariableLength'?: 
-        
-          
-          number
-    ;
-  /**
-   * Optional suffix-side variable length when patternType is suffix or both
-   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-   */
-  'suffixVariableLength'?: 
-        
-          
-          number
-    ;
-  /**
-   * Legacy combined length retained for backwards compatibility
-   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-   */
-  'variableLength'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-   */
-  'characterSet': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-   */
-  'constantString': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-   */
-  'tlds': 
-        
-          
-          Array<string>
-    ;
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-   */
-  'numDomainsToGenerate': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-   */
-  'batchSize'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+     */
+    'patternType': BulkDomainGenerationRequestOperationsInnerConfigPatternTypeEnum;
+    /**
+     * Optional prefix-side variable length when patternType is prefix or both
+     * @type {number}
+     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+     */
+    'prefixVariableLength'?: number;
+    /**
+     * Optional suffix-side variable length when patternType is suffix or both
+     * @type {number}
+     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+     */
+    'suffixVariableLength'?: number;
+    /**
+     * Legacy combined length retained for backwards compatibility
+     * @type {number}
+     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+     * @deprecated
+     */
+    'variableLength'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+     */
+    'characterSet': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+     */
+    'constantString': string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+     */
+    'tlds': Array<string>;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+     */
+    'numDomainsToGenerate': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+     */
+    'batchSize'?: number;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum BulkDomainGenerationRequestOperationsInnerConfigPatternTypeEnum {
+    prefix = 'prefix',
+    suffix = 'suffix',
+    both = 'both'
 }
 
 

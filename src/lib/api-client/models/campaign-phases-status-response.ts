@@ -23,33 +23,23 @@ import type { CampaignPhasesStatusResponsePhasesInner } from './campaign-phases-
  * @interface CampaignPhasesStatusResponse
  */
 export interface CampaignPhasesStatusResponse {
-  /**
-   * 
-   * @memberof CampaignPhasesStatusResponse
-   */
-  'campaignId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignPhasesStatusResponse
-   */
-  'overallProgressPercentage': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof CampaignPhasesStatusResponse
-   */
-  'phases': 
-        
-          
-          Array<CampaignPhasesStatusResponsePhasesInner>
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignPhasesStatusResponse
+     */
+    'campaignId': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignPhasesStatusResponse
+     */
+    'overallProgressPercentage': number;
+    /**
+     * 
+     * @type {Array<CampaignPhasesStatusResponsePhasesInner>}
+     * @memberof CampaignPhasesStatusResponse
+     */
+    'phases': Array<CampaignPhasesStatusResponsePhasesInner>;
 }
-
 

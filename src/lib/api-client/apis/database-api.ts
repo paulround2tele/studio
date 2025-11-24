@@ -14,7 +14,7 @@
 
 
 import type { Configuration } from '../configuration';
-import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig, AxiosHeaderValue, AxiosHeaders } from 'axios';
+import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
 // Some imports not used depending on template conditions
 // @ts-ignore
@@ -51,11 +51,14 @@ export const DatabaseApiAxiosParamCreator = function (configuration?: Configurat
             const localVarPath = `/database/query`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -67,15 +70,8 @@ export const DatabaseApiAxiosParamCreator = function (configuration?: Configurat
                 localVarHeaderParameter['X-Requested-With'] = String(xRequestedWith);
             }
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(bulkDatabaseQueryRequest, localVarRequestOptions, configuration)
 
             return {
@@ -97,11 +93,14 @@ export const DatabaseApiAxiosParamCreator = function (configuration?: Configurat
             const localVarPath = `/database/stats`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
 
-            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
-            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
-            const localVarQueryParameter: Record<string, unknown> = {};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
 
@@ -113,15 +112,8 @@ export const DatabaseApiAxiosParamCreator = function (configuration?: Configurat
                 localVarHeaderParameter['X-Requested-With'] = String(xRequestedWith);
             }
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
-            if (baseOptions.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            
-            if (options.headers) {
-                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
-            }
-            localVarRequestOptions.headers = headerParams.toJSON();
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(bulkDatabaseStatsRequest, localVarRequestOptions, configuration)
 
             return {

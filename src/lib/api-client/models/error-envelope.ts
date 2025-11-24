@@ -23,33 +23,23 @@ import type { ApiError } from './api-error';
  * @interface ErrorEnvelope
  */
 export interface ErrorEnvelope {
-  /**
-   * Always false for error envelopes.
-   * @memberof ErrorEnvelope
-   */
-  'success': 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof ErrorEnvelope
-   */
-  'error': 
-        
-          
-          ApiError
-    ;
-  /**
-   * 
-   * @memberof ErrorEnvelope
-   */
-  'requestId': 
-        
-          
-          string
-    ;
+    /**
+     * Always false for error envelopes.
+     * @type {boolean}
+     * @memberof ErrorEnvelope
+     */
+    'success': boolean;
+    /**
+     * 
+     * @type {ApiError}
+     * @memberof ErrorEnvelope
+     */
+    'error': ApiError;
+    /**
+     * 
+     * @type {string}
+     * @memberof ErrorEnvelope
+     */
+    'requestId': string;
 }
-
 

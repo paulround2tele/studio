@@ -20,24 +20,17 @@
  * @interface CampaignClassificationBucketSampleDomainsInner
  */
 export interface CampaignClassificationBucketSampleDomainsInner {
-  /**
-   * 
-   * @memberof CampaignClassificationBucketSampleDomainsInner
-   */
-  'domain': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignClassificationBucketSampleDomainsInner
-   */
-  'richness'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignClassificationBucketSampleDomainsInner
+     */
+    'domain': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignClassificationBucketSampleDomainsInner
+     */
+    'richness'?: number;
 }
-
 

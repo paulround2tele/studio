@@ -26,33 +26,23 @@ import type { BulkHTTPValidationRequestStealth } from './bulk-httpvalidation-req
  * @interface BulkHTTPValidationRequest
  */
 export interface BulkHTTPValidationRequest {
-  /**
-   * 
-   * @memberof BulkHTTPValidationRequest
-   */
-  'operations': 
-        
-          
-          Array<BulkHTTPValidationRequestOperationsInner>
-    ;
-  /**
-   * 
-   * @memberof BulkHTTPValidationRequest
-   */
-  'batchSize'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkHTTPValidationRequest
-   */
-  'stealth'?: 
-        
-          
-          BulkHTTPValidationRequestStealth
-    ;
+    /**
+     * 
+     * @type {Array<BulkHTTPValidationRequestOperationsInner>}
+     * @memberof BulkHTTPValidationRequest
+     */
+    'operations': Array<BulkHTTPValidationRequestOperationsInner>;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkHTTPValidationRequest
+     */
+    'batchSize'?: number;
+    /**
+     * 
+     * @type {BulkHTTPValidationRequestStealth}
+     * @memberof BulkHTTPValidationRequest
+     */
+    'stealth'?: BulkHTTPValidationRequestStealth;
 }
-
 

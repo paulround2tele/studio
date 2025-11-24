@@ -8,6 +8,21 @@ import { DomainMetricsInput } from '@/types/campaignMetrics';
 
 const DEFAULT_THRESHOLD = 4000;
 
+/**
+ * Resolve worker script URL in environments that may not provide the URL constructor (e.g., Jest)
+ */
+const resolveWorkerScript = (): string | URL => {
+  if (typeof URL === 'function') {
+    try {
+      return new URL('../workers/metricsWorker.ts', import.meta.url);
+    } catch {
+      // Fall through to string fallback when bundler metadata is unavailable
+    }
+  }
+
+  return '/workers/metricsWorker.js';
+};
+
 interface WorkerMessage {
   type: 'compute' | 'result' | 'error';
   id?: string;
@@ -53,6 +68,7 @@ export function useWorkerMetricsFallback(
   const [isLoading, setIsLoading] = useState(() => shouldUseWorker && domains.length > 0);
   const [error, setError] = useState<Error | null>(null);
   const [timingMs, setTimingMs] = useState<number | null>(null);
+  const [workerReady, setWorkerReady] = useState(false);
   
   const workerRef = useRef<Worker | null>(null);
   const requestIdRef = useRef<number>(0);
@@ -65,21 +81,21 @@ export function useWorkerMetricsFallback(
         workerRef.current.terminate();
         workerRef.current = null;
       }
+      setWorkerReady(false);
       return;
     }
 
     if (typeof Worker === 'undefined') {
       setError(new Error('Worker not supported in this environment'));
       setIsLoading(false);
+      setWorkerReady(false);
       return;
     }
 
     try {
-      // Create worker from URL (Next.js handles this in public folder or via webpack)
-      workerRef.current = new Worker(
-        new URL('../workers/metricsWorker.ts', import.meta.url),
-        { type: 'module' }
-      );
+      const workerScript = resolveWorkerScript();
+      workerRef.current = new Worker(workerScript, { type: 'module' });
+      setWorkerReady(true);
 
       workerRef.current.onmessage = (event: MessageEvent<WorkerMessage>) => {
         const { type, id, aggregates, classifiedCounts, error: workerError, timingMs: workerTiming } = event.data;
@@ -96,9 +112,9 @@ export function useWorkerMetricsFallback(
           setResult({
             aggregates,
             classifiedCounts,
-            timingMs: workerTiming || 0
+            timingMs: workerTiming ?? 0
           });
-          setTimingMs(workerTiming || 0);
+          setTimingMs(workerTiming ?? null);
           setError(null);
         } else if (type === 'error') {
           setError(new Error(workerError || 'Worker computation failed'));
@@ -110,6 +126,7 @@ export function useWorkerMetricsFallback(
         console.error('Worker error:', error);
         setError(new Error('Worker failed to initialize'));
         setIsLoading(false);
+        setWorkerReady(false);
         pendingRequestRef.current = null;
       };
 
@@ -117,6 +134,7 @@ export function useWorkerMetricsFallback(
       console.warn('Failed to create worker, falling back to main thread:', err);
       setError(err instanceof Error ? err : new Error('Worker initialization failed'));
       setIsLoading(false);
+      setWorkerReady(false);
       workerRef.current = null;
       return;
     }
@@ -126,16 +144,13 @@ export function useWorkerMetricsFallback(
         workerRef.current.terminate();
         workerRef.current = null;
       }
+      setWorkerReady(false);
     };
   }, [shouldUseWorker]);
 
   // Compute metrics
   const computeMetrics = useCallback(() => {
-    if (!shouldUseWorker || !workerRef.current) {
-      if (shouldUseWorker && !workerRef.current) {
-        setError(new Error('Worker unavailable'));
-        setIsLoading(false);
-      }
+    if (!shouldUseWorker || !workerReady || !workerRef.current) {
       return;
     }
 
@@ -164,26 +179,25 @@ export function useWorkerMetricsFallback(
       setIsLoading(false);
       pendingRequestRef.current = null;
     }
-  }, [domains, shouldUseWorker]);
-
-  useEffect(() => {
-    if (shouldUseWorker && domains.length > 0) {
-      setIsLoading(true);
-    }
-  }, [shouldUseWorker, domains.length]);
+  }, [domains, shouldUseWorker, workerReady]);
 
   // Trigger computation when domains change
   useEffect(() => {
-    if (shouldUseWorker && domains.length > 0) {
-      computeMetrics();
-    } else {
-      // Clear results when not using worker
+    if (!shouldUseWorker || domains.length === 0) {
       setResult(null);
       setError(null);
       setTimingMs(null);
       setIsLoading(false);
+      return;
     }
-  }, [domains, computeMetrics, shouldUseWorker]);
+
+    if (!workerReady) {
+      setIsLoading(true);
+      return;
+    }
+
+    computeMetrics();
+  }, [domains, computeMetrics, shouldUseWorker, workerReady]);
 
   // Cleanup on unmount
   useEffect(() => {

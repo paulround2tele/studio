@@ -23,76 +23,67 @@ import type { AuthConfigPasswordPolicy } from './auth-config-password-policy';
  * @interface AuthConfig
  */
 export interface AuthConfig {
-  /**
-   * Authentication provider type
-   * @memberof AuthConfig
-   */
-  'provider': 
-      'none' | 'local' | 'oauth2' | 'saml'
-;
-  /**
-   * Whether authentication is enforced
-   * @memberof AuthConfig
-   */
-  'enabled': 
-        
-          
-          boolean
-    ;
-  /**
-   * JWT issuer claim value
-   * @memberof AuthConfig
-   */
-  'jwtIssuer'?: 
-        
-          
-          string
-    ;
-  /**
-   * JWT audience claim value
-   * @memberof AuthConfig
-   */
-  'jwtAudience'?: 
-        
-          
-          string
-    ;
-  /**
-   * Access token time-to-live in seconds
-   * @memberof AuthConfig
-   */
-  'accessTokenTtlSeconds': 
-        
-          
-          number
-    ;
-  /**
-   * Refresh token time-to-live in seconds
-   * @memberof AuthConfig
-   */
-  'refreshTokenTtlSeconds': 
-        
-          
-          number
-    ;
-  /**
-   * Providers enabled system-wide
-   * @memberof AuthConfig
-   */
-  'allowedProviders'?: 
-        
-          
-          Array<string>
-    ;
-  /**
-   * 
-   * @memberof AuthConfig
-   */
-  'passwordPolicy'?: 
-        
-          
-          AuthConfigPasswordPolicy
-    ;
+    [key: string]: any;
+
+    /**
+     * Authentication provider type
+     * @type {string}
+     * @memberof AuthConfig
+     */
+    'provider': AuthConfigProviderEnum;
+    /**
+     * Whether authentication is enforced
+     * @type {boolean}
+     * @memberof AuthConfig
+     */
+    'enabled': boolean;
+    /**
+     * JWT issuer claim value
+     * @type {string}
+     * @memberof AuthConfig
+     */
+    'jwtIssuer'?: string;
+    /**
+     * JWT audience claim value
+     * @type {string}
+     * @memberof AuthConfig
+     */
+    'jwtAudience'?: string;
+    /**
+     * Access token time-to-live in seconds
+     * @type {number}
+     * @memberof AuthConfig
+     */
+    'accessTokenTtlSeconds': number;
+    /**
+     * Refresh token time-to-live in seconds
+     * @type {number}
+     * @memberof AuthConfig
+     */
+    'refreshTokenTtlSeconds': number;
+    /**
+     * Providers enabled system-wide
+     * @type {Array<string>}
+     * @memberof AuthConfig
+     */
+    'allowedProviders'?: Array<string>;
+    /**
+     * 
+     * @type {AuthConfigPasswordPolicy}
+     * @memberof AuthConfig
+     */
+    'passwordPolicy'?: AuthConfigPasswordPolicy;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum AuthConfigProviderEnum {
+    none = 'none',
+    local = 'local',
+    oauth2 = 'oauth2',
+    saml = 'saml'
 }
 
 

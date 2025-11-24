@@ -20,33 +20,23 @@
  * @interface SseEventsStats200Response
  */
 export interface SseEventsStats200Response {
-  /**
-   * Number of active SSE connections
-   * @memberof SseEventsStats200Response
-   */
-  'activeConnections'?: 
-        
-          
-          number
-    ;
-  /**
-   * Total events sent since server start
-   * @memberof SseEventsStats200Response
-   */
-  'totalEventsSent'?: 
-        
-          
-          number
-    ;
-  /**
-   * Server uptime
-   * @memberof SseEventsStats200Response
-   */
-  'uptime'?: 
-        
-          
-          string
-    ;
+    /**
+     * Number of active SSE connections
+     * @type {number}
+     * @memberof SseEventsStats200Response
+     */
+    'activeConnections'?: number;
+    /**
+     * Total events sent since server start
+     * @type {number}
+     * @memberof SseEventsStats200Response
+     */
+    'totalEventsSent'?: number;
+    /**
+     * Server uptime
+     * @type {string}
+     * @memberof SseEventsStats200Response
+     */
+    'uptime'?: string;
 }
-
 

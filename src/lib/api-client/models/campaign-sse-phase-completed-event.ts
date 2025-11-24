@@ -23,31 +23,32 @@ import type { PhaseTransitionEvent } from './phase-transition-event';
  * @interface CampaignSsePhaseCompletedEvent
  */
 export interface CampaignSsePhaseCompletedEvent {
-  /**
-   * 
-   * @memberof CampaignSsePhaseCompletedEvent
-   */
-  'type': 
-      'phase_completed'
-;
-  /**
-   * 
-   * @memberof CampaignSsePhaseCompletedEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSsePhaseCompletedEvent
-   */
-  'payload'?: 
-        
-          
-          PhaseTransitionEvent
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSsePhaseCompletedEvent
+     */
+    'type': CampaignSsePhaseCompletedEventTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSsePhaseCompletedEvent
+     */
+    'timestamp'?: string;
+    /**
+     * 
+     * @type {PhaseTransitionEvent}
+     * @memberof CampaignSsePhaseCompletedEvent
+     */
+    'payload'?: PhaseTransitionEvent;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CampaignSsePhaseCompletedEventTypeEnum {
+    phase_completed = 'phase_completed'
 }
 
 

@@ -26,51 +26,37 @@ import type { ErrorCode } from './error-code';
  * @interface ApiError
  */
 export interface ApiError {
-  /**
-   * 
-   * @memberof ApiError
-   */
-  'code': 
-        
-          
-          ErrorCode
-    ;
-  /**
-   * 
-   * @memberof ApiError
-   */
-  'message': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ApiError
-   */
-  'details'?: 
-        
-          
-          Array<ApiErrorDetailsInner>
-    ;
-  /**
-   * 
-   * @memberof ApiError
-   */
-  'timestamp': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ApiError
-   */
-  'path'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {ErrorCode}
+     * @memberof ApiError
+     */
+    'code': ErrorCode;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiError
+     */
+    'message': string;
+    /**
+     * 
+     * @type {Array<ApiErrorDetailsInner>}
+     * @memberof ApiError
+     */
+    'details'?: Array<ApiErrorDetailsInner>;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiError
+     */
+    'timestamp': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiError
+     */
+    'path'?: string;
 }
+
 
 

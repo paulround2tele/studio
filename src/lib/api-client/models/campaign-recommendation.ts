@@ -23,40 +23,45 @@ import type { RecommendationSeverity } from './recommendation-severity';
  * @interface CampaignRecommendation
  */
 export interface CampaignRecommendation {
-  /**
-   * 
-   * @memberof CampaignRecommendation
-   */
-  'id': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignRecommendation
-   */
-  'message': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignRecommendation
-   */
-  'rationaleCode': 
-      'R_DNS_LOW' | 'R_HTTP_LOW' | 'R_FEW_HIGH_POTENTIAL' | 'R_WARNING_RATE_HIGH' | 'R_NO_LEADS' | 'R_MOMENTUM_LOSS' | 'R_MOMENTUM_SURGE' | 'R_ALL_CLEAR'
-;
-  /**
-   * 
-   * @memberof CampaignRecommendation
-   */
-  'severity': 
-        
-          
-          RecommendationSeverity
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignRecommendation
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignRecommendation
+     */
+    'message': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignRecommendation
+     */
+    'rationaleCode': CampaignRecommendationRationaleCodeEnum;
+    /**
+     * 
+     * @type {RecommendationSeverity}
+     * @memberof CampaignRecommendation
+     */
+    'severity': RecommendationSeverity;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CampaignRecommendationRationaleCodeEnum {
+    R_DNS_LOW = 'R_DNS_LOW',
+    R_HTTP_LOW = 'R_HTTP_LOW',
+    R_FEW_HIGH_POTENTIAL = 'R_FEW_HIGH_POTENTIAL',
+    R_WARNING_RATE_HIGH = 'R_WARNING_RATE_HIGH',
+    R_NO_LEADS = 'R_NO_LEADS',
+    R_MOMENTUM_LOSS = 'R_MOMENTUM_LOSS',
+    R_MOMENTUM_SURGE = 'R_MOMENTUM_SURGE',
+    R_ALL_CLEAR = 'R_ALL_CLEAR'
 }
 
 

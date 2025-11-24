@@ -23,40 +23,29 @@ import type { FlexibleValue } from './flexible-value';
  * @interface ProxyOperationResult
  */
 export interface ProxyOperationResult {
-  /**
-   * 
-   * @memberof ProxyOperationResult
-   */
-  'proxyId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProxyOperationResult
-   */
-  'success': 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof ProxyOperationResult
-   */
-  'error'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProxyOperationResult
-   */
-  'metadata'?: 
-        Record<string, unknown>
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyOperationResult
+     */
+    'proxyId': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProxyOperationResult
+     */
+    'success': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyOperationResult
+     */
+    'error'?: string;
+    /**
+     * 
+     * @type {{ [key: string]: FlexibleValue; }}
+     * @memberof ProxyOperationResult
+     */
+    'metadata'?: { [key: string]: FlexibleValue; };
 }
-
 

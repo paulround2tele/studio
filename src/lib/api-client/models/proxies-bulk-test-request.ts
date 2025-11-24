@@ -20,15 +20,11 @@
  * @interface ProxiesBulkTestRequest
  */
 export interface ProxiesBulkTestRequest {
-  /**
-   * 
-   * @memberof ProxiesBulkTestRequest
-   */
-  'proxyIds': 
-        
-          
-          Array<string>
-    ;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof ProxiesBulkTestRequest
+     */
+    'proxyIds': Array<string>;
 }
-
 

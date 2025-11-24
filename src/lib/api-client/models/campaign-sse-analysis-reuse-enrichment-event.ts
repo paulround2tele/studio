@@ -23,31 +23,32 @@ import type { AnalysisReuseEnrichmentEvent } from './analysis-reuse-enrichment-e
  * @interface CampaignSseAnalysisReuseEnrichmentEvent
  */
 export interface CampaignSseAnalysisReuseEnrichmentEvent {
-  /**
-   * 
-   * @memberof CampaignSseAnalysisReuseEnrichmentEvent
-   */
-  'type': 
-      'analysis_reuse_enrichment'
-;
-  /**
-   * 
-   * @memberof CampaignSseAnalysisReuseEnrichmentEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSseAnalysisReuseEnrichmentEvent
-   */
-  'payload'?: 
-        
-          
-          AnalysisReuseEnrichmentEvent
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSseAnalysisReuseEnrichmentEvent
+     */
+    'type': CampaignSseAnalysisReuseEnrichmentEventTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSseAnalysisReuseEnrichmentEvent
+     */
+    'timestamp'?: string;
+    /**
+     * 
+     * @type {AnalysisReuseEnrichmentEvent}
+     * @memberof CampaignSseAnalysisReuseEnrichmentEvent
+     */
+    'payload'?: AnalysisReuseEnrichmentEvent;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CampaignSseAnalysisReuseEnrichmentEventTypeEnum {
+    analysis_reuse_enrichment = 'analysis_reuse_enrichment'
 }
 
 

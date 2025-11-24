@@ -20,15 +20,11 @@
  * @interface ConfigUpdateStealthRequest
  */
 export interface ConfigUpdateStealthRequest {
-  /**
-   * 
-   * @memberof ConfigUpdateStealthRequest
-   */
-  'enabled': 
-        
-          
-          boolean
-    ;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ConfigUpdateStealthRequest
+     */
+    'enabled': boolean;
 }
-
 

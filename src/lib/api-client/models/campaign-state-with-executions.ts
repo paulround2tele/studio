@@ -26,24 +26,17 @@ import type { PhaseExecution } from './phase-execution';
  * @interface CampaignStateWithExecutions
  */
 export interface CampaignStateWithExecutions {
-  /**
-   * 
-   * @memberof CampaignStateWithExecutions
-   */
-  'campaignState': 
-        
-          
-          CampaignState
-    ;
-  /**
-   * 
-   * @memberof CampaignStateWithExecutions
-   */
-  'phaseExecutions': 
-        
-          
-          Array<PhaseExecution>
-    ;
+    /**
+     * 
+     * @type {CampaignState}
+     * @memberof CampaignStateWithExecutions
+     */
+    'campaignState': CampaignState;
+    /**
+     * 
+     * @type {Array<PhaseExecution>}
+     * @memberof CampaignStateWithExecutions
+     */
+    'phaseExecutions': Array<PhaseExecution>;
 }
-
 

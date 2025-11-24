@@ -65,6 +65,24 @@ describe('TaskSchedulerService Safety Improvements', () => {
       // Should reject with timeout error
       await expect(shortTimeoutPromise).rejects.toThrow('Task timeout');
     });
+
+    it('should provide structured payload when queue is cleared', async () => {
+      const queuedPromise = taskScheduler.queueTask(
+        'forecast_blend',
+        { test: 'data' },
+        'low',
+        1000
+      );
+
+      taskScheduler.clearQueue();
+
+      await expect(queuedPromise).resolves.toMatchObject({
+        success: false,
+        errorCode: 'QUEUE_CLEARED',
+        executedBy: 'system',
+        metadata: expect.objectContaining({ priority: 'low' })
+      });
+    });
   });
 
   describe('Worker Status Tracking', () => {  

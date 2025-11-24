@@ -23,87 +23,61 @@ import type { ProxyProtocol } from './proxy-protocol';
  * @interface CreateProxyRequestAPI
  */
 export interface CreateProxyRequestAPI {
-  /**
-   * 
-   * @memberof CreateProxyRequestAPI
-   */
-  'name': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CreateProxyRequestAPI
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CreateProxyRequestAPI
-   */
-  'address': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CreateProxyRequestAPI
-   */
-  'protocol'?: 
-        
-          
-          ProxyProtocol
-    ;
-  /**
-   * 
-   * @memberof CreateProxyRequestAPI
-   */
-  'username'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CreateProxyRequestAPI
-   */
-  'password'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CreateProxyRequestAPI
-   */
-  'countryCode'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CreateProxyRequestAPI
-   */
-  'isEnabled'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof CreateProxyRequestAPI
-   */
-  'notes'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateProxyRequestAPI
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateProxyRequestAPI
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateProxyRequestAPI
+     */
+    'address': string;
+    /**
+     * 
+     * @type {ProxyProtocol}
+     * @memberof CreateProxyRequestAPI
+     */
+    'protocol'?: ProxyProtocol;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateProxyRequestAPI
+     */
+    'username'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateProxyRequestAPI
+     */
+    'password'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateProxyRequestAPI
+     */
+    'countryCode'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CreateProxyRequestAPI
+     */
+    'isEnabled'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateProxyRequestAPI
+     */
+    'notes'?: string;
 }
+
 
 

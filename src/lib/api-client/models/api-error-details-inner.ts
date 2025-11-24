@@ -26,40 +26,31 @@ import type { FlexibleValue } from './flexible-value';
  * @interface ApiErrorDetailsInner
  */
 export interface ApiErrorDetailsInner {
-  /**
-   * JSON pointer or field path
-   * @memberof ApiErrorDetailsInner
-   */
-  'field'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ApiErrorDetailsInner
-   */
-  'code': 
-        
-          
-          ErrorCode
-    ;
-  /**
-   * 
-   * @memberof ApiErrorDetailsInner
-   */
-  'message': 
-        
-          
-          string
-    ;
-  /**
-   * Structured error context values constrained to primitive/array/object envelope.
-   * @memberof ApiErrorDetailsInner
-   */
-  'context'?: 
-        Record<string, unknown>
-    ;
+    /**
+     * JSON pointer or field path
+     * @type {string}
+     * @memberof ApiErrorDetailsInner
+     */
+    'field'?: string;
+    /**
+     * 
+     * @type {ErrorCode}
+     * @memberof ApiErrorDetailsInner
+     */
+    'code': ErrorCode;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiErrorDetailsInner
+     */
+    'message': string;
+    /**
+     * Structured error context values constrained to primitive/array/object envelope.
+     * @type {{ [key: string]: FlexibleValue; }}
+     * @memberof ApiErrorDetailsInner
+     */
+    'context'?: { [key: string]: FlexibleValue; };
 }
+
 
 

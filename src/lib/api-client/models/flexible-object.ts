@@ -23,7 +23,7 @@ import type { FlexiblePrimitive } from './flexible-primitive';
  * @interface FlexibleObject
  */
 export interface FlexibleObject {
-  [key: string]: FlexiblePrimitive | null | undefined;
-}
+    [key: string]: FlexiblePrimitive;
 
+}
 

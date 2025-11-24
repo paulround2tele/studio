@@ -20,40 +20,38 @@
  * @interface HealthResponse
  */
 export interface HealthResponse {
-  /**
-   * 
-   * @memberof HealthResponse
-   */
-  'status': 
-      'ok'
-;
-  /**
-   * 
-   * @memberof HealthResponse
-   */
-  'version'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof HealthResponse
-   */
-  'uptime'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof HealthResponse
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof HealthResponse
+     */
+    'status': HealthResponseStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof HealthResponse
+     */
+    'version'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HealthResponse
+     */
+    'uptime'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HealthResponse
+     */
+    'timestamp'?: string;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum HealthResponseStatusEnum {
+    ok = 'ok'
 }
 
 

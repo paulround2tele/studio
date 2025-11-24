@@ -20,15 +20,11 @@
  * @interface ConfigGetStealth200Response
  */
 export interface ConfigGetStealth200Response {
-  /**
-   * 
-   * @memberof ConfigGetStealth200Response
-   */
-  'enabled'?: 
-        
-          
-          boolean
-    ;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ConfigGetStealth200Response
+     */
+    'enabled'?: boolean;
 }
-
 

@@ -20,76 +20,66 @@
  * @interface RateLimiterConfig
  */
 export interface RateLimiterConfig {
-  /**
-   * Enable request rate limiting
-   * @memberof RateLimiterConfig
-   */
-  'enabled': 
-        
-          
-          boolean
-    ;
-  /**
-   * Rate limiting algorithm
-   * @memberof RateLimiterConfig
-   */
-  'strategy': 
-      'fixed_window' | 'sliding_window' | 'token_bucket'
-;
-  /**
-   * Window size for fixed/sliding strategies
-   * @memberof RateLimiterConfig
-   */
-  'windowSeconds': 
-        
-          
-          number
-    ;
-  /**
-   * Maximum requests per window
-   * @memberof RateLimiterConfig
-   */
-  'maxRequests': 
-        
-          
-          number
-    ;
-  /**
-   * Additional burst capacity
-   * @memberof RateLimiterConfig
-   */
-  'burst'?: 
-        
-          
-          number
-    ;
-  /**
-   * Maximum concurrent in-flight requests
-   * @memberof RateLimiterConfig
-   */
-  'concurrentLimit'?: 
-        
-          
-          number
-    ;
-  /**
-   * Temporary ban duration when threshold exceeded
-   * @memberof RateLimiterConfig
-   */
-  'banDurationSeconds'?: 
-        
-          
-          number
-    ;
-  /**
-   * Use X-Forwarded-For for client identity
-   * @memberof RateLimiterConfig
-   */
-  'respectForwardedFor'?: 
-        
-          
-          boolean
-    ;
+    [key: string]: any;
+
+    /**
+     * Enable request rate limiting
+     * @type {boolean}
+     * @memberof RateLimiterConfig
+     */
+    'enabled': boolean;
+    /**
+     * Rate limiting algorithm
+     * @type {string}
+     * @memberof RateLimiterConfig
+     */
+    'strategy': RateLimiterConfigStrategyEnum;
+    /**
+     * Window size for fixed/sliding strategies
+     * @type {number}
+     * @memberof RateLimiterConfig
+     */
+    'windowSeconds': number;
+    /**
+     * Maximum requests per window
+     * @type {number}
+     * @memberof RateLimiterConfig
+     */
+    'maxRequests': number;
+    /**
+     * Additional burst capacity
+     * @type {number}
+     * @memberof RateLimiterConfig
+     */
+    'burst'?: number;
+    /**
+     * Maximum concurrent in-flight requests
+     * @type {number}
+     * @memberof RateLimiterConfig
+     */
+    'concurrentLimit'?: number;
+    /**
+     * Temporary ban duration when threshold exceeded
+     * @type {number}
+     * @memberof RateLimiterConfig
+     */
+    'banDurationSeconds'?: number;
+    /**
+     * Use X-Forwarded-For for client identity
+     * @type {boolean}
+     * @memberof RateLimiterConfig
+     */
+    'respectForwardedFor'?: boolean;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum RateLimiterConfigStrategyEnum {
+    fixed_window = 'fixed_window',
+    sliding_window = 'sliding_window',
+    token_bucket = 'token_bucket'
 }
 
 

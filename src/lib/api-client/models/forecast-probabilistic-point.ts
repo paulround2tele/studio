@@ -20,87 +20,59 @@
  * @interface ForecastProbabilisticPoint
  */
 export interface ForecastProbabilisticPoint {
-  /**
-   * 
-   * @memberof ForecastProbabilisticPoint
-   */
-  'timestamp': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ForecastProbabilisticPoint
-   */
-  'value': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ForecastProbabilisticPoint
-   */
-  'lower'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ForecastProbabilisticPoint
-   */
-  'upper'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ForecastProbabilisticPoint
-   */
-  'p10'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ForecastProbabilisticPoint
-   */
-  'p50'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ForecastProbabilisticPoint
-   */
-  'p90'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ForecastProbabilisticPoint
-   */
-  'confidence'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ForecastProbabilisticPoint
-   */
-  'metricKey'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof ForecastProbabilisticPoint
+     */
+    'timestamp': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ForecastProbabilisticPoint
+     */
+    'value': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ForecastProbabilisticPoint
+     */
+    'lower'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ForecastProbabilisticPoint
+     */
+    'upper'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ForecastProbabilisticPoint
+     */
+    'p10'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ForecastProbabilisticPoint
+     */
+    'p50'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ForecastProbabilisticPoint
+     */
+    'p90'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ForecastProbabilisticPoint
+     */
+    'confidence'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ForecastProbabilisticPoint
+     */
+    'metricKey'?: string;
 }
-
 

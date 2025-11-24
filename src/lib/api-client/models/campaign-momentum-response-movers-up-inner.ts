@@ -20,24 +20,17 @@
  * @interface CampaignMomentumResponseMoversUpInner
  */
 export interface CampaignMomentumResponseMoversUpInner {
-  /**
-   * 
-   * @memberof CampaignMomentumResponseMoversUpInner
-   */
-  'domain': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignMomentumResponseMoversUpInner
-   */
-  'delta': 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignMomentumResponseMoversUpInner
+     */
+    'domain': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignMomentumResponseMoversUpInner
+     */
+    'delta': number;
 }
-
 

@@ -23,87 +23,61 @@ import type { ProxyProtocol } from './proxy-protocol';
  * @interface UpdateProxyRequestAPI
  */
 export interface UpdateProxyRequestAPI {
-  /**
-   * 
-   * @memberof UpdateProxyRequestAPI
-   */
-  'name'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof UpdateProxyRequestAPI
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof UpdateProxyRequestAPI
-   */
-  'address'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof UpdateProxyRequestAPI
-   */
-  'protocol'?: 
-        
-          
-          ProxyProtocol
-    ;
-  /**
-   * 
-   * @memberof UpdateProxyRequestAPI
-   */
-  'username'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof UpdateProxyRequestAPI
-   */
-  'password'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof UpdateProxyRequestAPI
-   */
-  'countryCode'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof UpdateProxyRequestAPI
-   */
-  'isEnabled'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof UpdateProxyRequestAPI
-   */
-  'notes'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateProxyRequestAPI
+     */
+    'name'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateProxyRequestAPI
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateProxyRequestAPI
+     */
+    'address'?: string;
+    /**
+     * 
+     * @type {ProxyProtocol}
+     * @memberof UpdateProxyRequestAPI
+     */
+    'protocol'?: ProxyProtocol;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateProxyRequestAPI
+     */
+    'username'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateProxyRequestAPI
+     */
+    'password'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateProxyRequestAPI
+     */
+    'countryCode'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof UpdateProxyRequestAPI
+     */
+    'isEnabled'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateProxyRequestAPI
+     */
+    'notes'?: string;
 }
+
 
 

@@ -23,49 +23,47 @@ import type { BulkAnalyticsResponseAnalytics } from './bulk-analytics-response-a
  * @interface BulkAnalyticsResponse
  */
 export interface BulkAnalyticsResponse {
-  /**
-   * 
-   * @memberof BulkAnalyticsResponse
-   */
-  'operationId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkAnalyticsResponse
-   */
-  'status': 
-      'initiated' | 'pending' | 'running' | 'completed'
-;
-  /**
-   * 
-   * @memberof BulkAnalyticsResponse
-   */
-  'analytics'?: 
-        
-          
-          BulkAnalyticsResponseAnalytics
-    ;
-  /**
-   * 
-   * @memberof BulkAnalyticsResponse
-   */
-  'processedCampaigns': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkAnalyticsResponse
-   */
-  'estimatedCompletion'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkAnalyticsResponse
+     */
+    'operationId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkAnalyticsResponse
+     */
+    'status': BulkAnalyticsResponseStatusEnum;
+    /**
+     * 
+     * @type {BulkAnalyticsResponseAnalytics}
+     * @memberof BulkAnalyticsResponse
+     */
+    'analytics'?: BulkAnalyticsResponseAnalytics;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkAnalyticsResponse
+     */
+    'processedCampaigns': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkAnalyticsResponse
+     */
+    'estimatedCompletion'?: string;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum BulkAnalyticsResponseStatusEnum {
+    initiated = 'initiated',
+    pending = 'pending',
+    running = 'running',
+    completed = 'completed'
 }
 
 

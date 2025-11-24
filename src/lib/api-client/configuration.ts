@@ -13,8 +13,6 @@
  */
 
 
-import type { RawAxiosRequestConfig } from 'axios';
-
 export interface ConfigurationParameters {
     apiKey?: string | Promise<string> | ((name: string) => string) | ((name: string) => Promise<string>);
     username?: string;
@@ -22,7 +20,7 @@ export interface ConfigurationParameters {
     accessToken?: string | Promise<string> | ((name?: string, scopes?: string[]) => string) | ((name?: string, scopes?: string[]) => Promise<string>);
     basePath?: string;
     serverIndex?: number;
-    baseOptions?: RawAxiosRequestConfig;
+    baseOptions?: any;
     formDataCtor?: new () => any;
 }
 
@@ -74,7 +72,7 @@ export class Configuration {
      * @type {any}
      * @memberof Configuration
      */
-    baseOptions?: RawAxiosRequestConfig;
+    baseOptions?: any;
     /**
      * The FormData constructor that will be used to create multipart form data
      * requests. You can inject this here so that execution environments that
@@ -91,7 +89,12 @@ export class Configuration {
         this.accessToken = param.accessToken;
         this.basePath = param.basePath;
         this.serverIndex = param.serverIndex;
-        this.baseOptions = param.baseOptions;
+        this.baseOptions = {
+            ...param.baseOptions,
+            headers: {
+                ...param.baseOptions?.headers,
+            },
+        };
         this.formDataCtor = param.formDataCtor;
     }
 

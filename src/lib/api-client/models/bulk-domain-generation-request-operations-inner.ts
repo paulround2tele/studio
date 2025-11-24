@@ -23,33 +23,23 @@ import type { BulkDomainGenerationRequestOperationsInnerConfig } from './bulk-do
  * @interface BulkDomainGenerationRequestOperationsInner
  */
 export interface BulkDomainGenerationRequestOperationsInner {
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequestOperationsInner
-   */
-  'campaignId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequestOperationsInner
-   */
-  'config': 
-        
-          
-          BulkDomainGenerationRequestOperationsInnerConfig
-    ;
-  /**
-   * 
-   * @memberof BulkDomainGenerationRequestOperationsInner
-   */
-  'maxDomains': 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkDomainGenerationRequestOperationsInner
+     */
+    'campaignId': string;
+    /**
+     * 
+     * @type {BulkDomainGenerationRequestOperationsInnerConfig}
+     * @memberof BulkDomainGenerationRequestOperationsInner
+     */
+    'config': BulkDomainGenerationRequestOperationsInnerConfig;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkDomainGenerationRequestOperationsInner
+     */
+    'maxDomains': number;
 }
-
 

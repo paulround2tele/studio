@@ -25,4 +25,3 @@ import type { FlexiblePrimitive } from './flexible-primitive';
 export interface FlexibleArray extends Array<FlexiblePrimitive> {
 }
 
-

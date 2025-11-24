@@ -23,24 +23,17 @@ import type { UpdateProxyRequestAPI } from './update-proxy-request-api';
  * @interface BulkUpdateProxiesRequest
  */
 export interface BulkUpdateProxiesRequest {
-  /**
-   * 
-   * @memberof BulkUpdateProxiesRequest
-   */
-  'proxyIds': 
-        
-          
-          Array<string>
-    ;
-  /**
-   * 
-   * @memberof BulkUpdateProxiesRequest
-   */
-  'updates': 
-        
-          
-          UpdateProxyRequestAPI
-    ;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BulkUpdateProxiesRequest
+     */
+    'proxyIds': Array<string>;
+    /**
+     * 
+     * @type {UpdateProxyRequestAPI}
+     * @memberof BulkUpdateProxiesRequest
+     */
+    'updates': UpdateProxyRequestAPI;
 }
-
 

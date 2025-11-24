@@ -20,33 +20,23 @@
  * @interface BulkResourceAllocationResponseAllocation
  */
 export interface BulkResourceAllocationResponseAllocation {
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponseAllocation
-   */
-  'allocatedAt'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponseAllocation
-   */
-  'expiresAt'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkResourceAllocationResponseAllocation
-   */
-  'estimatedCost'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkResourceAllocationResponseAllocation
+     */
+    'allocatedAt'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkResourceAllocationResponseAllocation
+     */
+    'expiresAt'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkResourceAllocationResponseAllocation
+     */
+    'estimatedCost'?: number;
 }
-
 

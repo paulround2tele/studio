@@ -9,6 +9,7 @@ interface HistoryEntry {
   snapshot: AggregateSnapshot;
   timestamp: number;
   pinned: boolean;
+  sequence: number;
 }
 
 interface CampaignHistory {
@@ -23,11 +24,11 @@ function enforceCapacity(history: CampaignHistory): void {
   const pinnedEntries = history.entries.filter((entry) => entry.pinned);
   const unpinnedEntries = history.entries
     .filter((entry) => !entry.pinned)
-    .sort((a, b) => b.timestamp - a.timestamp);
+    .sort(compareDesc);
   const maxUnpinned = Math.max(0, history.maxSnapshots - pinnedEntries.length);
   const keepUnpinned = maxUnpinned > 0 ? unpinnedEntries.slice(0, maxUnpinned) : [];
 
-  history.entries = [...pinnedEntries, ...keepUnpinned].sort((a, b) => a.timestamp - b.timestamp);
+  history.entries = [...pinnedEntries, ...keepUnpinned].sort(compareAsc);
 }
 
 // In-memory store
@@ -38,6 +39,22 @@ const DEFAULT_MAX_SNAPSHOTS = 50;
 const DEFAULT_TTL_HOURS = 24;
 const STORAGE_KEY_PREFIX = 'campaign_history_';
 const MAX_LOCALSTORAGE_SNAPSHOTS = 10;
+let insertionCounter = 0;
+
+const nextSequence = (): number => {
+  insertionCounter = (insertionCounter + 1) % Number.MAX_SAFE_INTEGER;
+  return insertionCounter;
+};
+
+const compareAsc = (a: HistoryEntry, b: HistoryEntry): number => {
+  const diff = a.timestamp - b.timestamp;
+  return diff !== 0 ? diff : a.sequence - b.sequence;
+};
+
+const compareDesc = (a: HistoryEntry, b: HistoryEntry): number => {
+  const diff = b.timestamp - a.timestamp;
+  return diff !== 0 ? diff : b.sequence - a.sequence;
+};
 
 // Feature flags (checked at runtime)
 const isEnabled = () => process.env.NEXT_PUBLIC_ENABLE_TRENDS !== 'false';
@@ -57,7 +74,8 @@ export function addSnapshot(
   const entry: HistoryEntry = {
     snapshot,
     timestamp: now,
-    pinned
+    pinned,
+    sequence: nextSequence()
   };
 
   // Get or create campaign history
@@ -110,7 +128,7 @@ export function getSnapshots(campaignId: string): AggregateSnapshot[] {
   pruneByTTL(campaignId);
 
   return history.entries
-    .sort((a, b) => a.timestamp - b.timestamp)
+    .sort(compareAsc)
     .map(e => e.snapshot);
 }
 
@@ -231,7 +249,7 @@ function updateLocalStorage(campaignId: string, history: CampaignHistory): void 
   try {
     // Keep only the most recent snapshots for localStorage
     const recentEntries = history.entries
-      .sort((a, b) => b.timestamp - a.timestamp)
+      .sort(compareDesc)
       .slice(0, MAX_LOCALSTORAGE_SNAPSHOTS);
 
     const compressed = {
@@ -277,7 +295,8 @@ function loadFromLocalStorage(campaignId: string): void {
         entries: parsed.entries.map((entry: { snapshot: unknown; timestamp: string; pinned?: boolean }) => ({
           snapshot: entry.snapshot as AggregateSnapshot,
           timestamp: entry.timestamp,
-          pinned: entry.pinned || false
+          pinned: entry.pinned || false,
+          sequence: nextSequence()
         })),
         maxSnapshots: DEFAULT_MAX_SNAPSHOTS
       };

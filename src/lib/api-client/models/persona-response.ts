@@ -26,78 +26,55 @@ import type { PersonaType } from './persona-type';
  * @interface PersonaResponse
  */
 export interface PersonaResponse {
-  /**
-   * 
-   * @memberof PersonaResponse
-   */
-  'id': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PersonaResponse
-   */
-  'name': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PersonaResponse
-   */
-  'personaType': 
-        
-          
-          PersonaType
-    ;
-  /**
-   * 
-   * @memberof PersonaResponse
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PersonaResponse
-   */
-  'configDetails'?: 
-        
-          
-          PersonaConfigDetails
-    ;
-  /**
-   * 
-   * @memberof PersonaResponse
-   */
-  'isEnabled': 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof PersonaResponse
-   */
-  'createdAt': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PersonaResponse
-   */
-  'updatedAt': 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof PersonaResponse
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PersonaResponse
+     */
+    'name': string;
+    /**
+     * 
+     * @type {PersonaType}
+     * @memberof PersonaResponse
+     */
+    'personaType': PersonaType;
+    /**
+     * 
+     * @type {string}
+     * @memberof PersonaResponse
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {PersonaConfigDetails}
+     * @memberof PersonaResponse
+     */
+    'configDetails'?: PersonaConfigDetails;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PersonaResponse
+     */
+    'isEnabled': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof PersonaResponse
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PersonaResponse
+     */
+    'updatedAt': string;
 }
+
 
 

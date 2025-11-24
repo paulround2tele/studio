@@ -20,33 +20,23 @@
  * @interface ProbabilisticForecastResponseQualityMetrics
  */
 export interface ProbabilisticForecastResponseQualityMetrics {
-  /**
-   * 
-   * @memberof ProbabilisticForecastResponseQualityMetrics
-   */
-  'mae'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ProbabilisticForecastResponseQualityMetrics
-   */
-  'mape'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ProbabilisticForecastResponseQualityMetrics
-   */
-  'residualVariance'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProbabilisticForecastResponseQualityMetrics
+     */
+    'mae'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProbabilisticForecastResponseQualityMetrics
+     */
+    'mape'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProbabilisticForecastResponseQualityMetrics
+     */
+    'residualVariance'?: number;
 }
-
 

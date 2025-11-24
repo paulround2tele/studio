@@ -23,78 +23,53 @@ import type { DomainAnalysisFeatures } from './domain-analysis-features';
  * @interface DomainStatusEvent
  */
 export interface DomainStatusEvent {
-  /**
-   * 
-   * @memberof DomainStatusEvent
-   */
-  'id'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof DomainStatusEvent
-   */
-  'domain'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof DomainStatusEvent
-   */
-  'dnsStatus'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof DomainStatusEvent
-   */
-  'httpStatus'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof DomainStatusEvent
-   */
-  'leadStatus'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof DomainStatusEvent
-   */
-  'dnsReason'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof DomainStatusEvent
-   */
-  'httpReason'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof DomainStatusEvent
-   */
-  'features'?: 
-        
-          
-          DomainAnalysisFeatures
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof DomainStatusEvent
+     */
+    'id'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DomainStatusEvent
+     */
+    'domain'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DomainStatusEvent
+     */
+    'dnsStatus'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DomainStatusEvent
+     */
+    'httpStatus'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DomainStatusEvent
+     */
+    'leadStatus'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DomainStatusEvent
+     */
+    'dnsReason'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DomainStatusEvent
+     */
+    'httpReason'?: string;
+    /**
+     * 
+     * @type {DomainAnalysisFeatures}
+     * @memberof DomainStatusEvent
+     */
+    'features'?: DomainAnalysisFeatures;
 }
-
 

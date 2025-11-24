@@ -20,126 +20,108 @@
  * @interface PersonaConfigDns
  */
 export interface PersonaConfigDns {
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'personaType': 
-      'dns'
-;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'resolvers': 
-        
-          
-          Array<string>
-    ;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'useSystemResolvers'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'queryTimeoutSeconds': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'maxDomainsPerRequest': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'resolverStrategy'?: 
-      'round_robin' | 'random' | 'weighted' | 'priority'
-;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'resolversWeighted'?: 
-        Record<string, unknown>
-    ;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'resolversPreferredOrder'?: 
-        
-          
-          Array<string>
-    ;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'concurrentQueriesPerDomain': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'queryDelayMinMs'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'queryDelayMaxMs'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'maxConcurrentGoroutines'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'rateLimitDps'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof PersonaConfigDns
-   */
-  'rateLimitBurst'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof PersonaConfigDns
+     */
+    'personaType': PersonaConfigDnsPersonaTypeEnum;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof PersonaConfigDns
+     */
+    'resolvers': Array<string>;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PersonaConfigDns
+     */
+    'useSystemResolvers'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof PersonaConfigDns
+     */
+    'queryTimeoutSeconds': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PersonaConfigDns
+     */
+    'maxDomainsPerRequest': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof PersonaConfigDns
+     */
+    'resolverStrategy'?: PersonaConfigDnsResolverStrategyEnum;
+    /**
+     * 
+     * @type {{ [key: string]: number; }}
+     * @memberof PersonaConfigDns
+     */
+    'resolversWeighted'?: { [key: string]: number; };
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof PersonaConfigDns
+     */
+    'resolversPreferredOrder'?: Array<string>;
+    /**
+     * 
+     * @type {number}
+     * @memberof PersonaConfigDns
+     */
+    'concurrentQueriesPerDomain': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PersonaConfigDns
+     */
+    'queryDelayMinMs'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PersonaConfigDns
+     */
+    'queryDelayMaxMs'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PersonaConfigDns
+     */
+    'maxConcurrentGoroutines'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PersonaConfigDns
+     */
+    'rateLimitDps'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PersonaConfigDns
+     */
+    'rateLimitBurst'?: number;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum PersonaConfigDnsPersonaTypeEnum {
+    dns = 'dns'
+}
+/**
+    * @export
+    * @enum {string}
+    */
+export enum PersonaConfigDnsResolverStrategyEnum {
+    round_robin = 'round_robin',
+    random = 'random',
+    weighted = 'weighted',
+    priority = 'priority'
 }
 
 

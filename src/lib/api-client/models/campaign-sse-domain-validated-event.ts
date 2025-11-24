@@ -23,31 +23,32 @@ import type { DomainStatusEvent } from './domain-status-event';
  * @interface CampaignSseDomainValidatedEvent
  */
 export interface CampaignSseDomainValidatedEvent {
-  /**
-   * 
-   * @memberof CampaignSseDomainValidatedEvent
-   */
-  'type': 
-      'domain_validated'
-;
-  /**
-   * 
-   * @memberof CampaignSseDomainValidatedEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSseDomainValidatedEvent
-   */
-  'payload'?: 
-        
-          
-          DomainStatusEvent
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSseDomainValidatedEvent
+     */
+    'type': CampaignSseDomainValidatedEventTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSseDomainValidatedEvent
+     */
+    'timestamp'?: string;
+    /**
+     * 
+     * @type {DomainStatusEvent}
+     * @memberof CampaignSseDomainValidatedEvent
+     */
+    'payload'?: DomainStatusEvent;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CampaignSseDomainValidatedEventTypeEnum {
+    domain_validated = 'domain_validated'
 }
 
 

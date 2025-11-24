@@ -8,7 +8,7 @@ const repoRoot = resolve(process.cwd());
 const logsDir = resolve(repoRoot, 'scripts', 'test-logs');
 mkdirSync(logsDir, { recursive: true });
 
-const res = spawnSync('node', [resolve(repoRoot, 'scripts/compare-routes.js')], {
+const res = spawnSync('node', [resolve(repoRoot, 'scripts/compare-routes.cjs')], {
   stdio: ['ignore', 'pipe', 'inherit'],
   encoding: 'utf8',
 });

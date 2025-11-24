@@ -23,31 +23,32 @@ import type { CampaignCompletedEvent } from './campaign-completed-event';
  * @interface CampaignSseCompletedEvent
  */
 export interface CampaignSseCompletedEvent {
-  /**
-   * 
-   * @memberof CampaignSseCompletedEvent
-   */
-  'type': 
-      'campaign_completed'
-;
-  /**
-   * 
-   * @memberof CampaignSseCompletedEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSseCompletedEvent
-   */
-  'payload'?: 
-        
-          
-          CampaignCompletedEvent
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSseCompletedEvent
+     */
+    'type': CampaignSseCompletedEventTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSseCompletedEvent
+     */
+    'timestamp'?: string;
+    /**
+     * 
+     * @type {CampaignCompletedEvent}
+     * @memberof CampaignSseCompletedEvent
+     */
+    'payload'?: CampaignCompletedEvent;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CampaignSseCompletedEventTypeEnum {
+    campaign_completed = 'campaign_completed'
 }
 
 

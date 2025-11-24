@@ -20,67 +20,59 @@
  * @interface PatternOffsetRequest
  */
 export interface PatternOffsetRequest {
-  /**
-   * 
-   * @memberof PatternOffsetRequest
-   */
-  'patternType': 
-      'prefix' | 'suffix' | 'both'
-;
-  /**
-   * Optional prefix-side variable length when patternType is prefix or both
-   * @memberof PatternOffsetRequest
-   */
-  'prefixVariableLength'?: 
-        
-          
-          number
-    ;
-  /**
-   * Optional suffix-side variable length when patternType is suffix or both
-   * @memberof PatternOffsetRequest
-   */
-  'suffixVariableLength'?: 
-        
-          
-          number
-    ;
-  /**
-   * Legacy combined length retained for backwards compatibility (prefix+suffix)
-   * @memberof PatternOffsetRequest
-   */
-  'variableLength'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof PatternOffsetRequest
-   */
-  'characterSet': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PatternOffsetRequest
-   */
-  'constantString'?: 
-        
-          
-          string
-    ;
-  /**
-   * Single TLD including dot, e.g. .com or without dot
-   * @memberof PatternOffsetRequest
-   */
-  'tld'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof PatternOffsetRequest
+     */
+    'patternType': PatternOffsetRequestPatternTypeEnum;
+    /**
+     * Optional prefix-side variable length when patternType is prefix or both
+     * @type {number}
+     * @memberof PatternOffsetRequest
+     */
+    'prefixVariableLength'?: number;
+    /**
+     * Optional suffix-side variable length when patternType is suffix or both
+     * @type {number}
+     * @memberof PatternOffsetRequest
+     */
+    'suffixVariableLength'?: number;
+    /**
+     * Legacy combined length retained for backwards compatibility (prefix+suffix)
+     * @type {number}
+     * @memberof PatternOffsetRequest
+     * @deprecated
+     */
+    'variableLength'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof PatternOffsetRequest
+     */
+    'characterSet': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PatternOffsetRequest
+     */
+    'constantString'?: string;
+    /**
+     * Single TLD including dot, e.g. .com or without dot
+     * @type {string}
+     * @memberof PatternOffsetRequest
+     */
+    'tld'?: string;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum PatternOffsetRequestPatternTypeEnum {
+    prefix = 'prefix',
+    suffix = 'suffix',
+    both = 'both'
 }
 
 

@@ -29,42 +29,29 @@ import type { TimelineEvent } from './timeline-event';
  * @interface CampaignProgressResponse
  */
 export interface CampaignProgressResponse {
-  /**
-   * 
-   * @memberof CampaignProgressResponse
-   */
-  'campaignId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignProgressResponse
-   */
-  'overall': 
-        
-          
-          CampaignProgressResponseOverall
-    ;
-  /**
-   * 
-   * @memberof CampaignProgressResponse
-   */
-  'phases': 
-        
-          
-          CampaignProgressResponsePhases
-    ;
-  /**
-   * Chronological list of timeline events for campaign lifecycle
-   * @memberof CampaignProgressResponse
-   */
-  'timeline': 
-        
-          
-          Array<TimelineEvent>
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignProgressResponse
+     */
+    'campaignId': string;
+    /**
+     * 
+     * @type {CampaignProgressResponseOverall}
+     * @memberof CampaignProgressResponse
+     */
+    'overall': CampaignProgressResponseOverall;
+    /**
+     * 
+     * @type {CampaignProgressResponsePhases}
+     * @memberof CampaignProgressResponse
+     */
+    'phases': CampaignProgressResponsePhases;
+    /**
+     * Chronological list of timeline events for campaign lifecycle
+     * @type {Array<TimelineEvent>}
+     * @memberof CampaignProgressResponse
+     */
+    'timeline': Array<TimelineEvent>;
 }
-
 

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"sort"
 	"strings"
 
@@ -10,17 +11,15 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// dumpRoutes builds the strict Chi router used by the apiserver and walks every
-// registered route so CI can compare it against the bundled OpenAPI contract.
+// dumpRoutes builds the strict Chi router used by the API server and walks each
+// registered route. The output is consumed by scripts/check-routes.mjs to ensure
+// parity between the OpenAPI contract and the live router wiring.
 func dumpRoutes() ([]string, error) {
-	// We do not need fully initialized dependencies to enumerate routes; the
-	// strict handler struct can be instantiated with nil deps because handler
-	// functions are never invoked during a chi.Walk.
 	strict := &strictHandlers{}
 	mux := chi.NewRouter()
 	gen.HandlerFromMuxWithBaseURL(gen.NewStrictHandler(strict, nil), mux, "/api/v2")
 
-	var routes []string
+	routes := make([]string, 0, 256)
 	walker := func(method string, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
 		if method == "" || route == "" {
 			return nil
@@ -29,14 +28,14 @@ func dumpRoutes() ([]string, error) {
 		if norm == "" {
 			norm = "/"
 		}
-		// Chi may report routes with "/*" suffix for catch-alls; trim redundant
-		// trailing slashes except for the root path.
 		if norm != "/" {
 			norm = strings.TrimRight(norm, "/")
 			if norm == "" {
 				norm = "/"
 			}
 		}
+		// Chi emits {param} with a preceding slash already; keep as-is so
+		// compare-routes.mjs can normalize consistently with the spec paths.
 		routes = append(routes, fmt.Sprintf("%s %s", strings.ToUpper(method), norm))
 		return nil
 	}
@@ -44,11 +43,12 @@ func dumpRoutes() ([]string, error) {
 	if err := chi.Walk(mux, walker); err != nil {
 		return nil, err
 	}
+
 	sort.Strings(routes)
 	return routes, nil
 }
 
-func main() {
+func runRouteDump() {
 	routes, err := dumpRoutes()
 	if err != nil {
 		log.Fatalf("route dump failed: %v", err)

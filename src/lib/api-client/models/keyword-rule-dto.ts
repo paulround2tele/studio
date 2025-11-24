@@ -20,87 +20,59 @@
  * @interface KeywordRuleDTO
  */
 export interface KeywordRuleDTO {
-  /**
-   * 
-   * @memberof KeywordRuleDTO
-   */
-  'id'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleDTO
-   */
-  'keywordSetId'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleDTO
-   */
-  'pattern'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleDTO
-   */
-  'ruleType'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleDTO
-   */
-  'isCaseSensitive'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleDTO
-   */
-  'category'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleDTO
-   */
-  'contextChars'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleDTO
-   */
-  'createdAt'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordRuleDTO
-   */
-  'updatedAt'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordRuleDTO
+     */
+    'id'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordRuleDTO
+     */
+    'keywordSetId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordRuleDTO
+     */
+    'pattern'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordRuleDTO
+     */
+    'ruleType'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof KeywordRuleDTO
+     */
+    'isCaseSensitive'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordRuleDTO
+     */
+    'category'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof KeywordRuleDTO
+     */
+    'contextChars'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordRuleDTO
+     */
+    'createdAt'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordRuleDTO
+     */
+    'updatedAt'?: string;
 }
-
 

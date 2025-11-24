@@ -29,38 +29,29 @@ import type { TableStats } from './table-stats';
  * @interface BulkDatabaseStatsResponse
  */
 export interface BulkDatabaseStatsResponse {
-  /**
-   * 
-   * @memberof BulkDatabaseStatsResponse
-   */
-  'databaseStats'?: 
-        
-          
-          DatabaseStats
-    ;
-  /**
-   * 
-   * @memberof BulkDatabaseStatsResponse
-   */
-  'schemaStats'?: 
-        Record<string, unknown>
-    ;
-  /**
-   * 
-   * @memberof BulkDatabaseStatsResponse
-   */
-  'tableStats'?: 
-        Record<string, unknown>
-    ;
-  /**
-   * 
-   * @memberof BulkDatabaseStatsResponse
-   */
-  'totalCount'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {DatabaseStats}
+     * @memberof BulkDatabaseStatsResponse
+     */
+    'databaseStats'?: DatabaseStats;
+    /**
+     * 
+     * @type {{ [key: string]: SchemaStats; }}
+     * @memberof BulkDatabaseStatsResponse
+     */
+    'schemaStats'?: { [key: string]: SchemaStats; };
+    /**
+     * 
+     * @type {{ [key: string]: TableStats; }}
+     * @memberof BulkDatabaseStatsResponse
+     */
+    'tableStats'?: { [key: string]: TableStats; };
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkDatabaseStatsResponse
+     */
+    'totalCount'?: number;
 }
-
 

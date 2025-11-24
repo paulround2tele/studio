@@ -23,78 +23,53 @@ import type { KeywordRuleDTO } from './keyword-rule-dto';
  * @interface KeywordSetWithRulesResponse
  */
 export interface KeywordSetWithRulesResponse {
-  /**
-   * 
-   * @memberof KeywordSetWithRulesResponse
-   */
-  'id': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordSetWithRulesResponse
-   */
-  'name': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordSetWithRulesResponse
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordSetWithRulesResponse
-   */
-  'isEnabled': 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof KeywordSetWithRulesResponse
-   */
-  'createdAt': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordSetWithRulesResponse
-   */
-  'updatedAt': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordSetWithRulesResponse
-   */
-  'rules': 
-        
-          
-          Array<KeywordRuleDTO>
-    ;
-  /**
-   * 
-   * @memberof KeywordSetWithRulesResponse
-   */
-  'ruleCount': 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordSetWithRulesResponse
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordSetWithRulesResponse
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordSetWithRulesResponse
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof KeywordSetWithRulesResponse
+     */
+    'isEnabled': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordSetWithRulesResponse
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordSetWithRulesResponse
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {Array<KeywordRuleDTO>}
+     * @memberof KeywordSetWithRulesResponse
+     */
+    'rules': Array<KeywordRuleDTO>;
+    /**
+     * 
+     * @type {number}
+     * @memberof KeywordSetWithRulesResponse
+     */
+    'ruleCount': number;
 }
-
 

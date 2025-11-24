@@ -20,58 +20,55 @@
  * @interface CampaignProgressResponseOverall
  */
 export interface CampaignProgressResponseOverall {
-  /**
-   * 
-   * @memberof CampaignProgressResponseOverall
-   */
-  'status'?: 
-      'draft' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled'
-;
-  /**
-   * 
-   * @memberof CampaignProgressResponseOverall
-   */
-  'percentComplete'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof CampaignProgressResponseOverall
-   */
-  'totalDomains'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof CampaignProgressResponseOverall
-   */
-  'processedDomains'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof CampaignProgressResponseOverall
-   */
-  'successfulDomains'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof CampaignProgressResponseOverall
-   */
-  'failedDomains'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignProgressResponseOverall
+     */
+    'status'?: CampaignProgressResponseOverallStatusEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignProgressResponseOverall
+     */
+    'percentComplete'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignProgressResponseOverall
+     */
+    'totalDomains'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignProgressResponseOverall
+     */
+    'processedDomains'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignProgressResponseOverall
+     */
+    'successfulDomains'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignProgressResponseOverall
+     */
+    'failedDomains'?: number;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CampaignProgressResponseOverallStatusEnum {
+    draft = 'draft',
+    running = 'running',
+    paused = 'paused',
+    completed = 'completed',
+    failed = 'failed',
+    cancelled = 'cancelled'
 }
 
 

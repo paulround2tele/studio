@@ -20,24 +20,17 @@
  * @interface LoginRequest
  */
 export interface LoginRequest {
-  /**
-   * 
-   * @memberof LoginRequest
-   */
-  'email': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof LoginRequest
-   */
-  'password': 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof LoginRequest
+     */
+    'email': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof LoginRequest
+     */
+    'password': string;
 }
-
 

@@ -20,29 +20,23 @@
  * @interface CampaignsPhaseConfigsList200Response
  */
 export interface CampaignsPhaseConfigsList200Response {
-  /**
-   * 
-   * @memberof CampaignsPhaseConfigsList200Response
-   */
-  'campaignId'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignsPhaseConfigsList200Response
-   */
-  'configsPresent'?: 
-        Record<string, unknown>
-    ;
-  /**
-   * 
-   * @memberof CampaignsPhaseConfigsList200Response
-   */
-  'configs'?: 
-        Record<string, unknown>
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignsPhaseConfigsList200Response
+     */
+    'campaignId'?: string;
+    /**
+     * 
+     * @type {{ [key: string]: boolean; }}
+     * @memberof CampaignsPhaseConfigsList200Response
+     */
+    'configsPresent'?: { [key: string]: boolean; };
+    /**
+     * 
+     * @type {{ [key: string]: object; }}
+     * @memberof CampaignsPhaseConfigsList200Response
+     */
+    'configs'?: { [key: string]: object; };
 }
-
 

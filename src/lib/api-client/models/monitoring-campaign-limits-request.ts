@@ -20,60 +20,41 @@
  * @interface MonitoringCampaignLimitsRequest
  */
 export interface MonitoringCampaignLimitsRequest {
-  /**
-   * 
-   * @memberof MonitoringCampaignLimitsRequest
-   */
-  'maxConcurrentJobs'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof MonitoringCampaignLimitsRequest
-   */
-  'rateLimitPerMinute'?: 
-        
-          
-          number
-    ;
-  /**
-   * Max CPU percent usable by campaign workers
-   * @memberof MonitoringCampaignLimitsRequest
-   */
-  'maxCPUPercent'?: 
-        
-          
-          number
-    ;
-  /**
-   * Max memory usage in MB
-   * @memberof MonitoringCampaignLimitsRequest
-   */
-  'maxMemoryMB'?: 
-        
-          
-          number
-    ;
-  /**
-   * Max disk space usage in MB
-   * @memberof MonitoringCampaignLimitsRequest
-   */
-  'maxDiskMB'?: 
-        
-          
-          number
-    ;
-  /**
-   * Max run duration in seconds
-   * @memberof MonitoringCampaignLimitsRequest
-   */
-  'maxDurationSeconds'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {number}
+     * @memberof MonitoringCampaignLimitsRequest
+     */
+    'maxConcurrentJobs'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof MonitoringCampaignLimitsRequest
+     */
+    'rateLimitPerMinute'?: number;
+    /**
+     * Max CPU percent usable by campaign workers
+     * @type {number}
+     * @memberof MonitoringCampaignLimitsRequest
+     */
+    'maxCPUPercent'?: number;
+    /**
+     * Max memory usage in MB
+     * @type {number}
+     * @memberof MonitoringCampaignLimitsRequest
+     */
+    'maxMemoryMB'?: number;
+    /**
+     * Max disk space usage in MB
+     * @type {number}
+     * @memberof MonitoringCampaignLimitsRequest
+     */
+    'maxDiskMB'?: number;
+    /**
+     * Max run duration in seconds
+     * @type {number}
+     * @memberof MonitoringCampaignLimitsRequest
+     */
+    'maxDurationSeconds'?: number;
 }
-
 

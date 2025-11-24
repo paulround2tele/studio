@@ -23,31 +23,32 @@ import type { PhaseFailedEvent } from './phase-failed-event';
  * @interface CampaignSsePhaseFailedEvent
  */
 export interface CampaignSsePhaseFailedEvent {
-  /**
-   * 
-   * @memberof CampaignSsePhaseFailedEvent
-   */
-  'type': 
-      'phase_failed'
-;
-  /**
-   * 
-   * @memberof CampaignSsePhaseFailedEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSsePhaseFailedEvent
-   */
-  'payload'?: 
-        
-          
-          PhaseFailedEvent
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSsePhaseFailedEvent
+     */
+    'type': CampaignSsePhaseFailedEventTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignSsePhaseFailedEvent
+     */
+    'timestamp'?: string;
+    /**
+     * 
+     * @type {PhaseFailedEvent}
+     * @memberof CampaignSsePhaseFailedEvent
+     */
+    'payload'?: PhaseFailedEvent;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CampaignSsePhaseFailedEventTypeEnum {
+    phase_failed = 'phase_failed'
 }
 
 

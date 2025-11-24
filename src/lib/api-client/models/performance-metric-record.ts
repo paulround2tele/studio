@@ -20,47 +20,48 @@
  * @interface PerformanceMetricRecord
  */
 export interface PerformanceMetricRecord {
-  /**
-   * 
-   * @memberof PerformanceMetricRecord
-   */
-  'metricKey': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PerformanceMetricRecord
-   */
-  'timestamp': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PerformanceMetricRecord
-   */
-  'value': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof PerformanceMetricRecord
-   */
-  'window'?: 
-      'raw' | '1m' | '5m' | '1h' | '1d'
-;
-  /**
-   * 
-   * @memberof PerformanceMetricRecord
-   */
-  'breakdown'?: 
-        Record<string, unknown>
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof PerformanceMetricRecord
+     */
+    'metricKey': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PerformanceMetricRecord
+     */
+    'timestamp': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof PerformanceMetricRecord
+     */
+    'value': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof PerformanceMetricRecord
+     */
+    'window'?: PerformanceMetricRecordWindowEnum;
+    /**
+     * 
+     * @type {{ [key: string]: number; }}
+     * @memberof PerformanceMetricRecord
+     */
+    'breakdown'?: { [key: string]: number; };
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum PerformanceMetricRecordWindowEnum {
+    raw = 'raw',
+    _1m = '1m',
+    _5m = '5m',
+    _1h = '1h',
+    _1d = '1d'
 }
 
 

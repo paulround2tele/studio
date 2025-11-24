@@ -26,33 +26,23 @@ import type { CreateCampaignRequestConfigurationPhases } from './create-campaign
  * @interface CreateCampaignRequestConfiguration
  */
 export interface CreateCampaignRequestConfiguration {
-  /**
-   * Maximum number of domains to process
-   * @memberof CreateCampaignRequestConfiguration
-   */
-  'maxDomains'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof CreateCampaignRequestConfiguration
-   */
-  'phases'?: 
-        
-          
-          CreateCampaignRequestConfigurationPhases
-    ;
-  /**
-   * 
-   * @memberof CreateCampaignRequestConfiguration
-   */
-  'patternConfig'?: 
-        
-          
-          CreateCampaignRequestConfigurationPatternConfig
-    ;
+    /**
+     * Maximum number of domains to process
+     * @type {number}
+     * @memberof CreateCampaignRequestConfiguration
+     */
+    'maxDomains'?: number;
+    /**
+     * 
+     * @type {CreateCampaignRequestConfigurationPhases}
+     * @memberof CreateCampaignRequestConfiguration
+     */
+    'phases'?: CreateCampaignRequestConfigurationPhases;
+    /**
+     * 
+     * @type {CreateCampaignRequestConfigurationPatternConfig}
+     * @memberof CreateCampaignRequestConfiguration
+     */
+    'patternConfig'?: CreateCampaignRequestConfigurationPatternConfig;
 }
-
 

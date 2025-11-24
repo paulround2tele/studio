@@ -23,42 +23,31 @@ import type { PersonaConfigDetails } from './persona-config-details';
  * @interface PersonaUpdateRequest
  */
 export interface PersonaUpdateRequest {
-  /**
-   * 
-   * @memberof PersonaUpdateRequest
-   */
-  'name'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PersonaUpdateRequest
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PersonaUpdateRequest
-   */
-  'isEnabled'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof PersonaUpdateRequest
-   */
-  'configDetails'?: 
-        
-          
-          PersonaConfigDetails
-    ;
-}
+    [key: string]: any;
 
+    /**
+     * 
+     * @type {string}
+     * @memberof PersonaUpdateRequest
+     */
+    'name'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PersonaUpdateRequest
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PersonaUpdateRequest
+     */
+    'isEnabled'?: boolean;
+    /**
+     * 
+     * @type {PersonaConfigDetails}
+     * @memberof PersonaUpdateRequest
+     */
+    'configDetails'?: PersonaConfigDetails;
+}
 

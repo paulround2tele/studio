@@ -20,54 +20,63 @@
  * @interface LoggingConfig
  */
 export interface LoggingConfig {
-  /**
-   * Minimum log level
-   * @memberof LoggingConfig
-   */
-  'level': 
-      'debug' | 'info' | 'warn' | 'error'
-;
-  /**
-   * Log output format
-   * @memberof LoggingConfig
-   */
-  'format': 
-      'json' | 'text'
-;
-  /**
-   * Fraction of debug/trace events to keep (if applicable)
-   * @memberof LoggingConfig
-   */
-  'sampleRate'?: 
-        
-          
-          number
-    ;
-  /**
-   * Log destinations (e.g. stdout, file)
-   * @memberof LoggingConfig
-   */
-  'destinations'?: 
-        
-          
-          Array<string>
-    ;
-  /**
-   * Enable structured HTTP access logging
-   * @memberof LoggingConfig
-   */
-  'enableHttpAccessLog'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * Forward-compatible logging extensions
-   * @memberof LoggingConfig
-   */
-  'extras'?: 
-        Record<string, unknown>
-    ;
+    [key: string]: any;
+
+    /**
+     * Minimum log level
+     * @type {string}
+     * @memberof LoggingConfig
+     */
+    'level': LoggingConfigLevelEnum;
+    /**
+     * Log output format
+     * @type {string}
+     * @memberof LoggingConfig
+     */
+    'format': LoggingConfigFormatEnum;
+    /**
+     * Fraction of debug/trace events to keep (if applicable)
+     * @type {number}
+     * @memberof LoggingConfig
+     */
+    'sampleRate'?: number;
+    /**
+     * Log destinations (e.g. stdout, file)
+     * @type {Array<string>}
+     * @memberof LoggingConfig
+     */
+    'destinations'?: Array<string>;
+    /**
+     * Enable structured HTTP access logging
+     * @type {boolean}
+     * @memberof LoggingConfig
+     */
+    'enableHttpAccessLog'?: boolean;
+    /**
+     * Forward-compatible logging extensions
+     * @type {{ [key: string]: any; }}
+     * @memberof LoggingConfig
+     */
+    'extras'?: { [key: string]: any; };
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum LoggingConfigLevelEnum {
+    debug = 'debug',
+    info = 'info',
+    warn = 'warn',
+    error = 'error'
+}
+/**
+    * @export
+    * @enum {string}
+    */
+export enum LoggingConfigFormatEnum {
+    json = 'json',
+    text = 'text'
 }
 
 

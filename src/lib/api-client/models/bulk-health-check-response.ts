@@ -23,42 +23,29 @@ import type { ProxyHealthCheckResponse } from './proxy-health-check-response';
  * @interface BulkHealthCheckResponse
  */
 export interface BulkHealthCheckResponse {
-  /**
-   * 
-   * @memberof BulkHealthCheckResponse
-   */
-  'totalProxies'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkHealthCheckResponse
-   */
-  'healthyProxies'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkHealthCheckResponse
-   */
-  'failedProxies'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkHealthCheckResponse
-   */
-  'results'?: 
-        
-          
-          Array<ProxyHealthCheckResponse>
-    ;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkHealthCheckResponse
+     */
+    'totalProxies'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkHealthCheckResponse
+     */
+    'healthyProxies'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkHealthCheckResponse
+     */
+    'failedProxies'?: number;
+    /**
+     * 
+     * @type {Array<ProxyHealthCheckResponse>}
+     * @memberof BulkHealthCheckResponse
+     */
+    'results'?: Array<ProxyHealthCheckResponse>;
 }
-
 

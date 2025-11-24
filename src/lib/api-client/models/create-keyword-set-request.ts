@@ -23,42 +23,29 @@ import type { KeywordRuleRequest } from './keyword-rule-request';
  * @interface CreateKeywordSetRequest
  */
 export interface CreateKeywordSetRequest {
-  /**
-   * 
-   * @memberof CreateKeywordSetRequest
-   */
-  'name': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CreateKeywordSetRequest
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CreateKeywordSetRequest
-   */
-  'isEnabled'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof CreateKeywordSetRequest
-   */
-  'rules'?: 
-        
-          
-          Array<KeywordRuleRequest>
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateKeywordSetRequest
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateKeywordSetRequest
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CreateKeywordSetRequest
+     */
+    'isEnabled'?: boolean;
+    /**
+     * 
+     * @type {Array<KeywordRuleRequest>}
+     * @memberof CreateKeywordSetRequest
+     */
+    'rules'?: Array<KeywordRuleRequest>;
 }
-
 

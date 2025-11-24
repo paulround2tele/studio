@@ -20,58 +20,51 @@
  * @interface PageInfo
  */
 export interface PageInfo {
-  /**
-   * 
-   * @memberof PageInfo
-   */
-  'startCursor'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PageInfo
-   */
-  'endCursor'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PageInfo
-   */
-  'hasNextPage': 
-        
-          
-          boolean
-    ;
-  /**
-   * Field used for ordering
-   * @memberof PageInfo
-   */
-  'sortBy'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof PageInfo
-   */
-  'sortOrder'?: 
-      'ASC' | 'DESC'
-;
-  /**
-   * Requested page size
-   * @memberof PageInfo
-   */
-  'first'?: 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof PageInfo
+     */
+    'startCursor'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PageInfo
+     */
+    'endCursor'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageInfo
+     */
+    'hasNextPage': boolean;
+    /**
+     * Field used for ordering
+     * @type {string}
+     * @memberof PageInfo
+     */
+    'sortBy'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PageInfo
+     */
+    'sortOrder'?: PageInfoSortOrderEnum;
+    /**
+     * Requested page size
+     * @type {number}
+     * @memberof PageInfo
+     */
+    'first'?: number;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum PageInfoSortOrderEnum {
+    ASC = 'ASC',
+    DESC = 'DESC'
 }
 
 

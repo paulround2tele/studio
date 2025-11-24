@@ -26,60 +26,41 @@ import type { BulkProxyOperationResponseResultsInner } from './bulk-proxy-operat
  * @interface BulkProxyOperationResponse
  */
 export interface BulkProxyOperationResponse {
-  /**
-   * 
-   * @memberof BulkProxyOperationResponse
-   */
-  'totalRequested': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkProxyOperationResponse
-   */
-  'successCount': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkProxyOperationResponse
-   */
-  'errorCount': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof BulkProxyOperationResponse
-   */
-  'successfulProxies'?: 
-        
-          
-          Array<string>
-    ;
-  /**
-   * 
-   * @memberof BulkProxyOperationResponse
-   */
-  'failedProxies'?: 
-        
-          
-          Array<BulkProxyOperationResponseFailedProxiesInner>
-    ;
-  /**
-   * 
-   * @memberof BulkProxyOperationResponse
-   */
-  'results'?: 
-        
-          
-          Array<BulkProxyOperationResponseResultsInner>
-    ;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkProxyOperationResponse
+     */
+    'totalRequested': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkProxyOperationResponse
+     */
+    'successCount': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BulkProxyOperationResponse
+     */
+    'errorCount': number;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BulkProxyOperationResponse
+     */
+    'successfulProxies'?: Array<string>;
+    /**
+     * 
+     * @type {Array<BulkProxyOperationResponseFailedProxiesInner>}
+     * @memberof BulkProxyOperationResponse
+     */
+    'failedProxies'?: Array<BulkProxyOperationResponseFailedProxiesInner>;
+    /**
+     * 
+     * @type {Array<BulkProxyOperationResponseResultsInner>}
+     * @memberof BulkProxyOperationResponse
+     */
+    'results'?: Array<BulkProxyOperationResponseResultsInner>;
 }
-
 

@@ -82,6 +82,37 @@ function convertDomains(apiDomains: DomainListItem[] | undefined | null): Campai
   });
 }
 
+function toRecord(value: unknown): Record<string, unknown> | undefined {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return undefined;
+}
+
+const asString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+const asNumber = (value: unknown): number | undefined => (typeof value === 'number' ? value : undefined);
+
+function extractCampaignMeta(enriched?: EnrichedCampaignResponse | null): CampaignMeta {
+  const campaignRecord = toRecord(enriched?.campaign);
+  if (!campaignRecord) return {};
+
+  const ownerRecord = toRecord(campaignRecord.owner);
+  const ownerFromObject = asString(ownerRecord?.email);
+  const ownerFallback = asString(campaignRecord.owner_email) || asString(campaignRecord.owner);
+
+  return {
+    createdAt: asString(campaignRecord.createdAt) || asString(campaignRecord.created_at),
+    updatedAt: asString(campaignRecord.updatedAt) || asString(campaignRecord.updated_at),
+    currentPhase: asString(campaignRecord.currentPhase) || asString(campaignRecord.current_phase) || asString(campaignRecord.phase),
+    owner: ownerFromObject || ownerFallback,
+    pattern: asString(campaignRecord.pattern) || asString(campaignRecord.domain_pattern) || asString(campaignRecord.domainPattern),
+    maxDomains:
+      asNumber(campaignRecord.maxDomains) ||
+      asNumber(campaignRecord.max_domains) ||
+      asNumber(campaignRecord.target_count)
+  };
+}
+
 // Convert to new service input format
 function convertToMetricsInput(domains: CampaignDomain[]): DomainMetricsInput[] {
   return domains.map(domain => ({
@@ -344,20 +375,11 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
   }
 
   // Prefer domains from dedicated list endpoint; fall back to enriched domains if present
-  const _enrichedObj = enriched as EnrichedCampaignResponse | undefined;
   const listObj = domainsList as CampaignDomainsListResponse | undefined;
   const rawDomains = listObj?.items || [];
   const domains = convertDomains(rawDomains);
   const metricsInput: DomainMetricsInput[] = convertToMetricsInput(domains);
-  const campaignDetails = (_enrichedObj?.campaign ?? {}) as any;
-  const campaignMeta: CampaignMeta = {
-    createdAt: campaignDetails.created_at || campaignDetails.createdAt,
-    updatedAt: campaignDetails.updated_at || campaignDetails.updatedAt,
-    currentPhase: campaignDetails.current_phase || campaignDetails.phase,
-    owner: campaignDetails.owner?.email || campaignDetails.owner_email || campaignDetails.owner,
-    pattern: campaignDetails.pattern || campaignDetails.domain_pattern || campaignDetails.domainPattern,
-    maxDomains: campaignDetails.max_domains || campaignDetails.target_count || campaignDetails.maxDomains
-  };
+  const campaignMeta = extractCampaignMeta(enriched);
   
   return (
     <MetricsProvider

@@ -23,15 +23,13 @@ import type { CampaignModeEnum } from './campaign-mode-enum';
  * @interface CampaignsModeUpdateRequest
  */
 export interface CampaignsModeUpdateRequest {
-  /**
-   * 
-   * @memberof CampaignsModeUpdateRequest
-   */
-  'mode': 
-        
-          
-          CampaignModeEnum
-    ;
+    /**
+     * 
+     * @type {CampaignModeEnum}
+     * @memberof CampaignsModeUpdateRequest
+     */
+    'mode': CampaignModeEnum;
 }
+
 
 

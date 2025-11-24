@@ -175,26 +175,30 @@ export class FetchWithPolicy {
     options: RequestInit,
     timeoutMs: number
   ): Promise<Response> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    return new Promise<Response>((resolve, reject) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        reject(new Error('Request timeout'));
+      }, timeoutMs);
 
-    try {
-      const response = await fetch(url, {
+      fetch(url, {
         ...options,
         signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timeout');
-      }
-      
-      throw error;
-    }
+      })
+        .then((response) => {
+          clearTimeout(timeoutId);
+          resolve(response);
+        })
+        .catch((error) => {
+          clearTimeout(timeoutId);
+          if (error instanceof Error && error.name === 'AbortError') {
+            reject(new Error('Request timeout'));
+            return;
+          }
+          reject(error);
+        });
+    });
   }
 
   /**
@@ -392,6 +396,9 @@ export class FetchWithPolicy {
    * Delay utility for backoff
    */
   private static delay(ms: number): Promise<void> {
+    if (process.env.NODE_ENV === 'test') {
+      return Promise.resolve();
+    }
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

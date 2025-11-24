@@ -29,33 +29,23 @@ import type { PhaseExecution } from './phase-execution';
  * @interface EnrichedCampaignResponse
  */
 export interface EnrichedCampaignResponse {
-  /**
-   * 
-   * @memberof EnrichedCampaignResponse
-   */
-  'campaign': 
-        
-          
-          CampaignResponse
-    ;
-  /**
-   * 
-   * @memberof EnrichedCampaignResponse
-   */
-  'state'?: 
-        
-          
-          CampaignState
-    ;
-  /**
-   * 
-   * @memberof EnrichedCampaignResponse
-   */
-  'phaseExecutions'?: 
-        
-          
-          Array<PhaseExecution>
-    ;
+    /**
+     * 
+     * @type {CampaignResponse}
+     * @memberof EnrichedCampaignResponse
+     */
+    'campaign': CampaignResponse;
+    /**
+     * 
+     * @type {CampaignState}
+     * @memberof EnrichedCampaignResponse
+     */
+    'state'?: CampaignState;
+    /**
+     * 
+     * @type {Array<PhaseExecution>}
+     * @memberof EnrichedCampaignResponse
+     */
+    'phaseExecutions'?: Array<PhaseExecution>;
 }
-
 

@@ -23,78 +23,53 @@ import type { KeywordRuleDTO } from './keyword-rule-dto';
  * @interface KeywordSetResponse
  */
 export interface KeywordSetResponse {
-  /**
-   * 
-   * @memberof KeywordSetResponse
-   */
-  'id': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordSetResponse
-   */
-  'name': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordSetResponse
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordSetResponse
-   */
-  'isEnabled': 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof KeywordSetResponse
-   */
-  'createdAt': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordSetResponse
-   */
-  'updatedAt': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof KeywordSetResponse
-   */
-  'rules'?: 
-        
-          
-          Array<KeywordRuleDTO>
-    ;
-  /**
-   * 
-   * @memberof KeywordSetResponse
-   */
-  'ruleCount': 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordSetResponse
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordSetResponse
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordSetResponse
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof KeywordSetResponse
+     */
+    'isEnabled': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordSetResponse
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeywordSetResponse
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {Array<KeywordRuleDTO>}
+     * @memberof KeywordSetResponse
+     */
+    'rules'?: Array<KeywordRuleDTO>;
+    /**
+     * 
+     * @type {number}
+     * @memberof KeywordSetResponse
+     */
+    'ruleCount': number;
 }
-
 

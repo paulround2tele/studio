@@ -23,60 +23,41 @@ import type { Proxy } from './proxy';
  * @interface ProxyStatusResponse
  */
 export interface ProxyStatusResponse {
-  /**
-   * 
-   * @memberof ProxyStatusResponse
-   */
-  'proxyId'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProxyStatusResponse
-   */
-  'status'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProxyStatusResponse
-   */
-  'lastChecked'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ProxyStatusResponse
-   */
-  'responseTime'?: 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ProxyStatusResponse
-   */
-  'isHealthy'?: 
-        
-          
-          boolean
-    ;
-  /**
-   * 
-   * @memberof ProxyStatusResponse
-   */
-  'proxyDetails'?: 
-        
-          
-          Proxy
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyStatusResponse
+     */
+    'proxyId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyStatusResponse
+     */
+    'status'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProxyStatusResponse
+     */
+    'lastChecked'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProxyStatusResponse
+     */
+    'responseTime'?: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProxyStatusResponse
+     */
+    'isHealthy'?: boolean;
+    /**
+     * 
+     * @type {Proxy}
+     * @memberof ProxyStatusResponse
+     */
+    'proxyDetails'?: Proxy;
 }
-
 

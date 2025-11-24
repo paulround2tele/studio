@@ -20,67 +20,47 @@
  * @interface ScoringProfile
  */
 export interface ScoringProfile {
-  /**
-   * 
-   * @memberof ScoringProfile
-   */
-  'id': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ScoringProfile
-   */
-  'name': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ScoringProfile
-   */
-  'description'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ScoringProfile
-   */
-  'weights': 
-        Record<string, unknown>
-    ;
-  /**
-   * 
-   * @memberof ScoringProfile
-   */
-  'version': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof ScoringProfile
-   */
-  'createdAt': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof ScoringProfile
-   */
-  'updatedAt': 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof ScoringProfile
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ScoringProfile
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ScoringProfile
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {{ [key: string]: number; }}
+     * @memberof ScoringProfile
+     */
+    'weights': { [key: string]: number; };
+    /**
+     * 
+     * @type {number}
+     * @memberof ScoringProfile
+     */
+    'version': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ScoringProfile
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ScoringProfile
+     */
+    'updatedAt': string;
 }
-
 

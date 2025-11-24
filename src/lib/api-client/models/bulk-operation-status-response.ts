@@ -23,49 +23,48 @@ import type { BulkOperationStatusResponseProgress } from './bulk-operation-statu
  * @interface BulkOperationStatusResponse
  */
 export interface BulkOperationStatusResponse {
-  /**
-   * 
-   * @memberof BulkOperationStatusResponse
-   */
-  'operationId': 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkOperationStatusResponse
-   */
-  'status': 
-      'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
-;
-  /**
-   * 
-   * @memberof BulkOperationStatusResponse
-   */
-  'progress': 
-        
-          
-          BulkOperationStatusResponseProgress
-    ;
-  /**
-   * 
-   * @memberof BulkOperationStatusResponse
-   */
-  'startedAt'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof BulkOperationStatusResponse
-   */
-  'completedAt'?: 
-        
-          
-          string
-    ;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkOperationStatusResponse
+     */
+    'operationId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkOperationStatusResponse
+     */
+    'status': BulkOperationStatusResponseStatusEnum;
+    /**
+     * 
+     * @type {BulkOperationStatusResponseProgress}
+     * @memberof BulkOperationStatusResponse
+     */
+    'progress': BulkOperationStatusResponseProgress;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkOperationStatusResponse
+     */
+    'startedAt'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BulkOperationStatusResponse
+     */
+    'completedAt'?: string;
+}
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum BulkOperationStatusResponseStatusEnum {
+    queued = 'queued',
+    running = 'running',
+    completed = 'completed',
+    failed = 'failed',
+    cancelled = 'cancelled'
 }
 
 

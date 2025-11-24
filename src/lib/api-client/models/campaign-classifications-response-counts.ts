@@ -20,60 +20,41 @@
  * @interface CampaignClassificationsResponseCounts
  */
 export interface CampaignClassificationsResponseCounts {
-  /**
-   * 
-   * @memberof CampaignClassificationsResponseCounts
-   */
-  'highPotential': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof CampaignClassificationsResponseCounts
-   */
-  'emerging': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof CampaignClassificationsResponseCounts
-   */
-  'atRisk': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof CampaignClassificationsResponseCounts
-   */
-  'leadCandidate': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof CampaignClassificationsResponseCounts
-   */
-  'lowValue': 
-        
-          
-          number
-    ;
-  /**
-   * 
-   * @memberof CampaignClassificationsResponseCounts
-   */
-  'other': 
-        
-          
-          number
-    ;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignClassificationsResponseCounts
+     */
+    'highPotential': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignClassificationsResponseCounts
+     */
+    'emerging': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignClassificationsResponseCounts
+     */
+    'atRisk': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignClassificationsResponseCounts
+     */
+    'leadCandidate': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignClassificationsResponseCounts
+     */
+    'lowValue': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof CampaignClassificationsResponseCounts
+     */
+    'other': number;
 }
-
 

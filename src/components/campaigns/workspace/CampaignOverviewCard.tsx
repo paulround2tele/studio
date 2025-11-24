@@ -16,8 +16,15 @@ interface CampaignOverviewCardProps {
   className?: string;
 }
 
+const toRecord = (value: unknown): Record<string, unknown> | undefined => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return undefined;
+};
+
 export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ campaignId, className }) => {
-  const selectOverview = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
+  const selectOverview = React.useMemo(() => pipelineSelectors.overview(campaignId), [campaignId]);
   const ov = useAppSelector(selectOverview);
   const { config, exec, phases, mode, nextAction } = ov;
   const dispatch = useAppDispatch();
@@ -25,18 +32,15 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   // Enriched campaign & scoring profile data
   const { data: enriched } = useGetCampaignEnrichedQuery(campaignId, { skip: !campaignId });
   const enrichedTyped: EnrichedCampaignResponse | undefined = enriched;
+  const enrichedRecord = toRecord(enrichedTyped);
   const { data: scoringProfiles } = useListScoringProfilesQuery(undefined, { skip: !campaignId });
   const scoringNode = ((): Record<string, unknown> | undefined => {
-    if (enrichedTyped && typeof enrichedTyped === 'object') {
-      const node = (enrichedTyped as Record<string, unknown>).scoring;
-      if (node && typeof node === 'object') return node as Record<string, unknown>;
-    }
-    return undefined;
+    const node = enrichedRecord?.['scoring'];
+    return toRecord(node);
   })();
   // Determine scoring profile id using known possible fields with type guards
   const scoringProfileId: string | undefined = (() => {
-    if (enrichedTyped && typeof enrichedTyped === 'object') {
-      const enrichedRecord = enrichedTyped as Record<string, unknown>;
+    if (enrichedRecord) {
       const directId = enrichedRecord['scoringProfileId'];
       if (directId) return String(directId);
       const directName = enrichedRecord['scoringProfile'];
@@ -53,8 +57,7 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const profileObj: ScoringProfile | undefined = scoringProfiles?.items?.find?.((p: ScoringProfile) => p.id === scoringProfileId);
   const profileName = profileObj?.name || scoringProfileId || '—';
   const avgScore: number | undefined = (() => {
-    if (enrichedTyped && typeof enrichedTyped === 'object') {
-      const enrichedRecord = enrichedTyped as Record<string, unknown>;
+    if (enrichedRecord) {
       const avg = enrichedRecord['averageScore'];
       if (typeof avg === 'number') return avg;
       const mono = enrichedRecord['score'];
@@ -69,8 +72,7 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
     return undefined;
   })();
   const lastRescoreAt: string | undefined = (() => {
-    if (enrichedTyped && typeof enrichedTyped === 'object') {
-      const enrichedRecord = enrichedTyped as Record<string, unknown>;
+    if (enrichedRecord) {
       const direct = enrichedRecord['lastRescoreAt'];
       if (typeof direct === 'string') return direct;
     }
@@ -84,7 +86,7 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const handlePrimaryCTA = async () => {
     if (!nextAction) return;
     if (nextAction.type === 'start') {
-  await startPhase({ campaignId, phase: nextAction.phase });
+      await startPhase({ campaignId, phase: nextAction.phase });
     }
   };
 
@@ -92,9 +94,9 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const completedRatio = `${exec.progress.completed}/${exec.progress.total}`;
   const globalExecState = (() => {
     if (exec.progress.completed === exec.progress.total && exec.progress.total > 0) return 'completed';
-    if (phases.some(p=>p.execState === 'failed')) return 'failed';
-    if (phases.some(p=>p.execState === 'running')) return 'running';
-    if (phases.some(p=>p.configState === 'valid')) return 'configured';
+    if (phases.some(p => p.execState === 'failed')) return 'failed';
+    if (phases.some(p => p.execState === 'running')) return 'running';
+    if (phases.some(p => p.configState === 'valid')) return 'configured';
     return 'idle';
   })();
 
@@ -109,7 +111,7 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-xs px-2 py-0.5 rounded bg-muted border">
               <span>Auto</span>
-              <Switch checked={mode.autoAdvance} onCheckedChange={v=>dispatch(setFullSequenceMode({campaignId, value: v}))} data-testid="campaign-mode-toggle" />
+              <Switch checked={mode.autoAdvance} onCheckedChange={v => dispatch(setFullSequenceMode({ campaignId, value: v }))} data-testid="campaign-mode-toggle" />
               <span className="font-medium" data-testid="campaign-mode-label">{mode.autoAdvance ? 'Full Sequence' : 'Step by Step'}</span>
             </div>
             <Button size="sm" disabled={!nextAction || nextAction.type!=='start'} isLoading={isLoading} onClick={handlePrimaryCTA} data-testid="campaign-start-phase">
