@@ -3,8 +3,24 @@ name: API Autogeneration
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'openapi-templates/**'
+      - 'openapitools.json'
+      - 'scripts/**'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'openapi-templates/**'
+      - 'openapitools.json'
+      - 'scripts/**'
+  workflow_dispatch:
+    inputs:
+      regenerate:
+        description: 'Force regeneration even if files outside OpenAPI changed'
+        required: false
+        default: 'false'
 
 jobs:
   autogen:
@@ -35,8 +51,16 @@ jobs:
       - name: Run API autogeneration
         run: npm run api:autogen
 
+      - name: Verify working tree is clean
+        run: |
+          if ! git diff --quiet --exit-code; then
+            echo "::error::API artifacts are out of date. Run npm run api:autogen and commit the changes."
+            git status --short
+            exit 1
+          fi
+
       - name: Upload route parity report
-        if: always()
+        if: always() && hashFiles('scripts/test-logs/route-parity.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: route-parity
