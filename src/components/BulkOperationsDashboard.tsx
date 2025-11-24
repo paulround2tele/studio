@@ -34,6 +34,8 @@ import type {
   BulkAnalyticsRequest,
   BulkResourceAllocationRequest,
 } from '@/lib/api-client/models';
+import { BulkAnalyticsRequestGranularityEnum, BulkAnalyticsRequestMetricsEnum } from '@/lib/api-client/models/bulk-analytics-request';
+import { BulkDNSValidationRequestOperationsInnerValidationConfigRecordTypesEnum } from '@/lib/api-client/models/bulk-dnsvalidation-request-operations-inner-validation-config';
 // UUID type alias (generated client no longer exports uuid-types explicitly)
 type UUID = string;
 
@@ -295,7 +297,11 @@ export const BulkOperationsDashboard: React.FC = () => {
             campaignId: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-dv`) as UUID,
             personaIds: ['persona-1', 'persona-2'],
             maxDomains: 100,
-            validationConfig: { timeout: 5000, retries: 1, recordTypes: 'A' },
+            validationConfig: {
+              timeout: 5000,
+              retries: 1,
+              recordTypes: [BulkDNSValidationRequestOperationsInnerValidationConfigRecordTypesEnum.A]
+            },
           }],
           batchSize: 50,
           stealth: {},
@@ -317,8 +323,8 @@ export const BulkOperationsDashboard: React.FC = () => {
       case 'analytics':
         return {
           campaignIds: ['campaign-1', 'campaign-2'],
-          metrics: 'response_time',
-          granularity: 'day',
+          metrics: [BulkAnalyticsRequestMetricsEnum.response_time],
+          granularity: BulkAnalyticsRequestGranularityEnum.day,
           timeRange: {
             startTime: '2024-01-01T00:00:00Z',
             endTime: '2024-12-31T23:59:59Z',
@@ -342,7 +348,8 @@ export const BulkOperationsDashboard: React.FC = () => {
         // Fallback to a no-op analytics request to satisfy typing; UI prevents hitting this path.
         return {
           campaignIds: [],
-          metrics: 'response_time',
+          metrics: [BulkAnalyticsRequestMetricsEnum.response_time],
+          granularity: BulkAnalyticsRequestGranularityEnum.day,
           timeRange: { startTime: new Date().toISOString(), endTime: new Date().toISOString() },
         } satisfies BulkAnalyticsRequest;
     }

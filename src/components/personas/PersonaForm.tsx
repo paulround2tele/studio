@@ -16,7 +16,9 @@ import { useToast } from "@/hooks/use-toast";
 import { PersonasApi, Configuration } from '@/lib/api-client';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { PersonaConfigHttp as HTTPConfigDetails } from '@/lib/api-client/models/persona-config-http';
+import { PersonaConfigHttpPersonaTypeEnum } from '@/lib/api-client/models/persona-config-http';
 import type { PersonaConfigDns as DNSConfigDetails } from '@/lib/api-client/models/persona-config-dns';
+import { PersonaConfigDnsPersonaTypeEnum } from '@/lib/api-client/models/persona-config-dns';
 import type { PersonaConfigDetails } from '@/lib/api-client/models/persona-config-details';
 import { PersonaType as ApiCreatePersonaRequestPersonaTypeEnum } from '@/lib/api-client/models/persona-type';
 import type { CreatePersonaRequest } from '@/lib/api-client/models/create-persona-request';
@@ -168,7 +170,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: PersonaResp
 
     try {
       const httpConfigDetails: HTTPConfigDetails = {
-        personaType: 'http' as const,
+        personaType: PersonaConfigHttpPersonaTypeEnum.http,
         userAgent: data.userAgent,
         headers: parseJsonOrUndefined<Record<string,string>>(data.headersJson || ""),
         headerOrder: parseStringToArray(data.headerOrderInput || ""),
@@ -425,7 +427,7 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: PersonaRespo
 
     try {
       const dnsConfigDetails: DNSConfigDetails = {
-        personaType: 'dns' as const,
+        personaType: PersonaConfigDnsPersonaTypeEnum.dns,
         resolvers: parseStringToArray(data.config_resolversInput || ""),
         useSystemResolvers: data.config_useSystemResolvers,
         queryTimeoutSeconds: data.config_queryTimeoutSeconds,
