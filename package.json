@@ -16,6 +16,7 @@
     "backend:start": "cd backend && ./bin/apiserver",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "type-check": "npm run typecheck",
     "test": "jest",
     "test:pipeline": "PLAYWRIGHT_JUNIT_OUTPUT=./test-results/pipeline.xml npx playwright test --grep @full-pipeline",
     "test:pipeline:fast": "FAST=1 npx playwright test --grep @full-pipeline",
