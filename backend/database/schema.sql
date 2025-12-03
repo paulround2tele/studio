@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict 5H5yiCInLaHIJNjoHk4YdlKPtxe0L5boHpWxjwb2Pp0jlHckMBcYVUN7cbMYUnf
+\restrict PUxuhbqHdThg01UmPLBi22Adbp03JbhajLAD8L2YFrxaGolOsYrBIZddsDDp0nZ
 
--- Dumped from database version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
--- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
+-- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
+-- Dumped by pg_dump version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -23,20 +23,6 @@ SET row_security = off;
 --
 
 CREATE SCHEMA auth;
-
-
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: -
---
-
--- *not* creating schema, since initdb creates it
-
-
---
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
---
-
-COMMENT ON SCHEMA public IS '';
 
 
 --
@@ -1985,63 +1971,52 @@ DECLARE
     current_campaign_phase phase_type_enum;
     current_campaign_status phase_status_enum;
 BEGIN
-    -- Get current campaign values to check if sync is actually needed
     SELECT current_phase, phase_status INTO current_campaign_phase, current_campaign_status
-    FROM lead_generation_campaigns 
+    FROM lead_generation_campaigns
     WHERE id = campaign_uuid;
-    
-    -- BUSINESS LOGIC: Derive current phase and status from campaign_phases table
-    -- Priority 1: Find any in_progress or failed phase (that's the active one)
+
     SELECT phase_type, status INTO computed_current_phase, computed_phase_status
-    FROM campaign_phases 
-    WHERE campaign_id = campaign_uuid 
-    AND status IN ('in_progress', 'failed')
+    FROM campaign_phases
+    WHERE campaign_id = campaign_uuid
+      AND status IN ('in_progress', 'failed')
     ORDER BY phase_order
     LIMIT 1;
-    
-    -- Priority 2: If no active phase, find first non-completed phase (ready to start)
+
     IF computed_current_phase IS NULL THEN
         SELECT phase_type, status INTO computed_current_phase, computed_phase_status
-        FROM campaign_phases 
-        WHERE campaign_id = campaign_uuid 
-        AND status NOT IN ('completed', 'skipped')
+        FROM campaign_phases
+        WHERE campaign_id = campaign_uuid
+          AND status NOT IN ('completed', 'skipped')
         ORDER BY phase_order
         LIMIT 1;
     END IF;
-    
-    -- Priority 3: If all phases completed, use the last phase
+
     IF computed_current_phase IS NULL THEN
         SELECT phase_type, status INTO computed_current_phase, computed_phase_status
-        FROM campaign_phases 
-        WHERE campaign_id = campaign_uuid 
+        FROM campaign_phases
+        WHERE campaign_id = campaign_uuid
         ORDER BY phase_order DESC
         LIMIT 1;
     END IF;
-    
-    -- Count completed phases for progress tracking
+
     SELECT COUNT(*) INTO completed_count
-    FROM campaign_phases 
-    WHERE campaign_id = campaign_uuid 
-    AND status IN ('completed', 'skipped');
-    
-    -- Only update if values have actually changed (prevent unnecessary updates)
-    IF computed_current_phase IS DISTINCT FROM current_campaign_phase OR 
+    FROM campaign_phases
+    WHERE campaign_id = campaign_uuid
+      AND status IN ('completed', 'skipped');
+
+    IF computed_current_phase IS DISTINCT FROM current_campaign_phase OR
        computed_phase_status IS DISTINCT FROM current_campaign_status THEN
-        
-        -- Update campaign with computed values (derived from phases)
-        UPDATE lead_generation_campaigns 
-        SET 
-            current_phase = computed_current_phase,
+        UPDATE lead_generation_campaigns
+        SET current_phase = computed_current_phase,
             phase_status = computed_phase_status,
             completed_phases = completed_count,
             updated_at = NOW()
         WHERE id = campaign_uuid;
-        
-        -- Log the sync operation
-        RAISE NOTICE 'Campaign % synced: % -> %, % -> %, completed_phases=%', 
-            campaign_uuid, 
+
+        RAISE NOTICE 'Campaign % synced: % -> %, % -> %, completed_phases=%',
+            campaign_uuid,
             current_campaign_phase, computed_current_phase,
-            current_campaign_status, computed_phase_status, 
+            current_campaign_status, computed_phase_status,
             completed_count;
     END IF;
 END;
@@ -10688,22 +10663,8 @@ ALTER TABLE ONLY public.sessions
 
 
 --
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: -
---
-
-REVOKE USAGE ON SCHEMA public FROM PUBLIC;
-
-
---
--- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: -
---
-
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO domainflow;
-
-
---
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5H5yiCInLaHIJNjoHk4YdlKPtxe0L5boHpWxjwb2Pp0jlHckMBcYVUN7cbMYUnf
+\unrestrict PUxuhbqHdThg01UmPLBi22Adbp03JbhajLAD8L2YFrxaGolOsYrBIZddsDDp0nZ
 
