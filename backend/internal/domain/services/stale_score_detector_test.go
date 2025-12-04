@@ -1,3 +1,6 @@
+//go:build cgo
+// +build cgo
+
 package services
 
 import (
@@ -55,7 +58,7 @@ func TestStaleScoreDetector_DetectStaleScores(t *testing.T) {
 		{
 			name: "stale_score_detected",
 			setupData: func(db *sqlx.DB, now time.Time) {
-				oldScoreTime := now.Add(-2 * time.Hour) // Score is 2 hours old
+				oldScoreTime := now.Add(-2 * time.Hour)      // Score is 2 hours old
 				newFeatureTime := now.Add(-30 * time.Minute) // Feature updated 30 min ago
 
 				// Insert old score
@@ -88,7 +91,7 @@ func TestStaleScoreDetector_DetectStaleScores(t *testing.T) {
 		{
 			name: "score_newer_than_feature",
 			setupData: func(db *sqlx.DB, now time.Time) {
-				oldFeatureTime := now.Add(-2 * time.Hour) // Feature is old
+				oldFeatureTime := now.Add(-2 * time.Hour)  // Feature is old
 				newScoreTime := now.Add(-30 * time.Minute) // Score is newer
 
 				// Insert newer score
@@ -106,7 +109,7 @@ func TestStaleScoreDetector_DetectStaleScores(t *testing.T) {
 			name: "boundary_condition_exact_threshold",
 			setupData: func(db *sqlx.DB, now time.Time) {
 				thresholdTime := now.Add(-1*time.Hour - 1*time.Minute) // Slightly older than threshold
-				featureTime := now.Add(-30 * time.Minute) // Feature updated after
+				featureTime := now.Add(-30 * time.Minute)              // Feature updated after
 
 				// Insert score just past threshold
 				db.Exec(`INSERT INTO analysis_scores (campaign_id, domain_name, relevance_score, updated_at) 

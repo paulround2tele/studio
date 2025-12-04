@@ -6,10 +6,12 @@ describe('phaseMapping keyword normalization', () => {
       includeKeywords: ['Alpha', ' beta '],
       adHocKeywords: ['beta', 'Gamma', ' '],
       httpPersonas: ['persona-1'],
+      keywordSetIds: [' set-1 ', '', 'set-2'],
     });
 
     expect(config.keywords).toEqual(['Alpha', 'beta', 'Gamma']);
     expect(config.adHocKeywords).toEqual(['beta', 'Gamma']);
+    expect(config.keywordSetIds).toEqual(['set-1', 'set-2']);
   });
 
   it('propagates ad-hoc keywords into analysis rules', () => {

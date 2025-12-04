@@ -16,6 +16,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -366,6 +367,33 @@ func (h *strictHandlers) KeywordSetsList(ctx context.Context, r gen.KeywordSetsL
 		}
 	}
 
+	ruleCounts := make(map[uuid.UUID]int, len(keywordSets))
+	for _, ks := range keywordSets {
+		if ks.Rules != nil {
+			ruleCounts[ks.ID] = len(*ks.Rules)
+		}
+	}
+	if includeRules && len(setsWithRules) > 0 {
+		for id, rules := range setsWithRules {
+			ruleCounts[id] = len(rules)
+		}
+	}
+	var idsNeedingCounts []uuid.UUID
+	for _, ks := range keywordSets {
+		if _, ok := ruleCounts[ks.ID]; !ok {
+			idsNeedingCounts = append(idsNeedingCounts, ks.ID)
+		}
+	}
+	if len(idsNeedingCounts) > 0 {
+		if counts, err := h.fetchRuleCountsByKeywordSetIDs(ctx, idsNeedingCounts); err == nil {
+			for id, count := range counts {
+				ruleCounts[id] = count
+			}
+		} else {
+			fmt.Printf("failed to fetch keyword rule counts: %v\n", err)
+		}
+	}
+
 	items := make([]gen.KeywordSetResponse, 0, len(keywordSets))
 	for _, ks := range keywordSets {
 		var rulesDTO *[]gen.KeywordRuleDTO
@@ -401,14 +429,6 @@ func (h *strictHandlers) KeywordSetsList(ctx context.Context, r gen.KeywordSetsL
 			}
 			return nil
 		}()
-		count := 0
-		if ks.Rules != nil {
-			count = len(*ks.Rules)
-		} else if includeRules {
-			if rules, ok := setsWithRules[ks.ID]; ok {
-				count = len(rules)
-			}
-		}
 		items = append(items, gen.KeywordSetResponse{
 			Id:          openapi_types.UUID(ks.ID),
 			Name:        ks.Name,
@@ -416,8 +436,13 @@ func (h *strictHandlers) KeywordSetsList(ctx context.Context, r gen.KeywordSetsL
 			IsEnabled:   ks.IsEnabled,
 			CreatedAt:   ks.CreatedAt,
 			UpdatedAt:   ks.UpdatedAt,
-			RuleCount:   count,
-			Rules:       rulesDTO,
+			RuleCount: func() int {
+				if count, ok := ruleCounts[ks.ID]; ok {
+					return count
+				}
+				return 0
+			}(),
+			Rules: rulesDTO,
 		})
 	}
 	resp := gen.KeywordSetsList200JSONResponse(items)
@@ -613,6 +638,10 @@ func (h *strictHandlers) KeywordSetsGet(ctx context.Context, r gen.KeywordSetsGe
 	count := 0
 	if ks.Rules != nil {
 		count = len(*ks.Rules)
+	} else if counts, err := h.fetchRuleCountsByKeywordSetIDs(ctx, []uuid.UUID{ks.ID}); err == nil {
+		count = counts[ks.ID]
+	} else {
+		fmt.Printf("failed to fetch keyword rule count: %v\n", err)
 	}
 	resp := gen.KeywordSetsGet200JSONResponse(gen.KeywordSetResponse{
 		Id:          openapi_types.UUID(ks.ID),
@@ -719,6 +748,10 @@ func (h *strictHandlers) KeywordSetsUpdate(ctx context.Context, r gen.KeywordSet
 	count := 0
 	if ks != nil && ks.Rules != nil {
 		count = len(*ks.Rules)
+	} else if counts, err := h.fetchRuleCountsByKeywordSetIDs(ctx, []uuid.UUID{setID}); err == nil {
+		count = counts[setID]
+	} else {
+		fmt.Printf("failed to fetch keyword rule count: %v\n", err)
 	}
 	resp := gen.KeywordSetsUpdate200JSONResponse(gen.KeywordSetResponse{
 		Id: openapi_types.UUID(setID),
@@ -818,4 +851,27 @@ func (h *strictHandlers) KeywordSetsRulesList(ctx context.Context, r gen.Keyword
 		})
 	}
 	return gen.KeywordSetsRulesList200JSONResponse(dtos), nil
+}
+
+func (h *strictHandlers) fetchRuleCountsByKeywordSetIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]int, error) {
+	counts := make(map[uuid.UUID]int, len(ids))
+	if len(ids) == 0 || h.deps == nil || h.deps.DB == nil {
+		return counts, nil
+	}
+	idStrings := make([]string, len(ids))
+	for i, id := range ids {
+		idStrings[i] = id.String()
+	}
+	rows := []struct {
+		KeywordSetID uuid.UUID `db:"keyword_set_id"`
+		RuleCount    int       `db:"rule_count"`
+	}{}
+	const query = `SELECT keyword_set_id, COUNT(*) as rule_count FROM keyword_rules WHERE keyword_set_id = ANY($1) GROUP BY keyword_set_id`
+	if err := h.deps.DB.SelectContext(ctx, &rows, query, pq.Array(idStrings)); err != nil {
+		return counts, err
+	}
+	for _, row := range rows {
+		counts[row.KeywordSetID] = row.RuleCount
+	}
+	return counts, nil
 }

@@ -17,11 +17,19 @@ interface PersonaOption {
   name: string;
 }
 
+interface KeywordSetOption {
+  id: string;
+  name: string;
+  description?: string;
+  ruleCount?: number;
+}
+
 interface TargetingStepProps {
   data: Partial<WizardTargetingStep>;
   onChange: (data: Partial<WizardTargetingStep>) => void;
   dnsPersonas: PersonaOption[];
   httpPersonas: PersonaOption[];
+  keywordSets: KeywordSetOption[];
   personasLoading: boolean;
   personasError?: string | null;
   onRetryPersonas?: () => void;
@@ -33,6 +41,7 @@ export function TargetingStep({
   onChange,
   dnsPersonas,
   httpPersonas,
+  keywordSets,
   personasLoading,
   personasError,
   onRetryPersonas,
@@ -42,6 +51,7 @@ export function TargetingStep({
 
   const selectedDns = data.dnsPersonas || [];
   const selectedHttp = data.httpPersonas || [];
+  const selectedKeywordSetIds = data.keywordSetIds || [];
   const adHocKeywords = data.adHocKeywords || [];
   const includeKeywords = data.includeKeywords || [];
 
@@ -49,6 +59,7 @@ export function TargetingStep({
 
   const dnsPersonaNames = useMemo(() => new Map(dnsPersonas.map(p => [p.id, p.name])), [dnsPersonas]);
   const httpPersonaNames = useMemo(() => new Map(httpPersonas.map(p => [p.id, p.name])), [httpPersonas]);
+  const keywordSetNameMap = useMemo(() => new Map(keywordSets.map(set => [set.id, set.name])), [keywordSets]);
 
   const applyIncludeKeywords = (raw: string) => {
     const parsed = raw.split(',').map(value => value.trim()).filter(Boolean);
@@ -116,6 +127,21 @@ export function TargetingStep({
   const removeAdHocKeyword = (keyword: string) => {
     onChange({
       adHocKeywords: adHocKeywords.filter(item => item !== keyword),
+    });
+  };
+
+  const toggleKeywordSet = (keywordSetId: string) => {
+    if (!keywordSetId) {
+      return;
+    }
+    const isSelected = selectedKeywordSetIds.includes(keywordSetId);
+    const nextIds = isSelected
+      ? selectedKeywordSetIds.filter(id => id !== keywordSetId)
+      : [...selectedKeywordSetIds, keywordSetId];
+    const nextNames = nextIds.map(id => keywordSetNameMap.get(id) || id);
+    onChange({
+      keywordSetIds: nextIds,
+      keywordSetNames: nextNames,
     });
   };
 
@@ -209,6 +235,49 @@ export function TargetingStep({
             })}
           </div>
         )}
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold">Keyword Sets</h3>
+            <p className="text-xs text-muted-foreground">Choose curated keyword collections that seed HTTP validation and enrichment.</p>
+          </div>
+          {selectedKeywordSetIds.length === 0 && (
+            <span className="text-[11px] font-medium text-destructive">Required</span>
+          )}
+        </div>
+        {personasLoading ? (
+          <p className="text-sm text-muted-foreground">Loading keyword sets...</p>
+        ) : keywordSets.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No keyword sets available. Create one before launching campaigns.</p>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {keywordSets.map(set => {
+              const selected = selectedKeywordSetIds.includes(set.id);
+              return (
+                <button
+                  type="button"
+                  key={set.id}
+                  onClick={() => toggleKeywordSet(set.id)}
+                  className={`rounded border p-3 text-left transition-colors ${selected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}
+                >
+                  <div className="flex items-center justify-between gap-2 text-sm font-medium">
+                    <span>{set.name}</span>
+                    {selected && <Badge variant="secondary" className="text-[10px]">Selected</Badge>}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{set.description || 'No description provided.'}</p>
+                  {typeof set.ruleCount === 'number' && (
+                    <p className="mt-1 text-[10px] text-muted-foreground">{set.ruleCount} rules</p>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">
+          At least one keyword set is required for every campaign. Combine sets with custom keywords for nuanced enrichment.
+        </p>
       </section>
 
       <section className="space-y-2">

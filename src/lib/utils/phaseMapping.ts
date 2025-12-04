@@ -117,6 +117,7 @@ export interface HTTPValidationConfig {
   personaIds: string[];
   keywords?: string[];
   adHocKeywords?: string[];
+  keywordSetIds?: string[];
   name?: string;
   enrichmentEnabled?: boolean;
   microCrawlEnabled?: boolean;
@@ -153,6 +154,15 @@ function sanitizeKeywordList(list?: string[]): string[] {
   return list
     .map((keyword) => (typeof keyword === 'string' ? keyword.trim() : ''))
     .filter((keyword): keyword is string => keyword.length > 0);
+}
+
+function sanitizeIdList(list?: string[]): string[] {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+  return list
+    .map((value) => (typeof value === 'string' ? value.trim() : ''))
+    .filter((value): value is string => value.length > 0);
 }
 
 function collectWizardKeywords(targeting: KeywordTargetingInput): string[] {
@@ -317,9 +327,11 @@ export function mapTargetingToHTTPValidation(targeting: {
   httpMicroCrawlEnabled?: boolean;
   httpMicroCrawlMaxPages?: number;
   httpMicroCrawlByteBudget?: number;
+  keywordSetIds?: string[];
 }): HTTPValidationConfig {
   const keywords = collectWizardKeywords(targeting);
   const adHocKeywords = sanitizeKeywordList(targeting.adHocKeywords);
+  const keywordSetIds = sanitizeIdList(targeting.keywordSetIds);
   const enrichmentEnabled = targeting.httpEnrichmentEnabled ?? true;
   const microEnabled = targeting.httpMicroCrawlEnabled ?? true;
   const microPages = Math.max(1, targeting.httpMicroCrawlMaxPages ?? DEFAULT_HTTP_MICRO_PAGES);
@@ -328,6 +340,7 @@ export function mapTargetingToHTTPValidation(targeting: {
     personaIds: targeting.httpPersonas || [],
     keywords,
     adHocKeywords,
+    keywordSetIds,
     name: 'HTTP Keyword Validation Phase',
     enrichmentEnabled,
     microCrawlEnabled: microEnabled,

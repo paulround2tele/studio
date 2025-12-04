@@ -6,8 +6,10 @@ import type { Proxy as ProxyType } from '@/lib/api-client/models/proxy';
 import { PersonasApi } from '@/lib/api-client/apis/personas-api';
 import { ProxiesApi } from '@/lib/api-client/apis/proxies-api';
 import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
+import { KeywordSetsApi } from '@/lib/api-client/apis/keyword-sets-api';
 import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
 import { apiConfiguration as config } from '@/lib/api/config';
+import type { KeywordSetResponse } from '@/lib/api-client/models/keyword-set-response';
 
 type HttpPersona = Persona;
 type DnsPersona = Persona;
@@ -17,6 +19,7 @@ interface CampaignFormData {
   dnsPersonas: DnsPersona[];
   proxies: ProxyType[];
   sourceCampaigns: Campaign[];
+  keywordSets: KeywordSetResponse[];
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -31,6 +34,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
   const [dnsPersonas, setDnsPersonas] = useState<DnsPersona[]>([]);
   const [proxies, setProxies] = useState<ProxyType[]>([]);
   const [sourceCampaigns, setSourceCampaigns] = useState<Campaign[]>([]);
+  const [keywordSets, setKeywordSets] = useState<KeywordSetResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +47,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
       const personasApi = new PersonasApi(config);
       const proxiesApi = new ProxiesApi(config);
       const campaignsApi = new CampaignsApi(config);
+      const keywordSetsApi = new KeywordSetsApi(config);
 
   // Load personas and filter by type using generated enum
   const personasResp = await personasApi.personasList();
@@ -61,6 +66,10 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
   const campaignsResp = await campaignsApi.campaignsList();
   const campaignsData = unwrapApiResponse<Campaign[]>(campaignsResp) || [];
       setSourceCampaigns(campaignsData);
+
+      const keywordSetsResp = await keywordSetsApi.keywordSetsList();
+      const keywordSetsData = unwrapApiResponse<KeywordSetResponse[]>(keywordSetsResp) || [];
+      setKeywordSets(keywordSetsData);
     } catch (error) {
       console.error('Error loading form data:', error);
       let message = 'Failed to load form data';
@@ -95,6 +104,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
     dnsPersonas: activeDnsPersonas,
     proxies,
     sourceCampaigns,
+    keywordSets,
     isLoading,
     error,
     refetch: fetchData

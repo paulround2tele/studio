@@ -126,6 +126,19 @@ export function ReviewStep({ goal, pattern, targeting }: ReviewStepProps) {
                   </div>
                 )}
 
+                {targeting.keywordSetNames && targeting.keywordSetNames.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Keyword Sets</p>
+                    <div className="flex flex-wrap gap-1">
+                      {targeting.keywordSetNames.map((name, index) => (
+                        <Badge key={name || index} variant="outline" className="text-xs">
+                          {name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {targeting.includeKeywords && targeting.includeKeywords.length > 0 && (
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Include Keywords</p>

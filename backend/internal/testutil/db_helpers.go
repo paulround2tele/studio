@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -24,15 +25,19 @@ var testDSN string
 func SetupTestDatabase(t *testing.T) (*sqlx.DB, func()) {
 	t.Helper()
 
+	backendDir := resolveBackendRoot(t)
+	repoRoot := filepath.Dir(backendDir)
+
 	// Initialize DSN on first run
 	if testDSN == "" {
 		testDSN = os.Getenv("TEST_POSTGRES_DSN")
 		if testDSN == "" {
 			// Read from .db_connection file if it exists
-			dbConnBytes, err := os.ReadFile("../../.db_connection")
+			dbConnPath := filepath.Join(repoRoot, ".db_connection")
+			dbConnBytes, err := os.ReadFile(dbConnPath)
 			if err == nil && len(dbConnBytes) > 0 {
 				testDSN = strings.TrimSpace(string(dbConnBytes))
-				t.Log("Using DSN from .db_connection file")
+				t.Logf("Using DSN from %s", dbConnPath)
 			} else {
 				t.Log("TEST_POSTGRES_DSN not set and .db_connection not found, using default: postgres://studio:studio@localhost:5432/studio_test?sslmode=disable")
 				testDSN = "postgres://studio:studio@localhost:5432/studio_test?sslmode=disable"
@@ -72,8 +77,8 @@ func SetupTestDatabase(t *testing.T) (*sqlx.DB, func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "go", "run", "./cmd/migrate", "-dsn", testDSN, "-migrations", "database/migrations", "-direction", "up")
-	// Use dynamic workspace path instead of hardcoded home (portable in CI / devcontainers)
-	cmd.Dir = "/workspaces/studio/backend"
+	// Resolve backend directory dynamically for local dev, CI, and devcontainers.
+	cmd.Dir = backendDir
 	cmd.Env = append(os.Environ(), "POSTGRES_DSN="+testDSN)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -119,4 +124,51 @@ func CleanupTestDatabase() {
 		testDB.Close()
 		testDB = nil
 	}
+}
+
+// resolveBackendRoot locates the backend module directory regardless of the current working directory.
+func resolveBackendRoot(t *testing.T) string {
+	t.Helper()
+	if override := os.Getenv("BACKEND_ROOT"); override != "" {
+		if isBackendRoot(override) {
+			return override
+		}
+		t.Fatalf("BACKEND_ROOT=%s does not point to backend module", override)
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	dir := wd
+	for i := 0; i < 10; i++ {
+		if isBackendRoot(dir) {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+
+	// Fallback: attempt ./backend relative to current directory (useful if go test invoked from repo root)
+	if rel, err := filepath.Abs(filepath.Join(wd, "backend")); err == nil && isBackendRoot(rel) {
+		return rel
+	}
+
+	t.Fatalf("unable to locate backend module root starting from %s", wd)
+	return ""
+}
+
+func isBackendRoot(dir string) bool {
+	info, err := os.Stat(filepath.Join(dir, "go.mod"))
+	if err != nil || info.IsDir() {
+		return false
+	}
+	contents, err := os.ReadFile(filepath.Join(dir, "go.mod"))
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(contents), "module github.com/fntelecomllc/studio/backend")
 }

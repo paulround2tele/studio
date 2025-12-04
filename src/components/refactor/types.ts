@@ -62,6 +62,8 @@ export interface WizardPatternStep {
 export interface WizardTargetingStep {
   keywords?: string[];
   adHocKeywords?: string[];
+  keywordSetIds?: string[];
+  keywordSetNames?: string[];
   dnsPersonas?: string[];
   dnsPersonaNames?: string[];
   httpPersonas?: string[];

@@ -132,6 +132,9 @@ describe('CampaignCreateWizard Component', () => {
       httpPersonas: [
         { id: 'http-persona-1', name: 'HTTP Persona 1' },
       ],
+      keywordSets: [
+        { id: 'kw-set-1', name: 'Default Keyword Set', ruleCount: 4, isEnabled: true, createdAt: '', updatedAt: '' },
+      ],
       isLoading: false,
       error: null,
       proxies: [],

@@ -28,6 +28,7 @@ import {
   type APIPhaseEnum
 } from '@/lib/utils/phaseMapping';
 import { useCampaignFormData } from '@/lib/hooks/useCampaignFormData';
+import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
 
 import GoalStep from './steps/GoalStep';
 import PatternStep from './steps/PatternStep';
@@ -63,8 +64,9 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
   const {
     dnsPersonas: dnsPersonaList,
     httpPersonas: httpPersonaList,
-    isLoading: isPersonaLoading,
-    error: personaError,
+    keywordSets: keywordSetList,
+    isLoading: isFormDataLoading,
+    error: formDataError,
     refetch: refetchPersonas,
   } = useCampaignFormData(false);
 
@@ -89,6 +91,19 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
       .sort((a, b) => a.name.localeCompare(b.name)),
     [httpPersonaList]
   );
+
+  const keywordSetOptions = useMemo(() =>
+    keywordSetList
+      .filter(set => Boolean(set?.id) && set.isEnabled !== false)
+      .map(set => ({
+        id: set.id,
+        name: set.name || set.id || 'Keyword Set',
+        description: set.description,
+        ruleCount: typeof set.ruleCount === 'number' ? set.ruleCount : undefined,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [keywordSetList]
+  );
   
   // Auto-start banner state management
   const {
@@ -111,6 +126,8 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
       excludeKeywords: [],
       excludeExtensions: [],
       adHocKeywords: [],
+      keywordSetIds: [],
+      keywordSetNames: [],
       dnsPersonas: [],
       httpPersonas: [],
       analysisPersonas: [],
@@ -142,6 +159,13 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
         changed = true;
       }
 
+      const singleKeywordSet = keywordSetOptions.length === 1 ? keywordSetOptions[0] : undefined;
+      if ((nextTargeting?.keywordSetIds?.length || 0) === 0 && singleKeywordSet) {
+        nextTargeting.keywordSetIds = [singleKeywordSet.id];
+        nextTargeting.keywordSetNames = [singleKeywordSet.name];
+        changed = true;
+      }
+
       if (!changed) {
         return prev;
       }
@@ -151,7 +175,7 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
         targeting: nextTargeting,
       };
     });
-  }, [dnsPersonaOptions, httpPersonaOptions]);
+  }, [dnsPersonaOptions, httpPersonaOptions, keywordSetOptions]);
 
   const currentStep = WIZARD_STEPS[wizardState.currentStep];
   const isValidStep = currentStep !== undefined;
@@ -167,13 +191,16 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
       case 1: // Pattern
         return !!(wizardState.pattern.basePattern?.trim() && wizardState.pattern.maxDomains && wizardState.pattern.maxDomains > 0);
       case 2: { // Targeting
+        const keywordSetCount = wizardState.targeting.keywordSetIds?.length || 0;
+        if (keywordSetCount === 0) {
+          return false;
+        }
         if (wizardState.goal.executionMode !== 'auto') {
           return true;
         }
         const dnsCount = wizardState.targeting.dnsPersonas?.length || 0;
         const httpCount = wizardState.targeting.httpPersonas?.length || 0;
-        const keywordCount = (wizardState.targeting.includeKeywords?.length || 0) + (wizardState.targeting.adHocKeywords?.length || 0);
-        return dnsCount > 0 && httpCount > 0 && keywordCount > 0;
+        return dnsCount > 0 && httpCount > 0;
       }
       case 3: // Review
         return validateStep(0) && validateStep(1) && validateStep(2);
@@ -182,8 +209,8 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
     }
   };
 
-  const personasBlocking = wizardState.currentStep === 2 && wizardState.goal.executionMode === 'auto' && (isPersonaLoading || Boolean(personaError));
-  const canProceed = !personasBlocking && validateStep(wizardState.currentStep);
+  const resourcesBlocking = wizardState.currentStep === 2 && wizardState.goal.executionMode === 'auto' && (isFormDataLoading || Boolean(formDataError));
+  const canProceed = !resourcesBlocking && validateStep(wizardState.currentStep);
   const isLoading = isCreating || isUpdatingMode || isStartingPhase || isConfiguringPhase;
 
   const validateAutoPhaseConfiguration = (): string | null => {
@@ -193,9 +220,8 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
     if ((wizardState.targeting.httpPersonas?.length || 0) === 0) {
       return 'Select at least one enrichment persona before running auto mode.';
     }
-    const keywordCount = (wizardState.targeting.includeKeywords?.length || 0) + (wizardState.targeting.adHocKeywords?.length || 0);
-    if (keywordCount === 0) {
-      return 'Provide at least one keyword for HTTP enrichment or add a custom keyword.';
+    if ((wizardState.targeting.keywordSetIds?.length || 0) === 0) {
+      return 'Select at least one keyword set before running auto mode.';
     }
     return null;
   };
@@ -248,19 +274,19 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
       
       // Show initializing banner for auto mode
       if (wizardState.goal.executionMode === 'auto') {
-        if (isPersonaLoading) {
+        if (isFormDataLoading) {
           toast({
-            title: 'Loading personas',
-            description: 'Please wait for personas to finish loading before launching auto mode.',
+            title: 'Loading campaign resources',
+            description: 'Please wait for personas and keyword sets to finish loading before launching auto mode.',
             variant: 'default'
           });
           return;
         }
 
-        if (personaError) {
+        if (formDataError) {
           toast({
             title: 'Persona data unavailable',
-            description: 'Resolve persona load errors before running auto mode.',
+            description: 'Resolve persona or keyword set load errors before running auto mode.',
             variant: 'destructive'
           });
           setWizardState(prev => ({ ...prev, currentStep: 2 }));
@@ -384,7 +410,11 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
         };
         const analysisConfig = mapTargetingToAnalysis(wizardState.targeting);
 
-        const phaseConfigurations: Array<{ phase: APIPhaseEnum; configuration: Record<string, unknown> }> = [
+        const extractionKeywordSetIds = Array.isArray(extractionPhaseConfig.keywordSetIds) && extractionPhaseConfig.keywordSetIds.length > 0
+          ? [...extractionPhaseConfig.keywordSetIds]
+          : undefined;
+
+        const phaseConfigurations: Array<{ phase: APIPhaseEnum; configuration: Record<string, unknown>; keywordSetIds?: string[] }> = [
           {
             phase: firstPhase,
             configuration: domainGenConfig as unknown as Record<string, unknown>,
@@ -396,6 +426,7 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
           {
             phase: 'extraction',
             configuration: extractionPhaseConfig as unknown as Record<string, unknown>,
+            keywordSetIds: extractionKeywordSetIds,
           },
         ];
 
@@ -411,13 +442,17 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
           configuration: enrichmentPhaseConfig,
         });
 
-        for (const { phase, configuration } of phaseConfigurations) {
+        for (const { phase, configuration, keywordSetIds } of phaseConfigurations) {
+          const configRequest: PhaseConfigurationRequest = {
+            configuration,
+          };
+          if (keywordSetIds && keywordSetIds.length > 0) {
+            configRequest.keywordSetIds = keywordSetIds;
+          }
           await configurePhase({
             campaignId,
             phase,
-            config: {
-              configuration,
-            },
+            config: configRequest,
           }).unwrap();
         }
 
@@ -514,8 +549,9 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
             onChange={updateTargeting}
             dnsPersonas={dnsPersonaOptions}
             httpPersonas={httpPersonaOptions}
-            personasLoading={isPersonaLoading}
-            personasError={personaError}
+            keywordSets={keywordSetOptions}
+            personasLoading={isFormDataLoading}
+            personasError={formDataError}
             onRetryPersonas={refetchPersonas}
             executionMode={wizardState.goal.executionMode}
           />
