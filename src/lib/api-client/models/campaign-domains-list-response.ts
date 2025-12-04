@@ -29,35 +29,51 @@ import type { ExtendedPageInfo } from './extended-page-info';
  * @interface CampaignDomainsListResponse
  */
 export interface CampaignDomainsListResponse {
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignDomainsListResponse
-     */
-    'campaignId': string;
-    /**
-     * 
-     * @type {Array<DomainListItem>}
-     * @memberof CampaignDomainsListResponse
-     */
-    'items': Array<DomainListItem>;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignDomainsListResponse
-     */
-    'total': number;
-    /**
-     * 
-     * @type {CampaignDomainsListResponseAggregates}
-     * @memberof CampaignDomainsListResponse
-     */
-    'aggregates'?: CampaignDomainsListResponseAggregates;
-    /**
-     * 
-     * @type {ExtendedPageInfo}
-     * @memberof CampaignDomainsListResponse
-     */
-    'pageInfo'?: ExtendedPageInfo;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponse
+   */
+  'campaignId': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponse
+   */
+  'items': 
+        
+          
+          Array<DomainListItem>
+    ;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponse
+   */
+  'total': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponse
+   */
+  'aggregates'?: 
+        
+          
+          CampaignDomainsListResponseAggregates
+    ;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponse
+   */
+  'pageInfo'?: 
+        
+          
+          ExtendedPageInfo
+    ;
 }
+
 

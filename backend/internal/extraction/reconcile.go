@@ -18,8 +18,8 @@ type ReconcileOptions struct {
 // ReconcileStuckBuilding transitions rows 'building' older than threshold back to 'pending' for retry.
 // Uses ctid subselect pattern to avoid long-running updates.
 func ReconcileStuckBuilding(ctx context.Context, conn *pgx.Conn, opts ReconcileOptions) (int, error) {
-	if !EnabledFeatureTable() {
-		return 0, nil
+	if conn == nil {
+		return 0, fmt.Errorf("pgx connection required for reconciliation")
 	}
 	if opts.BatchSize <= 0 {
 		opts.BatchSize = 200

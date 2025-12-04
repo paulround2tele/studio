@@ -16,89 +16,88 @@ import (
 // ExtractionAnalysisOrchestrator provides a unified interface for the complete extraction-analysis pipeline
 // This implements the final integration of all phases (P1-P8) of the Extraction → Analysis redesign.
 type ExtractionAnalysisOrchestrator struct {
-	db                        *sqlx.DB
-	logger                    Logger
-	
+	db     *sqlx.DB
+	logger Logger
+
 	// Core services
-	featureExtractionSvc     *FeatureExtractionService
-	keywordExtractionSvc     *KeywordExtractionService
-	adaptiveCrawlingSvc      *AdaptiveCrawlingService
-	advancedScoringSvc       *AdvancedScoringService
-	batchExtractionSvc       *BatchExtractionService
-	dataMigrationSvc         *DataMigrationService
-	
+	featureExtractionSvc *FeatureExtractionService
+	keywordExtractionSvc *KeywordExtractionService
+	adaptiveCrawlingSvc  *AdaptiveCrawlingService
+	advancedScoringSvc   *AdvancedScoringService
+	batchExtractionSvc   *BatchExtractionService
+	dataMigrationSvc     *DataMigrationService
+
 	// Configuration
-	config                   OrchestratorConfig
+	config OrchestratorConfig
 }
 
 // OrchestratorConfig contains configuration for the extraction-analysis orchestrator
 type OrchestratorConfig struct {
-	EnableBatchProcessing     bool          `json:"enable_batch_processing"`
-	EnableAdaptiveCrawling    bool          `json:"enable_adaptive_crawling"`
-	EnableAdvancedScoring     bool          `json:"enable_advanced_scoring"`
-	BatchSize                 int           `json:"batch_size"`
-	WorkerCount               int           `json:"worker_count"`
-	ProcessingTimeout         time.Duration `json:"processing_timeout"`
-	RetryAttempts             int           `json:"retry_attempts"`
-	RetryDelay                time.Duration `json:"retry_delay"`
+	EnableBatchProcessing  bool          `json:"enable_batch_processing"`
+	EnableAdaptiveCrawling bool          `json:"enable_adaptive_crawling"`
+	EnableAdvancedScoring  bool          `json:"enable_advanced_scoring"`
+	BatchSize              int           `json:"batch_size"`
+	WorkerCount            int           `json:"worker_count"`
+	ProcessingTimeout      time.Duration `json:"processing_timeout"`
+	RetryAttempts          int           `json:"retry_attempts"`
+	RetryDelay             time.Duration `json:"retry_delay"`
 }
 
 // PipelineResult represents the result of running the complete extraction-analysis pipeline
 type PipelineResult struct {
-	DomainID              uuid.UUID                      `json:"domain_id"`
-	DomainName            string                         `json:"domain_name"`
-	CampaignID            uuid.UUID                      `json:"campaign_id"`
-	
+	DomainID   uuid.UUID `json:"domain_id"`
+	DomainName string    `json:"domain_name"`
+	CampaignID uuid.UUID `json:"campaign_id"`
+
 	// Processing stages
-	FeatureExtractionComplete  bool                      `json:"feature_extraction_complete"`
-	KeywordExtractionComplete bool                      `json:"keyword_extraction_complete"`
-	AdaptiveCrawlingComplete   bool                      `json:"adaptive_crawling_complete"`
-	AdvancedScoringComplete    bool                      `json:"advanced_scoring_complete"`
-	
+	FeatureExtractionComplete bool `json:"feature_extraction_complete"`
+	KeywordExtractionComplete bool `json:"keyword_extraction_complete"`
+	AdaptiveCrawlingComplete  bool `json:"adaptive_crawling_complete"`
+	AdvancedScoringComplete   bool `json:"advanced_scoring_complete"`
+
 	// Results
-	FeatureProfile            *ExtractionFeatures       `json:"feature_profile,omitempty"`
-	KeywordProfile            *KeywordRelevanceAnalysis `json:"keyword_profile,omitempty"`
-	CrawlProfile              *SiteComplexityProfile    `json:"crawl_profile,omitempty"`
-	ScoringProfile            *ScoringProfile           `json:"scoring_profile,omitempty"`
-	
+	FeatureProfile *ExtractionFeatures       `json:"feature_profile,omitempty"`
+	KeywordProfile *KeywordRelevanceAnalysis `json:"keyword_profile,omitempty"`
+	CrawlProfile   *SiteComplexityProfile    `json:"crawl_profile,omitempty"`
+	ScoringProfile *ScoringProfile           `json:"scoring_profile,omitempty"`
+
 	// Pipeline metadata
-	ProcessingTime            time.Duration             `json:"processing_time"`
-	StartedAt                 time.Time                 `json:"started_at"`
-	CompletedAt               time.Time                 `json:"completed_at"`
-	Success                   bool                      `json:"success"`
-	ErrorMessage              string                    `json:"error_message,omitempty"`
-	
+	ProcessingTime time.Duration `json:"processing_time"`
+	StartedAt      time.Time     `json:"started_at"`
+	CompletedAt    time.Time     `json:"completed_at"`
+	Success        bool          `json:"success"`
+	ErrorMessage   string        `json:"error_message,omitempty"`
+
 	// Performance metrics
-	PhaseTimings              map[string]time.Duration  `json:"phase_timings"`
-	ResourceUsage             map[string]interface{}    `json:"resource_usage"`
+	PhaseTimings  map[string]time.Duration `json:"phase_timings"`
+	ResourceUsage map[string]interface{}   `json:"resource_usage"`
 }
 
 // PipelineStatus represents the current status of the extraction-analysis pipeline
 type PipelineStatus struct {
-	TotalDomains              int                       `json:"total_domains"`
-	ProcessedDomains          int                       `json:"processed_domains"`
-	SuccessfulDomains         int                       `json:"successful_domains"`
-	FailedDomains             int                       `json:"failed_domains"`
-	PendingDomains            int                       `json:"pending_domains"`
-	
+	TotalDomains      int `json:"total_domains"`
+	ProcessedDomains  int `json:"processed_domains"`
+	SuccessfulDomains int `json:"successful_domains"`
+	FailedDomains     int `json:"failed_domains"`
+	PendingDomains    int `json:"pending_domains"`
+
 	// Feature flags status
-	FeatureFlagsEnabled       ExtractionAnalysisFeatureFlags `json:"feature_flags_enabled"`
-	
+	FeatureFlagsEnabled ExtractionAnalysisFeatureFlags `json:"feature_flags_enabled"`
+
 	// Performance metrics
-	AverageProcessingTime     time.Duration             `json:"average_processing_time"`
-	ThroughputPerSecond       float64                   `json:"throughput_per_second"`
-	ErrorRate                 float64                   `json:"error_rate"`
-	
+	AverageProcessingTime time.Duration `json:"average_processing_time"`
+	ThroughputPerSecond   float64       `json:"throughput_per_second"`
+	ErrorRate             float64       `json:"error_rate"`
+
 	// Migration status
-	MigrationStatus           *MigrationStatus          `json:"migration_status,omitempty"`
-	
+	MigrationStatus *MigrationStatus `json:"migration_status,omitempty"`
+
 	// Last updated
-	LastUpdated               time.Time                 `json:"last_updated"`
+	LastUpdated time.Time `json:"last_updated"`
 }
 
 // ExtractionAnalysisFeatureFlags represents the current state of all feature flags
 type ExtractionAnalysisFeatureFlags struct {
-	ExtractionFeatureTableEnabled  bool `json:"extraction_feature_table_enabled"`
 	ExtractionKeywordDetailEnabled bool `json:"extraction_keyword_detail_enabled"`
 	AnalysisReadsFeatureTable      bool `json:"analysis_reads_feature_table"`
 	MicrocrawlAdaptiveMode         bool `json:"microcrawl_adaptive_mode"`
@@ -150,7 +149,7 @@ func NewExtractionAnalysisOrchestrator(
 // ProcessDomain runs the complete extraction-analysis pipeline for a single domain
 func (o *ExtractionAnalysisOrchestrator) ProcessDomain(ctx context.Context, domainID uuid.UUID, campaignID uuid.UUID, domainName string, signals extraction.RawSignals) (*PipelineResult, error) {
 	startTime := time.Now()
-	
+
 	result := &PipelineResult{
 		DomainID:      domainID,
 		DomainName:    domainName,
@@ -241,7 +240,6 @@ func (o *ExtractionAnalysisOrchestrator) GetPipelineStatus(ctx context.Context, 
 
 	// Get feature flags status
 	status.FeatureFlagsEnabled = ExtractionAnalysisFeatureFlags{
-		ExtractionFeatureTableEnabled:  featureflags.IsExtractionFeatureTableEnabled(),
 		ExtractionKeywordDetailEnabled: featureflags.IsExtractionKeywordDetailEnabled(),
 		AnalysisReadsFeatureTable:      featureflags.IsAnalysisReadsFeatureTableEnabled(),
 		MicrocrawlAdaptiveMode:         featureflags.IsMicrocrawlAdaptiveModeEnabled(),
@@ -335,18 +333,12 @@ func (o *ExtractionAnalysisOrchestrator) runFeatureExtraction(ctx context.Contex
 		Now:                      time.Now(),
 	})
 
-	// Save features if feature table is enabled
-	if featureflags.IsExtractionFeatureTableEnabled() {
-		err := o.featureExtractionSvc.SaveFeatures(ctx, result.DomainID, result.CampaignID, result.DomainName, signals, features)
-		if err != nil {
-			return fmt.Errorf("failed to save features: %w", err)
-		}
+	if err := o.featureExtractionSvc.SaveFeatures(ctx, result.DomainID, result.CampaignID, result.DomainName, signals, features); err != nil {
+		return fmt.Errorf("failed to save features: %w", err)
+	}
 
-		// Get the saved feature profile
-		profile, err := o.featureExtractionSvc.GetExtractionStatus(ctx, result.DomainID, result.CampaignID)
-		if err == nil {
-			result.FeatureProfile = profile
-		}
+	if profile, err := o.featureExtractionSvc.GetExtractionStatus(ctx, result.DomainID, result.CampaignID); err == nil {
+		result.FeatureProfile = profile
 	}
 
 	result.FeatureExtractionComplete = true
@@ -467,7 +459,7 @@ func (o *ExtractionAnalysisOrchestrator) runAdvancedScoring(ctx context.Context,
 func (o *ExtractionAnalysisOrchestrator) processIndividualDomains(ctx context.Context, campaignID uuid.UUID) (*BatchResult, error) {
 	// This is a simplified implementation
 	// In practice, this would fetch domains and process them individually
-	
+
 	result := &BatchResult{
 		CampaignID:        campaignID,
 		BatchID:           fmt.Sprintf("individual_%s_%d", campaignID.String()[:8], time.Now().Unix()),
@@ -495,7 +487,6 @@ func (o *ExtractionAnalysisOrchestrator) GetHealthCheck(ctx context.Context) map
 		"timestamp": time.Now(),
 		"services":  map[string]bool{},
 		"feature_flags": ExtractionAnalysisFeatureFlags{
-			ExtractionFeatureTableEnabled:  featureflags.IsExtractionFeatureTableEnabled(),
 			ExtractionKeywordDetailEnabled: featureflags.IsExtractionKeywordDetailEnabled(),
 			AnalysisReadsFeatureTable:      featureflags.IsAnalysisReadsFeatureTableEnabled(),
 			MicrocrawlAdaptiveMode:         featureflags.IsMicrocrawlAdaptiveModeEnabled(),
@@ -527,14 +518,13 @@ func (o *ExtractionAnalysisOrchestrator) GetConfiguration() map[string]interface
 	return map[string]interface{}{
 		"orchestrator_config": o.config,
 		"feature_flags": ExtractionAnalysisFeatureFlags{
-			ExtractionFeatureTableEnabled:  featureflags.IsExtractionFeatureTableEnabled(),
 			ExtractionKeywordDetailEnabled: featureflags.IsExtractionKeywordDetailEnabled(),
 			AnalysisReadsFeatureTable:      featureflags.IsAnalysisReadsFeatureTableEnabled(),
 			MicrocrawlAdaptiveMode:         featureflags.IsMicrocrawlAdaptiveModeEnabled(),
 			AnalysisRescoringEnabled:       featureflags.IsAnalysisRescoringEnabled(),
 		},
 		"feature_flag_helpers": map[string]interface{}{
-			"min_coverage_threshold": featureflags.GetAnalysisFeatureTableMinCoverage(),
+			"min_coverage_threshold":       featureflags.GetAnalysisFeatureTableMinCoverage(),
 			"dual_read_variance_threshold": featureflags.GetDualReadVarianceThreshold(),
 		},
 	}

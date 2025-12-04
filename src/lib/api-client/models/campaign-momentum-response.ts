@@ -23,23 +23,33 @@ import type { CampaignMomentumResponseMoversUpInner } from './campaign-momentum-
  * @interface CampaignMomentumResponse
  */
 export interface CampaignMomentumResponse {
-    /**
-     * 
-     * @type {Array<CampaignMomentumResponseMoversUpInner>}
-     * @memberof CampaignMomentumResponse
-     */
-    'moversUp': Array<CampaignMomentumResponseMoversUpInner>;
-    /**
-     * 
-     * @type {Array<CampaignMomentumResponseMoversUpInner>}
-     * @memberof CampaignMomentumResponse
-     */
-    'moversDown': Array<CampaignMomentumResponseMoversUpInner>;
-    /**
-     * 
-     * @type {Array<number>}
-     * @memberof CampaignMomentumResponse
-     */
-    'histogram': Array<number>;
+  /**
+   * 
+   * @memberof CampaignMomentumResponse
+   */
+  'moversUp': 
+        
+          
+          Array<CampaignMomentumResponseMoversUpInner>
+    ;
+  /**
+   * 
+   * @memberof CampaignMomentumResponse
+   */
+  'moversDown': 
+        
+          
+          Array<CampaignMomentumResponseMoversUpInner>
+    ;
+  /**
+   * 
+   * @memberof CampaignMomentumResponse
+   */
+  'histogram': 
+        
+          
+          Array<number>
+    ;
 }
+
 

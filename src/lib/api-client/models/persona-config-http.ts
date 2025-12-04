@@ -29,92 +29,119 @@ import type { PersonaConfigHttpTlsClientHello } from './persona-config-http-tls-
  * @interface PersonaConfigHttp
  */
 export interface PersonaConfigHttp {
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaConfigHttp
-     */
-    'personaType': PersonaConfigHttpPersonaTypeEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaConfigHttp
-     */
-    'userAgent': string;
-    /**
-     * 
-     * @type {{ [key: string]: string; }}
-     * @memberof PersonaConfigHttp
-     */
-    'headers'?: { [key: string]: string; };
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof PersonaConfigHttp
-     */
-    'headerOrder'?: Array<string>;
-    /**
-     * 
-     * @type {PersonaConfigHttpTlsClientHello}
-     * @memberof PersonaConfigHttp
-     */
-    'tlsClientHello'?: PersonaConfigHttpTlsClientHello;
-    /**
-     * 
-     * @type {ConfigGetStealth200Response}
-     * @memberof PersonaConfigHttp
-     */
-    'http2Settings'?: ConfigGetStealth200Response;
-    /**
-     * 
-     * @type {PersonaConfigHttpCookieHandling}
-     * @memberof PersonaConfigHttp
-     */
-    'cookieHandling'?: PersonaConfigHttpCookieHandling;
-    /**
-     * 
-     * @type {number}
-     * @memberof PersonaConfigHttp
-     */
-    'requestTimeoutSeconds'?: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PersonaConfigHttp
-     */
-    'followRedirects'?: boolean;
-    /**
-     * 
-     * @type {Array<number>}
-     * @memberof PersonaConfigHttp
-     */
-    'allowedStatusCodes'?: Array<number>;
-    /**
-     * 
-     * @type {number}
-     * @memberof PersonaConfigHttp
-     */
-    'rateLimitDps'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PersonaConfigHttp
-     */
-    'rateLimitBurst'?: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaConfigHttp
-     */
-    'notes'?: string;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum PersonaConfigHttpPersonaTypeEnum {
-    http = 'http'
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'personaType': 
+      'http'
+;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'userAgent': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'headers'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'headerOrder'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'tlsClientHello'?: 
+        
+          
+          PersonaConfigHttpTlsClientHello
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'http2Settings'?: 
+        
+          
+          ConfigGetStealth200Response
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'cookieHandling'?: 
+        
+          
+          PersonaConfigHttpCookieHandling
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'requestTimeoutSeconds'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'followRedirects'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'allowedStatusCodes'?: 
+        
+          
+          Array<number>
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'rateLimitDps'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'rateLimitBurst'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttp
+   */
+  'notes'?: 
+        
+          
+          string
+    ;
 }
 
 

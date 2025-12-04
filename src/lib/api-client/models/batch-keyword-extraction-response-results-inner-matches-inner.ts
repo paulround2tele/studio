@@ -20,29 +20,42 @@
  * @interface BatchKeywordExtractionResponseResultsInnerMatchesInner
  */
 export interface BatchKeywordExtractionResponseResultsInnerMatchesInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof BatchKeywordExtractionResponseResultsInnerMatchesInner
-     */
-    'matchedPattern'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BatchKeywordExtractionResponseResultsInnerMatchesInner
-     */
-    'matchedText'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BatchKeywordExtractionResponseResultsInnerMatchesInner
-     */
-    'category'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof BatchKeywordExtractionResponseResultsInnerMatchesInner
-     */
-    'contexts'?: Array<string>;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInnerMatchesInner
+   */
+  'matchedPattern'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInnerMatchesInner
+   */
+  'matchedText'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInnerMatchesInner
+   */
+  'category'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInnerMatchesInner
+   */
+  'contexts'?: 
+        
+          
+          Array<string>
+    ;
 }
+
 

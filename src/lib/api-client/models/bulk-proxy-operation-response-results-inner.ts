@@ -20,41 +20,60 @@
  * @interface BulkProxyOperationResponseResultsInner
  */
 export interface BulkProxyOperationResponseResultsInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkProxyOperationResponseResultsInner
-     */
-    'proxyId': string;
-    /**
-     * Operation performed (enable|disable|delete|update|test)
-     * @type {string}
-     * @memberof BulkProxyOperationResponseResultsInner
-     */
-    'operation': string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof BulkProxyOperationResponseResultsInner
-     */
-    'success': boolean;
-    /**
-     * HTTP status or synthetic code for the operation
-     * @type {number}
-     * @memberof BulkProxyOperationResponseResultsInner
-     */
-    'statusCode'?: number;
-    /**
-     * Error message if success=false
-     * @type {string}
-     * @memberof BulkProxyOperationResponseResultsInner
-     */
-    'error'?: string;
-    /**
-     * Optional human readable status message
-     * @type {string}
-     * @memberof BulkProxyOperationResponseResultsInner
-     */
-    'message'?: string;
+  /**
+   * 
+   * @memberof BulkProxyOperationResponseResultsInner
+   */
+  'proxyId': 
+        
+          
+          string
+    ;
+  /**
+   * Operation performed (enable|disable|delete|update|test)
+   * @memberof BulkProxyOperationResponseResultsInner
+   */
+  'operation': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkProxyOperationResponseResultsInner
+   */
+  'success': 
+        
+          
+          boolean
+    ;
+  /**
+   * HTTP status or synthetic code for the operation
+   * @memberof BulkProxyOperationResponseResultsInner
+   */
+  'statusCode'?: 
+        
+          
+          number
+    ;
+  /**
+   * Error message if success=false
+   * @memberof BulkProxyOperationResponseResultsInner
+   */
+  'error'?: 
+        
+          
+          string
+    ;
+  /**
+   * Optional human readable status message
+   * @memberof BulkProxyOperationResponseResultsInner
+   */
+  'message'?: 
+        
+          
+          string
+    ;
 }
+
 

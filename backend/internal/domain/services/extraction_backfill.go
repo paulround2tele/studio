@@ -15,7 +15,7 @@ import (
 )
 
 // ExtractionBackfillService provides a P0/P1 bridge to populate domain_extraction_features
-// from existing generated_domains rows. It is gated by EXTRACTION_FEATURE_TABLE_ENABLED.
+// from existing generated_domains rows.
 type ExtractionBackfillService struct {
 	DB any // *sql.DB | *sqlx.DB | *pgx.Conn
 }
@@ -23,9 +23,6 @@ type ExtractionBackfillService struct {
 // BackfillCampaign processes existing generated_domains rows for a campaign and upserts feature rows.
 // It performs lightweight aggregation using existing feature_vector JSON when available.
 func (s *ExtractionBackfillService) BackfillCampaign(ctx context.Context, campaignID uuid.UUID, limit int) (int, error) {
-	if !extraction.EnabledFeatureTable() {
-		return 0, nil
-	}
 	// Materialize connection variants
 	var dbStd *sql.DB
 	var pgxConn *pgx.Conn

@@ -291,20 +291,16 @@ func initAppDependencies() (*AppDeps, error) {
 		deps.Stores.CampaignJob = pg_store.NewCampaignJobStorePostgres(db)
 
 		// Extraction metrics initialization (idempotent)
-		// Guard via env flag to allow early disable if not desired in some environments.
-		if os.Getenv("EXTRACTION_FEATURE_TABLE_ENABLED") != "" { // loose gate: any value attempts init
-			// best-effort: avoid panic if import path changes.
-			func() {
-				defer func() { _ = recover() }()
-				extraction.InitMetrics()
-				// Start periodic gauge updater (30s default)
-				if raw := db.DB; raw != nil {
-					ctx, cancel := context.WithCancel(context.Background())
-					_ = cancel // in future wire into shutdown
-					extraction.StartFeatureMetricsLoop(ctx, raw, 30*time.Second)
-				}
-			}()
-		}
+		func() {
+			defer func() { _ = recover() }()
+			extraction.InitMetrics()
+			// Start periodic gauge updater (30s default)
+			if raw := db.DB; raw != nil {
+				ctx, cancel := context.WithCancel(context.Background())
+				_ = cancel // in future wire into shutdown
+				extraction.StartFeatureMetricsLoop(ctx, raw, 30*time.Second)
+			}
+		}()
 	}
 
 	// Initialize aggregates cache (always, even if DB nil; handlers will guard)

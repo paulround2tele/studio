@@ -23,29 +23,42 @@ import type { BulkDNSValidationRequestOperationsInnerValidationConfig } from './
  * @interface BulkDNSValidationRequestOperationsInner
  */
 export interface BulkDNSValidationRequestOperationsInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkDNSValidationRequestOperationsInner
-     */
-    'campaignId': string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof BulkDNSValidationRequestOperationsInner
-     */
-    'personaIds': Array<string>;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkDNSValidationRequestOperationsInner
-     */
-    'maxDomains'?: number;
-    /**
-     * 
-     * @type {BulkDNSValidationRequestOperationsInnerValidationConfig}
-     * @memberof BulkDNSValidationRequestOperationsInner
-     */
-    'validationConfig'?: BulkDNSValidationRequestOperationsInnerValidationConfig;
+  /**
+   * 
+   * @memberof BulkDNSValidationRequestOperationsInner
+   */
+  'campaignId': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkDNSValidationRequestOperationsInner
+   */
+  'personaIds': 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof BulkDNSValidationRequestOperationsInner
+   */
+  'maxDomains'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkDNSValidationRequestOperationsInner
+   */
+  'validationConfig'?: 
+        
+          
+          BulkDNSValidationRequestOperationsInnerValidationConfig
+    ;
 }
+
 

@@ -20,25 +20,33 @@
  * @interface DNSValidatorConfigJSON
  */
 export interface DNSValidatorConfigJSON {
-    [key: string]: any;
-
-    /**
-     * Custom DNS resolver endpoints
-     * @type {Array<string>}
-     * @memberof DNSValidatorConfigJSON
-     */
-    'resolvers'?: Array<string>;
-    /**
-     * Query timeout in milliseconds
-     * @type {number}
-     * @memberof DNSValidatorConfigJSON
-     */
-    'timeoutMs'?: number;
-    /**
-     * Number of retry attempts
-     * @type {number}
-     * @memberof DNSValidatorConfigJSON
-     */
-    'retries'?: number;
+  /**
+   * Custom DNS resolver endpoints
+   * @memberof DNSValidatorConfigJSON
+   */
+  'resolvers'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * Query timeout in milliseconds
+   * @memberof DNSValidatorConfigJSON
+   */
+  'timeoutMs'?: 
+        
+          
+          number
+    ;
+  /**
+   * Number of retry attempts
+   * @memberof DNSValidatorConfigJSON
+   */
+  'retries'?: 
+        
+          
+          number
+    ;
 }
+
 

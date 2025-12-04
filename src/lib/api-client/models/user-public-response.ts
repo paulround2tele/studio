@@ -20,29 +20,42 @@
  * @interface UserPublicResponse
  */
 export interface UserPublicResponse {
-    /**
-     * 
-     * @type {string}
-     * @memberof UserPublicResponse
-     */
-    'id': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof UserPublicResponse
-     */
-    'username': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof UserPublicResponse
-     */
-    'email': string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof UserPublicResponse
-     */
-    'isActive': boolean;
+  /**
+   * 
+   * @memberof UserPublicResponse
+   */
+  'id': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof UserPublicResponse
+   */
+  'username': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof UserPublicResponse
+   */
+  'email': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof UserPublicResponse
+   */
+  'isActive': 
+        
+          
+          boolean
+    ;
 }
+
 

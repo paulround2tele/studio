@@ -20,17 +20,24 @@
  * @interface AnalysisFailedEvent
  */
 export interface AnalysisFailedEvent {
-    /**
-     * 
-     * @type {string}
-     * @memberof AnalysisFailedEvent
-     */
-    'error': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AnalysisFailedEvent
-     */
-    'errorCode'?: string;
+  /**
+   * 
+   * @memberof AnalysisFailedEvent
+   */
+  'error': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof AnalysisFailedEvent
+   */
+  'errorCode'?: 
+        
+          
+          string
+    ;
 }
+
 

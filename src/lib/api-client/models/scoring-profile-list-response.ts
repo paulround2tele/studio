@@ -15,47 +15,34 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { RecommendationSeverity } from './recommendation-severity';
+import type { ScoringProfile } from './scoring-profile';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ScoringProfileListResponseMeta } from './scoring-profile-list-response-meta';
 
 /**
- * 
+ * Paginated list wrapper for scoring profiles
  * @export
- * @interface CampaignRecommendation
+ * @interface ScoringProfileListResponse
  */
-export interface CampaignRecommendation {
+export interface ScoringProfileListResponse {
   /**
    * 
-   * @memberof CampaignRecommendation
+   * @memberof ScoringProfileListResponse
    */
-  'id': 
+  'items': 
         
           
-          string
+          Array<ScoringProfile>
     ;
   /**
    * 
-   * @memberof CampaignRecommendation
+   * @memberof ScoringProfileListResponse
    */
-  'message': 
+  'meta'?: 
         
           
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignRecommendation
-   */
-  'rationaleCode': 
-      'R_DNS_LOW' | 'R_HTTP_LOW' | 'R_FEW_HIGH_POTENTIAL' | 'R_WARNING_RATE_HIGH' | 'R_NO_LEADS' | 'R_MOMENTUM_LOSS' | 'R_MOMENTUM_SURGE' | 'R_ALL_CLEAR'
-;
-  /**
-   * 
-   * @memberof CampaignRecommendation
-   */
-  'severity': 
-        
-          
-          RecommendationSeverity
+          ScoringProfileListResponseMeta
     ;
 }
 

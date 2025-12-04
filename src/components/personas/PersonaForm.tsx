@@ -13,18 +13,19 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { PersonasApi, Configuration } from '@/lib/api-client';
+import { PersonasApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { PersonaConfigHttp as HTTPConfigDetails } from '@/lib/api-client/models/persona-config-http';
-import { PersonaConfigHttpPersonaTypeEnum } from '@/lib/api-client/models/persona-config-http';
 import type { PersonaConfigDns as DNSConfigDetails } from '@/lib/api-client/models/persona-config-dns';
-import { PersonaConfigDnsPersonaTypeEnum } from '@/lib/api-client/models/persona-config-dns';
 import type { PersonaConfigDetails } from '@/lib/api-client/models/persona-config-details';
 import { PersonaType as ApiCreatePersonaRequestPersonaTypeEnum } from '@/lib/api-client/models/persona-type';
 import type { CreatePersonaRequest } from '@/lib/api-client/models/create-persona-request';
 import type { UpdatePersonaRequest } from '@/lib/api-client/models/update-persona-request';
 import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
-const personasApi = new PersonasApi(new Configuration());
+const personasApi = new PersonasApi(apiConfiguration);
+const HTTP_PERSONA_TYPE: HTTPConfigDetails['personaType'] = 'http';
+const DNS_PERSONA_TYPE: DNSConfigDetails['personaType'] = 'dns';
 
 // Narrowers
 function asHttpConfig(p: PersonaResponse | undefined): HTTPConfigDetails | undefined {
@@ -170,7 +171,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: PersonaResp
 
     try {
       const httpConfigDetails: HTTPConfigDetails = {
-        personaType: PersonaConfigHttpPersonaTypeEnum.http,
+        personaType: HTTP_PERSONA_TYPE,
         userAgent: data.userAgent,
         headers: parseJsonOrUndefined<Record<string,string>>(data.headersJson || ""),
         headerOrder: parseStringToArray(data.headerOrderInput || ""),
@@ -427,7 +428,7 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: PersonaRespo
 
     try {
       const dnsConfigDetails: DNSConfigDetails = {
-        personaType: PersonaConfigDnsPersonaTypeEnum.dns,
+        personaType: DNS_PERSONA_TYPE,
         resolvers: parseStringToArray(data.config_resolversInput || ""),
         useSystemResolvers: data.config_useSystemResolvers,
         queryTimeoutSeconds: data.config_queryTimeoutSeconds,

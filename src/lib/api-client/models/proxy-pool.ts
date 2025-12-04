@@ -20,77 +20,112 @@
  * @interface ProxyPool
  */
 export interface ProxyPool {
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPool
-     */
-    'id'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPool
-     */
-    'name'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPool
-     */
-    'description'?: string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ProxyPool
-     */
-    'isEnabled'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPool
-     */
-    'poolStrategy'?: string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ProxyPool
-     */
-    'healthCheckEnabled'?: boolean;
-    /**
-     * 
-     * @type {number}
-     * @memberof ProxyPool
-     */
-    'healthCheckIntervalSeconds'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ProxyPool
-     */
-    'maxRetries'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ProxyPool
-     */
-    'timeoutSeconds'?: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPool
-     */
-    'createdAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPool
-     */
-    'updatedAt'?: string;
-    /**
-     * 
-     * @type {Array<{ [key: string]: any; }>}
-     * @memberof ProxyPool
-     */
-    'proxies'?: Array<{ [key: string]: any; }>;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'id'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'name'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'description'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'isEnabled'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'poolStrategy'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'healthCheckEnabled'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'healthCheckIntervalSeconds'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'maxRetries'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'timeoutSeconds'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'createdAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'updatedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPool
+   */
+  'proxies'?: 
+        Array<Record<string, unknown>>
+    ;
 }
+
 

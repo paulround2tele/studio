@@ -23,59 +23,87 @@ import type { BatchKeywordExtractionResponseResultsInnerMatchesInner } from './b
  * @interface BatchKeywordExtractionResponseResultsInner
  */
 export interface BatchKeywordExtractionResponseResultsInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof BatchKeywordExtractionResponseResultsInner
-     */
-    'url'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BatchKeywordExtractionResponseResultsInner
-     */
-    'keywordSetIdUsed'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BatchKeywordExtractionResponseResultsInner
-     */
-    'httpPersonaIdUsed'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BatchKeywordExtractionResponseResultsInner
-     */
-    'dnsPersonaIdUsed'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BatchKeywordExtractionResponseResultsInner
-     */
-    'proxyIdUsed'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BatchKeywordExtractionResponseResultsInner
-     */
-    'finalURL'?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof BatchKeywordExtractionResponseResultsInner
-     */
-    'statusCode'?: number;
-    /**
-     * 
-     * @type {Array<BatchKeywordExtractionResponseResultsInnerMatchesInner>}
-     * @memberof BatchKeywordExtractionResponseResultsInner
-     */
-    'matches'?: Array<BatchKeywordExtractionResponseResultsInnerMatchesInner>;
-    /**
-     * 
-     * @type {string}
-     * @memberof BatchKeywordExtractionResponseResultsInner
-     */
-    'error'?: string;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInner
+   */
+  'url'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInner
+   */
+  'keywordSetIdUsed'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInner
+   */
+  'httpPersonaIdUsed'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInner
+   */
+  'dnsPersonaIdUsed'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInner
+   */
+  'proxyIdUsed'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInner
+   */
+  'finalURL'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInner
+   */
+  'statusCode'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInner
+   */
+  'matches'?: 
+        
+          
+          Array<BatchKeywordExtractionResponseResultsInnerMatchesInner>
+    ;
+  /**
+   * 
+   * @memberof BatchKeywordExtractionResponseResultsInner
+   */
+  'error'?: 
+        
+          
+          string
+    ;
 }
+
 

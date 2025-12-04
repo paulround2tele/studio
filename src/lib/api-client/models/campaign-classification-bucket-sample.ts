@@ -23,31 +23,22 @@ import type { CampaignClassificationBucketSampleDomainsInner } from './campaign-
  * @interface CampaignClassificationBucketSample
  */
 export interface CampaignClassificationBucketSample {
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignClassificationBucketSample
-     */
-    'bucket': CampaignClassificationBucketSampleBucketEnum;
-    /**
-     * 
-     * @type {Array<CampaignClassificationBucketSampleDomainsInner>}
-     * @memberof CampaignClassificationBucketSample
-     */
-    'domains': Array<CampaignClassificationBucketSampleDomainsInner>;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum CampaignClassificationBucketSampleBucketEnum {
-    highPotential = 'highPotential',
-    emerging = 'emerging',
-    atRisk = 'atRisk',
-    leadCandidate = 'leadCandidate',
-    lowValue = 'lowValue',
-    other = 'other'
+  /**
+   * 
+   * @memberof CampaignClassificationBucketSample
+   */
+  'bucket': 
+      'highPotential' | 'emerging' | 'atRisk' | 'leadCandidate' | 'lowValue' | 'other'
+;
+  /**
+   * 
+   * @memberof CampaignClassificationBucketSample
+   */
+  'domains': 
+        
+          
+          Array<CampaignClassificationBucketSampleDomainsInner>
+    ;
 }
 
 

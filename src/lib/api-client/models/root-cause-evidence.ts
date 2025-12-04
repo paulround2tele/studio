@@ -23,41 +23,60 @@ import type { RootCauseEvidenceValue } from './root-cause-evidence-value';
  * @interface RootCauseEvidence
  */
 export interface RootCauseEvidence {
-    /**
-     * 
-     * @type {string}
-     * @memberof RootCauseEvidence
-     */
-    'type': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof RootCauseEvidence
-     */
-    'description': string;
-    /**
-     * 
-     * @type {RootCauseEvidenceValue}
-     * @memberof RootCauseEvidence
-     */
-    'value'?: RootCauseEvidenceValue;
-    /**
-     * 
-     * @type {number}
-     * @memberof RootCauseEvidence
-     */
-    'confidence'?: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof RootCauseEvidence
-     */
-    'source'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof RootCauseEvidence
-     */
-    'collectedAt'?: string;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'type': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'description': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'value'?: 
+        
+          
+          RootCauseEvidenceValue
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'confidence'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'source'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'collectedAt'?: 
+        
+          
+          string
+    ;
 }
+
 

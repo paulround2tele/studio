@@ -26,37 +26,51 @@ import type { PersonaType } from './persona-type';
  * @interface CreatePersonaRequest
  */
 export interface CreatePersonaRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof CreatePersonaRequest
-     */
-    'name': string;
-    /**
-     * 
-     * @type {PersonaType}
-     * @memberof CreatePersonaRequest
-     */
-    'personaType': PersonaType;
-    /**
-     * 
-     * @type {string}
-     * @memberof CreatePersonaRequest
-     */
-    'description'?: string;
-    /**
-     * 
-     * @type {PersonaConfigDetails}
-     * @memberof CreatePersonaRequest
-     */
-    'configDetails': PersonaConfigDetails;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof CreatePersonaRequest
-     */
-    'isEnabled'?: boolean;
+  /**
+   * 
+   * @memberof CreatePersonaRequest
+   */
+  'name': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CreatePersonaRequest
+   */
+  'personaType': 
+        
+          
+          PersonaType
+    ;
+  /**
+   * 
+   * @memberof CreatePersonaRequest
+   */
+  'description'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CreatePersonaRequest
+   */
+  'configDetails': 
+        
+          
+          PersonaConfigDetails
+    ;
+  /**
+   * 
+   * @memberof CreatePersonaRequest
+   */
+  'isEnabled'?: 
+        
+          
+          boolean
+    ;
 }
-
 
 

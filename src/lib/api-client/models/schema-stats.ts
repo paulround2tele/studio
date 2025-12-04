@@ -20,29 +20,42 @@
  * @interface SchemaStats
  */
 export interface SchemaStats {
-    /**
-     * 
-     * @type {string}
-     * @memberof SchemaStats
-     */
-    'name'?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof SchemaStats
-     */
-    'tableCount'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof SchemaStats
-     */
-    'totalRows'?: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof SchemaStats
-     */
-    'totalSize'?: string;
+  /**
+   * 
+   * @memberof SchemaStats
+   */
+  'name'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof SchemaStats
+   */
+  'tableCount'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof SchemaStats
+   */
+  'totalRows'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof SchemaStats
+   */
+  'totalSize'?: 
+        
+          
+          string
+    ;
 }
+
 

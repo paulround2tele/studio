@@ -20,17 +20,24 @@
  * @interface BulkOperationStatusResponseProgress
  */
 export interface BulkOperationStatusResponseProgress {
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkOperationStatusResponseProgress
-     */
-    'processed': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkOperationStatusResponseProgress
-     */
-    'total': number;
+  /**
+   * 
+   * @memberof BulkOperationStatusResponseProgress
+   */
+  'processed': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkOperationStatusResponseProgress
+   */
+  'total': 
+        
+          
+          number
+    ;
 }
+
 

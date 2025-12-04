@@ -23,17 +23,22 @@ import type { BulkDatabaseQueryResponseResultsValue } from './bulk-database-quer
  * @interface BulkDatabaseQueryResponse
  */
 export interface BulkDatabaseQueryResponse {
-    /**
-     * 
-     * @type {{ [key: string]: BulkDatabaseQueryResponseResultsValue; }}
-     * @memberof BulkDatabaseQueryResponse
-     */
-    'results'?: { [key: string]: BulkDatabaseQueryResponseResultsValue; };
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkDatabaseQueryResponse
-     */
-    'totalCount'?: number;
+  /**
+   * 
+   * @memberof BulkDatabaseQueryResponse
+   */
+  'results'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof BulkDatabaseQueryResponse
+   */
+  'totalCount'?: 
+        
+          
+          number
+    ;
 }
+
 

@@ -23,41 +23,58 @@ import type { FlexibleValue } from './flexible-value';
  * @interface ProxyPoolProxyRef
  */
 export interface ProxyPoolProxyRef {
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolProxyRef
-     */
-    'proxyId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolProxyRef
-     */
-    'address': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolProxyRef
-     */
-    'protocol': string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ProxyPoolProxyRef
-     */
-    'isHealthy': boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolProxyRef
-     */
-    'lastChecked'?: string;
-    /**
-     * 
-     * @type {{ [key: string]: FlexibleValue; }}
-     * @memberof ProxyPoolProxyRef
-     */
-    'metadata'?: { [key: string]: FlexibleValue; };
+  /**
+   * 
+   * @memberof ProxyPoolProxyRef
+   */
+  'proxyId': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolProxyRef
+   */
+  'address': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolProxyRef
+   */
+  'protocol': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolProxyRef
+   */
+  'isHealthy': 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolProxyRef
+   */
+  'lastChecked'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolProxyRef
+   */
+  'metadata'?: 
+        Record<string, unknown>
+    ;
 }
+
 

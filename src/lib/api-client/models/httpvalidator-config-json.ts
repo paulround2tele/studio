@@ -20,31 +20,42 @@
  * @interface HTTPValidatorConfigJSON
  */
 export interface HTTPValidatorConfigJSON {
-    [key: string]: any;
-
-    /**
-     * Custom user agent string
-     * @type {string}
-     * @memberof HTTPValidatorConfigJSON
-     */
-    'userAgent'?: string;
-    /**
-     * Follow HTTP redirects
-     * @type {boolean}
-     * @memberof HTTPValidatorConfigJSON
-     */
-    'followRedirects'?: boolean;
-    /**
-     * Request timeout in milliseconds
-     * @type {number}
-     * @memberof HTTPValidatorConfigJSON
-     */
-    'timeoutMs'?: number;
-    /**
-     * Keywords to search for within HTTP responses
-     * @type {Array<string>}
-     * @memberof HTTPValidatorConfigJSON
-     */
-    'keywords'?: Array<string>;
+  /**
+   * Custom user agent string
+   * @memberof HTTPValidatorConfigJSON
+   */
+  'userAgent'?: 
+        
+          
+          string
+    ;
+  /**
+   * Follow HTTP redirects
+   * @memberof HTTPValidatorConfigJSON
+   */
+  'followRedirects'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * Request timeout in milliseconds
+   * @memberof HTTPValidatorConfigJSON
+   */
+  'timeoutMs'?: 
+        
+          
+          number
+    ;
+  /**
+   * Keywords to search for within HTTP responses
+   * @memberof HTTPValidatorConfigJSON
+   */
+  'keywords'?: 
+        
+          
+          Array<string>
+    ;
 }
+
 

@@ -47,10 +47,9 @@ type FeatureRow struct {
 }
 
 // UpsertFeatureRow performs an atomic UPSERT for a single domain feature row.
-// If feature table is disabled it returns silently (no-op).
 func UpsertFeatureRow(ctx context.Context, conn interface{}, row FeatureRow) error {
-	if !EnabledFeatureTable() {
-		return nil
+	if conn == nil {
+		return errors.New("connection required for UpsertFeatureRow")
 	}
 	// Accept *pgx.Conn, pgx.Tx, *sql.DB for flexibility.
 	switch c := conn.(type) {
@@ -137,8 +136,8 @@ func defaultStr(v string, d string) string {
 
 // TransitionReady updates processing_state to ready with optional clearing of last_error.
 func TransitionReady(ctx context.Context, conn *pgx.Conn, campaignID, domainID string) error {
-	if !EnabledFeatureTable() {
-		return nil
+	if conn == nil {
+		return errors.New("pgx connection required for TransitionReady")
 	}
 	_, err := conn.Exec(ctx, `UPDATE domain_extraction_features SET processing_state='ready', last_error=NULL, updated_at=now() WHERE campaign_id=$1 AND domain_id=$2`, campaignID, domainID)
 	return err
@@ -146,8 +145,8 @@ func TransitionReady(ctx context.Context, conn *pgx.Conn, campaignID, domainID s
 
 // TransitionError marks the row error with message.
 func TransitionError(ctx context.Context, conn *pgx.Conn, campaignID, domainID string, message string) error {
-	if !EnabledFeatureTable() {
-		return nil
+	if conn == nil {
+		return errors.New("pgx connection required for TransitionError")
 	}
 	_, err := conn.Exec(ctx, `UPDATE domain_extraction_features SET processing_state='error', last_error=$3, updated_at=now() WHERE campaign_id=$1 AND domain_id=$2`, campaignID, domainID, message)
 	return err
@@ -155,17 +154,14 @@ func TransitionError(ctx context.Context, conn *pgx.Conn, campaignID, domainID s
 
 // ReconcileStuckBuildingLegacy (deprecated) retained for backward compatibility until callers migrate to extraction.ReconcileStuckBuilding with ReconcileOptions.
 func ReconcileStuckBuildingLegacy(ctx context.Context, conn *pgx.Conn, olderThan time.Duration, batch int) (int, error) {
-	if !EnabledFeatureTable() {
-		return 0, nil
-	}
 	// Delegate to new implementation with options.
 	return ReconcileStuckBuilding(ctx, conn, ReconcileOptions{OlderThan: olderThan, BatchSize: batch})
 }
 
 // QuickSmokeQuery verifies table existence (for tests)
 func QuickSmokeQuery(ctx context.Context, conn *pgx.Conn) error {
-	if !EnabledFeatureTable() {
-		return nil
+	if conn == nil {
+		return errors.New("pgx connection required for QuickSmokeQuery")
 	}
 	row := conn.QueryRow(ctx, `SELECT 1 FROM domain_extraction_features LIMIT 1`)
 	var one int

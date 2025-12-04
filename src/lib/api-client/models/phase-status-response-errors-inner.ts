@@ -20,23 +20,33 @@
  * @interface PhaseStatusResponseErrorsInner
  */
 export interface PhaseStatusResponseErrorsInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseStatusResponseErrorsInner
-     */
-    'message'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseStatusResponseErrorsInner
-     */
-    'timestamp'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseStatusResponseErrorsInner
-     */
-    'code'?: string;
+  /**
+   * 
+   * @memberof PhaseStatusResponseErrorsInner
+   */
+  'message'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseStatusResponseErrorsInner
+   */
+  'timestamp'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseStatusResponseErrorsInner
+   */
+  'code'?: 
+        
+          
+          string
+    ;
 }
+
 

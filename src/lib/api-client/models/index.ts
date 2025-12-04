@@ -209,6 +209,8 @@ export * from './root-cause-evidence-value';
 export * from './root-cause-evidence-value-one-of';
 export * from './schema-stats';
 export * from './scoring-profile';
+export * from './scoring-profile-list-response';
+export * from './scoring-profile-list-response-meta';
 export * from './server-config-response';
 export * from './server-config-update-request';
 export * from './session-response';

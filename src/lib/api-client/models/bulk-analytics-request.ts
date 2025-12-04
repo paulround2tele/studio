@@ -26,58 +26,47 @@ import type { BulkAnalyticsRequestTimeRange } from './bulk-analytics-request-tim
  * @interface BulkAnalyticsRequest
  */
 export interface BulkAnalyticsRequest {
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof BulkAnalyticsRequest
-     */
-    'campaignIds': Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof BulkAnalyticsRequest
-     */
-    'metrics': Array<BulkAnalyticsRequestMetricsEnum>;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkAnalyticsRequest
-     */
-    'granularity'?: BulkAnalyticsRequestGranularityEnum;
-    /**
-     * 
-     * @type {BulkAnalyticsRequestTimeRange}
-     * @memberof BulkAnalyticsRequest
-     */
-    'timeRange': BulkAnalyticsRequestTimeRange;
-    /**
-     * 
-     * @type {BulkAnalyticsRequestAggregation}
-     * @memberof BulkAnalyticsRequest
-     */
-    'aggregation'?: BulkAnalyticsRequestAggregation;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum BulkAnalyticsRequestMetricsEnum {
-    response_time = 'response_time',
-    content_analysis = 'content_analysis',
-    lead_score = 'lead_score',
-    domain_health = 'domain_health',
-    keyword_density = 'keyword_density'
-}
-/**
-    * @export
-    * @enum {string}
-    */
-export enum BulkAnalyticsRequestGranularityEnum {
-    hour = 'hour',
-    day = 'day',
-    week = 'week',
-    month = 'month'
+  /**
+   * 
+   * @memberof BulkAnalyticsRequest
+   */
+  'campaignIds': 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsRequest
+   */
+  'metrics': 
+      'response_time' | 'content_analysis' | 'lead_score' | 'domain_health' | 'keyword_density'
+;
+  /**
+   * 
+   * @memberof BulkAnalyticsRequest
+   */
+  'granularity'?: 
+      'hour' | 'day' | 'week' | 'month'
+;
+  /**
+   * 
+   * @memberof BulkAnalyticsRequest
+   */
+  'timeRange': 
+        
+          
+          BulkAnalyticsRequestTimeRange
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsRequest
+   */
+  'aggregation'?: 
+        
+          
+          BulkAnalyticsRequestAggregation
+    ;
 }
 
 

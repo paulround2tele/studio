@@ -23,41 +23,40 @@ import type { BulkGenerationResponseOperationsValueProgress } from './bulk-gener
  * @interface BulkGenerationResponseOperationsValue
  */
 export interface BulkGenerationResponseOperationsValue {
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkGenerationResponseOperationsValue
-     */
-    'campaignId'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkGenerationResponseOperationsValue
-     */
-    'status'?: BulkGenerationResponseOperationsValueStatusEnum;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkGenerationResponseOperationsValue
-     */
-    'domainsGenerated'?: number;
-    /**
-     * 
-     * @type {BulkGenerationResponseOperationsValueProgress}
-     * @memberof BulkGenerationResponseOperationsValue
-     */
-    'progress'?: BulkGenerationResponseOperationsValueProgress;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum BulkGenerationResponseOperationsValueStatusEnum {
-    pending = 'pending',
-    running = 'running',
-    completed = 'completed',
-    failed = 'failed'
+  /**
+   * 
+   * @memberof BulkGenerationResponseOperationsValue
+   */
+  'campaignId'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkGenerationResponseOperationsValue
+   */
+  'status'?: 
+      'pending' | 'running' | 'completed' | 'failed'
+;
+  /**
+   * 
+   * @memberof BulkGenerationResponseOperationsValue
+   */
+  'domainsGenerated'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkGenerationResponseOperationsValue
+   */
+  'progress'?: 
+        
+          
+          BulkGenerationResponseOperationsValueProgress
+    ;
 }
 
 

@@ -19,7 +19,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
 	"golang.org/x/net/html"
 
@@ -483,10 +482,11 @@ func (s *httpValidationService) Configure(ctx context.Context, campaignID uuid.U
 		}
 	}
 	s.deps.Logger.Info(ctx, "HTTP validation configuration stored", map[string]interface{}{
-		"campaign_id":    campaignID,
-		"persona_count":  len(httpConfig.PersonaIDs),
-		"keyword_count":  len(httpConfig.Keywords),
-		"adhoc_keywords": len(httpConfig.AdHocKeywords),
+		"campaign_id":       campaignID,
+		"persona_count":     len(httpConfig.PersonaIDs),
+		"keyword_set_count": len(httpConfig.KeywordSetIDs),
+		"keyword_count":     len(httpConfig.Keywords),
+		"adhoc_keywords":    len(httpConfig.AdHocKeywords),
 	})
 
 	return nil
@@ -505,16 +505,17 @@ func (s *httpValidationService) Validate(ctx context.Context, config interface{}
 	}
 
 	// Validate at least some keywords are provided
-	totalKeywords := len(httpConfig.Keywords) + len(httpConfig.AdHocKeywords)
+	totalKeywords := len(httpConfig.Keywords) + len(httpConfig.AdHocKeywords) + len(httpConfig.KeywordSetIDs)
 	if totalKeywords == 0 {
 		return fmt.Errorf("at least one keyword (predefined or ad-hoc) must be provided")
 	}
 
 	s.deps.Logger.Debug(ctx, "HTTP validation configuration validated", map[string]interface{}{
-		"persona_count":  len(httpConfig.PersonaIDs),
-		"keyword_count":  len(httpConfig.Keywords),
-		"adhoc_keywords": len(httpConfig.AdHocKeywords),
-		"total_keywords": totalKeywords,
+		"persona_count":     len(httpConfig.PersonaIDs),
+		"keyword_count":     len(httpConfig.Keywords),
+		"keyword_set_count": len(httpConfig.KeywordSetIDs),
+		"adhoc_keywords":    len(httpConfig.AdHocKeywords),
+		"total_keywords":    totalKeywords,
 	})
 
 	return nil
@@ -607,7 +608,7 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 	execution.ItemsTotal = len(domains)
 
 	// Log keyword configuration snapshot (counts only) for transparency
-	var keywordSetCount, adHocCount int
+	var keywordSetCount, inlineKeywordCount, adHocCount int
 	var enrichmentFlag, microcrawlFlag bool
 	if s.store != nil {
 		var exec store.Querier
@@ -617,7 +618,9 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 		if phase, perr := s.store.GetCampaignPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation); perr == nil && phase != nil && phase.Configuration != nil {
 			var cfg models.HTTPPhaseConfigRequest
 			if json.Unmarshal(*phase.Configuration, &cfg) == nil {
-				keywordSetCount = len(cfg.Keywords)
+				setIDs, inlineKeywords := coalesceKeywordSources(&cfg)
+				keywordSetCount = len(setIDs)
+				inlineKeywordCount = len(inlineKeywords)
 				adHocCount = len(cfg.AdHocKeywords)
 				if cfg.EnrichmentEnabled != nil {
 					enrichmentFlag = *cfg.EnrichmentEnabled
@@ -636,6 +639,7 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 		"campaign_id":        campaignID,
 		"domains_total":      len(domains),
 		"keyword_sets":       keywordSetCount,
+		"inline_keywords":    inlineKeywordCount,
 		"ad_hoc_keywords":    adHocCount,
 		"enrichment_enabled": enrichmentFlag,
 		"microcrawl_enabled": microcrawlFlag,
@@ -848,7 +852,7 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 				if phase, perr := s.store.GetCampaignPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation); perr == nil && phase != nil && phase.Configuration != nil {
 					var cfg models.HTTPPhaseConfigRequest
 					_ = json.Unmarshal(*phase.Configuration, &cfg)
-					setIDs, inlineKeywords := partitionKeywordInputs(cfg.Keywords)
+					setIDs, inlineKeywords := coalesceKeywordSources(&cfg)
 					if len(setIDs) > 0 {
 						keywordSetIDs = append(keywordSetIDs, setIDs...)
 					}
@@ -1082,11 +1086,8 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 				errStatus = "error"
 				s.deps.Logger.Warn(ctx, "Failed to persist feature vectors", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
 			} else {
-				// Dual-write into domain_extraction_features when enabled
-				if featureflags.IsExtractionFeatureTableEnabled() {
-					if err := s.persistExtractionFeatureRows(ctx, campaignID, enrichmentVectors); err != nil && s.deps.Logger != nil {
-						s.deps.Logger.Warn(ctx, "Failed to persist analysis-ready feature rows", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
-					}
+				if err := s.persistExtractionFeatureRows(ctx, campaignID, enrichmentVectors); err != nil && s.deps.Logger != nil {
+					s.deps.Logger.Warn(ctx, "Failed to persist analysis-ready feature rows", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
 				}
 				// Emit SSE enrichment sample
 				if s.deps.SSE != nil {
@@ -2278,6 +2279,42 @@ func (s *httpValidationService) microCrawlEnhance(ctx context.Context, campaignI
 		merged = append(merged, k)
 	}
 	return pagesExamined, exhausted, totalUnique, merged
+}
+
+func coalesceKeywordSources(cfg *models.HTTPPhaseConfigRequest) ([]string, []string) {
+	if cfg == nil {
+		return nil, nil
+	}
+	appendUniqueUUID := func(seen map[string]struct{}, list []string, raw string) ([]string, map[string]struct{}) {
+		if seen == nil {
+			seen = make(map[string]struct{})
+		}
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" {
+			return list, seen
+		}
+		if _, err := uuid.Parse(trimmed); err != nil {
+			return list, seen
+		}
+		if _, ok := seen[trimmed]; ok {
+			return list, seen
+		}
+		seen[trimmed] = struct{}{}
+		return append(list, trimmed), seen
+	}
+	var seen map[string]struct{}
+	var setIDs []string
+	for _, id := range cfg.KeywordSetIDs {
+		setIDs, seen = appendUniqueUUID(seen, setIDs, id)
+	}
+	legacySetIDs, inlineKeywords := partitionKeywordInputs(cfg.Keywords)
+	for _, id := range legacySetIDs {
+		setIDs, seen = appendUniqueUUID(seen, setIDs, id)
+	}
+	if len(setIDs) == 0 {
+		setIDs = nil
+	}
+	return setIDs, inlineKeywords
 }
 
 func partitionKeywordInputs(inputs []string) ([]string, []string) {

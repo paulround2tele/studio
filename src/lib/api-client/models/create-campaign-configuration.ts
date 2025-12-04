@@ -20,42 +20,40 @@
  * @interface CreateCampaignConfiguration
  */
 export interface CreateCampaignConfiguration {
-    [key: string]: any;
-
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateCampaignConfiguration
-     */
-    'generationStrategy'?: CreateCampaignConfigurationGenerationStrategyEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateCampaignConfiguration
-     */
-    'pattern'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof CreateCampaignConfiguration
-     */
-    'initialDomains'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof CreateCampaignConfiguration
-     */
-    'seedKeywords'?: Array<string>;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum CreateCampaignConfigurationGenerationStrategyEnum {
-    pattern = 'pattern',
-    list = 'list',
-    seed_keywords = 'seed_keywords'
+  /**
+   * 
+   * @memberof CreateCampaignConfiguration
+   */
+  'generationStrategy'?: 
+      'pattern' | 'list' | 'seed_keywords'
+;
+  /**
+   * 
+   * @memberof CreateCampaignConfiguration
+   */
+  'pattern'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignConfiguration
+   */
+  'initialDomains'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignConfiguration
+   */
+  'seedKeywords'?: 
+        
+          
+          Array<string>
+    ;
 }
 
 

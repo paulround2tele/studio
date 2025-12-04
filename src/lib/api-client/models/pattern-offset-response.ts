@@ -20,11 +20,15 @@
  * @interface PatternOffsetResponse
  */
 export interface PatternOffsetResponse {
-    /**
-     * 
-     * @type {number}
-     * @memberof PatternOffsetResponse
-     */
-    'currentOffset'?: number;
+  /**
+   * 
+   * @memberof PatternOffsetResponse
+   */
+  'currentOffset'?: 
+        
+          
+          number
+    ;
 }
+
 

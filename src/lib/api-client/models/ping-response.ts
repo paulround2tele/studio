@@ -20,32 +20,31 @@
  * @interface PingResponse
  */
 export interface PingResponse {
-    /**
-     * 
-     * @type {string}
-     * @memberof PingResponse
-     */
-    'message': PingResponseMessageEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof PingResponse
-     */
-    'timestamp'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PingResponse
-     */
-    'version'?: string;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum PingResponseMessageEnum {
-    pong = 'pong'
+  /**
+   * 
+   * @memberof PingResponse
+   */
+  'message': 
+      'pong'
+;
+  /**
+   * 
+   * @memberof PingResponse
+   */
+  'timestamp'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PingResponse
+   */
+  'version'?: 
+        
+          
+          string
+    ;
 }
 
 

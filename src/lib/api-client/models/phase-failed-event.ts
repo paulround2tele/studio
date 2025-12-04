@@ -20,17 +20,24 @@
  * @interface PhaseFailedEvent
  */
 export interface PhaseFailedEvent {
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseFailedEvent
-     */
-    'phase': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseFailedEvent
-     */
-    'error': string;
+  /**
+   * 
+   * @memberof PhaseFailedEvent
+   */
+  'phase': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseFailedEvent
+   */
+  'error': 
+        
+          
+          string
+    ;
 }
+
 

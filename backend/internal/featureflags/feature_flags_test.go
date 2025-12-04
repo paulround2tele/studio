@@ -8,7 +8,6 @@ import (
 func TestFeatureFlags(t *testing.T) {
 	// Clean up environment before testing
 	defer func() {
-		os.Unsetenv("EXTRACTION_FEATURE_TABLE_ENABLED")
 		os.Unsetenv("EXTRACTION_KEYWORD_DETAIL_ENABLED")
 		os.Unsetenv("MICROCRAWL_ADAPTIVE_MODE")
 		os.Unsetenv("ANALYSIS_RESCORING_ENABLED")
@@ -16,10 +15,6 @@ func TestFeatureFlags(t *testing.T) {
 	}()
 
 	// Test default values (should all be false)
-	if IsExtractionFeatureTableEnabled() != false {
-		t.Error("IsExtractionFeatureTableEnabled should default to false")
-	}
-
 	if IsExtractionKeywordDetailEnabled() != false {
 		t.Error("IsExtractionKeywordDetailEnabled should default to false")
 	}
@@ -32,20 +27,20 @@ func TestFeatureFlags(t *testing.T) {
 		t.Error("IsAnalysisRescoringEnabled should default to false")
 	}
 
-	// Test with environment variable set
-	os.Setenv("EXTRACTION_FEATURE_TABLE_ENABLED", "true")
-	if IsExtractionFeatureTableEnabled() != true {
-		t.Error("IsExtractionFeatureTableEnabled should return true when env var is set")
-	}
-
 	// Test structured output
 	flags := GetExtractionAnalysisFlags()
-	if !flags.ExtractionFeatureTableEnabled {
-		t.Error("GetExtractionAnalysisFlags should reflect env var setting")
+	if flags.ExtractionKeywordDetailEnabled || flags.MicrocrawlAdaptiveMode || flags.AnalysisRescoringEnabled {
+		t.Error("GetExtractionAnalysisFlags should default to all false")
 	}
 
-	// Clean up for next test
-	os.Unsetenv("EXTRACTION_FEATURE_TABLE_ENABLED")
+	// Set downstream flags and ensure struct reflects them
+	os.Setenv("EXTRACTION_KEYWORD_DETAIL_ENABLED", "true")
+	os.Setenv("MICROCRAWL_ADAPTIVE_MODE", "true")
+	os.Setenv("ANALYSIS_RESCORING_ENABLED", "true")
+	flags = GetExtractionAnalysisFlags()
+	if !(flags.ExtractionKeywordDetailEnabled && flags.MicrocrawlAdaptiveMode && flags.AnalysisRescoringEnabled) {
+		t.Error("GetExtractionAnalysisFlags should reflect env var settings")
+	}
 }
 
 func TestAnalysisFeatureTableMinCoverage(t *testing.T) {

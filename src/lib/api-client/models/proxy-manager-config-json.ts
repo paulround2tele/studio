@@ -20,55 +20,56 @@
  * @interface ProxyManagerConfigJSON
  */
 export interface ProxyManagerConfigJSON {
-    [key: string]: any;
-
-    /**
-     * Proxy rotation / selection strategy
-     * @type {string}
-     * @memberof ProxyManagerConfigJSON
-     */
-    'strategy': ProxyManagerConfigJSONStrategyEnum;
-    /**
-     * Interval between proxy rotations
-     * @type {number}
-     * @memberof ProxyManagerConfigJSON
-     */
-    'rotationIntervalSeconds': number;
-    /**
-     * Maximum size of proxy pool
-     * @type {number}
-     * @memberof ProxyManagerConfigJSON
-     */
-    'poolSize'?: number;
-    /**
-     * Failure threshold before proxy eviction
-     * @type {number}
-     * @memberof ProxyManagerConfigJSON
-     */
-    'failThreshold'?: number;
-    /**
-     * Fallback proxy endpoint
-     * @type {string}
-     * @memberof ProxyManagerConfigJSON
-     */
-    'fallbackProxy'?: string;
-    /**
-     * Additional proxy manager options
-     * @type {{ [key: string]: any; }}
-     * @memberof ProxyManagerConfigJSON
-     */
-    'extras'?: { [key: string]: any; };
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum ProxyManagerConfigJSONStrategyEnum {
-    round_robin = 'round_robin',
-    random = 'random',
-    geo = 'geo',
-    sticky = 'sticky'
+  /**
+   * Proxy rotation / selection strategy
+   * @memberof ProxyManagerConfigJSON
+   */
+  'strategy': 
+      'round_robin' | 'random' | 'geo' | 'sticky'
+;
+  /**
+   * Interval between proxy rotations
+   * @memberof ProxyManagerConfigJSON
+   */
+  'rotationIntervalSeconds': 
+        
+          
+          number
+    ;
+  /**
+   * Maximum size of proxy pool
+   * @memberof ProxyManagerConfigJSON
+   */
+  'poolSize'?: 
+        
+          
+          number
+    ;
+  /**
+   * Failure threshold before proxy eviction
+   * @memberof ProxyManagerConfigJSON
+   */
+  'failThreshold'?: 
+        
+          
+          number
+    ;
+  /**
+   * Fallback proxy endpoint
+   * @memberof ProxyManagerConfigJSON
+   */
+  'fallbackProxy'?: 
+        
+          
+          string
+    ;
+  /**
+   * Additional proxy manager options
+   * @memberof ProxyManagerConfigJSON
+   */
+  'extras'?: 
+        Record<string, unknown>
+    ;
 }
 
 

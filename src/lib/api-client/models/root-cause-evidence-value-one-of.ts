@@ -20,29 +20,42 @@
  * @interface RootCauseEvidenceValueOneOf
  */
 export interface RootCauseEvidenceValueOneOf {
-    /**
-     * 
-     * @type {string}
-     * @memberof RootCauseEvidenceValueOneOf
-     */
-    'metric': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof RootCauseEvidenceValueOneOf
-     */
-    'value': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof RootCauseEvidenceValueOneOf
-     */
-    'baseline'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof RootCauseEvidenceValueOneOf
-     */
-    'deviation'?: number;
+  /**
+   * 
+   * @memberof RootCauseEvidenceValueOneOf
+   */
+  'metric': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidenceValueOneOf
+   */
+  'value': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidenceValueOneOf
+   */
+  'baseline'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidenceValueOneOf
+   */
+  'deviation'?: 
+        
+          
+          number
+    ;
 }
+
 

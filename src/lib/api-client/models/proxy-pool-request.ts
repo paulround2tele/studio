@@ -20,53 +20,78 @@
  * @interface ProxyPoolRequest
  */
 export interface ProxyPoolRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolRequest
-     */
-    'name': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolRequest
-     */
-    'description'?: string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ProxyPoolRequest
-     */
-    'isEnabled'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolRequest
-     */
-    'poolStrategy'?: string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ProxyPoolRequest
-     */
-    'healthCheckEnabled'?: boolean;
-    /**
-     * 
-     * @type {number}
-     * @memberof ProxyPoolRequest
-     */
-    'healthCheckIntervalSeconds'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ProxyPoolRequest
-     */
-    'maxRetries'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ProxyPoolRequest
-     */
-    'timeoutSeconds'?: number;
+  /**
+   * 
+   * @memberof ProxyPoolRequest
+   */
+  'name': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolRequest
+   */
+  'description'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolRequest
+   */
+  'isEnabled'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolRequest
+   */
+  'poolStrategy'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolRequest
+   */
+  'healthCheckEnabled'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolRequest
+   */
+  'healthCheckIntervalSeconds'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolRequest
+   */
+  'maxRetries'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolRequest
+   */
+  'timeoutSeconds'?: 
+        
+          
+          number
+    ;
 }
+
 

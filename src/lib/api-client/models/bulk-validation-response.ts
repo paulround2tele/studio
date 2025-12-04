@@ -23,46 +23,47 @@ import type { ProxyOperationResult } from './proxy-operation-result';
  * @interface BulkValidationResponse
  */
 export interface BulkValidationResponse {
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkValidationResponse
-     */
-    'operationId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkValidationResponse
-     */
-    'status': BulkValidationResponseStatusEnum;
-    /**
-     * 
-     * @type {{ [key: string]: ProxyOperationResult; }}
-     * @memberof BulkValidationResponse
-     */
-    'operations': { [key: string]: ProxyOperationResult; };
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkValidationResponse
-     */
-    'totalOperations': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkValidationResponse
-     */
-    'estimatedDuration'?: string;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum BulkValidationResponseStatusEnum {
-    initiated = 'initiated',
-    pending = 'pending',
-    running = 'running'
+  /**
+   * 
+   * @memberof BulkValidationResponse
+   */
+  'operationId': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkValidationResponse
+   */
+  'status': 
+      'initiated' | 'pending' | 'running'
+;
+  /**
+   * 
+   * @memberof BulkValidationResponse
+   */
+  'operations': 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof BulkValidationResponse
+   */
+  'totalOperations': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkValidationResponse
+   */
+  'estimatedDuration'?: 
+        
+          
+          string
+    ;
 }
 
 

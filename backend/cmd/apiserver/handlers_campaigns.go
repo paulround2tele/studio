@@ -1005,14 +1005,25 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 			if h.deps.Logger != nil {
 				kraw, _ := json.Marshal(incoming["keywords"])
 				adhocRaw, _ := json.Marshal(incoming["adHocKeywords"])
+				setRaw, _ := json.Marshal(incoming["keywordSetIds"])
 				h.deps.Logger.Info(ctx, "HTTP phase configure payload", map[string]interface{}{
-					"campaign_id":  r.CampaignId,
-					"persona_ids":  personaStrs,
-					"keywords_raw": string(kraw),
-					"adhoc_raw":    string(adhocRaw),
+					"campaign_id":      r.CampaignId,
+					"persona_ids":      personaStrs,
+					"keywords_raw":     string(kraw),
+					"adhoc_raw":        string(adhocRaw),
+					"keyword_sets_raw": string(setRaw),
 				})
 			}
 			httpCfg := &models.HTTPPhaseConfigRequest{PersonaIDs: personaStrs}
+			keywordSetIDs := extractStringArray(incoming, "keywordSetIds", "keyword_set_ids")
+			if len(keywordSetIDs) == 0 {
+				if nested, ok := incoming["targeting"].(map[string]interface{}); ok {
+					keywordSetIDs = extractStringArray(nested, "keywordSetIds", "keyword_set_ids")
+				}
+			}
+			if normalized := filterUUIDStrings(keywordSetIDs); len(normalized) > 0 {
+				httpCfg.KeywordSetIDs = normalized
+			}
 			keywords := extractStringArray(incoming, "keywords", "includeKeywords")
 			if len(keywords) == 0 {
 				if nested, ok := incoming["targeting"].(map[string]interface{}); ok {
@@ -1027,14 +1038,15 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 				}
 			}
 			httpCfg.AdHocKeywords = adHoc
-			if len(httpCfg.Keywords) == 0 {
-				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "at least one keyword is required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			if len(httpCfg.Keywords) == 0 && len(httpCfg.KeywordSetIDs) == 0 {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "at least one keyword or keyword set is required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 			}
 			if h.deps.Logger != nil {
 				h.deps.Logger.Info(ctx, "HTTP phase configure parsed", map[string]interface{}{
-					"campaign_id":  r.CampaignId,
-					"keywords_len": len(httpCfg.Keywords),
-					"adhoc_len":    len(httpCfg.AdHocKeywords),
+					"campaign_id":      r.CampaignId,
+					"keywords_len":     len(httpCfg.Keywords),
+					"keyword_sets_len": len(httpCfg.KeywordSetIDs),
+					"adhoc_len":        len(httpCfg.AdHocKeywords),
 				})
 			}
 			cfg = httpCfg
@@ -1217,6 +1229,30 @@ func dedupeStrings(in []string) []string {
 			continue
 		}
 		if _, ok := seen[trimmed]; ok {
+			continue
+		}
+		seen[trimmed] = struct{}{}
+		out = append(out, trimmed)
+	}
+	return out
+}
+
+// filterUUIDStrings returns unique UUID strings (case-preserving) from the provided slice.
+func filterUUIDStrings(in []string) []string {
+	if len(in) == 0 {
+		return []string{}
+	}
+	seen := make(map[string]struct{}, len(in))
+	out := make([]string, 0, len(in))
+	for _, raw := range in {
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" {
+			continue
+		}
+		if _, err := uuid.Parse(trimmed); err != nil {
+			continue
+		}
+		if _, exists := seen[trimmed]; exists {
 			continue
 		}
 		seen[trimmed] = struct{}{}

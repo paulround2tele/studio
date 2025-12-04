@@ -23,29 +23,40 @@ import type { PhaseConfigurationRequestPersonaIds } from './phase-configuration-
  * @interface PhaseConfigurationRequest
  */
 export interface PhaseConfigurationRequest {
-    /**
-     * Phase-specific configuration
-     * @type {{ [key: string]: any; }}
-     * @memberof PhaseConfigurationRequest
-     */
-    'configuration': { [key: string]: any; };
-    /**
-     * 
-     * @type {PhaseConfigurationRequestPersonaIds}
-     * @memberof PhaseConfigurationRequest
-     */
-    'personaIds'?: PhaseConfigurationRequestPersonaIds;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseConfigurationRequest
-     */
-    'proxyPoolId'?: string;
-    /**
-     * Keyword sets for extraction phase
-     * @type {Array<string>}
-     * @memberof PhaseConfigurationRequest
-     */
-    'keywordSetIds'?: Array<string>;
+  /**
+   * Phase-specific configuration
+   * @memberof PhaseConfigurationRequest
+   */
+  'configuration': 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof PhaseConfigurationRequest
+   */
+  'personaIds'?: 
+        
+          
+          PhaseConfigurationRequestPersonaIds
+    ;
+  /**
+   * 
+   * @memberof PhaseConfigurationRequest
+   */
+  'proxyPoolId'?: 
+        
+          
+          string
+    ;
+  /**
+   * Keyword sets for extraction phase
+   * @memberof PhaseConfigurationRequest
+   */
+  'keywordSetIds'?: 
+        
+          
+          Array<string>
+    ;
 }
+
 

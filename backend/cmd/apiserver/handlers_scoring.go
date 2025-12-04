@@ -77,7 +77,19 @@ func (h *strictHandlers) ScoringProfilesList(ctx context.Context, r gen.ScoringP
 		}
 		dtos = append(dtos, dto)
 	}
-	return gen.ScoringProfilesList200JSONResponse(dtos), nil
+	response := gen.ScoringProfileListResponse{
+		Items: dtos,
+		Meta: &struct {
+			Limit  int "json:\"limit\""
+			Offset int "json:\"offset\""
+			Total  int "json:\"total\""
+		}{
+			Limit:  limit,
+			Offset: offset,
+			Total:  offset + len(dtos),
+		},
+	}
+	return gen.ScoringProfilesList200JSONResponse(response), nil
 }
 
 func (h *strictHandlers) ScoringProfilesCreate(ctx context.Context, r gen.ScoringProfilesCreateRequestObject) (gen.ScoringProfilesCreateResponseObject, error) {

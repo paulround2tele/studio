@@ -20,29 +20,40 @@
  * @interface BulkHTTPValidationRequestOperationsInnerValidationConfig
  */
 export interface BulkHTTPValidationRequestOperationsInnerValidationConfig {
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkHTTPValidationRequestOperationsInnerValidationConfig
-     */
-    'timeout'?: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof BulkHTTPValidationRequestOperationsInnerValidationConfig
-     */
-    'followRedirects'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkHTTPValidationRequestOperationsInnerValidationConfig
-     */
-    'userAgent'?: string;
-    /**
-     * 
-     * @type {{ [key: string]: string; }}
-     * @memberof BulkHTTPValidationRequestOperationsInnerValidationConfig
-     */
-    'headers'?: { [key: string]: string; };
+  /**
+   * 
+   * @memberof BulkHTTPValidationRequestOperationsInnerValidationConfig
+   */
+  'timeout'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkHTTPValidationRequestOperationsInnerValidationConfig
+   */
+  'followRedirects'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof BulkHTTPValidationRequestOperationsInnerValidationConfig
+   */
+  'userAgent'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkHTTPValidationRequestOperationsInnerValidationConfig
+   */
+  'headers'?: 
+        Record<string, unknown>
+    ;
 }
+
 

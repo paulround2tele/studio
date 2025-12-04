@@ -23,57 +23,45 @@ import type { BulkResourceAllocationRequestResources } from './bulk-resource-all
  * @interface BulkResourceAllocationRequest
  */
 export interface BulkResourceAllocationRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkResourceAllocationRequest
-     */
-    'operationType': BulkResourceAllocationRequestOperationTypeEnum;
-    /**
-     * 
-     * @type {BulkResourceAllocationRequestResources}
-     * @memberof BulkResourceAllocationRequest
-     */
-    'resources': BulkResourceAllocationRequestResources;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkResourceAllocationRequest
-     */
-    'priority'?: BulkResourceAllocationRequestPriorityEnum;
-    /**
-     * Resource allocation duration in seconds
-     * @type {number}
-     * @memberof BulkResourceAllocationRequest
-     */
-    'duration': number;
-    /**
-     * Resource allocation tags for tracking
-     * @type {{ [key: string]: string; }}
-     * @memberof BulkResourceAllocationRequest
-     */
-    'tags'?: { [key: string]: string; };
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum BulkResourceAllocationRequestOperationTypeEnum {
-    domain_generation = 'domain_generation',
-    dns_validation = 'dns_validation',
-    http_validation = 'http_validation',
-    analytics = 'analytics'
-}
-/**
-    * @export
-    * @enum {string}
-    */
-export enum BulkResourceAllocationRequestPriorityEnum {
-    low = 'low',
-    normal = 'normal',
-    high = 'high',
-    critical = 'critical'
+  /**
+   * 
+   * @memberof BulkResourceAllocationRequest
+   */
+  'operationType': 
+      'domain_generation' | 'dns_validation' | 'http_validation' | 'analytics'
+;
+  /**
+   * 
+   * @memberof BulkResourceAllocationRequest
+   */
+  'resources': 
+        
+          
+          BulkResourceAllocationRequestResources
+    ;
+  /**
+   * 
+   * @memberof BulkResourceAllocationRequest
+   */
+  'priority'?: 
+      'low' | 'normal' | 'high' | 'critical'
+;
+  /**
+   * Resource allocation duration in seconds
+   * @memberof BulkResourceAllocationRequest
+   */
+  'duration': 
+        
+          
+          number
+    ;
+  /**
+   * Resource allocation tags for tracking
+   * @memberof BulkResourceAllocationRequest
+   */
+  'tags'?: 
+        Record<string, unknown>
+    ;
 }
 
 

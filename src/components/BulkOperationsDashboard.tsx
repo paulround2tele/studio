@@ -34,13 +34,19 @@ import type {
   BulkAnalyticsRequest,
   BulkResourceAllocationRequest,
 } from '@/lib/api-client/models';
-import { BulkAnalyticsRequestGranularityEnum, BulkAnalyticsRequestMetricsEnum } from '@/lib/api-client/models/bulk-analytics-request';
-import { BulkDNSValidationRequestOperationsInnerValidationConfigRecordTypesEnum } from '@/lib/api-client/models/bulk-dnsvalidation-request-operations-inner-validation-config';
+import type { BulkDNSValidationRequestOperationsInnerValidationConfig } from '@/lib/api-client/models/bulk-dnsvalidation-request-operations-inner-validation-config';
 // UUID type alias (generated client no longer exports uuid-types explicitly)
 type UUID = string;
 
 // Professional type aliases for readability
 type BulkResourceRequest = BulkResourceAllocationRequest;
+type AnalyticsMetric = BulkAnalyticsRequest['metrics'];
+type AnalyticsGranularity = NonNullable<BulkAnalyticsRequest['granularity']>;
+type DnsRecordType = BulkDNSValidationRequestOperationsInnerValidationConfig['recordTypes'];
+
+const DEFAULT_ANALYTICS_METRIC: AnalyticsMetric = 'response_time';
+const DEFAULT_ANALYTICS_GRANULARITY: AnalyticsGranularity = 'day';
+const DEFAULT_DNS_RECORD_TYPE: DnsRecordType = 'A';
 
 /**
  * Bulk Operations Dashboard Component
@@ -300,7 +306,7 @@ export const BulkOperationsDashboard: React.FC = () => {
             validationConfig: {
               timeout: 5000,
               retries: 1,
-              recordTypes: [BulkDNSValidationRequestOperationsInnerValidationConfigRecordTypesEnum.A]
+              recordTypes: DEFAULT_DNS_RECORD_TYPE,
             },
           }],
           batchSize: 50,
@@ -323,8 +329,8 @@ export const BulkOperationsDashboard: React.FC = () => {
       case 'analytics':
         return {
           campaignIds: ['campaign-1', 'campaign-2'],
-          metrics: [BulkAnalyticsRequestMetricsEnum.response_time],
-          granularity: BulkAnalyticsRequestGranularityEnum.day,
+          metrics: DEFAULT_ANALYTICS_METRIC,
+          granularity: DEFAULT_ANALYTICS_GRANULARITY,
           timeRange: {
             startTime: '2024-01-01T00:00:00Z',
             endTime: '2024-12-31T23:59:59Z',
@@ -348,8 +354,8 @@ export const BulkOperationsDashboard: React.FC = () => {
         // Fallback to a no-op analytics request to satisfy typing; UI prevents hitting this path.
         return {
           campaignIds: [],
-          metrics: [BulkAnalyticsRequestMetricsEnum.response_time],
-          granularity: BulkAnalyticsRequestGranularityEnum.day,
+          metrics: DEFAULT_ANALYTICS_METRIC,
+          granularity: DEFAULT_ANALYTICS_GRANULARITY,
           timeRange: { startTime: new Date().toISOString(), endTime: new Date().toISOString() },
         } satisfies BulkAnalyticsRequest;
     }

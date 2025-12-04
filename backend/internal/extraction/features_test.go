@@ -1,20 +1,6 @@
 package extraction
 
-import (
-	"os"
-	"testing"
-)
-
-func TestFlagEnabled(t *testing.T) {
-	os.Setenv("EXTRACTION_FEATURE_TABLE_ENABLED", "true")
-	if !EnabledFeatureTable() {
-		t.Fatalf("expected feature table flag to be enabled")
-	}
-	os.Unsetenv("EXTRACTION_FEATURE_TABLE_ENABLED")
-	if EnabledFeatureTable() {
-		t.Fatalf("expected flag disabled after unset")
-	}
-}
+import "testing"
 
 func TestBuildFeaturesBasic(t *testing.T) {
 	agg := BuildFeatures(RawSignals{ParsedKeywordHits: []KeywordHit{{KeywordID: "k1", BaseWeight: 1}, {KeywordID: "k2", BaseWeight: 2}, {KeywordID: "k1", BaseWeight: 1}}}, BuilderParams{})

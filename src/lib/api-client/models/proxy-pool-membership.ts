@@ -20,35 +20,51 @@
  * @interface ProxyPoolMembership
  */
 export interface ProxyPoolMembership {
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolMembership
-     */
-    'poolId'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolMembership
-     */
-    'proxyId'?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof ProxyPoolMembership
-     */
-    'weight'?: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ProxyPoolMembership
-     */
-    'isActive'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolMembership
-     */
-    'addedAt'?: string;
+  /**
+   * 
+   * @memberof ProxyPoolMembership
+   */
+  'poolId'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolMembership
+   */
+  'proxyId'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolMembership
+   */
+  'weight'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolMembership
+   */
+  'isActive'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolMembership
+   */
+  'addedAt'?: 
+        
+          
+          string
+    ;
 }
+
 

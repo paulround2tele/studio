@@ -26,41 +26,60 @@ import type { BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner } from './bul
  * @interface BulkAnalyticsResponseAnalytics
  */
 export interface BulkAnalyticsResponseAnalytics {
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkAnalyticsResponseAnalytics
-     */
-    'totalCampaigns'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkAnalyticsResponseAnalytics
-     */
-    'totalDomains'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkAnalyticsResponseAnalytics
-     */
-    'totalLeads'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkAnalyticsResponseAnalytics
-     */
-    'overallSuccessRate'?: number;
-    /**
-     * 
-     * @type {Array<BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner>}
-     * @memberof BulkAnalyticsResponseAnalytics
-     */
-    'topPerformingTLDs'?: Array<BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner>;
-    /**
-     * 
-     * @type {BulkAnalyticsResponseAnalyticsPerformanceMetrics}
-     * @memberof BulkAnalyticsResponseAnalytics
-     */
-    'performanceMetrics'?: BulkAnalyticsResponseAnalyticsPerformanceMetrics;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalytics
+   */
+  'totalCampaigns'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalytics
+   */
+  'totalDomains'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalytics
+   */
+  'totalLeads'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalytics
+   */
+  'overallSuccessRate'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalytics
+   */
+  'topPerformingTLDs'?: 
+        
+          
+          Array<BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner>
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalytics
+   */
+  'performanceMetrics'?: 
+        
+          
+          BulkAnalyticsResponseAnalyticsPerformanceMetrics
+    ;
 }
+
 

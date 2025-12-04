@@ -20,35 +20,51 @@
  * @interface BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner
  */
 export interface BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner
-     */
-    'tld'?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner
-     */
-    'domains'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner
-     */
-    'leads'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner
-     */
-    'successRate'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner
-     */
-    'rank'?: number;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner
+   */
+  'tld'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner
+   */
+  'domains'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner
+   */
+  'leads'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner
+   */
+  'successRate'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalyticsTopPerformingTLDsInner
+   */
+  'rank'?: 
+        
+          
+          number
+    ;
 }
+
 

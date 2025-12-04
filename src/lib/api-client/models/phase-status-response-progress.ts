@@ -20,35 +20,51 @@
  * @interface PhaseStatusResponseProgress
  */
 export interface PhaseStatusResponseProgress {
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseStatusResponseProgress
-     */
-    'totalItems'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseStatusResponseProgress
-     */
-    'processedItems'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseStatusResponseProgress
-     */
-    'successfulItems'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseStatusResponseProgress
-     */
-    'failedItems'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseStatusResponseProgress
-     */
-    'percentComplete'?: number;
+  /**
+   * 
+   * @memberof PhaseStatusResponseProgress
+   */
+  'totalItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseStatusResponseProgress
+   */
+  'processedItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseStatusResponseProgress
+   */
+  'successfulItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseStatusResponseProgress
+   */
+  'failedItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseStatusResponseProgress
+   */
+  'percentComplete'?: 
+        
+          
+          number
+    ;
 }
+
 

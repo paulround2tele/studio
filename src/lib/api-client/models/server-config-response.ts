@@ -35,55 +35,76 @@ import type { WorkerConfig } from './worker-config';
  * @interface ServerConfigResponse
  */
 export interface ServerConfigResponse {
-    [key: string]: any;
-
-    /**
-     * 
-     * @type {AuthConfig}
-     * @memberof ServerConfigResponse
-     */
-    'auth': AuthConfig;
-    /**
-     * 
-     * @type {LoggingConfig}
-     * @memberof ServerConfigResponse
-     */
-    'logging': LoggingConfig;
-    /**
-     * 
-     * @type {RateLimiterConfig}
-     * @memberof ServerConfigResponse
-     */
-    'rateLimiter': RateLimiterConfig;
-    /**
-     * 
-     * @type {ProxyManagerConfigJSON}
-     * @memberof ServerConfigResponse
-     */
-    'proxyManager': ProxyManagerConfigJSON;
-    /**
-     * 
-     * @type {WorkerConfig}
-     * @memberof ServerConfigResponse
-     */
-    'worker': WorkerConfig;
-    /**
-     * 
-     * @type {string}
-     * @memberof ServerConfigResponse
-     */
-    'version'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ServerConfigResponse
-     */
-    'buildHash'?: string;
-    /**
-     * Additional server configuration values
-     * @type {{ [key: string]: any; }}
-     * @memberof ServerConfigResponse
-     */
-    'extras'?: { [key: string]: any; };
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'auth': 
+        
+          
+          AuthConfig
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'logging': 
+        
+          
+          LoggingConfig
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'rateLimiter': 
+        
+          
+          RateLimiterConfig
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'proxyManager': 
+        
+          
+          ProxyManagerConfigJSON
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'worker': 
+        
+          
+          WorkerConfig
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'version'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ServerConfigResponse
+   */
+  'buildHash'?: 
+        
+          
+          string
+    ;
+  /**
+   * Additional server configuration values
+   * @memberof ServerConfigResponse
+   */
+  'extras'?: 
+        Record<string, unknown>
+    ;
 }
+
 

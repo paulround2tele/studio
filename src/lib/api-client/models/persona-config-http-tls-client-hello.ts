@@ -20,51 +20,38 @@
  * @interface PersonaConfigHttpTlsClientHello
  */
 export interface PersonaConfigHttpTlsClientHello {
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaConfigHttpTlsClientHello
-     */
-    'minVersion'?: PersonaConfigHttpTlsClientHelloMinVersionEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaConfigHttpTlsClientHello
-     */
-    'maxVersion'?: PersonaConfigHttpTlsClientHelloMaxVersionEnum;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof PersonaConfigHttpTlsClientHello
-     */
-    'cipherSuites'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof PersonaConfigHttpTlsClientHello
-     */
-    'curvePreferences'?: Array<string>;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum PersonaConfigHttpTlsClientHelloMinVersionEnum {
-    TLS10 = 'TLS10',
-    TLS11 = 'TLS11',
-    TLS12 = 'TLS12',
-    TLS13 = 'TLS13'
-}
-/**
-    * @export
-    * @enum {string}
-    */
-export enum PersonaConfigHttpTlsClientHelloMaxVersionEnum {
-    TLS10 = 'TLS10',
-    TLS11 = 'TLS11',
-    TLS12 = 'TLS12',
-    TLS13 = 'TLS13'
+  /**
+   * 
+   * @memberof PersonaConfigHttpTlsClientHello
+   */
+  'minVersion'?: 
+      'TLS10' | 'TLS11' | 'TLS12' | 'TLS13'
+;
+  /**
+   * 
+   * @memberof PersonaConfigHttpTlsClientHello
+   */
+  'maxVersion'?: 
+      'TLS10' | 'TLS11' | 'TLS12' | 'TLS13'
+;
+  /**
+   * 
+   * @memberof PersonaConfigHttpTlsClientHello
+   */
+  'cipherSuites'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof PersonaConfigHttpTlsClientHello
+   */
+  'curvePreferences'?: 
+        
+          
+          Array<string>
+    ;
 }
 
 

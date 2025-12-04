@@ -20,37 +20,51 @@
  * @interface AuthConfigPasswordPolicy
  */
 export interface AuthConfigPasswordPolicy {
-    [key: string]: any;
-
-    /**
-     * 
-     * @type {number}
-     * @memberof AuthConfigPasswordPolicy
-     */
-    'minLength'?: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof AuthConfigPasswordPolicy
-     */
-    'requireNumbers'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof AuthConfigPasswordPolicy
-     */
-    'requireSymbols'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof AuthConfigPasswordPolicy
-     */
-    'requireUppercase'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof AuthConfigPasswordPolicy
-     */
-    'requireLowercase'?: boolean;
+  /**
+   * 
+   * @memberof AuthConfigPasswordPolicy
+   */
+  'minLength'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof AuthConfigPasswordPolicy
+   */
+  'requireNumbers'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof AuthConfigPasswordPolicy
+   */
+  'requireSymbols'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof AuthConfigPasswordPolicy
+   */
+  'requireUppercase'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof AuthConfigPasswordPolicy
+   */
+  'requireLowercase'?: 
+        
+          
+          boolean
+    ;
 }
+
 

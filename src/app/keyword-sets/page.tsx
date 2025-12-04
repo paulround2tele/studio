@@ -7,12 +7,13 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, Edit } from 'lucide-react';
-import { KeywordSetsApi, Configuration } from '@/lib/api-client';
+import { KeywordSetsApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import type { KeywordSetResponse } from '@/lib/api-client/models';
 import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
 import { useSSE } from '@/hooks/useSSE';
 import type { SSEEvent } from '@/hooks/useSSE';
-const keywordSetsApi = new KeywordSetsApi(new Configuration());
+const keywordSetsApi = new KeywordSetsApi(apiConfiguration);
 
 export default function KeywordSetsPage() {
   const [sets, setSets] = useState<KeywordSetResponse[]>([]);

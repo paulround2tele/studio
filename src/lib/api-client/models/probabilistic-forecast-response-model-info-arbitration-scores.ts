@@ -20,23 +20,33 @@
  * @interface ProbabilisticForecastResponseModelInfoArbitrationScores
  */
 export interface ProbabilisticForecastResponseModelInfoArbitrationScores {
-    /**
-     * 
-     * @type {number}
-     * @memberof ProbabilisticForecastResponseModelInfoArbitrationScores
-     */
-    'mae'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ProbabilisticForecastResponseModelInfoArbitrationScores
-     */
-    'mape'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ProbabilisticForecastResponseModelInfoArbitrationScores
-     */
-    'confidence'?: number;
+  /**
+   * 
+   * @memberof ProbabilisticForecastResponseModelInfoArbitrationScores
+   */
+  'mae'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ProbabilisticForecastResponseModelInfoArbitrationScores
+   */
+  'mape'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ProbabilisticForecastResponseModelInfoArbitrationScores
+   */
+  'confidence'?: 
+        
+          
+          number
+    ;
 }
+
 

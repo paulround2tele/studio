@@ -20,29 +20,42 @@
  * @interface CampaignDomainsListResponseAggregatesDns
  */
 export interface CampaignDomainsListResponseAggregatesDns {
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignDomainsListResponseAggregatesDns
-     */
-    'pending'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignDomainsListResponseAggregatesDns
-     */
-    'ok'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignDomainsListResponseAggregatesDns
-     */
-    'error'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignDomainsListResponseAggregatesDns
-     */
-    'timeout'?: number;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponseAggregatesDns
+   */
+  'pending'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponseAggregatesDns
+   */
+  'ok'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponseAggregatesDns
+   */
+  'error'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponseAggregatesDns
+   */
+  'timeout'?: 
+        
+          
+          number
+    ;
 }
+
 

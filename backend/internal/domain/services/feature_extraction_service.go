@@ -11,7 +11,6 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"github.com/fntelecomllc/studio/backend/internal/extraction"
-	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 )
 
 // FeatureExtractionService handles writing feature extraction results to the new domain_extraction_features table
@@ -31,16 +30,16 @@ func NewFeatureExtractionService(db *sqlx.DB, logger Logger) *FeatureExtractionS
 
 // ExtractionFeatures represents the data structure for domain_extraction_features table
 type ExtractionFeatures struct {
-	ID           uuid.UUID `db:"id"`
-	DomainID     uuid.UUID `db:"domain_id"`
-	CampaignID   uuid.UUID `db:"campaign_id"`
-	DomainName   string    `db:"domain_name"`
-	
+	ID         uuid.UUID `db:"id"`
+	DomainID   uuid.UUID `db:"domain_id"`
+	CampaignID uuid.UUID `db:"campaign_id"`
+	DomainName string    `db:"domain_name"`
+
 	// Processing state
-	ProcessingState string `db:"processing_state"`
-	AttemptCount    int    `db:"attempt_count"`
+	ProcessingState string         `db:"processing_state"`
+	AttemptCount    int            `db:"attempt_count"`
 	LastError       sql.NullString `db:"last_error"`
-	
+
 	// HTTP fetch metrics
 	HTTPStatus     sql.NullString `db:"http_status"`
 	HTTPStatusCode sql.NullInt32  `db:"http_status_code"`
@@ -48,34 +47,34 @@ type ExtractionFeatures struct {
 	ContentHash    sql.NullString `db:"content_hash"`
 	ContentBytes   sql.NullInt32  `db:"content_bytes"`
 	PageLang       sql.NullString `db:"page_lang"`
-	
+
 	// Feature extraction results
-	KwUniqueCount           sql.NullInt32   `db:"kw_unique_count"`
-	KwTotalOccurrences      sql.NullInt32   `db:"kw_total_occurrences"`
-	KwWeightSum             sql.NullFloat64 `db:"kw_weight_sum"`
-	KwTop3                  sql.NullString  `db:"kw_top3"`         // JSONB
-	KwSignalDistribution    sql.NullString  `db:"kw_signal_distribution"` // JSONB
-	ContentRichnessScore    sql.NullFloat64 `db:"content_richness_score"`
-	
+	KwUniqueCount        sql.NullInt32   `db:"kw_unique_count"`
+	KwTotalOccurrences   sql.NullInt32   `db:"kw_total_occurrences"`
+	KwWeightSum          sql.NullFloat64 `db:"kw_weight_sum"`
+	KwTop3               sql.NullString  `db:"kw_top3"`                // JSONB
+	KwSignalDistribution sql.NullString  `db:"kw_signal_distribution"` // JSONB
+	ContentRichnessScore sql.NullFloat64 `db:"content_richness_score"`
+
 	// Microcrawl features
-	MicrocrawlEnabled       sql.NullBool    `db:"microcrawl_enabled"`
-	MicrocrawlPages         sql.NullInt32   `db:"microcrawl_pages"`
-	MicrocrawlBaseKwCount   sql.NullInt32   `db:"microcrawl_base_kw_count"`
-	MicrocrawlAddedKwCount  sql.NullInt32   `db:"microcrawl_added_kw_count"`
-	MicrocrawlGainRatio     sql.NullFloat64 `db:"microcrawl_gain_ratio"`
-	DiminishingReturns      sql.NullBool    `db:"diminishing_returns"`
-	
+	MicrocrawlEnabled      sql.NullBool    `db:"microcrawl_enabled"`
+	MicrocrawlPages        sql.NullInt32   `db:"microcrawl_pages"`
+	MicrocrawlBaseKwCount  sql.NullInt32   `db:"microcrawl_base_kw_count"`
+	MicrocrawlAddedKwCount sql.NullInt32   `db:"microcrawl_added_kw_count"`
+	MicrocrawlGainRatio    sql.NullFloat64 `db:"microcrawl_gain_ratio"`
+	DiminishingReturns     sql.NullBool    `db:"diminishing_returns"`
+
 	// Parking detection
-	IsParked          sql.NullBool    `db:"is_parked"`
-	ParkedConfidence  sql.NullFloat64 `db:"parked_confidence"`
-	
+	IsParked         sql.NullBool    `db:"is_parked"`
+	ParkedConfidence sql.NullFloat64 `db:"parked_confidence"`
+
 	// Scoring
 	IsStaleScore sql.NullBool `db:"is_stale_score"`
-	
+
 	// Processing metadata
 	ExtractedAt   sql.NullTime   `db:"extracted_at"`
 	FeatureVector sql.NullString `db:"feature_vector"` // JSONB
-	
+
 	// Audit fields
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
@@ -84,17 +83,6 @@ type ExtractionFeatures struct {
 // SaveFeatures saves feature extraction results to the domain_extraction_features table
 // This is the core method for Phase P1 implementation.
 func (s *FeatureExtractionService) SaveFeatures(ctx context.Context, domainID uuid.UUID, campaignID uuid.UUID, domainName string, signals extraction.RawSignals, features extraction.FeatureAggregate) error {
-	// Check if feature flag is enabled
-	if !featureflags.IsExtractionFeatureTableEnabled() {
-		if s.logger != nil {
-			s.logger.Debug(ctx, "Feature extraction table disabled, skipping save", map[string]interface{}{
-				"domain_id":   domainID,
-				"campaign_id": campaignID,
-			})
-		}
-		return nil
-	}
-
 	// Prepare JSONB data
 	kwTop3JSON, err := json.Marshal(features.Top3)
 	if err != nil {
@@ -113,29 +101,29 @@ func (s *FeatureExtractionService) SaveFeatures(ctx context.Context, domainID uu
 
 	// Create the extraction features record
 	record := ExtractionFeatures{
-		ID:                      uuid.New(),
-		DomainID:                domainID,
-		CampaignID:              campaignID,
-		DomainName:              domainName,
-		ProcessingState:         "ready",
-		AttemptCount:            1,
-		HTTPStatus:              sql.NullString{String: fmt.Sprintf("%d", signals.HTTPStatusCode), Valid: signals.HTTPStatusCode > 0},
-		HTTPStatusCode:          sql.NullInt32{Int32: int32(signals.HTTPStatusCode), Valid: signals.HTTPStatusCode > 0},
-		FetchTimeMs:             sql.NullInt32{Int32: int32(signals.FetchLatencyMs), Valid: signals.FetchLatencyMs > 0},
-		ContentHash:             sql.NullString{String: signals.ContentHash, Valid: signals.ContentHash != ""},
-		ContentBytes:            sql.NullInt32{Int32: int32(signals.ContentBytes), Valid: signals.ContentBytes > 0},
-		PageLang:                sql.NullString{String: signals.Language, Valid: signals.Language != ""},
-		KwUniqueCount:           sql.NullInt32{Int32: int32(features.KwUniqueCount), Valid: true},
-		KwTotalOccurrences:      sql.NullInt32{Int32: int32(features.KwTotalOccurrences), Valid: true},
-		KwWeightSum:             sql.NullFloat64{Float64: features.KwWeightSum, Valid: true},
-		KwTop3:                  sql.NullString{String: string(kwTop3JSON), Valid: len(features.Top3) > 0},
-		KwSignalDistribution:    sql.NullString{String: string(signalDistJSON), Valid: len(features.SignalDistribution) > 0},
-		ContentRichnessScore:    sql.NullFloat64{Float64: features.ContentRichnessScore, Valid: true},
-		IsParked:                sql.NullBool{Bool: features.IsParked, Valid: true},
-		ParkedConfidence:        sql.NullFloat64{Float64: features.ParkedConfidence, Valid: features.ParkedConfidence > 0},
-		IsStaleScore:            sql.NullBool{Bool: false, Valid: true},
-		ExtractedAt:             sql.NullTime{Time: time.Now(), Valid: true},
-		FeatureVector:           sql.NullString{String: string(featureVectorJSON), Valid: len(features.FeatureVector) > 0},
+		ID:                   uuid.New(),
+		DomainID:             domainID,
+		CampaignID:           campaignID,
+		DomainName:           domainName,
+		ProcessingState:      "ready",
+		AttemptCount:         1,
+		HTTPStatus:           sql.NullString{String: fmt.Sprintf("%d", signals.HTTPStatusCode), Valid: signals.HTTPStatusCode > 0},
+		HTTPStatusCode:       sql.NullInt32{Int32: int32(signals.HTTPStatusCode), Valid: signals.HTTPStatusCode > 0},
+		FetchTimeMs:          sql.NullInt32{Int32: int32(signals.FetchLatencyMs), Valid: signals.FetchLatencyMs > 0},
+		ContentHash:          sql.NullString{String: signals.ContentHash, Valid: signals.ContentHash != ""},
+		ContentBytes:         sql.NullInt32{Int32: int32(signals.ContentBytes), Valid: signals.ContentBytes > 0},
+		PageLang:             sql.NullString{String: signals.Language, Valid: signals.Language != ""},
+		KwUniqueCount:        sql.NullInt32{Int32: int32(features.KwUniqueCount), Valid: true},
+		KwTotalOccurrences:   sql.NullInt32{Int32: int32(features.KwTotalOccurrences), Valid: true},
+		KwWeightSum:          sql.NullFloat64{Float64: features.KwWeightSum, Valid: true},
+		KwTop3:               sql.NullString{String: string(kwTop3JSON), Valid: len(features.Top3) > 0},
+		KwSignalDistribution: sql.NullString{String: string(signalDistJSON), Valid: len(features.SignalDistribution) > 0},
+		ContentRichnessScore: sql.NullFloat64{Float64: features.ContentRichnessScore, Valid: true},
+		IsParked:             sql.NullBool{Bool: features.IsParked, Valid: true},
+		ParkedConfidence:     sql.NullFloat64{Float64: features.ParkedConfidence, Valid: features.ParkedConfidence > 0},
+		IsStaleScore:         sql.NullBool{Bool: false, Valid: true},
+		ExtractedAt:          sql.NullTime{Time: time.Now(), Valid: true},
+		FeatureVector:        sql.NullString{String: string(featureVectorJSON), Valid: len(features.FeatureVector) > 0},
 	}
 
 	// Add microcrawl data if available
@@ -184,14 +172,14 @@ func (s *FeatureExtractionService) SaveFeatures(ctx context.Context, domainID uu
 
 	if s.logger != nil {
 		s.logger.Info(ctx, "Feature extraction results saved", map[string]interface{}{
-			"domain_id":     domainID,
-			"campaign_id":   campaignID,
-			"domain_name":   domainName,
-			"kw_unique":     features.KwUniqueCount,
-			"kw_total":      features.KwTotalOccurrences,
-			"richness":      features.ContentRichnessScore,
-			"microcrawl":    signals.Microcrawl != nil,
-			"parked":        features.IsParked,
+			"domain_id":   domainID,
+			"campaign_id": campaignID,
+			"domain_name": domainName,
+			"kw_unique":   features.KwUniqueCount,
+			"kw_total":    features.KwTotalOccurrences,
+			"richness":    features.ContentRichnessScore,
+			"microcrawl":  signals.Microcrawl != nil,
+			"parked":      features.IsParked,
 		})
 	}
 
@@ -200,10 +188,6 @@ func (s *FeatureExtractionService) SaveFeatures(ctx context.Context, domainID uu
 
 // MarkExtractionError marks a domain extraction as failed with error details
 func (s *FeatureExtractionService) MarkExtractionError(ctx context.Context, domainID uuid.UUID, campaignID uuid.UUID, domainName string, errorMsg string, attemptCount int) error {
-	if !featureflags.IsExtractionFeatureTableEnabled() {
-		return nil
-	}
-
 	query := `
 		DELETE FROM domain_extraction_features WHERE domain_id = $1 AND campaign_id = $2;
 		INSERT INTO domain_extraction_features (
@@ -232,10 +216,6 @@ func (s *FeatureExtractionService) MarkExtractionError(ctx context.Context, doma
 
 // GetExtractionStatus retrieves the current extraction status for a domain
 func (s *FeatureExtractionService) GetExtractionStatus(ctx context.Context, domainID uuid.UUID, campaignID uuid.UUID) (*ExtractionFeatures, error) {
-	if !featureflags.IsExtractionFeatureTableEnabled() {
-		return nil, fmt.Errorf("feature extraction table disabled")
-	}
-
 	var record ExtractionFeatures
 	query := `
 		SELECT * FROM domain_extraction_features 

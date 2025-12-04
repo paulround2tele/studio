@@ -31,10 +31,10 @@ This directory contains comprehensive architecture documentation for the DomainF
 - [x] Feature flag documentation and Go constants
 - [x] Integration documentation completed
 
-**Phase P1: Feature Extraction Table Integration** 🔄 Next
-- [ ] Implement FeatureExtractionService writing to domain_extraction_features
-- [ ] Add dual-write mode with feature flag control
-- [ ] Wire EXTRACTION_FEATURE_TABLE_ENABLED into extraction flow
+**Phase P1: Feature Extraction Table Integration** ✅ Complete
+- [x] Implement FeatureExtractionService writing to domain_extraction_features
+- [x] Ensure dual-write path from HTTP validation persists enrichment for analysis
+- [x] Permanently enable feature tables (feature flag removed)
 
 **Phase P2+: Future Phases** ⏳ Planned
 - See [EXTRACTION_ANALYSIS_REDESIGN_PLAN.md](./EXTRACTION_ANALYSIS_REDESIGN_PLAN.md) for complete roadmap

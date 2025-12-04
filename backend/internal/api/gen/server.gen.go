@@ -2176,6 +2176,18 @@ type ScoringProfile struct {
 	Weights     map[string]float32 `json:"weights"`
 }
 
+// ScoringProfileListResponse Paginated list wrapper for scoring profiles
+type ScoringProfileListResponse struct {
+	Items []ScoringProfile `json:"items"`
+
+	// Meta Pagination metadata
+	Meta *struct {
+		Limit  int `json:"limit"`
+		Offset int `json:"offset"`
+		Total  int `json:"total"`
+	} `json:"meta,omitempty"`
+}
+
 // SessionResponse defines model for SessionResponse.
 type SessionResponse struct {
 	ExpiresAt    time.Time          `json:"expiresAt"`
@@ -15951,7 +15963,7 @@ type ScoringProfilesListResponseObject interface {
 	VisitScoringProfilesListResponse(w http.ResponseWriter) error
 }
 
-type ScoringProfilesList200JSONResponse []ScoringProfile
+type ScoringProfilesList200JSONResponse ScoringProfileListResponse
 
 func (response ScoringProfilesList200JSONResponse) VisitScoringProfilesListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

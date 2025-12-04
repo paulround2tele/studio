@@ -20,35 +20,49 @@
  * @interface DomainAnalysisFeaturesKeywords
  */
 export interface DomainAnalysisFeaturesKeywords {
-    /**
-     * 
-     * @type {number}
-     * @memberof DomainAnalysisFeaturesKeywords
-     */
-    'unique_count'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof DomainAnalysisFeaturesKeywords
-     */
-    'hits_total'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof DomainAnalysisFeaturesKeywords
-     */
-    'weight_sum'?: number;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof DomainAnalysisFeaturesKeywords
-     */
-    'top3'?: Array<string>;
-    /**
-     * 
-     * @type {{ [key: string]: number; }}
-     * @memberof DomainAnalysisFeaturesKeywords
-     */
-    'signal_distribution'?: { [key: string]: number; };
+  /**
+   * 
+   * @memberof DomainAnalysisFeaturesKeywords
+   */
+  'unique_count'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof DomainAnalysisFeaturesKeywords
+   */
+  'hits_total'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof DomainAnalysisFeaturesKeywords
+   */
+  'weight_sum'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof DomainAnalysisFeaturesKeywords
+   */
+  'top3'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof DomainAnalysisFeaturesKeywords
+   */
+  'signal_distribution'?: 
+        Record<string, unknown>
+    ;
 }
+
 

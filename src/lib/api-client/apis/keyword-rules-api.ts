@@ -14,7 +14,7 @@
 
 
 import type { Configuration } from '../configuration';
-import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
+import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig, AxiosHeaderValue, AxiosHeaders } from 'axios';
 import globalAxios from 'axios';
 // Some imports not used depending on template conditions
 // @ts-ignore
@@ -50,14 +50,11 @@ export const KeywordRulesApiAxiosParamCreator = function (configuration?: Config
             const localVarPath = `/keyword-rules`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
+            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
 
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
+            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
+            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
+            const localVarQueryParameter: Record<string, unknown> = {};
 
             // authentication cookieAuth required
 
@@ -92,8 +89,15 @@ export const KeywordRulesApiAxiosParamCreator = function (configuration?: Config
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
+            if (baseOptions.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            
+            if (options.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            localVarRequestOptions.headers = headerParams.toJSON();
 
             return {
                 url: toPathString(localVarUrlObj),

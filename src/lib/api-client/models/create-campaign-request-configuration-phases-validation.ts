@@ -20,23 +20,33 @@
  * @interface CreateCampaignRequestConfigurationPhasesValidation
  */
 export interface CreateCampaignRequestConfigurationPhasesValidation {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof CreateCampaignRequestConfigurationPhasesValidation
-     */
-    'enabled'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof CreateCampaignRequestConfigurationPhasesValidation
-     */
-    'dnsValidation'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof CreateCampaignRequestConfigurationPhasesValidation
-     */
-    'httpValidation'?: boolean;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPhasesValidation
+   */
+  'enabled'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPhasesValidation
+   */
+  'dnsValidation'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPhasesValidation
+   */
+  'httpValidation'?: 
+        
+          
+          boolean
+    ;
 }
+
 

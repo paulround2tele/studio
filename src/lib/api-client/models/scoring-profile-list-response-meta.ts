@@ -13,49 +13,39 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { RecommendationSeverity } from './recommendation-severity';
 
 /**
- * 
+ * Pagination metadata
  * @export
- * @interface CampaignRecommendation
+ * @interface ScoringProfileListResponseMeta
  */
-export interface CampaignRecommendation {
+export interface ScoringProfileListResponseMeta {
   /**
    * 
-   * @memberof CampaignRecommendation
+   * @memberof ScoringProfileListResponseMeta
    */
-  'id': 
+  'limit': 
         
           
-          string
+          number
     ;
   /**
    * 
-   * @memberof CampaignRecommendation
+   * @memberof ScoringProfileListResponseMeta
    */
-  'message': 
+  'offset': 
         
           
-          string
+          number
     ;
   /**
    * 
-   * @memberof CampaignRecommendation
+   * @memberof ScoringProfileListResponseMeta
    */
-  'rationaleCode': 
-      'R_DNS_LOW' | 'R_HTTP_LOW' | 'R_FEW_HIGH_POTENTIAL' | 'R_WARNING_RATE_HIGH' | 'R_NO_LEADS' | 'R_MOMENTUM_LOSS' | 'R_MOMENTUM_SURGE' | 'R_ALL_CLEAR'
-;
-  /**
-   * 
-   * @memberof CampaignRecommendation
-   */
-  'severity': 
+  'total': 
         
           
-          RecommendationSeverity
+          number
     ;
 }
 

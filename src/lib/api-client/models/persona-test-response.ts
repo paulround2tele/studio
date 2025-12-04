@@ -20,59 +20,83 @@
  * @interface PersonaTestResponse
  */
 export interface PersonaTestResponse {
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaTestResponse
-     */
-    'personaId'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaTestResponse
-     */
-    'personaType'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaTestResponse
-     */
-    'personaName'?: string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PersonaTestResponse
-     */
-    'success'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PersonaTestResponse
-     */
-    'testPassed'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaTestResponse
-     */
-    'message'?: string;
-    /**
-     * 
-     * @type {object}
-     * @memberof PersonaTestResponse
-     */
-    'testResults'?: object;
-    /**
-     * 
-     * @type {object}
-     * @memberof PersonaTestResponse
-     */
-    'results'?: object;
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaTestResponse
-     */
-    'timestamp'?: string;
+  /**
+   * 
+   * @memberof PersonaTestResponse
+   */
+  'personaId'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PersonaTestResponse
+   */
+  'personaType'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PersonaTestResponse
+   */
+  'personaName'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PersonaTestResponse
+   */
+  'success'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof PersonaTestResponse
+   */
+  'testPassed'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof PersonaTestResponse
+   */
+  'message'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PersonaTestResponse
+   */
+  'testResults'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof PersonaTestResponse
+   */
+  'results'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof PersonaTestResponse
+   */
+  'timestamp'?: 
+        
+          
+          string
+    ;
 }
+
 

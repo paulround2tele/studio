@@ -23,46 +23,47 @@ import type { BulkGenerationResponseOperationsValue } from './bulk-generation-re
  * @interface BulkGenerationResponse
  */
 export interface BulkGenerationResponse {
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkGenerationResponse
-     */
-    'operationId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkGenerationResponse
-     */
-    'status': BulkGenerationResponseStatusEnum;
-    /**
-     * 
-     * @type {{ [key: string]: BulkGenerationResponseOperationsValue; }}
-     * @memberof BulkGenerationResponse
-     */
-    'operations': { [key: string]: BulkGenerationResponseOperationsValue; };
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkGenerationResponse
-     */
-    'totalOperations': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkGenerationResponse
-     */
-    'estimatedDuration'?: string;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum BulkGenerationResponseStatusEnum {
-    initiated = 'initiated',
-    pending = 'pending',
-    running = 'running'
+  /**
+   * 
+   * @memberof BulkGenerationResponse
+   */
+  'operationId': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkGenerationResponse
+   */
+  'status': 
+      'initiated' | 'pending' | 'running'
+;
+  /**
+   * 
+   * @memberof BulkGenerationResponse
+   */
+  'operations': 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof BulkGenerationResponse
+   */
+  'totalOperations': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkGenerationResponse
+   */
+  'estimatedDuration'?: 
+        
+          
+          string
+    ;
 }
 
 

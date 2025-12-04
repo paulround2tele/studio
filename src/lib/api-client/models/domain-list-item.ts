@@ -23,65 +23,96 @@ import type { DomainAnalysisFeatures } from './domain-analysis-features';
  * @interface DomainListItem
  */
 export interface DomainListItem {
-    /**
-     * 
-     * @type {string}
-     * @memberof DomainListItem
-     */
-    'id'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof DomainListItem
-     */
-    'domain'?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof DomainListItem
-     */
-    'offset'?: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof DomainListItem
-     */
-    'createdAt'?: string;
-    /**
-     * DNS validation status (authoritative)
-     * @type {string}
-     * @memberof DomainListItem
-     */
-    'dnsStatus'?: string;
-    /**
-     * HTTP validation status (authoritative)
-     * @type {string}
-     * @memberof DomainListItem
-     */
-    'httpStatus'?: string;
-    /**
-     * Lead extraction status if available
-     * @type {string}
-     * @memberof DomainListItem
-     */
-    'leadStatus'?: string;
-    /**
-     * Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE)
-     * @type {string}
-     * @memberof DomainListItem
-     */
-    'dnsReason'?: string;
-    /**
-     * Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)
-     * @type {string}
-     * @memberof DomainListItem
-     */
-    'httpReason'?: string;
-    /**
-     * 
-     * @type {DomainAnalysisFeatures}
-     * @memberof DomainListItem
-     */
-    'features'?: DomainAnalysisFeatures;
+  /**
+   * 
+   * @memberof DomainListItem
+   */
+  'id'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof DomainListItem
+   */
+  'domain'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof DomainListItem
+   */
+  'offset'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof DomainListItem
+   */
+  'createdAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * DNS validation status (authoritative)
+   * @memberof DomainListItem
+   */
+  'dnsStatus'?: 
+        
+          
+          string
+    ;
+  /**
+   * HTTP validation status (authoritative)
+   * @memberof DomainListItem
+   */
+  'httpStatus'?: 
+        
+          
+          string
+    ;
+  /**
+   * Lead extraction status if available
+   * @memberof DomainListItem
+   */
+  'leadStatus'?: 
+        
+          
+          string
+    ;
+  /**
+   * Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE)
+   * @memberof DomainListItem
+   */
+  'dnsReason'?: 
+        
+          
+          string
+    ;
+  /**
+   * Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)
+   * @memberof DomainListItem
+   */
+  'httpReason'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof DomainListItem
+   */
+  'features'?: 
+        
+          
+          DomainAnalysisFeatures
+    ;
 }
+
 

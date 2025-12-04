@@ -26,126 +26,160 @@ import type { FlexibleValue } from './flexible-value';
  * @interface PhaseExecution
  */
 export interface PhaseExecution {
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecution
-     */
-    'id': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecution
-     */
-    'campaignId': string;
-    /**
-     * Phase identifier
-     * @type {string}
-     * @memberof PhaseExecution
-     */
-    'phaseType': PhaseExecutionPhaseTypeEnum;
-    /**
-     * 
-     * @type {ExecutionStatusEnum}
-     * @memberof PhaseExecution
-     */
-    'status': ExecutionStatusEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecution
-     */
-    'startedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecution
-     */
-    'completedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecution
-     */
-    'pausedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecution
-     */
-    'failedAt'?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseExecution
-     */
-    'progressPercentage'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseExecution
-     */
-    'totalItems'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseExecution
-     */
-    'processedItems'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseExecution
-     */
-    'successfulItems'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseExecution
-     */
-    'failedItems'?: number;
-    /**
-     * 
-     * @type {{ [key: string]: any; }}
-     * @memberof PhaseExecution
-     */
-    'configuration'?: { [key: string]: any; };
-    /**
-     * 
-     * @type {{ [key: string]: FlexibleValue; }}
-     * @memberof PhaseExecution
-     */
-    'errorDetails'?: { [key: string]: FlexibleValue; };
-    /**
-     * 
-     * @type {{ [key: string]: FlexibleValue; }}
-     * @memberof PhaseExecution
-     */
-    'metrics'?: { [key: string]: FlexibleValue; };
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecution
-     */
-    'createdAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecution
-     */
-    'updatedAt': string;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum PhaseExecutionPhaseTypeEnum {
-    discovery = 'discovery',
-    validation = 'validation',
-    enrichment = 'enrichment',
-    extraction = 'extraction',
-    analysis = 'analysis'
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'id': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'campaignId': 
+        
+          
+          string
+    ;
+  /**
+   * Phase identifier
+   * @memberof PhaseExecution
+   */
+  'phaseType': 
+      'discovery' | 'validation' | 'enrichment' | 'extraction' | 'analysis'
+;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'status': 
+        
+          
+          ExecutionStatusEnum
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'startedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'completedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'pausedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'failedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'progressPercentage'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'totalItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'processedItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'successfulItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'failedItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'configuration'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'errorDetails'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'metrics'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'createdAt': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseExecution
+   */
+  'updatedAt': 
+        
+          
+          string
+    ;
 }
 
 

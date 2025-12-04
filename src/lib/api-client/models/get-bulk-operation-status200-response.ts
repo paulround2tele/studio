@@ -20,29 +20,42 @@
  * @interface GetBulkOperationStatus200Response
  */
 export interface GetBulkOperationStatus200Response {
-    /**
-     * 
-     * @type {string}
-     * @memberof GetBulkOperationStatus200Response
-     */
-    'operationId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetBulkOperationStatus200Response
-     */
-    'type': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetBulkOperationStatus200Response
-     */
-    'status': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof GetBulkOperationStatus200Response
-     */
-    'progress': number;
+  /**
+   * 
+   * @memberof GetBulkOperationStatus200Response
+   */
+  'operationId': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof GetBulkOperationStatus200Response
+   */
+  'type': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof GetBulkOperationStatus200Response
+   */
+  'status': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof GetBulkOperationStatus200Response
+   */
+  'progress': 
+        
+          
+          number
+    ;
 }
+
 

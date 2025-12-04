@@ -20,65 +20,96 @@
  * @interface CampaignMetricsResponse
  */
 export interface CampaignMetricsResponse {
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignMetricsResponse
-     */
-    'highPotential': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignMetricsResponse
-     */
-    'leads': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignMetricsResponse
-     */
-    'keywordCoveragePct': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignMetricsResponse
-     */
-    'avgRichness': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignMetricsResponse
-     */
-    'warningRatePct': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignMetricsResponse
-     */
-    'medianGain': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignMetricsResponse
-     */
-    'stuffing': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignMetricsResponse
-     */
-    'repetition': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignMetricsResponse
-     */
-    'anchor': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignMetricsResponse
-     */
-    'totalAnalyzed': number;
+  /**
+   * 
+   * @memberof CampaignMetricsResponse
+   */
+  'highPotential': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignMetricsResponse
+   */
+  'leads': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignMetricsResponse
+   */
+  'keywordCoveragePct': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignMetricsResponse
+   */
+  'avgRichness': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignMetricsResponse
+   */
+  'warningRatePct': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignMetricsResponse
+   */
+  'medianGain': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignMetricsResponse
+   */
+  'stuffing': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignMetricsResponse
+   */
+  'repetition': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignMetricsResponse
+   */
+  'anchor': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignMetricsResponse
+   */
+  'totalAnalyzed': 
+        
+          
+          number
+    ;
 }
+
 

@@ -20,61 +20,47 @@
  * @interface CampaignPhasesStatusResponsePhasesInner
  */
 export interface CampaignPhasesStatusResponsePhasesInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignPhasesStatusResponsePhasesInner
-     */
-    'phase': CampaignPhasesStatusResponsePhasesInnerPhaseEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignPhasesStatusResponsePhasesInner
-     */
-    'status': CampaignPhasesStatusResponsePhasesInnerStatusEnum;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignPhasesStatusResponsePhasesInner
-     */
-    'progressPercentage': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignPhasesStatusResponsePhasesInner
-     */
-    'startedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignPhasesStatusResponsePhasesInner
-     */
-    'completedAt'?: string;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum CampaignPhasesStatusResponsePhasesInnerPhaseEnum {
-    generation = 'generation',
-    dns = 'dns',
-    http = 'http',
-    analysis = 'analysis',
-    leads = 'leads'
-}
-/**
-    * @export
-    * @enum {string}
-    */
-export enum CampaignPhasesStatusResponsePhasesInnerStatusEnum {
-    not_started = 'not_started',
-    ready = 'ready',
-    configured = 'configured',
-    in_progress = 'in_progress',
-    paused = 'paused',
-    completed = 'completed',
-    failed = 'failed'
+  /**
+   * 
+   * @memberof CampaignPhasesStatusResponsePhasesInner
+   */
+  'phase': 
+      'generation' | 'dns' | 'http' | 'analysis' | 'leads'
+;
+  /**
+   * 
+   * @memberof CampaignPhasesStatusResponsePhasesInner
+   */
+  'status': 
+      'not_started' | 'ready' | 'configured' | 'in_progress' | 'paused' | 'completed' | 'failed'
+;
+  /**
+   * 
+   * @memberof CampaignPhasesStatusResponsePhasesInner
+   */
+  'progressPercentage': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignPhasesStatusResponsePhasesInner
+   */
+  'startedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignPhasesStatusResponsePhasesInner
+   */
+  'completedAt'?: 
+        
+          
+          string
+    ;
 }
 
 

@@ -10,29 +10,9 @@ The system has been consolidated to use a unified extraction/analysis pipeline. 
 
 ### Current Feature Flags
 
-### EXTRACTION_FEATURE_TABLE_ENABLED
+### Feature Table Persistence
 
-**Purpose**: Controls whether new feature extraction logic writes to the `domain_extraction_features` table.
-
-**Type**: Boolean  
-**Default**: `false`  
-**Environment Variable**: `EXTRACTION_FEATURE_TABLE_ENABLED`  
-**Implementation Phase**: P1
-
-**Description**: 
-When enabled, the feature extraction service will write detailed extraction results to the new `domain_extraction_features` table in addition to the legacy `feature_vector` column. This enables dual-write mode for safe migration.
-
-**Usage**:
-```go
-if featureflags.IsExtractionFeatureTableEnabled() {
-    // Write to domain_extraction_features table
-    err := extractionService.SaveFeatures(ctx, domainID, features)
-}
-// Continue with legacy feature_vector write
-```
-
-**Dependencies**: None  
-**Rollback**: Set to `false` to disable writes to new table
+Feature tables are now permanently enabled. The system always writes extraction results to `domain_extraction_features`, so no environment flag is required or supported. All references to `EXTRACTION_FEATURE_TABLE_ENABLED` have been removed.
 
 ---
 
@@ -57,7 +37,7 @@ if featureflags.IsExtractionKeywordDetailEnabled() {
 }
 ```
 
-**Dependencies**: Recommended to enable after `EXTRACTION_FEATURE_TABLE_ENABLED` is stable  
+**Dependencies**: Recommended to enable after feature table persistence is stable  
 **Rollback**: Set to `false` to disable detailed keyword processing
 
 ---
@@ -161,7 +141,6 @@ All feature flags are controlled via environment variables. Set the environment 
 Example `.env` configuration:
 ```bash
 # Extraction → Analysis Redesign Flags
-EXTRACTION_FEATURE_TABLE_ENABLED=false
 EXTRACTION_KEYWORD_DETAIL_ENABLED=false
 ANALYSIS_READS_FEATURE_TABLE=false
 MICROCRAWL_ADAPTIVE_MODE=false
@@ -190,7 +169,7 @@ Feature flags can be updated at runtime through the feature flags API endpoint:
 
 ### Phase-based Rollout
 1. **Phase P0**: Documentation and infrastructure (no flags active)
-2. **Phase P1**: Enable `EXTRACTION_FEATURE_TABLE_ENABLED` in development
+2. **Phase P1**: Permanently enable domain_extraction_features writes (flag removed)
 3. **Phase P2**: Enable `EXTRACTION_KEYWORD_DETAIL_ENABLED` after P1 is stable
 4. **Phase P3**: Enable `ANALYSIS_READS_FEATURE_TABLE` for gradual read migration
 5. **Phase P4**: Enable `MICROCRAWL_ADAPTIVE_MODE` for adaptive crawling

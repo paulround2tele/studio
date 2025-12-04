@@ -20,11 +20,15 @@
  * @interface AnalysisReuseEnrichmentEvent
  */
 export interface AnalysisReuseEnrichmentEvent {
-    /**
-     * Number of feature vectors reused from prior HTTP phase enrichment.
-     * @type {number}
-     * @memberof AnalysisReuseEnrichmentEvent
-     */
-    'featureVectorCount'?: number;
+  /**
+   * Number of feature vectors reused from prior HTTP phase enrichment.
+   * @memberof AnalysisReuseEnrichmentEvent
+   */
+  'featureVectorCount'?: 
+        
+          
+          number
+    ;
 }
+
 

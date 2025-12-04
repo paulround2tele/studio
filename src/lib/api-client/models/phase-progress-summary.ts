@@ -20,61 +20,67 @@
  * @interface PhaseProgressSummary
  */
 export interface PhaseProgressSummary {
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseProgressSummary
-     */
-    'status': PhaseProgressSummaryStatusEnum;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseProgressSummary
-     */
-    'percentComplete': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseProgressSummary
-     */
-    'itemsProcessed': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseProgressSummary
-     */
-    'itemsTotal': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseProgressSummary
-     */
-    'startedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseProgressSummary
-     */
-    'completedAt'?: string;
-    /**
-     * Human readable duration
-     * @type {string}
-     * @memberof PhaseProgressSummary
-     */
-    'duration'?: string;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum PhaseProgressSummaryStatusEnum {
-    not_started = 'not_started',
-    configured = 'configured',
-    running = 'running',
-    paused = 'paused',
-    completed = 'completed',
-    failed = 'failed'
+  /**
+   * 
+   * @memberof PhaseProgressSummary
+   */
+  'status': 
+      'not_started' | 'configured' | 'running' | 'paused' | 'completed' | 'failed'
+;
+  /**
+   * 
+   * @memberof PhaseProgressSummary
+   */
+  'percentComplete': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseProgressSummary
+   */
+  'itemsProcessed': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseProgressSummary
+   */
+  'itemsTotal': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseProgressSummary
+   */
+  'startedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseProgressSummary
+   */
+  'completedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * Human readable duration
+   * @memberof PhaseProgressSummary
+   */
+  'duration'?: 
+        
+          
+          string
+    ;
 }
 
 

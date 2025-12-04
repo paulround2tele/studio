@@ -20,41 +20,60 @@
  * @interface DatabaseValue
  */
 export interface DatabaseValue {
-    /**
-     * 
-     * @type {string}
-     * @memberof DatabaseValue
-     */
-    'stringValue'?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof DatabaseValue
-     */
-    'intValue'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof DatabaseValue
-     */
-    'floatValue'?: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof DatabaseValue
-     */
-    'boolValue'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof DatabaseValue
-     */
-    'isNull'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof DatabaseValue
-     */
-    'rawValue'?: string;
+  /**
+   * 
+   * @memberof DatabaseValue
+   */
+  'stringValue'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof DatabaseValue
+   */
+  'intValue'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof DatabaseValue
+   */
+  'floatValue'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof DatabaseValue
+   */
+  'boolValue'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof DatabaseValue
+   */
+  'isNull'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof DatabaseValue
+   */
+  'rawValue'?: 
+        
+          
+          string
+    ;
 }
+
 

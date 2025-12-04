@@ -14,7 +14,6 @@ import (
 )
 
 // Environment flag helpers (mirroring existing ENABLE_* pattern)
-func EnabledFeatureTable() bool  { return flagEnabled("EXTRACTION_FEATURE_TABLE_ENABLED") }
 func EnabledKeywordDetail() bool { return flagEnabled("EXTRACTION_KEYWORD_DETAIL_ENABLED") }
 
 func flagEnabled(name string) bool {

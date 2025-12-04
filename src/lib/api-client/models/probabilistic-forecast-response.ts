@@ -29,64 +29,76 @@ import type { ProbabilisticForecastResponseQualityMetrics } from './probabilisti
  * @interface ProbabilisticForecastResponse
  */
 export interface ProbabilisticForecastResponse {
-    /**
-     * 
-     * @type {number}
-     * @memberof ProbabilisticForecastResponse
-     */
-    'horizon': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProbabilisticForecastResponse
-     */
-    'generatedAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProbabilisticForecastResponse
-     */
-    'method': ProbabilisticForecastResponseMethodEnum;
-    /**
-     * 
-     * @type {Array<ForecastProbabilisticPoint>}
-     * @memberof ProbabilisticForecastResponse
-     */
-    'points': Array<ForecastProbabilisticPoint>;
-    /**
-     * 
-     * @type {number}
-     * @memberof ProbabilisticForecastResponse
-     */
-    'timingMs'?: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProbabilisticForecastResponse
-     */
-    'error'?: string;
-    /**
-     * 
-     * @type {ProbabilisticForecastResponseModelInfo}
-     * @memberof ProbabilisticForecastResponse
-     */
-    'modelInfo'?: ProbabilisticForecastResponseModelInfo;
-    /**
-     * 
-     * @type {ProbabilisticForecastResponseQualityMetrics}
-     * @memberof ProbabilisticForecastResponse
-     */
-    'qualityMetrics'?: ProbabilisticForecastResponseQualityMetrics;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum ProbabilisticForecastResponseMethodEnum {
-    server = 'server',
-    client = 'client',
-    blended = 'blended'
+  /**
+   * 
+   * @memberof ProbabilisticForecastResponse
+   */
+  'horizon': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ProbabilisticForecastResponse
+   */
+  'generatedAt': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProbabilisticForecastResponse
+   */
+  'method': 
+      'server' | 'client' | 'blended'
+;
+  /**
+   * 
+   * @memberof ProbabilisticForecastResponse
+   */
+  'points': 
+        
+          
+          Array<ForecastProbabilisticPoint>
+    ;
+  /**
+   * 
+   * @memberof ProbabilisticForecastResponse
+   */
+  'timingMs'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ProbabilisticForecastResponse
+   */
+  'error'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProbabilisticForecastResponse
+   */
+  'modelInfo'?: 
+        
+          
+          ProbabilisticForecastResponseModelInfo
+    ;
+  /**
+   * 
+   * @memberof ProbabilisticForecastResponse
+   */
+  'qualityMetrics'?: 
+        
+          
+          ProbabilisticForecastResponseQualityMetrics
+    ;
 }
 
 

@@ -23,23 +23,33 @@ import type { CreateCampaignRequestConfiguration } from './create-campaign-reque
  * @interface CreateCampaignRequest
  */
 export interface CreateCampaignRequest {
-    /**
-     * Campaign name
-     * @type {string}
-     * @memberof CreateCampaignRequest
-     */
-    'name': string;
-    /**
-     * Campaign description
-     * @type {string}
-     * @memberof CreateCampaignRequest
-     */
-    'description'?: string;
-    /**
-     * 
-     * @type {CreateCampaignRequestConfiguration}
-     * @memberof CreateCampaignRequest
-     */
-    'configuration'?: CreateCampaignRequestConfiguration;
+  /**
+   * Campaign name
+   * @memberof CreateCampaignRequest
+   */
+  'name': 
+        
+          
+          string
+    ;
+  /**
+   * Campaign description
+   * @memberof CreateCampaignRequest
+   */
+  'description'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequest
+   */
+  'configuration'?: 
+        
+          
+          CreateCampaignRequestConfiguration
+    ;
 }
+
 

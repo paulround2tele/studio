@@ -65,6 +65,7 @@ type DNSPhaseConfigRequest struct {
 // HTTPPhaseConfigRequest represents HTTP validation phase configuration
 type HTTPPhaseConfigRequest struct {
 	PersonaIDs    []string `json:"personaIds" validate:"required,min=1" binding:"required" example:"[\"persona-uuid-1\", \"persona-uuid-2\"]" description:"Array of persona IDs to use for HTTP validation"`
+	KeywordSetIDs []string `json:"keywordSetIds,omitempty" example:"[\"set-uuid-1\", \"set-uuid-2\"]" description:"Keyword set identifiers applied during validation"`
 	Keywords      []string `json:"keywords,omitempty" example:"[\"keyword1\", \"keyword2\"]" description:"Predefined keywords to search for"`
 	AdHocKeywords []string `json:"adHocKeywords,omitempty" example:"[\"custom1\", \"custom2\"]" description:"Custom keywords to search for"`
 	Name          *string  `json:"name,omitempty" example:"My HTTP Campaign" description:"Optional name for the campaign"`

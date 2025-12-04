@@ -3521,6 +3521,16 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        /** @description Paginated list wrapper for scoring profiles */
+        ScoringProfileListResponse: {
+            items: components["schemas"]["ScoringProfile"][];
+            /** @description Pagination metadata */
+            meta?: {
+                limit: number;
+                offset: number;
+                total: number;
+            };
+        };
         CreateScoringProfileRequest: {
             name: string;
             description?: string;
@@ -7495,7 +7505,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ScoringProfile"][];
+                    "application/json": components["schemas"]["ScoringProfileListResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];

@@ -241,6 +241,8 @@ docs/RootCauseEvidenceValueOneOf.md
 docs/SchemaStats.md
 docs/ScoringApi.md
 docs/ScoringProfile.md
+docs/ScoringProfileListResponse.md
+docs/ScoringProfileListResponseMeta.md
 docs/ServerConfigResponse.md
 docs/ServerConfigUpdateRequest.md
 docs/ServerSettingsApi.md
@@ -471,6 +473,8 @@ models/root-cause-evidence-value-one-of.ts
 models/root-cause-evidence-value.ts
 models/root-cause-evidence.ts
 models/schema-stats.ts
+models/scoring-profile-list-response-meta.ts
+models/scoring-profile-list-response.ts
 models/scoring-profile.ts
 models/server-config-response.ts
 models/server-config-update-request.ts
