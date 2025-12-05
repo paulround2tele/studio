@@ -1606,7 +1606,11 @@ func (s *campaignStorePostgres) UpdateDomainsBulkHTTPStatus(ctx context.Context,
 	// Cast validation_status to enum and timestamp; only set http_reason when status not 'ok'
 	q := fmt.Sprintf(`UPDATE generated_domains gd
 		SET http_status = v.validation_status::domain_http_status_enum,
-			http_status_code = v.http_status_code::integer,
+			http_status_code = CASE
+				WHEN v.http_status_code IS NULL THEN NULL
+				WHEN v.http_status_code::integer BETWEEN 100 AND 599 THEN v.http_status_code::integer
+				ELSE NULL
+			END,
 			last_validated_at = v.last_checked_at::timestamptz,
 			lead_status = CASE
 				WHEN v.validation_status NOT IN ('ok','pending') THEN 'no_match'::domain_lead_status_enum

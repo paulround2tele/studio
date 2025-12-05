@@ -71,7 +71,8 @@ func TestUpdateDomainsBulkHTTPStatusSetsLeadStatus(t *testing.T) {
 		CreatedAt:             now,
 	}}
 
-	mock.ExpectExec(`lead_status\s*=\s*CASE\s+WHEN v\.validation_status NOT IN \('ok','pending'\)\s+THEN 'no_match'::domain_lead_status_enum`).
+	queryRegex := `(?s)http_status_code\s*=\s*CASE\s+WHEN v\.http_status_code IS NULL THEN NULL\s+WHEN v\.http_status_code::integer BETWEEN 100 AND 599 THEN v\.http_status_code::integer\s+ELSE NULL\s+END.*lead_status\s*=\s*CASE\s+WHEN v\.validation_status NOT IN \('ok','pending'\)\s+THEN 'no_match'::domain_lead_status_enum`
+	mock.ExpectExec(queryRegex).
 		WithArgs(results[0].DomainName, results[0].ValidationStatus, results[0].HTTPStatusCode, results[0].LastCheckedAt, results[0].Reason).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 

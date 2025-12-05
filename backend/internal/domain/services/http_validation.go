@@ -1372,6 +1372,14 @@ func (s *httpValidationService) getPersonaAndProxy(ctx context.Context, campaign
 	return nil, nil, nil
 }
 
+func sanitizeHTTPStatusCode(code int) *int32 {
+	if code >= 100 && code <= 599 {
+		c := int32(code)
+		return &c
+	}
+	return nil
+}
+
 // storeHTTPResults stores HTTP validation results in the campaign store
 func (s *httpValidationService) storeHTTPResults(ctx context.Context, campaignID uuid.UUID, results []*httpvalidator.ValidationResult) error {
 	s.deps.Logger.Info(ctx, "Storing HTTP validation results", map[string]interface{}{
@@ -1487,11 +1495,7 @@ func (s *httpValidationService) storeHTTPResults(ctx context.Context, campaignID
 				reasonPtr = &val
 			}
 		}
-		var codePtr *int32
-		if r.StatusCode != 0 {
-			c := int32(r.StatusCode)
-			codePtr = &c
-		}
+		codePtr := sanitizeHTTPStatusCode(r.StatusCode)
 		var titlePtr *string
 		if r.ExtractedTitle != "" {
 			t := r.ExtractedTitle
@@ -1557,7 +1561,11 @@ func (s *httpValidationService) storeHTTPResults(ctx context.Context, campaignID
 	query := fmt.Sprintf(`WITH updates(domain_name,validation_status,http_status_code,last_checked_at,reason) AS (VALUES %s)
 	UPDATE generated_domains gd
 	SET http_status = u.validation_status::domain_http_status_enum,
-			http_status_code = u.http_status_code,
+			http_status_code = CASE
+				WHEN u.http_status_code IS NULL THEN NULL
+				WHEN u.http_status_code BETWEEN 100 AND 599 THEN u.http_status_code
+				ELSE NULL
+			END,
 			last_validated_at = u.last_checked_at
 	FROM updates u
 	WHERE gd.domain_name = u.domain_name

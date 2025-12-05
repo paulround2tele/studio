@@ -269,7 +269,7 @@ type AnalysisConfig struct {
 }
 
 var (
-	defaultAnalysisTypes = []string{"content"}
+	defaultAnalysisTypes  = []string{"content"}
 	AnalysisTypeAllowlist = map[string]struct{}{
 		"content":   {},
 		"links":     {},
