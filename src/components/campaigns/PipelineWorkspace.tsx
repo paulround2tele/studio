@@ -8,6 +8,7 @@ import DiscoveryConfigForm from '@/components/campaigns/workspace/forms/Discover
 import DNSValidationConfigForm from '@/components/campaigns/workspace/forms/DNSValidationConfigForm';
 import HTTPValidationConfigForm from '@/components/campaigns/workspace/forms/HTTPValidationConfigForm';
 import AnalysisConfigForm from '@/components/campaigns/workspace/forms/AnalysisConfigForm';
+import EnrichmentConfigForm from '@/components/campaigns/workspace/forms/EnrichmentConfigForm';
 import { Button } from '@/components/ui/button';
 import { PhaseStepper, PhasePanelShell, StatusBadge, CampaignOverviewCard, AlertStack } from '@/components/campaigns/workspace';
 import { useStartPhaseStandaloneMutation, useGetPhaseStatusStandaloneQuery } from '@/store/api/campaignApi';
@@ -44,6 +45,15 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
   const dispatch = useAppDispatch();
   const [startPhase] = useStartPhaseStandaloneMutation();
   const pendingAutoStarts = React.useRef<Set<string>>(new Set());
+  const autoAdvanceAlerts = React.useMemo(() => {
+    if (!mode.autoAdvance || !mode.hint) return [];
+    return [{
+      id: 'auto-advance-hint',
+      tone: mode.state === 'blocked' ? 'warn' as const : 'info' as const,
+      title: 'Auto Advance',
+      message: mode.hint,
+    }];
+  }, [mode.autoAdvance, mode.hint, mode.state]);
 
   // Auto-advance effect: when in full sequence mode and a phase just completed, start next configured idle phase.
   React.useEffect(() => {
@@ -76,11 +86,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
       case 'extraction': return <HTTPValidationConfigForm {...common} readOnly={isConfigured} />;
       case 'analysis': return <AnalysisConfigForm {...common} readOnly={isConfigured} />;
       case 'enrichment':
-        return (
-          <div className="text-sm text-muted-foreground">
-            Lead enrichment transforms analyzed domains into actionable contacts. Configure personas and enrichment settings in upcoming iterations.
-          </div>
-        );
+        return <EnrichmentConfigForm {...common} readOnly={isConfigured} />;
       default: return <div className="text-xs">Unknown phase: {phase}</div>;
     }
   };
@@ -125,6 +131,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
           alerts={<>
             <AlertStack
               items={[
+                ...autoAdvanceAlerts,
                 ...(startCTA.disabled && startCTA.reasons.length > 0 ? [{
                   id: 'start-gating',
                   tone: 'warn' as const,

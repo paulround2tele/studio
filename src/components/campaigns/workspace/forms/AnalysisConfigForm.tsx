@@ -1,101 +1,419 @@
    
-   "use client";
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+"use client";
+
+import React, { useEffect, useMemo, useState } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectValue,
+  SelectItem,
+} from '@/components/ui/select';
 import { X } from 'lucide-react';
-import { useConfigurePhaseStandaloneMutation, campaignApi } from '@/store/api/campaignApi';
+import { PersonasApi } from '@/lib/api-client';
+import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
+import { PersonaType } from '@/lib/api-client/models/persona-type';
+import { apiConfiguration } from '@/lib/api/config';
 import { useToast } from '@/hooks/use-toast';
+import { useConfigurePhaseStandaloneMutation, campaignApi } from '@/store/api/campaignApi';
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
-// Removed phantom PhaseStatusResponse enums; rely on literal values
 import { markConfigured } from '@/utils/phaseStatus';
-import type { AnalysisConfigFormValues } from '@/types/forms';
+import type { AnalysisConfigFormValues, AnalysisKeywordRuleFormValue } from '@/types/forms';
 
-interface AnalysisPhaseConfig {
-  name: string;
-  analysisTypes: string[];
-  enableSuggestions: boolean;
-  customRules: string[];
+interface Props {
+  campaignId: string;
+  onConfigured?: () => void;
+  readOnly?: boolean;
 }
 
-interface FormValues extends AnalysisConfigFormValues { 
-  name: string; 
-  analysisTypes: string[]; 
-  enableSuggestions: boolean; 
-  customRules: string[]; 
-}
-interface Props { campaignId: string; onConfigured?: ()=>void; readOnly?: boolean; }
+const ALL_ANALYSIS_TYPES = ['content', 'links', 'headers', 'structure'];
+const MAX_PERSONAS = 5;
 
-const ALL_ANALYSIS_TYPES = ['content','links','headers','structure'];
+export const makeDefaultValues = (): AnalysisConfigFormValues => ({
+  name: `Analysis - ${new Date().toLocaleDateString()}`,
+  personaIds: [],
+  analysisTypes: ['content'],
+  includeExternal: false,
+  enableSuggestions: true,
+  generateReports: true,
+  keywordRules: [],
+});
+
+export const buildRulePayload = (rules: AnalysisKeywordRuleFormValue[]) =>
+  rules
+    .map((rule) => ({
+      pattern: rule.pattern.trim(),
+      ruleType: rule.ruleType,
+      contextChars: Number.isFinite(rule.contextChars)
+        ? Math.max(0, Math.round(rule.contextChars))
+        : 0,
+    }))
+    .filter((rule) => rule.pattern.length > 0);
 
 export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, readOnly }) => {
-  const form = useForm<FormValues>({ defaultValues: { name: `Analysis - ${new Date().toLocaleDateString()}`, analysisTypes: ['content'], enableSuggestions: true, customRules: [] }});
   const { toast } = useToast();
   const dispatch = useAppDispatch();
   const [configurePhase, { isLoading: saving }] = useConfigurePhaseStandaloneMutation();
+  const [personas, setPersonas] = useState<PersonaResponse[]>([]);
+  const [loadingPersonas, setLoadingPersonas] = useState(true);
+  const form = useForm<AnalysisConfigFormValues>({ defaultValues: makeDefaultValues() });
+  const { control } = form;
+  const ruleArray = useFieldArray({ control, name: 'keywordRules' });
+  const watchedPersonaIds = form.watch('personaIds');
+  const watchedAnalysisTypes = form.watch('analysisTypes');
+  const watchedRules = form.watch('keywordRules');
+  const [newRulePattern, setNewRulePattern] = useState('');
+  const [newRuleType, setNewRuleType] = useState<'string' | 'regex'>('string');
+  const [newRuleContext, setNewRuleContext] = useState(32);
 
-  const toggleType = (t:string) => { const cur=form.getValues('analysisTypes'); form.setValue('analysisTypes', cur.includes(t)? cur.filter(x=>x!==t): [...cur,t]); };
-  const toggleSuggestions = (v:boolean) => form.setValue('enableSuggestions', v);
-  const addRule = (r:string) => { const trimmed=r.trim(); if(!trimmed) return; const cur=form.getValues('customRules'); if(cur.includes(trimmed)) return; form.setValue('customRules',[...cur, trimmed]); };
-  const removeRule = (r:string) => form.setValue('customRules', form.getValues('customRules').filter(x=>x!==r));
+  useEffect(() => {
+    form.register('personaIds');
+    form.register('analysisTypes');
+  }, [form]);
 
-  const onSubmit = async (data: FormValues) => { 
-    try { 
-      const analysisConfig: AnalysisPhaseConfig = { 
-        name: data.name, 
-        analysisTypes: data.analysisTypes, 
-        enableSuggestions: data.enableSuggestions, 
-        customRules: data.customRules 
-      };
-      // Flatten configuration – backend expects keys at root of configuration map for this phase
-      const req: PhaseConfigurationRequest = { configuration: { ...analysisConfig } };
-      const res = await configurePhase({ campaignId, phase: 'analysis', config: req }).unwrap(); 
-  if (res?.status === 'configured') {
-        dispatch(campaignApi.util.updateQueryData(
-          'getPhaseStatusStandalone',
-          { campaignId, phase: 'analysis' },
-          (draft) => markConfigured(draft, 'analysis')
-        ));
+  useEffect(() => {
+    if (readOnly) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoadingPersonas(true);
+        const personasApi = new PersonasApi(apiConfiguration);
+        const response = await personasApi.personasList(
+          undefined,
+          undefined,
+          true,
+          PersonaType.http,
+        );
+        const candidates = Array.isArray(response.data) ? response.data : [];
+        if (!cancelled) {
+          setPersonas(candidates.filter((p) => p && p.id));
+          if (candidates.length === 1 && form.getValues('personaIds').length === 0) {
+            const lone = candidates[0];
+            if (lone?.id) {
+              form.setValue('personaIds', [lone.id]);
+            }
+          }
+        }
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) {
+          toast({ title: 'Unable to load personas', variant: 'destructive' });
+        }
+      } finally {
+        if (!cancelled) setLoadingPersonas(false);
       }
-      // Force authoritative refetch
-      dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'analysis' })); 
-      toast({ title:'Analysis configured' }); 
-      dispatch(pushGuidanceMessage({ campaignId, msg: { id: Date.now().toString(), message:'Analysis configured', phase:'analysis', severity:'info' } })); 
-      onConfigured?.(); 
-    } catch(e){ 
-      console.error(e); 
-      toast({ title:'Save failed', description:'Try again', variant:'destructive'});
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [form, readOnly, toast]);
+
+  const personaLookup = useMemo(() =>
+    personas.reduce<Record<string, PersonaResponse>>((acc, p) => {
+      if (p.id) acc[p.id] = p;
+      return acc;
+    }, {}), [personas]);
+
+  const togglePersona = (id: string) => {
+    const current = form.getValues('personaIds');
+    if (current.includes(id)) {
+      form.setValue('personaIds', current.filter((pid) => pid !== id));
+      return;
+    }
+    if (current.length >= MAX_PERSONAS) {
+      toast({ title: `Limit ${MAX_PERSONAS} personas`, variant: 'destructive' });
+      return;
+    }
+    form.setValue('personaIds', [...current, id]);
+  };
+
+  const toggleAnalysisType = (type: string) => {
+    const current = form.getValues('analysisTypes');
+    if (current.includes(type)) {
+      const next = current.filter((t) => t !== type);
+      form.setValue('analysisTypes', next.length ? next : ['content']);
+    } else {
+      form.setValue('analysisTypes', [...current, type]);
     }
   };
 
-  if(readOnly){ const v=form.getValues(); return <div data-testid="phase-analysis-readonly" className="space-y-2 text-xs"><div data-testid="phase-analysis-readonly-name"><strong>Name:</strong> {v.name}</div><div data-testid="phase-analysis-readonly-types"><strong>Types:</strong> {v.analysisTypes.join(', ')}</div><div data-testid="phase-analysis-readonly-suggestions"><strong>Suggestions:</strong> {v.enableSuggestions? 'On':'Off'}</div><div data-testid="phase-analysis-readonly-rules"><strong>Rules:</strong> {v.customRules.length}</div></div>; }
+  const handleAddRule = () => {
+    const pattern = newRulePattern.trim();
+    if (!pattern) {
+      toast({ title: 'Rule pattern required', variant: 'destructive' });
+      return;
+    }
+    ruleArray.append({
+      id: `${Date.now()}`,
+      pattern,
+      ruleType: newRuleType,
+      contextChars: newRuleContext,
+    });
+    setNewRulePattern('');
+  };
+
+  const handleSubmitForm = async (values: AnalysisConfigFormValues) => {
+    const trimmedName = values.name.trim() || `Analysis - ${new Date().toLocaleDateString()}`;
+    const payloadRules = buildRulePayload(values.keywordRules);
+    if (!values.analysisTypes.length) {
+      toast({ title: 'Select an analysis type', variant: 'destructive' });
+      return;
+    }
+    const configuration: Record<string, unknown> = {
+      name: trimmedName,
+      personaIds: values.personaIds,
+      analysisTypes: values.analysisTypes,
+      includeExternal: values.includeExternal,
+      enableSuggestions: values.enableSuggestions,
+      generateReports: values.generateReports,
+    };
+    if (payloadRules.length) {
+      configuration.keywordRules = payloadRules;
+    }
+    try {
+      const request: PhaseConfigurationRequest = { configuration };
+      const response = await configurePhase({ campaignId, phase: 'analysis', config: request }).unwrap();
+      if (response?.status === 'configured') {
+        dispatch(
+          campaignApi.util.updateQueryData(
+            'getPhaseStatusStandalone',
+            { campaignId, phase: 'analysis' },
+            (draft) => markConfigured(draft, 'analysis'),
+          ),
+        );
+      }
+      dispatch(
+        campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'analysis' }),
+      );
+      toast({ title: 'Analysis configured' });
+      dispatch(
+        pushGuidanceMessage({
+          campaignId,
+          msg: {
+            id: Date.now().toString(),
+            message: 'Analysis configured',
+            phase: 'analysis',
+            severity: 'info',
+          },
+        }),
+      );
+      onConfigured?.();
+    } catch (error) {
+      console.error(error);
+      toast({ title: 'Save failed', description: 'Unable to configure analysis', variant: 'destructive' });
+    }
+  };
+
+  if (readOnly) {
+    const snapshot = form.getValues();
+    const personaNames = snapshot.personaIds
+      .map((id) => personaLookup[id]?.name)
+      .filter(Boolean)
+      .join(', ');
+    return (
+      <div className="space-y-2 text-xs" data-testid="phase-analysis-readonly">
+        <div><strong>Name:</strong> {snapshot.name}</div>
+        <div><strong>Personas:</strong> {personaNames || snapshot.personaIds.length || '—'}</div>
+        <div><strong>Analysis Types:</strong> {snapshot.analysisTypes.join(', ')}</div>
+        <div><strong>Include External:</strong> {snapshot.includeExternal ? 'Yes' : 'No'}</div>
+        <div><strong>AI Suggestions:</strong> {snapshot.enableSuggestions ? 'Enabled' : 'Disabled'}</div>
+        <div><strong>Reports:</strong> {snapshot.generateReports ? 'Enabled' : 'Disabled'}</div>
+        <div><strong>Keyword Rules:</strong> {snapshot.keywordRules.length}</div>
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
-      <form data-testid="phase-analysis-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="name" render={({field}) => <FormItem data-testid="phase-analysis-field-name"><FormLabel>Name</FormLabel><FormControl><Input data-testid="phase-analysis-input-name" {...field} /></FormControl><FormMessage/></FormItem>} />
+      <form
+        data-testid="phase-analysis-form"
+        onSubmit={form.handleSubmit(handleSubmitForm)}
+        className="space-y-4"
+      >
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem data-testid="phase-analysis-field-name">
+              <FormLabel>Configuration Name</FormLabel>
+              <FormControl>
+                <Input {...field} data-testid="phase-analysis-input-name" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="space-y-2" data-testid="phase-analysis-personas">
+          <div className="text-xs font-medium">Scoring Personas (optional)</div>
+          {loadingPersonas ? (
+            <div className="text-xs text-muted-foreground">Loading personas...</div>
+          ) : personas.length === 0 ? (
+            <div className="text-xs text-muted-foreground">No HTTP personas available.</div>
+          ) : (
+            <div className="grid grid-cols-1 gap-2">
+              {personas.map((persona) => (
+                <div
+                  key={persona.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => persona.id && togglePersona(persona.id)}
+                  onKeyDown={(evt) => {
+                    if (evt.key === 'Enter' && persona.id) togglePersona(persona.id);
+                  }}
+                  className={`p-2 border rounded text-xs flex justify-between items-center cursor-pointer ${
+                    persona.id && watchedPersonaIds.includes(persona.id)
+                      ? 'border-primary bg-primary/5'
+                      : 'hover:border-primary/60'
+                  }`}
+                >
+                  <span>{persona.name}</span>
+                  {persona.id && watchedPersonaIds.includes(persona.id) && (
+                    <Badge variant="default">Selected</Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {watchedPersonaIds.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {watchedPersonaIds.map((id) => (
+                <Badge key={id} variant="secondary" className="flex items-center gap-1">
+                  {personaLookup[id]?.name || id}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => togglePersona(id)} />
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="space-y-2" data-testid="phase-analysis-types">
-          <div className="text-xs font-medium" data-testid="phase-analysis-types-label">Analysis Types</div>
-          <div className="flex flex-wrap gap-2" data-testid="phase-analysis-types-list">{ALL_ANALYSIS_TYPES.map(t=> <Badge data-testid={`phase-analysis-type-${t}`} key={t} onClick={()=>toggleType(t)} variant={form.getValues('analysisTypes').includes(t)? 'default':'outline'} className="cursor-pointer text-[11px]">{t}</Badge>)}</div>
+          <div className="text-xs font-medium">Analysis Types</div>
+          <div className="flex flex-wrap gap-2">
+            {ALL_ANALYSIS_TYPES.map((type) => (
+              <Badge
+                key={type}
+                data-testid={`phase-analysis-type-${type}`}
+                className="cursor-pointer text-[11px]"
+                variant={watchedAnalysisTypes.includes(type) ? 'default' : 'outline'}
+                onClick={() => toggleAnalysisType(type)}
+              >
+                {type}
+              </Badge>
+            ))}
+          </div>
         </div>
-        <div className="flex items-center gap-3" data-testid="phase-analysis-suggestions">
-          <span className="text-xs" data-testid="phase-analysis-suggestions-label">Enable AI Suggestions</span>
-          <Switch data-testid="phase-analysis-suggestions-toggle" checked={form.getValues('enableSuggestions')} onCheckedChange={(v)=>toggleSuggestions(!!v)} />
+
+        <div className="grid grid-cols-1 gap-4 text-xs md:grid-cols-3" data-testid="phase-analysis-toggles">
+          <div className="flex items-center justify-between border rounded px-3 py-2">
+            <span>Include External Links</span>
+            <Switch
+              checked={form.watch('includeExternal')}
+              onCheckedChange={(checked) => form.setValue('includeExternal', !!checked)}
+            />
+          </div>
+          <div className="flex items-center justify-between border rounded px-3 py-2">
+            <span>AI Suggestions</span>
+            <Switch
+              checked={form.watch('enableSuggestions')}
+              onCheckedChange={(checked) => form.setValue('enableSuggestions', !!checked)}
+            />
+          </div>
+          <div className="flex items-center justify-between border rounded px-3 py-2">
+            <span>Generate Reports</span>
+            <Switch
+              checked={form.watch('generateReports')}
+              onCheckedChange={(checked) => form.setValue('generateReports', !!checked)}
+            />
+          </div>
         </div>
-        <div className="space-y-2" data-testid="phase-analysis-custom-rules">
-          <div className="text-xs font-medium" data-testid="phase-analysis-custom-rules-label">Custom Rules (optional)</div>
-          <Input data-testid="phase-analysis-input-new-rule" placeholder="Enter rule and press Enter" onKeyDown={e=>{ if(e.key==='Enter'){ e.preventDefault(); addRule((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value=''; } }} />
-          {form.getValues('customRules').length>0 && <div className="flex flex-wrap gap-2" data-testid="phase-analysis-custom-rules-list">{form.getValues('customRules').map(r=> <Badge data-testid={`phase-analysis-custom-rule-${r}`} key={r} variant="secondary" className="flex items-center gap-1">{r}<X className="h-3 w-3 cursor-pointer" onClick={()=>removeRule(r)} /></Badge>)}</div>}
+
+        <div className="space-y-2" data-testid="phase-analysis-rules">
+          <div className="text-xs font-medium">Keyword Rules</div>
+          <div className="flex flex-col gap-2 border rounded p-3">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_140px_120px_auto]">
+              <Input
+                placeholder="Pattern"
+                value={newRulePattern}
+                onChange={(evt) => setNewRulePattern(evt.target.value)}
+              />
+              <Select value={newRuleType} onValueChange={(val: 'string' | 'regex') => setNewRuleType(val)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="string">Contains</SelectItem>
+                  <SelectItem value="regex">Regex</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                min={0}
+                value={newRuleContext}
+                onChange={(evt) => setNewRuleContext(parseInt(evt.target.value || '0', 10))}
+                placeholder="Context chars"
+              />
+              <Button type="button" size="sm" onClick={handleAddRule}>
+                Add Rule
+              </Button>
+            </div>
+            {watchedRules.length === 0 && (
+              <div className="text-[11px] text-muted-foreground">
+                Optional: add patterns to boost leads for exact strings or regex matches.
+              </div>
+            )}
+            {ruleArray.fields.length > 0 && (
+              <div className="space-y-2">
+                {ruleArray.fields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="flex flex-wrap items-center gap-2 rounded border px-2 py-1 text-xs"
+                  >
+                    <span className="flex-1 truncate" title={watchedRules[index]?.pattern}>
+                      {watchedRules[index]?.pattern}
+                    </span>
+                    <Badge variant="outline">{watchedRules[index]?.ruleType}</Badge>
+                    <span className="text-[11px] text-muted-foreground">
+                      ctx {watchedRules[index]?.contextChars ?? 0}
+                    </span>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => ruleArray.remove(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex justify-end" data-testid="phase-analysis-actions"><Button data-testid="phase-analysis-submit" type="submit" size="sm" disabled={saving}>{saving? 'Saving...':'Save Analysis'}</Button></div>
+
+        <div className="flex justify-end" data-testid="phase-analysis-actions">
+          <Button type="submit" size="sm" disabled={saving}>
+            {saving ? 'Saving…' : 'Save Analysis'}
+          </Button>
+        </div>
       </form>
     </Form>
   );
 };
+
 export default AnalysisConfigForm;

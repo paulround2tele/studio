@@ -7,6 +7,9 @@ import { campaignApi } from '@/store/api/campaignApi';
 // ---------------------------------------------
 export const PIPELINE_PHASE_ORDER = ['discovery','validation','enrichment','extraction','analysis'] as const;
 export type PipelinePhaseKey = typeof PIPELINE_PHASE_ORDER[number];
+export const OPTIONAL_CONFIG_PHASES: PipelinePhaseKey[] = ['enrichment', 'analysis'];
+export const isOptionalConfigPhase = (phase?: PipelinePhaseKey) => !!phase && OPTIONAL_CONFIG_PHASES.includes(phase);
+const filterOptionalConfigPhases = (phases: PipelinePhaseKey[]) => phases.filter((phase) => !isOptionalConfigPhase(phase));
 
 type BackendStatus = 'not_started' | 'configured' | 'running' | 'in_progress' | 'paused' | 'completed' | 'failed' | string | undefined;
 
@@ -17,6 +20,10 @@ export interface UIPipelinePhase {
   statusRaw?: BackendStatus;
   lastError?: string;
 }
+
+const isPhaseConfiguredOrOptional = (phase: UIPipelinePhase) => phase.configState === 'valid' || isOptionalConfigPhase(phase.key);
+const friendlyPhaseLabel = (phase: PipelinePhaseKey) => phase.charAt(0).toUpperCase() + phase.slice(1);
+type AutoAdvanceState = 'disabled' | 'waiting_start' | 'running' | 'ready' | 'blocked';
 
 // ---------------------------------------------
 // Base Accessors
@@ -124,12 +131,12 @@ export const makeSelectMissingPhases = (campaignId: string) => createSelector(
 
 export const makeSelectAllConfigured = (campaignId: string) => createSelector(
   makeSelectMissingPhases(campaignId),
-  missing => missing.length === 0
+  missing => filterOptionalConfigPhases(missing).length === 0
 );
 
 export const makeSelectFirstUnconfigured = (campaignId: string) => createSelector(
   makeSelectMissingPhases(campaignId),
-  missing => missing[0]
+  missing => missing.find((phase) => !isOptionalConfigPhase(phase))
 );
 
 export const makeSelectConfigProgress = (campaignId: string) => createSelector(
@@ -153,14 +160,16 @@ const makeSelectStartBlockingReasons = (campaignId: string) => createSelector(
   ],
   (missing, phases, autoAdvance, nextRunnable) => {
     const reasons: string[] = [];
+    const blockingMissing = filterOptionalConfigPhases(missing);
     if (autoAdvance) {
-      if (missing.length) reasons.push(`Missing configuration: ${missing.join(', ')}`);
+      if (blockingMissing.length) reasons.push(`Missing configuration: ${blockingMissing.join(', ')}`);
     } else {
       // manual mode: only block if no runnable phase OR an earlier phase is missing than the next runnable
       if (!nextRunnable) {
         reasons.push('No configured phase ready to start');
-      } else if (missing.length) {
-        const firstMissing = missing[0] as PipelinePhaseKey; // safe due to length check
+      } else if (blockingMissing.length) {
+        const firstMissing = blockingMissing[0];
+        if (!firstMissing) return reasons;
         const firstMissingIdx = PIPELINE_PHASE_ORDER.indexOf(firstMissing);
   const runnableIdx = PIPELINE_PHASE_ORDER.indexOf(nextRunnable.key);
         if (firstMissingIdx > -1 && firstMissingIdx < runnableIdx) {
@@ -225,9 +234,9 @@ export const makeSelectNextRunnablePhase = (campaignId: string) => createSelecto
   phases => {
     // Phase is runnable if it is configured, idle, and all previous phases are either completed or failed (allow retry logic separately)
     return phases.find((p, idx) => {
-      if (!(p.configState === 'valid' && p.execState === 'idle')) return false;
+      if (!(isPhaseConfiguredOrOptional(p) && p.execState === 'idle')) return false;
       const prev = phases.slice(0, idx);
-      return prev.every(pr => pr.configState === 'valid' && (pr.execState === 'completed' || pr.execState === 'failed'));
+      return prev.every(pr => isPhaseConfiguredOrOptional(pr) && (pr.execState === 'completed' || pr.execState === 'failed'));
     });
   }
 );
@@ -297,14 +306,16 @@ export const makeSelectNextUserAction = (campaignId: string) => createSelector(
       const last = phases[phases.length-1];
       if (last) fallbackPhase = last.key;
     }
+    const blockingMissing = filterOptionalConfigPhases(missing);
     // Manual (step-by-step) mode:
     // Allow starting the earliest runnable configured phase even if later phases are still unconfigured.
     // Only force configuration if the earliest missing phase precedes the runnable phase.
     if (!auto) {
       if (activeExec) return { type: 'watch', phase: activeExec.key } as const;
       if (nextRunnable) {
-        if (missing.length) {
-          const firstMissing = missing[0] as PipelinePhaseKey; // safe due to length check
+        if (blockingMissing.length) {
+          const firstMissing = blockingMissing[0];
+          if (!firstMissing) return { type: 'start', phase: nextRunnable.key } as const;
           const firstMissingIdx = PIPELINE_PHASE_ORDER.indexOf(firstMissing);
           const runnableIdx = PIPELINE_PHASE_ORDER.indexOf(nextRunnable.key);
           if (firstMissingIdx > -1 && firstMissingIdx < runnableIdx) {
@@ -313,13 +324,13 @@ export const makeSelectNextUserAction = (campaignId: string) => createSelector(
         }
         return { type: 'start', phase: nextRunnable.key } as const;
       }
-      if (missing.length) {
-        return { type: 'configure', phase: missing[0], reason: 'Configuration required' } as const;
+      if (blockingMissing.length) {
+        return { type: 'configure', phase: blockingMissing[0], reason: 'Configuration required' } as const;
       }
       return { type: 'wait', phase: fallbackPhase } as const;
     }
     // Auto mode strict requirement.
-    if (missing.length) return { type: 'configure', phase: missing[0], reason: 'Configuration required' } as const;
+    if (blockingMissing.length) return { type: 'configure', phase: blockingMissing[0], reason: 'Configuration required' } as const;
     if (activeExec) return { type: 'watch', phase: activeExec.key } as const;
     if (nextRunnable) return { type: 'start', phase: nextRunnable.key } as const;
     return { type: 'wait', phase: fallbackPhase } as const;
@@ -333,7 +344,21 @@ export const makeSelectGuidanceQueue = (campaignId: string) => createSelector(
   selectCampaignUIById(campaignId), ui => ui?.guidanceMessages || []
 );
 export const makeSelectLatestGuidance = (campaignId: string) => createSelector(
-  makeSelectGuidanceQueue(campaignId), list => list[0]
+  [makeSelectGuidanceQueue(campaignId), makeSelectMissingPhases(campaignId)],
+  (list, missing) => {
+    if (list.length) return list[0];
+    const blocking = filterOptionalConfigPhases(missing);
+    if (blocking.length) return undefined;
+    const optionalMissing = missing.filter(isOptionalConfigPhase);
+    if (!optionalMissing.length) return undefined;
+    const labels = optionalMissing.map(friendlyPhaseLabel).join(' & ');
+    return {
+      id: 'optional-defaults',
+      message: `${labels} will run with default settings. Configure later if you need custom personas or thresholds.`,
+      phase: optionalMissing.length === 1 ? optionalMissing[0] : undefined,
+      severity: 'info' as const,
+    };
+  }
 );
 export const makeSelectGuidanceCount = (campaignId: string) => createSelector(
   makeSelectGuidanceQueue(campaignId), list => list.length
@@ -397,6 +422,38 @@ export const makeSelectPipelineOverview = (campaignId: string) => createSelector
     canStartFull,
     nextAction
   ) => {
+    const blockingMissing = filterOptionalConfigPhases(missing);
+    const anyPhaseStarted = phases.some(p => p.execState !== 'idle');
+    const nextRunnable = phases.find((p, idx) => {
+      if (!(isPhaseConfiguredOrOptional(p) && p.execState === 'idle')) return false;
+      const prev = phases.slice(0, idx);
+      return prev.every(pr => isPhaseConfiguredOrOptional(pr) && (pr.execState === 'completed' || pr.execState === 'failed'));
+    });
+    const describePhase = (phase?: PipelinePhaseKey) => (phase ? friendlyPhaseLabel(phase) : undefined);
+    let autoAdvanceState: AutoAdvanceState = autoAdvance ? 'ready' : 'disabled';
+    let autoAdvanceHint: string | undefined;
+
+    if (autoAdvance) {
+      if (blockingMissing.length) {
+        autoAdvanceState = 'blocked';
+        autoAdvanceHint = `Auto mode paused until ${describePhase(blockingMissing[0]) || 'earlier phases'} are configured.`;
+      } else if (!anyPhaseStarted) {
+        autoAdvanceState = 'waiting_start';
+        autoAdvanceHint = `Start ${describePhase(PIPELINE_PHASE_ORDER[0]) || 'the first phase'} once to arm auto advance.`;
+      } else if (activeExec) {
+        autoAdvanceState = 'running';
+        autoAdvanceHint = `${describePhase(activeExec.key) || 'Current phase'} is running; the next phase will auto-start when it completes.`;
+      } else if (nextRunnable) {
+        autoAdvanceState = 'ready';
+        autoAdvanceHint = `${describePhase(nextRunnable.key) || 'The next phase'} will start automatically.`;
+      } else {
+        autoAdvanceState = 'ready';
+        autoAdvanceHint = 'Auto mode ready.';
+      }
+    } else {
+      autoAdvanceHint = undefined;
+    }
+
     const phasesEnriched = phases.map(p => {
       const r = (runtime as Record<string, { startedAt?: number; completedAt?: number }>)[p.key];
       let durationMs: number | undefined;
@@ -408,7 +465,7 @@ export const makeSelectPipelineOverview = (campaignId: string) => createSelector
       phasesEnriched,
       config: { allConfigured, firstMissing, missing, progress: configProgress },
       exec: { summary: execSummary, active: activeExec, progress: overallProgress },
-      mode: { autoAdvance },
+      mode: { autoAdvance, state: autoAdvanceState, hint: autoAdvanceHint },
       failures: { lastFailed, failedList },
       guidance: { queue: guidanceQueue, latest: latestGuidance, count: guidanceQueue.length },
       start: { canStart: canStartFull, reasons: startReasons },

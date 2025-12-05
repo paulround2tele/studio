@@ -1,4 +1,5 @@
 import type { UIPipelinePhase } from './pipelineSelectors';
+import { isOptionalConfigPhase } from './pipelineSelectors';
 
 /**
  * Determine next phase to auto-start under full sequence mode.
@@ -14,7 +15,7 @@ export function computeAutoStartPhase(phases: UIPipelinePhase[], autoAdvance: bo
   if (!anyStarted) return undefined; // initial start must be manual
   const active = phases.find(p => p.execState === 'running');
   if (active) return undefined;
-  const next = phases.find(p => p.configState === 'valid' && p.execState === 'idle');
+  const next = phases.find(p => (p.configState === 'valid' || isOptionalConfigPhase(p.key)) && p.execState === 'idle');
   return next?.key;
 }
 

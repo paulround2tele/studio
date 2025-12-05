@@ -90,6 +90,21 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
     }
   };
 
+  const autoStateVariant = (state?: string) => {
+    switch (state) {
+      case 'blocked':
+        return 'missing' as const;
+      case 'running':
+        return 'running' as const;
+      case 'waiting_start':
+        return 'idle' as const;
+      case 'ready':
+        return 'configured' as const;
+      default:
+        return 'paused' as const;
+    }
+  };
+
   const configuredRatio = `${config.progress.configured}/${config.progress.total}`;
   const completedRatio = `${exec.progress.completed}/${exec.progress.total}`;
   const globalExecState = (() => {
@@ -108,12 +123,27 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
             <CardTitle className="text-base font-semibold" data-testid="campaign-overview-title">Campaign Overview</CardTitle>
             <StatusBadge variant={globalExecState} compact data-testid="campaign-overview-status">{globalExecState}</StatusBadge>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-2 text-xs px-2 py-0.5 rounded bg-muted border">
               <span>Auto</span>
               <Switch checked={mode.autoAdvance} onCheckedChange={v => dispatch(setFullSequenceMode({ campaignId, value: v }))} data-testid="campaign-mode-toggle" />
               <span className="font-medium" data-testid="campaign-mode-label">{mode.autoAdvance ? 'Full Sequence' : 'Step by Step'}</span>
+              {mode.autoAdvance && (
+                <StatusBadge
+                  variant={autoStateVariant(mode.state)}
+                  compact
+                  titleText={mode.hint}
+                  data-testid="campaign-mode-state"
+                >
+                  {(mode.state || 'ready').replace(/_/g, ' ')}
+                </StatusBadge>
+              )}
             </div>
+            {mode.autoAdvance && mode.hint && (
+              <span className="text-[10px] text-muted-foreground max-w-xs text-right leading-snug" data-testid="campaign-mode-hint">
+                {mode.hint}
+              </span>
+            )}
             <Button size="sm" disabled={!nextAction || nextAction.type!=='start'} isLoading={isLoading} onClick={handlePrimaryCTA} data-testid="campaign-start-phase">
               {nextAction?.type === 'start' ? `Start ${nextAction.phase}` : 'Start'}
             </Button>

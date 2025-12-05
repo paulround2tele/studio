@@ -2,8 +2,10 @@
 package application
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"sync"
@@ -268,18 +270,23 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	// Read mode (default step_by_step) for readiness gating when starting the first phase in full_sequence
 	mode, _ := o.store.GetCampaignMode(ctx, querier, campaignID)
 	if mode == "full_sequence" && phase == models.PhaseTypeDomainGeneration {
-		// Strict model A: all configs must be present before any start (handled at API layer earlier ideally).
+		// Full-sequence mode now only requires the validation stages (DNS/HTTP) to be configured up-front.
+		// Enrichment and analysis fall back to persisted defaults, so their absence should not block the run.
 		configs, _ := o.store.ListPhaseConfigs(ctx, querier, campaignID)
 		missingList := []string{}
-		for _, required := range []models.PhaseTypeEnum{models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation, models.PhaseTypeAnalysis, models.PhaseTypeEnrichment} {
+		for _, required := range []models.PhaseTypeEnum{models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation} {
 			if _, ok := configs[required]; !ok {
 				missingList = append(missingList, string(required))
 			}
 		}
 		if len(missingList) > 0 {
-			o.deps.Logger.Warn(ctx, "Full sequence start blocked: missing downstream phase configs", map[string]interface{}{"campaign_id": campaignID, "missing": missingList})
+			o.deps.Logger.Warn(ctx, "Full sequence start blocked: missing validation configs", map[string]interface{}{"campaign_id": campaignID, "missing": missingList})
 			return &MissingPhaseConfigsError{Missing: missingList}
 		}
+	}
+
+	if err := o.ensurePhaseDefaultConfig(ctx, querier, campaignID, phase); err != nil {
+		return fmt.Errorf("failed to ensure default configuration for %s: %w", phase, err)
 	}
 
 	// Broadcast phase started event will occur after successful Execute
@@ -514,6 +521,57 @@ func (o *CampaignOrchestrator) getPhaseService(phase models.PhaseTypeEnum) (doma
 	default:
 		return nil, fmt.Errorf("unsupported phase type: %s", phase)
 	}
+}
+
+func (o *CampaignOrchestrator) ensurePhaseDefaultConfig(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	if o.store == nil {
+		return nil
+	}
+	if phase != models.PhaseTypeEnrichment && phase != models.PhaseTypeAnalysis {
+		return nil
+	}
+
+	raw, err := o.store.GetPhaseConfig(ctx, exec, campaignID, phase)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) || err == sql.ErrNoRows {
+			err = nil
+		} else {
+			return err
+		}
+	}
+	if raw != nil {
+		payload := bytes.TrimSpace([]byte(*raw))
+		if len(payload) > 0 && !bytes.Equal(payload, []byte("null")) {
+			return nil
+		}
+	} else if err == nil {
+		// explicit nil payload stored, treat as missing and fall through
+	}
+
+	switch phase {
+	case models.PhaseTypeEnrichment:
+		if o.enrichmentSvc == nil {
+			return fmt.Errorf("enrichment service unavailable")
+		}
+		if o.deps.Logger != nil {
+			o.deps.Logger.Info(ctx, "Auto-configuring enrichment defaults", map[string]interface{}{"campaign_id": campaignID})
+		}
+		if err := o.enrichmentSvc.Configure(ctx, campaignID, nil); err != nil {
+			return fmt.Errorf("auto-configure enrichment defaults: %w", err)
+		}
+	case models.PhaseTypeAnalysis:
+		if o.analysisSvc == nil {
+			return fmt.Errorf("analysis service unavailable")
+		}
+		if o.deps.Logger != nil {
+			o.deps.Logger.Info(ctx, "Auto-configuring analysis defaults", map[string]interface{}{"campaign_id": campaignID})
+		}
+		if err := o.analysisSvc.Configure(ctx, campaignID, &domainservices.AnalysisConfig{}); err != nil {
+			return fmt.Errorf("auto-configure analysis defaults: %w", err)
+		}
+	}
+
+	return nil
 }
 
 // monitorPhaseProgress monitors the progress of a phase execution

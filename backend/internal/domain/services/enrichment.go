@@ -31,6 +31,14 @@ const (
 	enrichmentDefaultLowScoreGrace   = 0.24
 	enrichmentDefaultMinContentBytes = 1024
 	enrichmentDefaultParkedFloor     = 0.45
+	enrichmentMatchScoreMin          = 0.05
+	enrichmentMatchScoreMax          = 0.95
+	enrichmentGraceMin               = 0.0
+	enrichmentGraceMax               = 0.6
+	enrichmentMinContentBytesFloor   = 256
+	enrichmentMinContentBytesCeil    = 2 * 1024 * 1024
+	enrichmentParkedFloorMin         = 0.0
+	enrichmentParkedFloorMax         = 1.0
 )
 
 type enrichmentConfig struct {
@@ -103,6 +111,11 @@ func (s *enrichmentService) Configure(ctx context.Context, campaignID uuid.UUID,
 	if err != nil {
 		return fmt.Errorf("failed to marshal enrichment config: %w", err)
 	}
+	sanitized, snapshot, sanitizeErr := sanitizeEnrichmentConfigPayload(raw)
+	if sanitizeErr != nil {
+		return fmt.Errorf("invalid enrichment config: %w", sanitizeErr)
+	}
+	raw = sanitized
 
 	if s.store != nil {
 		var exec store.Querier
@@ -119,11 +132,11 @@ func (s *enrichmentService) Configure(ctx context.Context, campaignID uuid.UUID,
 		if st.Status == models.PhaseStatusNotStarted {
 			st.Status = models.PhaseStatusConfigured
 		}
+		st.Configuration = snapshot
 	})
 
 	return nil
 }
-
 func (s *enrichmentService) Execute(ctx context.Context, campaignID uuid.UUID) (<-chan PhaseProgress, error) {
 	if s.deps.Logger != nil {
 		s.deps.Logger.Info(ctx, "Starting enrichment execution", map[string]interface{}{"campaign_id": campaignID})
@@ -153,7 +166,6 @@ func (s *enrichmentService) Execute(ctx context.Context, campaignID uuid.UUID) (
 	})
 
 	progressCh := make(chan PhaseProgress, 4)
-
 	go s.runEnrichment(ctx, campaignID, exec, cfg, total, progressCh)
 
 	return progressCh, nil
@@ -181,8 +193,11 @@ func (s *enrichmentService) Cancel(ctx context.Context, campaignID uuid.UUID) er
 }
 
 func (s *enrichmentService) Validate(ctx context.Context, config interface{}) error {
-	// Initial enrichment phase accepts any JSON-serializable payload.
-	if _, err := marshalEnrichmentConfig(config); err != nil {
+	raw, err := marshalEnrichmentConfig(config)
+	if err != nil {
+		return fmt.Errorf("invalid enrichment config: %w", err)
+	}
+	if _, _, err := sanitizeEnrichmentConfigPayload(raw); err != nil {
 		return fmt.Errorf("invalid enrichment config: %w", err)
 	}
 	return nil
@@ -406,20 +421,23 @@ func defaultEnrichmentConfig() enrichmentConfig {
 }
 
 func (cfg *enrichmentConfig) applyOverrides(overrides enrichmentConfigOverrides) {
-	if overrides.MatchScoreThreshold != nil && *overrides.MatchScoreThreshold > 0 {
-		cfg.MatchScoreThreshold = *overrides.MatchScoreThreshold
+	if overrides.MatchScoreThreshold != nil {
+		cfg.MatchScoreThreshold = clampFloat(*overrides.MatchScoreThreshold, enrichmentMatchScoreMin, enrichmentMatchScoreMax)
 	}
-	if overrides.LowScoreGraceThreshold != nil && *overrides.LowScoreGraceThreshold > 0 {
-		cfg.LowScoreGraceThreshold = *overrides.LowScoreGraceThreshold
+	if overrides.LowScoreGraceThreshold != nil {
+		cfg.LowScoreGraceThreshold = clampFloat(*overrides.LowScoreGraceThreshold, enrichmentGraceMin, enrichmentGraceMax)
 	}
-	if overrides.MinContentBytes != nil && *overrides.MinContentBytes > 0 {
-		cfg.MinContentBytes = *overrides.MinContentBytes
+	if overrides.MinContentBytes != nil {
+		cfg.MinContentBytes = clampInt(*overrides.MinContentBytes, enrichmentMinContentBytesFloor, enrichmentMinContentBytesCeil)
 	}
-	if overrides.ParkedConfidenceFloor != nil && *overrides.ParkedConfidenceFloor >= 0 {
-		cfg.ParkedConfidenceFloor = *overrides.ParkedConfidenceFloor
+	if overrides.ParkedConfidenceFloor != nil {
+		cfg.ParkedConfidenceFloor = clampFloat(*overrides.ParkedConfidenceFloor, enrichmentParkedFloorMin, enrichmentParkedFloorMax)
 	}
 	if overrides.RequireStructuralSignals != nil {
 		cfg.RequireStructuralSignals = *overrides.RequireStructuralSignals
+	}
+	if cfg.LowScoreGraceThreshold > cfg.MatchScoreThreshold {
+		cfg.LowScoreGraceThreshold = cfg.MatchScoreThreshold
 	}
 }
 
@@ -641,4 +659,56 @@ func marshalEnrichmentConfig(config interface{}) (json.RawMessage, error) {
 		}
 		return json.RawMessage(raw), nil
 	}
+}
+
+func sanitizeEnrichmentConfigPayload(raw json.RawMessage) (json.RawMessage, map[string]interface{}, error) {
+	cfg := defaultEnrichmentConfig()
+	trimmed := bytes.TrimSpace(raw)
+	if len(trimmed) > 0 && !bytes.Equal(trimmed, []byte("null")) {
+		var overrides enrichmentConfigOverrides
+		if err := json.Unmarshal(trimmed, &overrides); err != nil {
+			return nil, nil, err
+		}
+		cfg.applyOverrides(overrides)
+	}
+
+	snapshot := buildEnrichmentSnapshot(cfg)
+	sanitized, err := json.Marshal(snapshot)
+	if err != nil {
+		return nil, nil, err
+	}
+	return json.RawMessage(sanitized), snapshot, nil
+}
+
+func buildEnrichmentSnapshot(cfg enrichmentConfig) map[string]interface{} {
+	return map[string]interface{}{
+		"matchScoreThreshold":      cfg.MatchScoreThreshold,
+		"lowScoreGraceThreshold":   cfg.LowScoreGraceThreshold,
+		"minContentBytes":          cfg.MinContentBytes,
+		"parkedConfidenceFloor":    cfg.ParkedConfidenceFloor,
+		"requireStructuralSignals": cfg.RequireStructuralSignals,
+	}
+}
+
+func clampFloat(value, min, max float64) float64 {
+	if math.IsNaN(value) {
+		return min
+	}
+	if value < min {
+		return min
+	}
+	if value > max {
+		return max
+	}
+	return value
+}
+
+func clampInt(value, min, max int) int {
+	if value < min {
+		return min
+	}
+	if value > max {
+		return max
+	}
+	return value
 }

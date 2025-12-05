@@ -1051,84 +1051,61 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 			}
 			cfg = httpCfg
 		case models.PhaseTypeAnalysis:
-			// Build typed AnalysisConfig with extended symmetry (personaIds, includeExternal, keywordRules, name)
-			// Backward compatibility: some clients may nest under `analysis` key
-			if _, present := incoming["personaIds"]; !present {
-				if nested, okn := incoming["analysis"].(map[string]interface{}); okn {
-					incoming = nested
-				}
+			analysisPayload := incoming
+			if nested, ok := incoming["analysis"].(map[string]interface{}); ok {
+				analysisPayload = nested
 			}
-			idsRaw, ok := incoming["personaIds"]
-			if !ok {
-				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-			}
-			arrIfc, ok := idsRaw.([]interface{})
-			if !ok || len(arrIfc) == 0 {
-				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds must be a non-empty array", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-			}
-			personaIDs := make([]string, 0, len(arrIfc))
-			for _, v := range arrIfc {
-				if s, ok := v.(string); ok && strings.TrimSpace(s) != "" {
-					personaIDs = append(personaIDs, s)
-				}
-			}
-			if len(personaIDs) == 0 {
+			personaValues := extractStringArray(analysisPayload, "personaIds")
+			personaIDs := filterUUIDStrings(personaValues)
+			if len(personaValues) > 0 && len(personaIDs) == 0 {
 				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "no valid persona IDs provided", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 			}
-			analysisCfg := &domainservices.AnalysisConfig{PersonaIDs: personaIDs}
-			if inc, ok := incoming["includeExternal"].(bool); ok {
-				analysisCfg.IncludeExternal = inc
+			analysisTypesRaw := extractStringArray(analysisPayload, "analysisTypes")
+			analysisTypes, typeErr := normalizeAnalysisTypesInput(analysisTypesRaw)
+			if typeErr != nil {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: typeErr.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 			}
-			if nm, ok := incoming["name"].(string); ok {
+			includeExternal := boolFromAny(analysisPayload["includeExternal"], false)
+			enableSuggestions := boolFromAny(analysisPayload["enableSuggestions"], false)
+			generateReports := boolFromAny(analysisPayload["generateReports"], false)
+			var namePtr *string
+			if nm, ok := analysisPayload["name"].(string); ok {
 				trim := strings.TrimSpace(nm)
 				if trim != "" {
-					analysisCfg.Name = &trim
+					namePtr = &trim
 				}
 			}
-			// Parse keywordRules if provided (array of objects with at least pattern, ruleType)
-			if krRaw, ok := incoming["keywordRules"]; ok && krRaw != nil {
-				if arr, ok := krRaw.([]interface{}); ok {
-					parsed := make([]models.KeywordRule, 0, len(arr))
-					for _, item := range arr {
-						obj, ok := item.(map[string]interface{})
-						if !ok {
-							continue // skip non-object entries quietly
-						}
-						pattern, _ := obj["pattern"].(string)
-						ruleType, _ := obj["ruleType"].(string)
-						if strings.TrimSpace(pattern) == "" || strings.TrimSpace(ruleType) == "" {
-							continue
-						}
-						isCase := false
-						if b, ok := obj["isCaseSensitive"].(bool); ok {
-							isCase = b
-						}
-						// Generate ephemeral ID so downstream validation expecting UUID is satisfied
-						kr := models.KeywordRule{ID: uuid.New(), Pattern: pattern, RuleType: models.KeywordRuleTypeEnum(ruleType), IsCaseSensitive: isCase, CreatedAt: time.Now(), UpdatedAt: time.Now()}
-						parsed = append(parsed, kr)
-					}
-					if len(parsed) > 0 {
-						analysisCfg.KeywordRules = parsed
-					}
+			keywordRules := buildKeywordRulesFromPayload(analysisPayload["keywordRules"])
+			if len(keywordRules) == 0 {
+				legacyRules := legacyKeywordRulesFromStrings(extractStringArray(analysisPayload, "customRules"))
+				if len(legacyRules) > 0 {
+					keywordRules = legacyRules
 				}
 			}
-			// Legacy customRules (array of strings) -> map to keywordRules if keywordRules absent
-			if len(analysisCfg.KeywordRules) == 0 {
-				if crRaw, ok := incoming["customRules"]; ok && crRaw != nil {
-					if arr, ok := crRaw.([]interface{}); ok {
-						legacy := make([]models.KeywordRule, 0, len(arr))
-						for _, v := range arr {
-							if s, ok := v.(string); ok && strings.TrimSpace(s) != "" {
-								legacy = append(legacy, models.KeywordRule{ID: uuid.New(), Pattern: s, RuleType: models.KeywordRuleTypeEnum("string"), IsCaseSensitive: false, CreatedAt: time.Now(), UpdatedAt: time.Now()})
-							}
-						}
-						if len(legacy) > 0 {
-							analysisCfg.KeywordRules = legacy
-						}
-					}
-				}
+			analysisCfg := &domainservices.AnalysisConfig{
+				PersonaIDs:        personaIDs,
+				IncludeExternal:   includeExternal,
+				AnalysisTypes:     analysisTypes,
+				EnableSuggestions: enableSuggestions,
+				GenerateReports:   generateReports,
+				KeywordRules:      keywordRules,
+				Name:              namePtr,
 			}
 			cfg = analysisCfg
+			normalized := map[string]interface{}{
+				"personaIds":        personaIDs,
+				"includeExternal":   includeExternal,
+				"analysisTypes":     analysisTypes,
+				"enableSuggestions": enableSuggestions,
+				"generateReports":   generateReports,
+			}
+			if namePtr != nil {
+				normalized["name"] = *namePtr
+			}
+			if len(keywordRules) > 0 {
+				normalized["keywordRules"] = keywordRulesToPayload(keywordRules)
+			}
+			incoming = normalized
 		default:
 			cfg = incoming
 		}
@@ -1277,6 +1254,137 @@ func extractStringArray(source map[string]interface{}, primary string, fallbacks
 		acc = append(acc, gatherStringValues(val)...)
 	}
 	return dedupeStrings(acc)
+}
+
+func normalizeAnalysisTypesInput(values []string) ([]string, error) {
+	if len(values) == 0 {
+		return []string{}, nil
+	}
+	normalized := make([]string, 0, len(values))
+	seen := make(map[string]struct{}, len(values))
+	for idx, raw := range values {
+		val := strings.ToLower(strings.TrimSpace(raw))
+		if val == "" {
+			continue
+		}
+		if _, ok := domainservices.AnalysisTypeAllowlist[val]; !ok {
+			return nil, fmt.Errorf("analysisTypes[%d] must be one of content|links|headers|structure", idx)
+		}
+		if _, dup := seen[val]; dup {
+			continue
+		}
+		seen[val] = struct{}{}
+		normalized = append(normalized, val)
+	}
+	return normalized, nil
+}
+
+func boolFromAny(val interface{}, fallback bool) bool {
+	switch typed := val.(type) {
+	case bool:
+		return typed
+	default:
+		return fallback
+	}
+}
+
+func numberToInt(val interface{}) (int, bool) {
+	switch v := val.(type) {
+	case int:
+		return v, true
+	case int32:
+		return int(v), true
+	case int64:
+		return int(v), true
+	case float64:
+		return int(v), true
+	case float32:
+		return int(v), true
+	default:
+		return 0, false
+	}
+}
+
+func buildKeywordRulesFromPayload(raw interface{}) []models.KeywordRule {
+	arr, ok := raw.([]interface{})
+	if !ok {
+		return nil
+	}
+	now := time.Now()
+	parsed := make([]models.KeywordRule, 0, len(arr))
+	for _, item := range arr {
+		obj, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		pattern, _ := obj["pattern"].(string)
+		ruleType, _ := obj["ruleType"].(string)
+		pattern = strings.TrimSpace(pattern)
+		ruleType = strings.ToLower(strings.TrimSpace(ruleType))
+		if pattern == "" || ruleType == "" {
+			continue
+		}
+		enum := models.KeywordRuleTypeEnum(ruleType)
+		if enum != models.KeywordRuleTypeString && enum != models.KeywordRuleTypeRegex {
+			continue
+		}
+		rule := models.KeywordRule{
+			ID:              uuid.New(),
+			Pattern:         pattern,
+			RuleType:        enum,
+			IsCaseSensitive: boolFromAny(obj["isCaseSensitive"], false),
+			CreatedAt:       now,
+			UpdatedAt:       now,
+		}
+		if ctx, ok := numberToInt(obj["contextChars"]); ok && ctx >= 0 {
+			rule.ContextChars = ctx
+		}
+		parsed = append(parsed, rule)
+	}
+	return parsed
+}
+
+func legacyKeywordRulesFromStrings(values []string) []models.KeywordRule {
+	if len(values) == 0 {
+		return nil
+	}
+	now := time.Now()
+	rules := make([]models.KeywordRule, 0, len(values))
+	for _, raw := range values {
+		pattern := strings.TrimSpace(raw)
+		if pattern == "" {
+			continue
+		}
+		rules = append(rules, models.KeywordRule{
+			ID:              uuid.New(),
+			Pattern:         pattern,
+			RuleType:        models.KeywordRuleTypeString,
+			IsCaseSensitive: false,
+			CreatedAt:       now,
+			UpdatedAt:       now,
+		})
+	}
+	return rules
+}
+
+func keywordRulesToPayload(rules []models.KeywordRule) []map[string]interface{} {
+	if len(rules) == 0 {
+		return nil
+	}
+	out := make([]map[string]interface{}, 0, len(rules))
+	for _, rule := range rules {
+		record := map[string]interface{}{
+			"id":              rule.ID.String(),
+			"pattern":         rule.Pattern,
+			"ruleType":        string(rule.RuleType),
+			"isCaseSensitive": rule.IsCaseSensitive,
+		}
+		if rule.ContextChars > 0 {
+			record["contextChars"] = rule.ContextChars
+		}
+		out = append(out, record)
+	}
+	return out
 }
 
 // gatherStringValues flattens supported string container shapes.

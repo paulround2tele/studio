@@ -4,7 +4,6 @@
 import type {
   CreateCampaignRequestConfigurationPhasesDiscovery,
   CreateCampaignRequestConfigurationPhasesValidation,
-  CreateCampaignRequestConfigurationPhasesAnalysis,
   CreateCampaignRequestConfigurationPhasesExtraction
 } from '@/lib/api-client/models';
 
@@ -48,14 +47,29 @@ export interface HTTPValidationConfigFormValues {
  * Analysis phase configuration form values
  * Maps to CreateCampaignRequestConfigurationPhasesAnalysis
  */
-export interface AnalysisConfigFormValues extends CreateCampaignRequestConfigurationPhasesAnalysis {
-  // All properties inherited from generated type
-  enabled: boolean; // Make required for form validation
-  generateReports: boolean; // Make required for form validation
-  // Additional analysis-specific form fields
-  keywordExtraction?: boolean;
-  contentAnalysis?: boolean;
-  technicalAnalysis?: boolean;
+export type AnalysisKeywordRuleFormValue = {
+  id: string;
+  pattern: string;
+  ruleType: 'string' | 'regex';
+  contextChars: number;
+};
+
+export interface AnalysisConfigFormValues {
+  name: string;
+  personaIds: string[];
+  analysisTypes: string[];
+  includeExternal: boolean;
+  enableSuggestions: boolean;
+  generateReports: boolean;
+  keywordRules: AnalysisKeywordRuleFormValue[];
+}
+
+export interface EnrichmentConfigFormValues {
+  matchScoreThreshold: number;
+  lowScoreGraceThreshold: number;
+  minContentBytes: number;
+  parkedConfidenceFloor: number;
+  requireStructuralSignals: boolean;
 }
 
 /**
@@ -102,7 +116,6 @@ export interface FormSubmissionState {
 export type {
   CreateCampaignRequestConfigurationPhasesDiscovery,
   CreateCampaignRequestConfigurationPhasesValidation,
-  CreateCampaignRequestConfigurationPhasesAnalysis,
   CreateCampaignRequestConfigurationPhasesExtraction
 };
 

@@ -1,6 +1,7 @@
 package application
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -558,6 +559,78 @@ func TestFirstPhaseMissingConfigsGated(t *testing.T) {
 		t.Fatalf("expected MissingPhaseConfigsError got %T", err)
 	}
 	// Legacy chainBlocked metric removed under strict Model A gating; asserting error type is sufficient.
+}
+
+func TestFullSequenceOptionalPhasesAutoConfigured(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := &testLogger{t: t}
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := domainservices.NewEnrichmentService(cs, deps)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	metrics := &testMetrics{}
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, metrics)
+
+	campaignID := createTestCampaign(t, cs)
+	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
+		t.Fatalf("set mode: %v", err)
+	}
+	for _, ph := range []models.PhaseTypeEnum{
+		models.PhaseTypeDomainGeneration,
+		models.PhaseTypeDNSValidation,
+		models.PhaseTypeHTTPKeywordValidation,
+	} {
+		upsertConfig(t, cs, campaignID, ph)
+	}
+	// Intentionally skip enrichment + analysis configs; orchestrator should auto-configure defaults.
+
+	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("start domain_generation: %v", err)
+	}
+
+	waitUntil(t, 2*time.Second, func() bool {
+		st, _ := analysisSvc.GetStatus(context.Background(), campaignID)
+		return st.Status == models.PhaseStatusCompleted
+	})
+	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions > 0 })
+
+	phases, err := cs.GetCampaignPhases(context.Background(), db, campaignID)
+	if err != nil {
+		t.Fatalf("get phases: %v", err)
+	}
+	var enrichmentPhase *models.CampaignPhase
+	for idx := range phases {
+		if phases[idx].PhaseType == models.PhaseTypeEnrichment {
+			enrichmentPhase = phases[idx]
+			break
+		}
+	}
+	if enrichmentPhase == nil {
+		t.Fatalf("expected enrichment phase record persisted")
+	}
+	if enrichmentPhase.Configuration == nil {
+		t.Fatalf("expected enrichment defaults persisted, configuration missing")
+	}
+	trimmed := bytes.TrimSpace(*enrichmentPhase.Configuration)
+	if len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")) {
+		t.Fatalf("expected enrichment defaults persisted, got %s", string(trimmed))
+	}
+
+	analysisConfig, ok := analysisSvc.configs[campaignID]
+	if !ok {
+		t.Fatalf("expected analysis defaults configured for campaign %s", campaignID)
+	}
+	if _, ok := analysisConfig.(*domainservices.AnalysisConfig); !ok {
+		t.Fatalf("expected analysis config type *AnalysisConfig got %T", analysisConfig)
+	}
+
+	if metrics.phaseAutoStarts != 4 {
+		t.Fatalf("expected 4 auto starts got %d", metrics.phaseAutoStarts)
+	}
 }
 
 func TestMidChainMissingNextConfigBlocks(t *testing.T) {

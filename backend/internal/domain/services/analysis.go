@@ -259,11 +259,24 @@ type analysisExecution struct {
 
 // AnalysisConfig represents configuration for analysis phase
 type AnalysisConfig struct {
-	PersonaIDs      []string             `json:"personaIds" validate:"required,min=1"`
-	KeywordRules    []models.KeywordRule `json:"keywordRules,omitempty"`    // Rules for keyword extraction
-	IncludeExternal bool                 `json:"includeExternal,omitempty"` // Include external links
-	Name            *string              `json:"name,omitempty"`
+	PersonaIDs        []string             `json:"personaIds,omitempty"`
+	KeywordRules      []models.KeywordRule `json:"keywordRules,omitempty"`    // Rules for keyword extraction
+	IncludeExternal   bool                 `json:"includeExternal,omitempty"` // Include external links
+	Name              *string              `json:"name,omitempty"`
+	AnalysisTypes     []string             `json:"analysisTypes,omitempty"`
+	EnableSuggestions bool                 `json:"enableSuggestions,omitempty"`
+	GenerateReports   bool                 `json:"generateReports,omitempty"`
 }
+
+var (
+	defaultAnalysisTypes = []string{"content"}
+	AnalysisTypeAllowlist = map[string]struct{}{
+		"content":   {},
+		"links":     {},
+		"headers":   {},
+		"structure": {},
+	}
+)
 
 // NewAnalysisService creates a new analysis service
 func NewAnalysisService(
@@ -395,9 +408,12 @@ func (s *analysisService) Configure(ctx context.Context, campaignID uuid.UUID, c
 		}
 	}
 	s.deps.Logger.Info(ctx, "Analysis configuration stored", map[string]interface{}{
-		"campaign_id":   campaignID,
-		"persona_count": len(analysisConfig.PersonaIDs),
-		"keyword_rules": len(analysisConfig.KeywordRules),
+		"campaign_id":        campaignID,
+		"persona_count":      len(analysisConfig.PersonaIDs),
+		"keyword_rules":      len(analysisConfig.KeywordRules),
+		"analysis_types":     analysisConfig.AnalysisTypes,
+		"enable_suggestions": analysisConfig.EnableSuggestions,
+		"generate_reports":   analysisConfig.GenerateReports,
 	})
 
 	return nil
@@ -410,9 +426,24 @@ func (s *analysisService) Validate(ctx context.Context, config interface{}) erro
 		return fmt.Errorf("invalid configuration type: expected *AnalysisConfig")
 	}
 
-	// Validate personas exist
-	if len(analysisConfig.PersonaIDs) == 0 {
-		return fmt.Errorf("at least one persona ID must be provided")
+	if len(analysisConfig.PersonaIDs) > 0 {
+		normalized := make([]string, 0, len(analysisConfig.PersonaIDs))
+		seen := make(map[string]struct{}, len(analysisConfig.PersonaIDs))
+		for idx, raw := range analysisConfig.PersonaIDs {
+			trim := strings.TrimSpace(raw)
+			if trim == "" {
+				continue
+			}
+			if _, err := uuid.Parse(trim); err != nil {
+				return fmt.Errorf("personaIds[%d] invalid UUID: %w", idx, err)
+			}
+			if _, dup := seen[trim]; dup {
+				continue
+			}
+			seen[trim] = struct{}{}
+			normalized = append(normalized, trim)
+		}
+		analysisConfig.PersonaIDs = normalized
 	}
 
 	// Optional: validate name length if provided
@@ -425,6 +456,30 @@ func (s *analysisService) Validate(ctx context.Context, config interface{}) erro
 			return fmt.Errorf("name exceeds maximum length of 120 characters")
 		}
 		*analysisConfig.Name = trim
+	}
+
+	// Normalize analysis types (optional list, default to "content" if empty)
+	if len(analysisConfig.AnalysisTypes) > 0 {
+		normalized := make([]string, 0, len(analysisConfig.AnalysisTypes))
+		seen := make(map[string]struct{}, len(analysisConfig.AnalysisTypes))
+		for idx, raw := range analysisConfig.AnalysisTypes {
+			val := strings.ToLower(strings.TrimSpace(raw))
+			if val == "" {
+				continue
+			}
+			if _, ok := AnalysisTypeAllowlist[val]; !ok {
+				return fmt.Errorf("analysisTypes[%d] must be one of content|links|headers|structure", idx)
+			}
+			if _, dup := seen[val]; dup {
+				continue
+			}
+			seen[val] = struct{}{}
+			normalized = append(normalized, val)
+		}
+		analysisConfig.AnalysisTypes = normalized
+	}
+	if len(analysisConfig.AnalysisTypes) == 0 {
+		analysisConfig.AnalysisTypes = append([]string{}, defaultAnalysisTypes...)
 	}
 
 	// Validate keyword rules (if provided). We allow zero rules; presence means each must have pattern & rule type
