@@ -18,8 +18,6 @@ src/components/campaigns/PipelineWorkspace.tsx:53:      await startPhase({ campa
 src/components/campaigns/PipelineWorkspace.tsx:55:      dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: nextAction.phase } as any));
 src/components/campaigns/PipelineWorkspace.tsx:66:      startPhase({ campaignId, phase: nextAuto as any }).finally(()=> {
 src/components/campaigns/PipelineWorkspace.tsx:164:                  <Button key={p} size="sm" variant="destructive" className="text-[10px] py-1" onClick={()=>startPhase({ campaignId, phase: p as any })}>Retry {p}</Button>
-src/components/campaigns/CampaignDashboard.tsx:117:    onSave(data as any);
-src/components/campaigns/CampaignDashboard.tsx:122:      onSaveAndStart(data as any);
 src/components/campaigns/CampaignProgressMonitor.tsx:125:            variant={progressInfo.statusColor as any}
 src/components/campaigns/FullSequencePreflightWizard.tsx:31:            {phases.map((p: any) => (
 src/components/campaigns/ContentSimilarityView.tsx:58:  if (score > 75) return "default" as any;
@@ -56,7 +54,6 @@ src/components/refactor/campaign/CohortComparisonPanel.tsx:202:          <Tabs v
 src/components/refactor/campaign/CohortComparisonPanel.tsx:379:  campaign: any;
 src/components/refactor/campaign/PipelineBarContainer.tsx:49:        status: status as any,
 src/components/refactor/campaign/PipelineBarContainer.tsx:62:        status: status as any,
-src/components/refactor/campaign/EnhancedCampaignOverview.tsx:19:  domains: any[];
 src/components/refactor/campaign/MetricsDebugPanel.tsx:28:  lastDeltas?: any[];
 src/components/refactor/campaign/MetricsDebugPanel.tsx:29:  topMovers?: any[];
 src/components/refactor/campaign/CampaignOverviewV2.tsx:39:function convertDomains(apiDomains: any[] | undefined | null): CampaignDomain[] {
@@ -745,25 +742,6 @@ src/store/ui/__tests__/pipelineSelectors.test.ts:44:		const first = sel(store.ge
 src/store/ui/__tests__/pipelineSelectors.test.ts:45:		const second = sel(store.getState() as any);
 src/store/ui/__tests__/pipelineSelectors.test.ts:54:		const ov = ovSel(store.getState() as any);
 src/store/api/cleanCampaignApi.ts:57:// - Type casting with 'as any'
-src/store/api/bulkOperationsApi.ts:59:  return data ? { data } : { error: { status: 500, data: 'Empty bulk generation response' } as any };
-src/store/api/bulkOperationsApi.ts:60:        } catch (error: any) {
-src/store/api/bulkOperationsApi.ts:74:      return data ? { data } : { error: { status: 500, data: 'Empty DNS validation response' } as any };
-src/store/api/bulkOperationsApi.ts:75:        } catch (error: any) {
-src/store/api/bulkOperationsApi.ts:88:      return data ? { data } : { error: { status: 500, data: 'Empty HTTP validation response' } as any };
-src/store/api/bulkOperationsApi.ts:89:        } catch (error: any) {
-src/store/api/bulkOperationsApi.ts:103:      return data ? { data } : { error: { status: 500, data: 'Empty bulk analytics response' } as any };
-src/store/api/bulkOperationsApi.ts:104:        } catch (error: any) {
-src/store/api/bulkOperationsApi.ts:118:      return data ? { data } : { error: { status: 500, data: 'Empty bulk resource allocation response' } as any };
-src/store/api/bulkOperationsApi.ts:119:        } catch (error: any) {
-src/store/api/bulkOperationsApi.ts:132:      return data ? { data } : { error: { status: 500, data: 'Empty bulk resource status response' } as any };
-src/store/api/bulkOperationsApi.ts:133:        } catch (error: any) {
-src/store/api/bulkOperationsApi.ts:149:      return data ? { data } : { error: { status: 500, data: 'Empty cancel operation response' } as any };
-src/store/api/bulkOperationsApi.ts:150:        } catch (error: any) {
-src/store/api/bulkOperationsApi.ts:164:          const resp = await bulkOperationsApiClient.getBulkOperationStatus(operationId) as any;
-src/store/api/bulkOperationsApi.ts:167:            return { error: { status: 500, data: 'Empty bulk operation status' } as any };
-src/store/api/bulkOperationsApi.ts:170:        } catch (error: any) {
-src/store/api/bulkOperationsApi.ts:191:      return data ? { data } : { error: { status: 500, data: 'Empty bulk operations list response' } as any };
-src/store/api/bulkOperationsApi.ts:192:        } catch (error: any) {
 src/store/api/README.md:39:  if ('error' in res && res.error && (res.error as any).data?.error) {
 src/store/api/README.md:40:    const { error, requestId } = (res.error as any).data;
 src/store/api/README.md:41:    return { error: { status: (res.error as any).status, data: { code: error.code, message: error.message, requestId } } };

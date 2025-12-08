@@ -170,6 +170,7 @@ type StatusDTO struct {
 	CampaignID                openapi_types.UUID `json:"campaignId"`
 	OverallProgressPercentage float64            `json:"overallProgressPercentage"`
 	Phases                    []PhaseStatusItem  `json:"phases"`
+	ErrorMessage              *string            `json:"errorMessage,omitempty"`
 }
 
 type PhaseStatusItem struct {
@@ -178,6 +179,8 @@ type PhaseStatusItem struct {
 	ProgressPercentage float64    `json:"progressPercentage"`
 	StartedAt          *time.Time `json:"startedAt"`
 	CompletedAt        *time.Time `json:"completedAt"`
+	FailedAt           *time.Time `json:"failedAt"`
+	ErrorMessage       *string    `json:"errorMessage,omitempty"`
 }
 
 type campaignPhaseRecord struct {
@@ -187,6 +190,8 @@ type campaignPhaseRecord struct {
 	Progress    float64
 	StartedAt   *time.Time
 	CompletedAt *time.Time
+	FailedAt    *time.Time
+	ErrorMsg    *string
 }
 
 // Repository abstraction (minimal) – adapt if broader store layer exists
@@ -259,6 +264,8 @@ func buildPhaseStatusItem(fallbackType models.PhaseTypeEnum, record *campaignPha
 	progress := 0.0
 	var startedAt *time.Time
 	var completedAt *time.Time
+	var failedAt *time.Time
+	var errorMessage *string
 
 	if record != nil {
 		if record.PhaseType != "" {
@@ -271,6 +278,8 @@ func buildPhaseStatusItem(fallbackType models.PhaseTypeEnum, record *campaignPha
 		progress = record.Progress
 		startedAt = record.StartedAt
 		completedAt = record.CompletedAt
+		failedAt = record.FailedAt
+		errorMessage = record.ErrorMsg
 	}
 
 	progress = clampProgress(progress)
@@ -303,6 +312,8 @@ func buildPhaseStatusItem(fallbackType models.PhaseTypeEnum, record *campaignPha
 		ProgressPercentage: progress,
 		StartedAt:          startedAt,
 		CompletedAt:        completedAt,
+		FailedAt:           failedAt,
+		ErrorMessage:       errorMessage,
 	}
 }
 
@@ -466,7 +477,7 @@ func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *Ag
 	campaignAggregationCacheHits.WithLabelValues("status", "miss").Inc()
 
 	start := time.Now()
-	query := `SELECT phase_type, phase_order, status, progress_percentage, started_at, completed_at
+	query := `SELECT phase_type, phase_order, status, progress_percentage, started_at, completed_at, failed_at, error_message
 			   FROM campaign_phases
 			   WHERE campaign_id = $1
 			   ORDER BY phase_order ASC`
@@ -490,9 +501,11 @@ func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *Ag
 			progressRaw  sql.NullFloat64
 			startedRaw   sql.NullTime
 			completedRaw sql.NullTime
+			failedRaw    sql.NullTime
+			errorRaw     sql.NullString
 		)
 
-		if err := rows.Scan(&phaseTypeStr, &phaseOrder, &status, &progressRaw, &startedRaw, &completedRaw); err != nil {
+		if err := rows.Scan(&phaseTypeStr, &phaseOrder, &status, &progressRaw, &startedRaw, &completedRaw, &failedRaw, &errorRaw); err != nil {
 			return StatusDTO{}, err
 		}
 
@@ -511,6 +524,14 @@ func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *Ag
 		if completedRaw.Valid {
 			completed := completedRaw.Time
 			record.CompletedAt = &completed
+		}
+		if failedRaw.Valid {
+			failed := failedRaw.Time
+			record.FailedAt = &failed
+		}
+		if errorRaw.Valid {
+			err := errorRaw.String
+			record.ErrorMsg = &err
 		}
 
 		phaseRecords[record.PhaseType] = record
@@ -581,10 +602,21 @@ func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *Ag
 		overallProgress = clampProgress(totalProgress / float64(phaseCount))
 	}
 
+	var campaignError sql.NullString
+	if err := repo.DB().QueryRowContext(ctx, `SELECT error_message FROM lead_generation_campaigns WHERE id = $1`, campaignID).Scan(&campaignError); err != nil {
+		if err != sql.ErrNoRows {
+			return StatusDTO{}, err
+		}
+	}
+
 	dto := StatusDTO{
 		CampaignID:                openapi_types.UUID(campaignID),
 		OverallProgressPercentage: overallProgress,
 		Phases:                    phases,
+	}
+	if campaignError.Valid {
+		errMsg := campaignError.String
+		dto.ErrorMessage = &errMsg
 	}
 
 	campaignAggregationLatency.WithLabelValues("status").Observe(time.Since(start).Seconds())

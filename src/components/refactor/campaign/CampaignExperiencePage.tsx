@@ -29,6 +29,7 @@ import { WarningPills as _WarningPills } from './WarningPills';
 import { MoverList } from './MoverList';
 import { Histogram } from './Histogram';
 import { mergeCampaignPhases } from './phaseStatusUtils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 import { useCampaignPhaseStream } from '@/hooks/useCampaignPhaseStream';
 import { 
@@ -41,6 +42,8 @@ import {
   useGetCampaignMomentumQuery,
   useGetCampaignStatusQuery
 } from '@/store/api/campaignApi';
+import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 import type { CampaignKpi } from '../types';
 import type { WarningData } from './WarningDistribution';
@@ -84,6 +87,32 @@ function extractErrorMessage(error?: FetchBaseQueryError | SerializedError | und
 const LEAD_DOMAIN_DEFAULT_LIMIT = 200;
 const LEAD_DOMAIN_INCREMENT = 200;
 const LEAD_DOMAIN_MAX = 1000;
+
+function formatPhaseLabelFromSnapshot(phase?: string): string {
+  const normalizedInput = typeof phase === 'string' ? phase.toLowerCase() : '';
+  const normalized = normalizedInput ? normalizeToApiPhase(normalizedInput) : null;
+  if (normalized) {
+    return getPhaseDisplayName(normalized);
+  }
+  const fallback = typeof phase === 'string' && phase.length > 0 ? phase : 'Unknown Phase';
+  return fallback
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function formatFailureTimestamp(value?: string): string | null {
+  if (!value) {
+    return null;
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return date.toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+}
 
 export function CampaignExperiencePage({ className: _className, role: _role = "region" }: CampaignExperiencePageProps) {
   const params = useParams();
@@ -158,6 +187,32 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     ssePhases: phases,
     sseLastUpdate: lastUpdate
   }), [statusSnapshot, funnelData, phases, lastUpdate]);
+
+  const campaignErrorMessage = React.useMemo(() => {
+    const message = statusSnapshot?.errorMessage;
+    if (typeof message !== 'string') {
+      return null;
+    }
+    const trimmed = message.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }, [statusSnapshot]);
+
+  const failedPhaseSummaries = React.useMemo(() => {
+    if (!statusSnapshot?.phases?.length) {
+      return [] as Array<{ key: string; label: string; description: string; failedAtLabel: string | null }>;
+    }
+
+    return statusSnapshot.phases
+      .filter((phase) => phase.status === 'failed')
+      .map((phase, index) => ({
+        key: `${phase.phase}-${phase.failedAt ?? index}`,
+        label: formatPhaseLabelFromSnapshot(phase.phase),
+        description: (phase.errorMessage ?? 'Phase failed').trim(),
+        failedAtLabel: formatFailureTimestamp(phase.failedAt),
+      }));
+  }, [statusSnapshot]);
+
+  const shouldShowFailureSummary = Boolean(campaignErrorMessage || failedPhaseSummaries.length > 0);
 
   // Transform metrics data to KPI format
   const kpis: CampaignKpi[] = React.useMemo(() => {
@@ -346,6 +401,31 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
       {/* Pipeline Status Bar */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-3">Pipeline Status</h2>
+        {shouldShowFailureSummary && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle>Campaign requires attention</AlertTitle>
+            <AlertDescription>
+              <div className="space-y-3">
+                {campaignErrorMessage && (
+                  <p>{campaignErrorMessage}</p>
+                )}
+                {failedPhaseSummaries.length > 0 && (
+                  <ul className="space-y-2">
+                    {failedPhaseSummaries.map((phase) => (
+                      <li key={phase.key} className="text-sm">
+                        <p className="font-medium text-red-900 dark:text-red-100">{phase.label}</p>
+                        <p className="text-red-900/90 dark:text-red-200">{phase.description}</p>
+                        {phase.failedAtLabel && (
+                          <p className="text-xs text-muted-foreground">Failed at {phase.failedAtLabel}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
         <PipelineBar phases={pipelinePhases} />
       </div>
 

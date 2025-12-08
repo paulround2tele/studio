@@ -38,20 +38,24 @@ func TestGetCampaignStatusReturnsPhaseData(t *testing.T) {
 	completedDNS := startedDNS.Add(20 * time.Minute)
 	startedHTTP := time.Now().Add(-60 * time.Minute).UTC()
 
-	query := `SELECT phase_type, phase_order, status, progress_percentage, started_at, completed_at
-               FROM campaign_phases
-               WHERE campaign_id = $1
-               ORDER BY phase_order ASC`
+	query := `SELECT phase_type, phase_order, status, progress_percentage, started_at, completed_at, failed_at, error_message
+	               FROM campaign_phases
+	               WHERE campaign_id = $1
+	               ORDER BY phase_order ASC`
 
-	rows := sqlmock.NewRows([]string{"phase_type", "phase_order", "status", "progress_percentage", "started_at", "completed_at"}).
-		AddRow("domain_generation", 1, "completed", 100.0, startedGeneration, completedGeneration).
-		AddRow("dns_validation", 2, "completed", 100.0, startedDNS, completedDNS).
-		AddRow("http_keyword_validation", 3, "in_progress", 75.0, startedHTTP, nil).
-		AddRow("enrichment", 4, "configured", nil, nil, nil)
+	rows := sqlmock.NewRows([]string{"phase_type", "phase_order", "status", "progress_percentage", "started_at", "completed_at", "failed_at", "error_message"}).
+		AddRow("domain_generation", 1, "completed", 100.0, startedGeneration, completedGeneration, nil, nil).
+		AddRow("dns_validation", 2, "completed", 100.0, startedDNS, completedDNS, nil, nil).
+		AddRow("http_keyword_validation", 3, "in_progress", 75.0, startedHTTP, nil, nil, nil).
+		AddRow("enrichment", 4, "configured", nil, nil, nil, nil, nil)
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(campaignID).
 		WillReturnRows(rows)
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT error_message FROM lead_generation_campaigns WHERE id = $1`)).
+		WithArgs(campaignID).
+		WillReturnRows(sqlmock.NewRows([]string{"error_message"}).AddRow(nil))
 
 	dto, err := GetCampaignStatus(context.Background(), repo, cache, campaignID)
 	if err != nil {
@@ -129,16 +133,20 @@ func TestGetCampaignStatusDefaultsWhenNoRows(t *testing.T) {
 
 	campaignID := uuid.New()
 
-	query := `SELECT phase_type, phase_order, status, progress_percentage, started_at, completed_at
-               FROM campaign_phases
-               WHERE campaign_id = $1
-               ORDER BY phase_order ASC`
+	query := `SELECT phase_type, phase_order, status, progress_percentage, started_at, completed_at, failed_at, error_message
+	               FROM campaign_phases
+	               WHERE campaign_id = $1
+	               ORDER BY phase_order ASC`
 
-	rows := sqlmock.NewRows([]string{"phase_type", "phase_order", "status", "progress_percentage", "started_at", "completed_at"})
+	rows := sqlmock.NewRows([]string{"phase_type", "phase_order", "status", "progress_percentage", "started_at", "completed_at", "failed_at", "error_message"})
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(campaignID).
 		WillReturnRows(rows)
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT error_message FROM lead_generation_campaigns WHERE id = $1`)).
+		WithArgs(campaignID).
+		WillReturnRows(sqlmock.NewRows([]string{"error_message"}).AddRow(nil))
 
 	dto, err := GetCampaignStatus(context.Background(), repo, cache, campaignID)
 	if err != nil {

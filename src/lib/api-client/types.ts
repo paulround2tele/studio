@@ -3162,6 +3162,8 @@ export interface components {
             campaignId: string;
             /** Format: float */
             overallProgressPercentage: number;
+            /** @description Optional campaign-level failure message surfaced when the overall run fails. */
+            errorMessage?: string | null;
             phases: {
                 /** @enum {string} */
                 phase: "generation" | "dns" | "http" | "analysis" | "leads";
@@ -3173,6 +3175,17 @@ export interface components {
                 startedAt?: string | null;
                 /** Format: date-time */
                 completedAt?: string | null;
+                /**
+                 * Format: date-time
+                 * @description Timestamp captured when the phase marked failed.
+                 */
+                failedAt?: string | null;
+                /** @description Backend-supplied error message describing why the phase failed. */
+                errorMessage?: string | null;
+                /** @description Structured metadata describing why the phase failed (code, message, context, etc.). */
+                errorDetails?: {
+                    [key: string]: unknown;
+                } | null;
             }[];
         };
         CampaignFunnelResponse: {

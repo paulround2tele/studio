@@ -722,8 +722,10 @@ func (s *dnsValidationService) updateExecutionStatus(campaignID uuid.UUID, statu
 		LastError:      errorMsg,
 	}
 
+	var progressPct float64
 	if execution.itemsTotal > 0 {
-		phaseStatus.ProgressPct = float64(execution.itemsProcessed) / float64(execution.itemsTotal) * 100
+		progressPct = float64(execution.itemsProcessed) / float64(execution.itemsTotal) * 100
+		phaseStatus.ProgressPct = progressPct
 	}
 
 	ctx := context.Background()
@@ -736,7 +738,23 @@ func (s *dnsValidationService) updateExecutionStatus(campaignID uuid.UUID, statu
 		case models.PhaseStatusCompleted:
 			_ = s.store.CompletePhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation)
 		case models.PhaseStatusFailed:
-			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation, errorMsg)
+			failureContext := map[string]interface{}{
+				"itemsProcessed":    execution.itemsProcessed,
+				"itemsTotal":        execution.itemsTotal,
+				"pendingDomainLoad": execution.pendingDomainLoad,
+				"validCount":        len(execution.validDomains),
+				"invalidCount":      len(execution.invalidDomains),
+			}
+			if execution.itemsTotal > 0 {
+				failureContext["progressPct"] = progressPct
+			}
+			failureDetails := buildPhaseFailureDetails(
+				models.PhaseTypeDNSValidation,
+				status,
+				errorMsg,
+				failureContext,
+			)
+			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation, errorMsg, failureDetails)
 		case models.PhaseStatusPaused:
 			_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation)
 		}

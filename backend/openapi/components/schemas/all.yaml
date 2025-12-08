@@ -1912,6 +1912,10 @@ CampaignPhasesStatusResponse:
   properties:
     campaignId: { type: string, format: uuid }
     overallProgressPercentage: { type: number, format: float }
+    errorMessage:
+      type: string
+      nullable: true
+      description: Optional campaign-level failure message surfaced when the overall run fails.
     phases:
       type: array
       items:
@@ -1922,6 +1926,20 @@ CampaignPhasesStatusResponse:
           progressPercentage: { type: number, format: float }
           startedAt: { type: string, format: date-time, nullable: true }
           completedAt: { type: string, format: date-time, nullable: true }
+          failedAt:
+            type: string
+            format: date-time
+            nullable: true
+            description: Timestamp captured when the phase marked failed.
+          errorMessage:
+            type: string
+            nullable: true
+            description: Backend-supplied error message describing why the phase failed.
+          errorDetails:
+            type: object
+            nullable: true
+            additionalProperties: {}
+            description: Structured metadata describing why the phase failed (code, message, context, etc.).
         required: [phase, status, progressPercentage]
   required: [campaignId, overallProgressPercentage, phases]
 

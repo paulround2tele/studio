@@ -45,6 +45,9 @@ export function normalizeToApiPhase(phase: string): ApiPhase | null {
     case 'enrichment_phase':
     case 'content_extraction':
       return 'enrichment';
+    case 'leads':
+    case 'lead_enrichment':
+      return 'enrichment';
     default:
       return null;
   }

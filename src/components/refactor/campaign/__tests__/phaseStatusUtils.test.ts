@@ -49,6 +49,31 @@ describe('mergeCampaignPhases', () => {
     });
   });
 
+  it('applies failure metadata from status snapshot', () => {
+    const snapshot: CampaignPhasesStatusResponse = {
+      campaignId: 'abc',
+      overallProgressPercentage: 10,
+      phases: [
+        {
+          phase: 'generation',
+          status: 'failed',
+          progressPercentage: 80,
+          failedAt: '2024-01-02T00:00:00Z',
+          errorMessage: 'Generation crashed'
+        }
+      ]
+    };
+
+    const result = mergeCampaignPhases({ statusSnapshot: snapshot });
+    const discovery = result.find((phase) => phase.key === 'discovery');
+
+    expect(discovery).toMatchObject({
+      status: 'failed',
+      failedAt: '2024-01-02T00:00:00Z',
+      errorMessage: 'Generation crashed'
+    });
+  });
+
   it('uses funnel data as fallback when snapshot missing', () => {
     const funnelData = {
       generated: 100,

@@ -5,7 +5,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -571,7 +571,6 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header with legacy link */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Create New Campaign</h1>
@@ -579,15 +578,6 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
             Set up your lead generation campaign with guided steps
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push('/campaigns/new/legacy')}
-          className="text-sm"
-        >
-          <ExternalLink className="w-4 h-4 mr-2" />
-          Use Legacy Form
-        </Button>
       </div>
 
       {/* Progress indicator */}

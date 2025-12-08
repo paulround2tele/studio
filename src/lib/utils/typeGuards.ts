@@ -332,7 +332,7 @@ export function extractDomainName(domain: unknown): string {
     if (domain.id) return domain.id;
   }
   
-  // Fallback for unknown domain structure (including legacy formats)
+  // Fallback for unknown domain structure (including deprecated formats)
   if (isObject(domain)) {
     const domainObj = domain as Record<string, unknown>;
     if (typeof domainObj.name === 'string') return domainObj.name;

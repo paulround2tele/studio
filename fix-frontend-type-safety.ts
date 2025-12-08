@@ -107,72 +107,7 @@ import { extractResponseData, toApiResponse, handleApiError } from '@/lib/utils/
 
       return content;
     }
-  },
-  {
-    filePath: 'src/store/api/bulkOperationsApi.ts',
-    description: 'Replace dangerous type casts in bulk operations API',
-    transform: (content: string) => {
-      // Add proper imports
-      content = content.replace(
-        `import type { 
-  BulkDomainGenerationRequest,
-  BulkDNSValidationRequest,
-  BulkHTTPValidationRequest,
-  BulkAnalyticsRequest,
-  BulkResourceRequest,
-  BulkAnalyzeDomains200Response,
-  BulkOperationStatus,
-  BulkOperationListResponse,
-  OperationCancellationResponse,
-  BulkResourceStatusResponse,
-  APIResponse,
-  BulkValidationResponse,
-  BulkDomainGenerationResponse
-} from '@/lib/api-client/models';`,
-        `import type { 
-  BulkDomainGenerationRequest,
-  BulkDNSValidationRequest,
-  BulkHTTPValidationRequest,
-  BulkAnalyticsRequest,
-  BulkResourceRequest,
-  BulkAnalyzeDomains200Response,
-  BulkOperationStatus,
-  BulkOperationListResponse,
-  OperationCancellationResponse,
-  BulkResourceStatusResponse,
-  APIResponse,
-  BulkValidationResponse,
-  BulkDomainGenerationResponse
-} from '@/lib/api-client/models';
-import { extractResponseData, toApiResponse, handleApiError } from '@/lib/utils/apiResponseHelpers';`
-      );
 
-      // Replace the same dangerous patterns
-      content = content.replace(
-        /const apiResponse = response\.data as APIResponse;\s*if \(apiResponse\.success && apiResponse\.data\) \{\s*return \{ data: apiResponse\.data as ([^}]+) \};\s*\} else \{\s*return \{\s*error: \{\s*status: 500,\s*data: apiResponse\.error\?\.\message \|\| '([^']+)'\s*\}\s*\};\s*\}/gs,
-        (match, type, errorMsg) => 
-          `const data = extractResponseData<${type}>(response);
-          if (data) {
-            return { data };
-          } else {
-            return { error: { status: 500, data: '${errorMsg}' } };
-          }`
-      );
-
-      // Fix catch blocks
-      content = content.replace(
-        /} catch \(error: any\) \{\s*return \{ error: \{ status: error\.response\?\.\status \|\| 500, data: error\.response\?\.\data \|\| error\.message \} \};\s*\}/g,
-        `} catch (error) {
-          try {
-            handleApiError(error, 'Bulk Operations API');
-          } catch (handledError) {
-            return { error: { status: 500, data: handledError.message } };
-          }
-        }`
-      );
-
-      return content;
-    }
   }
 ];
 

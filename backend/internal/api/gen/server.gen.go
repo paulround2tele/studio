@@ -1123,10 +1123,22 @@ type CampaignPhaseEnum string
 
 // CampaignPhasesStatusResponse Consolidated phase status list plus overall progress
 type CampaignPhasesStatusResponse struct {
-	CampaignId                openapi_types.UUID `json:"campaignId"`
-	OverallProgressPercentage float32            `json:"overallProgressPercentage"`
+	CampaignId openapi_types.UUID `json:"campaignId"`
+
+	// ErrorMessage Optional campaign-level failure message surfaced when the overall run fails.
+	ErrorMessage              *string `json:"errorMessage"`
+	OverallProgressPercentage float32 `json:"overallProgressPercentage"`
 	Phases                    []struct {
-		CompletedAt        *time.Time                               `json:"completedAt"`
+		CompletedAt *time.Time `json:"completedAt"`
+
+		// ErrorDetails Structured metadata describing why the phase failed (code, message, context, etc.).
+		ErrorDetails *map[string]interface{} `json:"errorDetails"`
+
+		// ErrorMessage Backend-supplied error message describing why the phase failed.
+		ErrorMessage *string `json:"errorMessage"`
+
+		// FailedAt Timestamp captured when the phase marked failed.
+		FailedAt           *time.Time                               `json:"failedAt"`
 		Phase              CampaignPhasesStatusResponsePhasesPhase  `json:"phase"`
 		ProgressPercentage float32                                  `json:"progressPercentage"`
 		StartedAt          *time.Time                               `json:"startedAt"`

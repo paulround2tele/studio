@@ -25,6 +25,16 @@ type MutablePhase = PipelinePhase & {
   progressPercentage: number;
 };
 
+const assignIfPresent = <K extends keyof PipelinePhase>(
+  target: MutablePhase,
+  source: PipelinePhase,
+  key: K
+): void => {
+  if (Object.prototype.hasOwnProperty.call(source, key)) {
+    target[key] = source[key];
+  }
+};
+
 const FUNNEL_FIELD_BY_PHASE: Partial<Record<PhaseKey, keyof FunnelData>> = {
   discovery: 'generated',
   validation: 'dnsValid',
@@ -58,6 +68,9 @@ function applySnapshot(phases: Map<PhaseKey, MutablePhase>, snapshot?: CampaignP
     phase.progressPercentage = clampProgress(phaseSnapshot.progressPercentage ?? 0);
     phase.startedAt = phaseSnapshot.startedAt;
     phase.completedAt = phaseSnapshot.completedAt;
+    const snapshotFailed = phaseSnapshot.status === 'failed';
+    phase.failedAt = snapshotFailed ? phaseSnapshot.failedAt : undefined;
+    phase.errorMessage = snapshotFailed ? phaseSnapshot.errorMessage : undefined;
   });
 }
 
@@ -109,6 +122,14 @@ function applySseOverlay(phases: Map<PhaseKey, MutablePhase>, ssePhases?: Pipeli
     target.progressPercentage = clampProgress(ssePhase.progressPercentage ?? 0);
     target.startedAt = ssePhase.startedAt;
     target.completedAt = ssePhase.completedAt;
+    if (ssePhase.status && ssePhase.status !== 'failed') {
+      target.failedAt = undefined;
+      target.errorMessage = undefined;
+    }
+    assignIfPresent(target, ssePhase, 'lastMessage');
+    assignIfPresent(target, ssePhase, 'errorMessage');
+    assignIfPresent(target, ssePhase, 'lastEventAt');
+    assignIfPresent(target, ssePhase, 'failedAt');
   });
 }
 

@@ -132,7 +132,7 @@ test.describe('Campaign Wizard - Full Pipeline E2E', () => {
     await page.goto('/campaigns/new', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000); // Let wizard initialize
 
-    // Verify wizard is loaded (not legacy form)
+    // Verify wizard UI is loaded
     const isWizardLoaded = await page.evaluate(() => {
       return document.body.innerText.includes('Goal') || 
              document.body.innerText.includes('Pattern') ||

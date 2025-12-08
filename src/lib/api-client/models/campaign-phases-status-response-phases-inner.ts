@@ -61,6 +61,31 @@ export interface CampaignPhasesStatusResponsePhasesInner {
           
           string
     ;
+  /**
+   * Timestamp captured when the phase marked failed.
+   * @memberof CampaignPhasesStatusResponsePhasesInner
+   */
+  'failedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * Backend-supplied error message describing why the phase failed.
+   * @memberof CampaignPhasesStatusResponsePhasesInner
+   */
+  'errorMessage'?: 
+        
+          
+          string
+    ;
+  /**
+   * Structured metadata describing why the phase failed (code, message, context, etc.).
+   * @memberof CampaignPhasesStatusResponsePhasesInner
+   */
+  'errorDetails'?: 
+        Record<string, unknown>
+    ;
 }
 
 

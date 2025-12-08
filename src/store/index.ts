@@ -1,11 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { campaignApi } from './api/campaignApi';
 import { authApi } from './api/authApi';
-import { bulkOperationsApi } from './api/bulkOperationsApi';
 import { scoringApi } from './api/scoringApi';
 import { serverMetricsApi } from '@/hooks/useCampaignServerMetrics';
 import campaignSlice from './slices/campaignSlice';
-import bulkOperationsSlice from './slices/bulkOperationsSlice';
 import campaignUiSlice from './ui/campaignUiSlice';
 import pipelineExecReducer from './slices/pipelineExecSlice';
 import { campaignStateSyncMiddleware } from './middleware/campaignStateSyncMiddleware';
@@ -13,13 +11,11 @@ import { campaignStateSyncMiddleware } from './middleware/campaignStateSyncMiddl
 export const store = configureStore({
   reducer: {
     campaign: campaignSlice,
-    bulkOperations: bulkOperationsSlice,
   campaignUI: campaignUiSlice,
   pipelineExec: pipelineExecReducer,
     // Add the generated reducers as specific top-level slices
   [campaignApi.reducerPath]: campaignApi.reducer,
   [authApi.reducerPath]: authApi.reducer,
-    [bulkOperationsApi.reducerPath]: bulkOperationsApi.reducer,
     [scoringApi.reducerPath]: scoringApi.reducer,
     [serverMetricsApi.reducerPath]: serverMetricsApi.reducer,
   },
@@ -33,7 +29,6 @@ export const store = configureStore({
     })
   .concat(campaignApi.middleware)
   .concat(authApi.middleware)
-  .concat(bulkOperationsApi.middleware)
   .concat(scoringApi.middleware)
   .concat(serverMetricsApi.middleware)
   .concat(campaignStateSyncMiddleware),

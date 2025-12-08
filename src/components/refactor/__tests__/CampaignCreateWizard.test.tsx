@@ -157,20 +157,6 @@ describe('CampaignCreateWizard Component', () => {
       expect(screen.getByText('25% complete')).toBeInTheDocument();
     });
 
-    it('should show link to legacy form', () => {
-      render(
-        <TestWrapper>
-          <CampaignCreateWizard />
-        </TestWrapper>
-      );
-
-      const legacyLink = screen.getByText('Use Legacy Form');
-      expect(legacyLink).toBeInTheDocument();
-      
-      fireEvent.click(legacyLink);
-      expect(mockPush).toHaveBeenCalledWith('/campaigns/new/legacy');
-    });
-
     it('should render all step indicators', () => {
       render(
         <TestWrapper>

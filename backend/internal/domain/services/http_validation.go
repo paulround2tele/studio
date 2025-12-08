@@ -19,6 +19,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/fntelecomllc/studio/backend/internal/extraction"
 	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
 	"golang.org/x/net/html"
 
@@ -370,6 +371,158 @@ func mergeFeatureVectors(primary, secondary map[string]any) map[string]any {
 }
 
 // ---- End Enrichment & Scoring Integration (ANCHOR STUBS) ----
+func normalizePatternToken(raw string) string {
+	return strings.TrimSpace(raw)
+}
+
+func enrichFeatureVectorWithRichness(fv map[string]interface{}, patternCounts map[string]int, microcrawlPatterns map[string]struct{}, result *httpvalidator.ValidationResult, ss StructuralSignals, isParked bool, confidence float64) {
+	if fv == nil || result == nil {
+		return
+	}
+	title := strings.TrimSpace(result.ExtractedTitle)
+	if title != "" {
+		fv["page_title"] = title
+	}
+	snippet := strings.TrimSpace(result.ExtractedContentSnippet)
+	if snippet != "" {
+		fv["content_snippet"] = snippet
+		fv["keyword_snippets"] = []string{snippet}
+	}
+	hits := buildKeywordHitsFromCounts(patternCounts, microcrawlPatterns, result.ExtractedTitle)
+	signals := buildRichnessSignals(result, ss, hits, isParked, confidence, fv)
+	agg := extraction.BuildFeatures(signals, extraction.BuilderParams{
+		ExtractionVersion:        1,
+		KeywordDictionaryVersion: 1,
+		Now:                      time.Now(),
+	})
+	mergeAggregateIntoVector(fv, agg)
+}
+
+func buildKeywordHitsFromCounts(counts map[string]int, microcrawlPatterns map[string]struct{}, title string) []extraction.KeywordHit {
+	if len(counts) == 0 {
+		return nil
+	}
+	titleLower := strings.ToLower(title)
+	keys := make([]string, 0, len(counts))
+	for k := range counts {
+		p := strings.TrimSpace(k)
+		if p == "" {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	sort.Strings(keys)
+	hits := make([]extraction.KeywordHit, 0, len(keys))
+	for _, keyword := range keys {
+		weight := float64(counts[keyword])
+		if weight <= 0 {
+			weight = 1
+		}
+		signalType := "body"
+		if _, ok := microcrawlPatterns[keyword]; ok {
+			signalType = "microcrawl"
+		} else if titleLower != "" && strings.Contains(titleLower, strings.ToLower(keyword)) {
+			signalType = "title"
+		}
+		hits = append(hits, extraction.KeywordHit{
+			KeywordID:  keyword,
+			SignalType: signalType,
+			BaseWeight: weight,
+			ValueScore: 1,
+		})
+	}
+	return hits
+}
+
+func buildRichnessSignals(result *httpvalidator.ValidationResult, ss StructuralSignals, hits []extraction.KeywordHit, isParked bool, confidence float64, fv map[string]interface{}) extraction.RawSignals {
+	contentBytes := result.ContentLength
+	if contentBytes <= 0 && len(result.RawBody) > 0 {
+		contentBytes = len(result.RawBody)
+	}
+	signals := extraction.RawSignals{
+		HTTPStatusCode:    result.StatusCode,
+		ContentBytes:      contentBytes,
+		Language:          ss.PrimaryLang,
+		ParsedKeywordHits: hits,
+		IsParked:          isParked,
+		ParkedConfidence:  confidence,
+	}
+	if signals.Language == "" {
+		if lang, ok := fv["primary_lang"].(string); ok && lang != "" {
+			signals.Language = lang
+		}
+	}
+	if v, ok := intFromAny(fv["secondary_pages_examined"]); ok {
+		signals.SecondaryPages = v
+	} else if v, ok := intFromAny(fv["microcrawl_pages"]); ok {
+		signals.SecondaryPages = v
+	}
+	if exhausted, ok := boolFromAny(fv["microcrawl_exhausted"]); ok {
+		signals.MicrocrawlExhausted = exhausted
+	}
+	if mc := microcrawlResultFromVector(fv); mc != nil {
+		signals.Microcrawl = mc
+	}
+	return signals
+}
+
+func mergeAggregateIntoVector(fv map[string]interface{}, agg extraction.FeatureAggregate) {
+	if fv == nil {
+		return
+	}
+	fv["kw_unique"] = agg.KwUniqueCount
+	fv["kw_hits_total"] = agg.KwTotalOccurrences
+	fv["kw_weight_sum"] = agg.KwWeightSum
+	if len(agg.Top3) > 0 {
+		top := make([]string, 0, len(agg.Top3))
+		for _, wk := range agg.Top3 {
+			if wk.KeywordID == "" {
+				continue
+			}
+			top = append(top, wk.KeywordID)
+		}
+		if len(top) > 0 {
+			fv["kw_top3"] = top
+		}
+	}
+	if len(agg.SignalDistribution) > 0 {
+		fv["kw_signal_distribution"] = agg.SignalDistribution
+	}
+	fv["richness"] = agg.ContentRichnessScore
+	fv["content_richness_score"] = agg.ContentRichnessScore
+	if agg.MicrocrawlGainRatio > 0 {
+		fv["microcrawl_gain_ratio"] = agg.MicrocrawlGainRatio
+	}
+	if agg.FeatureVector != nil {
+		for k, v := range agg.FeatureVector {
+			fv[k] = v
+		}
+	}
+}
+
+func microcrawlResultFromVector(fv map[string]interface{}) *extraction.MicrocrawlResult {
+	if fv == nil {
+		return nil
+	}
+	pages, _ := intFromAny(fv["microcrawl_pages"])
+	added, _ := intFromAny(fv["kw_unique_added"])
+	base, _ := intFromAny(fv["kw_unique_root"])
+	gain, _ := floatFromAny(fv["kw_growth_ratio"])
+	diminishing, _ := boolFromAny(fv["diminishing_returns"])
+	if pages == 0 && added == 0 && base == 0 && gain == 0 {
+		return nil
+	}
+	return &extraction.MicrocrawlResult{
+		PagesVisited:        pages,
+		AddedUniqueKeywords: added,
+		BaseUniqueBefore:    base,
+		GainRatio:           gain,
+		DiminishingReturns:  diminishing,
+	}
+}
 
 // httpValidationExecution tracks HTTP validation execution state
 type httpValidationExecution struct {
@@ -907,9 +1060,10 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 					"fetched_at":    time.Now().UTC().Format(time.RFC3339),
 					"content_bytes": r.ContentLength,
 				}
+				ss := StructuralSignals{}
 				// Structural parsing (HTML) & naive language heuristic
 				if len(r.RawBody) > 0 {
-					ss := parseStructuralSignals(r.RawBody, r.FinalURL)
+					ss = parseStructuralSignals(r.RawBody, r.FinalURL)
 					fv["h1_count"] = ss.H1Count
 					fv["link_internal_count"] = ss.LinkInternalCount
 					fv["link_external_count"] = ss.LinkExternalCount
@@ -918,22 +1072,25 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 					fv["lang_confidence"] = ss.LangConfidence
 					fv["has_structural_signals"] = true
 				}
+				patternCounts := make(map[string]int, 32)
+				microcrawlPatterns := make(map[string]struct{}, 8)
 				// Keyword scans (root only for now)
 				if len(r.RawBody) > 0 && (len(keywordSetIDs) > 0 || len(adHocKeywords) > 0) {
 					var exec store.Querier
 					if q, ok := s.deps.DB.(store.Querier); ok {
 						exec = q
 					}
-					patternCounts := make(map[string]int, 32)
-					uniquePatterns := make(map[string]struct{}, 32)
 					if len(keywordSetIDs) > 0 {
 						if hitsBySet, err := s.kwScanner.ScanBySetIDs(ctx, exec, r.RawBody, keywordSetIDs); err == nil && len(hitsBySet) > 0 {
 							perSet := make(map[string]int, len(hitsBySet))
 							for setID, patterns := range hitsBySet {
 								perSet[setID] = len(patterns)
-								for _, p := range patterns {
-									uniquePatterns[p] = struct{}{}
-									patternCounts[p]++
+								for _, rawPattern := range patterns {
+									pattern := normalizePatternToken(rawPattern)
+									if pattern == "" {
+										continue
+									}
+									patternCounts[pattern]++
 								}
 							}
 							fv["keyword_set_hits"] = perSet
@@ -943,28 +1100,31 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 					if len(adHocKeywords) > 0 {
 						if adhHits, err := s.kwScanner.ScanAdHocKeywords(ctx, r.RawBody, adHocKeywords); err == nil && len(adhHits) > 0 {
 							fv["ad_hoc_hits"] = adhHits
-							for _, p := range adhHits {
-								uniquePatterns[p] = struct{}{}
-								patternCounts[p]++
+							for _, rawPattern := range adhHits {
+								pattern := normalizePatternToken(rawPattern)
+								if pattern == "" {
+									continue
+								}
+								patternCounts[pattern]++
 							}
 						}
 					}
-					if r.ExtractedTitle != "" {
-						tl := strings.ToLower(r.ExtractedTitle)
-						hasTitleKeyword := false
-						for k := range uniquePatterns {
-							if strings.Contains(tl, strings.ToLower(k)) {
-								hasTitleKeyword = true
-								break
-							}
+				}
+				if r.ExtractedTitle != "" {
+					tl := strings.ToLower(r.ExtractedTitle)
+					hasTitleKeyword := false
+					for k := range patternCounts {
+						if strings.Contains(tl, strings.ToLower(k)) {
+							hasTitleKeyword = true
+							break
 						}
-						fv["title_has_keyword"] = hasTitleKeyword
 					}
-					fv["kw_hits_total"] = len(uniquePatterns)
-					fv["kw_unique"] = len(uniquePatterns)
-					if top := topKeywordsFromCounts(patternCounts, 3); len(top) > 0 {
-						fv["kw_top3"] = top
-					}
+					fv["title_has_keyword"] = hasTitleKeyword
+				}
+				fv["kw_hits_total"] = len(patternCounts)
+				fv["kw_unique"] = len(patternCounts)
+				if top := topKeywordsFromCounts(patternCounts, 3); len(top) > 0 {
+					fv["kw_top3"] = top
 				}
 				// Parked heuristic
 				isParked, conf := parkedHeuristic(r.ExtractedTitle, r.ExtractedContentSnippet)
@@ -1020,7 +1180,17 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 								}
 								fv["kw_unique_root"] = kwuBaseline
 								fv["kw_unique_added"] = addedKw
-								totalUnique := kwuBaseline + addedKw
+								for _, rawPattern := range newPatterns {
+									pattern := normalizePatternToken(rawPattern)
+									if pattern == "" {
+										continue
+									}
+									if _, exists := patternCounts[pattern]; !exists {
+										patternCounts[pattern] = 1
+									}
+									microcrawlPatterns[pattern] = struct{}{}
+								}
+								totalUnique := len(patternCounts)
 								fv["kw_unique"] = totalUnique
 								fv["kw_hits_total"] = totalUnique
 								// growth ratio; avoid div by zero
@@ -1069,6 +1239,7 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 						fv["partial_coverage"] = false
 					}
 				}
+				enrichFeatureVectorWithRichness(fv, patternCounts, microcrawlPatterns, r, ss, isParked, conf)
 				enrichmentVectors[r.Domain] = fv
 			}
 		}
@@ -2403,7 +2574,18 @@ func (s *httpValidationService) updateExecutionStatus(campaignID uuid.UUID, stat
 		case models.PhaseStatusSkipped:
 			_ = s.store.SkipPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation, errorMsg)
 		case models.PhaseStatusFailed:
-			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation, errorMsg)
+			failureContext := map[string]interface{}{
+				"itemsProcessed": execution.ItemsProcessed,
+				"itemsTotal":     execution.ItemsTotal,
+				"progressPct":    execution.Progress,
+			}
+			failureDetails := buildPhaseFailureDetails(
+				models.PhaseTypeHTTPKeywordValidation,
+				status,
+				errorMsg,
+				failureContext,
+			)
+			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation, errorMsg, failureDetails)
 		case models.PhaseStatusPaused:
 			_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation)
 		}

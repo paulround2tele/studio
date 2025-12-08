@@ -401,7 +401,13 @@ func (h *strictHandlers) CampaignsStatusGet(ctx context.Context, r gen.Campaigns
 
 	// Map DTO to typed response struct
 	phases := make([]struct {
-		CompletedAt        *time.Time                                   `json:"completedAt"`
+		CompletedAt *time.Time `json:"completedAt"`
+
+		// ErrorMessage Backend-supplied error message describing why the phase failed.
+		ErrorMessage *string `json:"errorMessage"`
+
+		// FailedAt Timestamp captured when the phase marked failed.
+		FailedAt           *time.Time                                   `json:"failedAt"`
 		Phase              gen.CampaignPhasesStatusResponsePhasesPhase  `json:"phase"`
 		ProgressPercentage float32                                      `json:"progressPercentage"`
 		StartedAt          *time.Time                                   `json:"startedAt"`
@@ -410,7 +416,13 @@ func (h *strictHandlers) CampaignsStatusGet(ctx context.Context, r gen.Campaigns
 
 	for i, phase := range dto.Phases {
 		phases[i] = struct {
-			CompletedAt        *time.Time                                   `json:"completedAt"`
+			CompletedAt *time.Time `json:"completedAt"`
+
+			// ErrorMessage Backend-supplied error message describing why the phase failed.
+			ErrorMessage *string `json:"errorMessage"`
+
+			// FailedAt Timestamp captured when the phase marked failed.
+			FailedAt           *time.Time                                   `json:"failedAt"`
 			Phase              gen.CampaignPhasesStatusResponsePhasesPhase  `json:"phase"`
 			ProgressPercentage float32                                      `json:"progressPercentage"`
 			StartedAt          *time.Time                                   `json:"startedAt"`
@@ -421,6 +433,8 @@ func (h *strictHandlers) CampaignsStatusGet(ctx context.Context, r gen.Campaigns
 			ProgressPercentage: float32(phase.ProgressPercentage),
 			StartedAt:          phase.StartedAt,
 			CompletedAt:        phase.CompletedAt,
+			FailedAt:           phase.FailedAt,
+			ErrorMessage:       phase.ErrorMessage,
 		}
 	}
 
@@ -428,6 +442,7 @@ func (h *strictHandlers) CampaignsStatusGet(ctx context.Context, r gen.Campaigns
 		CampaignId:                dto.CampaignID,
 		OverallProgressPercentage: float32(dto.OverallProgressPercentage),
 		Phases:                    phases,
+		ErrorMessage:              dto.ErrorMessage,
 	}
 	return gen.CampaignsStatusGet200JSONResponse(data), nil
 }

@@ -60,9 +60,17 @@ func (s *stubCampaignStore) CountCampaigns(ctx context.Context, exec store.Queri
 	return 0, nil
 }
 func (s *stubCampaignStore) UpdateCampaignStatus(ctx context.Context, exec store.Querier, id uuid.UUID, st models.PhaseStatusEnum, em sql.NullString) error {
+	s.mu.Lock()
+	s.mu.Unlock()
 	return nil
 }
 func (s *stubCampaignStore) UpdateCampaignProgress(ctx context.Context, exec store.Querier, id uuid.UUID, p, t int64, pct float64) error {
+	return nil
+}
+func (s *stubCampaignStore) FailPhase(ctx context.Context, exec store.Querier, id uuid.UUID, pt models.PhaseTypeEnum, em string, details map[string]interface{}) error {
+	s.mu.Lock()
+	s.failed = true
+	s.mu.Unlock()
 	return nil
 }
 func (s *stubCampaignStore) UpdateCampaignPhaseFields(ctx context.Context, exec store.Querier, id uuid.UUID, cp *models.PhaseTypeEnum, ps *models.PhaseStatusEnum) error {
@@ -120,12 +128,6 @@ func (s *stubCampaignStore) StartPhase(ctx context.Context, exec store.Querier, 
 	return nil
 }
 func (s *stubCampaignStore) PausePhase(ctx context.Context, exec store.Querier, id uuid.UUID, pt models.PhaseTypeEnum) error {
-	return nil
-}
-func (s *stubCampaignStore) FailPhase(ctx context.Context, exec store.Querier, id uuid.UUID, pt models.PhaseTypeEnum, em string) error {
-	s.mu.Lock()
-	s.failed = true
-	s.mu.Unlock()
 	return nil
 }
 func (s *stubCampaignStore) CreateGeneratedDomains(ctx context.Context, exec store.Querier, d []*models.GeneratedDomain) error {

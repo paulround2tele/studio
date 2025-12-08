@@ -33,6 +33,40 @@ const phaseDisplayNames: Record<CampaignPhase, string> = PHASE_ORDER.reduce((acc
   return acc;
 }, {} as Record<CampaignPhase, string>);
 
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
+
+const toRecord = (value: unknown): Record<string, unknown> | undefined => {
+  return isPlainObject(value) ? (value as Record<string, unknown>) : undefined;
+};
+
+const getStringField = (record: Record<string, unknown> | undefined, key: string): string | undefined => {
+  if (!record) {
+    return undefined;
+  }
+  const value = record[key];
+  return typeof value === 'string' ? value : undefined;
+};
+
+const getNestedRecord = (record: Record<string, unknown> | undefined, key: string): Record<string, unknown> | undefined => {
+  if (!record) {
+    return undefined;
+  }
+  return toRecord(record[key]);
+};
+
+interface FailureContext {
+  phase: CampaignPhase | null;
+  phaseLabel: string;
+  code?: string;
+  message?: string;
+  hint?: string;
+  details?: Record<string, unknown>;
+  detailsJson?: string;
+  timestamp?: string;
+}
+
 // Memoized phase status icon component for better performance  
 type PhaseStatus = 'not_started' | 'in_progress' | 'completed' | 'failed' | 'paused';
 const PhaseStatusIcon = memo(({ status }: { status: PhaseStatus }) => {
@@ -131,6 +165,73 @@ export function CampaignProgress({ campaign, phaseExecutions, state: _state }: C
   const currentPhaseDisplay = useMemo(() => {
     return currentPhase ? phaseDisplayNames[currentPhase] : 'Unknown Phase';
   }, [currentPhase]);
+
+  const failureContext = useMemo<FailureContext | null>(() => {
+    let failurePhase: CampaignPhase | null = null;
+    let failureExec: PhaseExecution | undefined;
+
+    if (currentPhase && execByPhase.has(currentPhase)) {
+      const currentExec = execByPhase.get(currentPhase);
+      if (currentExec?.status === 'failed') {
+        failurePhase = currentPhase;
+        failureExec = currentExec;
+      }
+    }
+
+    if (!failureExec) {
+      for (const [phase, exec] of execByPhase.entries()) {
+        if (exec.status === 'failed') {
+          failurePhase = phase;
+          failureExec = exec;
+          break;
+        }
+      }
+    }
+
+    if (!failureExec) {
+      return null;
+    }
+
+    const errorRecord = toRecord(failureExec.errorDetails);
+    const nestedDetails = getNestedRecord(errorRecord, 'details');
+    const metricsRecord = toRecord(failureExec.metrics);
+
+    const message =
+      getStringField(errorRecord, 'message') ??
+      getStringField(nestedDetails, 'message') ??
+      getStringField(nestedDetails, 'reason') ??
+      getStringField(nestedDetails, 'error') ??
+      getStringField(metricsRecord, 'failureReason');
+
+    const code =
+      getStringField(errorRecord, 'code') ??
+      getStringField(nestedDetails, 'code');
+
+    const hint =
+      getStringField(errorRecord, 'hint') ??
+      getStringField(nestedDetails, 'hint');
+
+    const detailsObject = errorRecord ?? nestedDetails;
+    let detailsJson: string | undefined;
+    if (detailsObject) {
+      try {
+        detailsJson = JSON.stringify(detailsObject, null, 2);
+      } catch {
+        detailsJson = undefined;
+      }
+    }
+
+    return {
+      phase: failurePhase,
+      phaseLabel: failurePhase ? phaseDisplayNames[failurePhase] : currentPhaseDisplay,
+      code,
+      message,
+      hint,
+      details: detailsObject,
+      detailsJson,
+      timestamp: failureExec.failedAt ?? failureExec.updatedAt
+    };
+  }, [currentPhase, currentPhaseDisplay, execByPhase]);
 
   const getStatusColor = useCallback((status: PhaseStatus) => {
     switch (status) {
@@ -252,11 +353,34 @@ export function CampaignProgress({ campaign, phaseExecutions, state: _state }: C
 
         {phaseStatus === 'failed' ? (
           <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-              <p className="text-sm text-red-600 dark:text-red-400">
-                The {currentPhaseDisplay} phase encountered an error.
-              </p>
+            <div className="flex items-start space-x-3">
+              <AlertTriangle className="w-4 h-4 mt-0.5 text-red-600" />
+              <div className="space-y-2 text-sm text-red-700 dark:text-red-300">
+                <p className="font-semibold">
+                  {failureContext?.phaseLabel ?? currentPhaseDisplay} phase failed
+                </p>
+                <p className="text-sm text-red-700 dark:text-red-200">
+                  {failureContext?.message ?? 'The phase encountered an error. Check the backend logs for more details.'}
+                </p>
+                {failureContext?.code && (
+                  <p className="text-xs uppercase tracking-wide text-red-600 dark:text-red-300">
+                    Error Code: <code className="font-mono text-xs">{failureContext.code}</code>
+                  </p>
+                )}
+                {failureContext?.hint && (
+                  <p className="text-xs text-red-600 dark:text-red-300">{failureContext.hint}</p>
+                )}
+                {failureContext?.detailsJson && (
+                  <details className="text-xs text-red-600 dark:text-red-300">
+                    <summary className="cursor-pointer font-medium">
+                      Technical details
+                    </summary>
+                    <pre className="mt-2 max-h-48 overflow-auto rounded bg-white/80 p-2 font-mono text-[11px] leading-tight text-red-800 dark:bg-red-950/40 dark:text-red-100">
+                      {failureContext.detailsJson}
+                    </pre>
+                  </details>
+                )}
+              </div>
             </div>
           </div>
         ) : phaseStatus === 'in_progress' ? (

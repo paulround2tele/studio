@@ -199,7 +199,7 @@ func (f *fakeCampaignStore) StartPhase(ctx context.Context, exec store.Querier, 
 func (f *fakeCampaignStore) PausePhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
 	return fmt.Errorf("not implemented")
 }
-func (f *fakeCampaignStore) FailPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string) error {
+func (f *fakeCampaignStore) FailPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string, errorDetails map[string]interface{}) error {
 	return fmt.Errorf("not implemented")
 }
 func (f *fakeCampaignStore) CreateGeneratedDomains(ctx context.Context, exec store.Querier, domains []*models.GeneratedDomain) error {

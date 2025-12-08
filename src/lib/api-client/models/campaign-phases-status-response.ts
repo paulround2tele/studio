@@ -42,6 +42,15 @@ export interface CampaignPhasesStatusResponse {
           number
     ;
   /**
+   * Optional campaign-level failure message surfaced when the overall run fails.
+   * @memberof CampaignPhasesStatusResponse
+   */
+  'errorMessage'?: 
+        
+          
+          string
+    ;
+  /**
    * 
    * @memberof CampaignPhasesStatusResponse
    */

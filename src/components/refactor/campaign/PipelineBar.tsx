@@ -15,6 +15,10 @@ export interface PipelinePhase {
   progressPercentage: number;
   startedAt?: string;
   completedAt?: string;
+  failedAt?: string;
+  lastMessage?: string;
+  errorMessage?: string;
+  lastEventAt?: string;
 }
 
 interface PipelineBarProps {
@@ -155,6 +159,12 @@ function PipelinePhaseCard({
             />
           </div>
         </div>
+      )}
+
+      {phase.status === 'failed' && (phase.errorMessage || phase.lastMessage) && (
+        <p className="mt-3 text-xs text-red-700 dark:text-red-300 line-clamp-3" title={phase.errorMessage || phase.lastMessage}>
+          {phase.errorMessage || phase.lastMessage}
+        </p>
       )}
     </div>
   );

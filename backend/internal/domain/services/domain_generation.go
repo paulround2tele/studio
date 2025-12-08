@@ -824,8 +824,10 @@ func (s *domainGenerationService) updateExecutionStatus(campaignID uuid.UUID, st
 		LastError:      errorMsg,
 	}
 
+	var progressPct float64
 	if execution.itemsTotal > 0 {
-		phaseStatus.ProgressPct = float64(execution.itemsProcessed) / float64(execution.itemsTotal) * 100
+		progressPct = float64(execution.itemsProcessed) / float64(execution.itemsTotal) * 100
+		phaseStatus.ProgressPct = progressPct
 	}
 
 	ctx := context.Background()
@@ -839,7 +841,23 @@ func (s *domainGenerationService) updateExecutionStatus(campaignID uuid.UUID, st
 		case models.PhaseStatusCompleted:
 			_ = s.store.CompletePhase(ctx, exec, campaignID, models.PhaseTypeDomainGeneration)
 		case models.PhaseStatusFailed:
-			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeDomainGeneration, errorMsg)
+			failureContext := map[string]interface{}{
+				"itemsProcessed": execution.itemsProcessed,
+				"itemsTotal":     execution.itemsTotal,
+			}
+			if execution.itemsTotal > 0 {
+				failureContext["progressPct"] = progressPct
+			}
+			if execution.configHash != "" {
+				failureContext["configHash"] = execution.configHash
+			}
+			failureDetails := buildPhaseFailureDetails(
+				models.PhaseTypeDomainGeneration,
+				status,
+				errorMsg,
+				failureContext,
+			)
+			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeDomainGeneration, errorMsg, failureDetails)
 		case models.PhaseStatusPaused:
 			_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeDomainGeneration)
 		}

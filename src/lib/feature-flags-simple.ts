@@ -65,13 +65,7 @@ export function isFeatureEnabled(name: string, defaultValue: boolean = false): b
 
 // Phase 1 feature flags
 export const PHASE1_FLAGS = {
-  CAMPAIGN_WIZARD_V1: 'CAMPAIGN_WIZARD_V1',
-  CAMPAIGN_OVERVIEW_V2: 'CAMPAIGN_OVERVIEW_V2'
-} as const;
-
-// Phase 2 feature flags
-export const PHASE2_FLAGS = {
-  SHOW_LEGACY_DOMAINS_TABLE: 'SHOW_LEGACY_DOMAINS_TABLE'
+  CAMPAIGN_WIZARD_V1: 'CAMPAIGN_WIZARD_V1'
 } as const;
 
 // Phase 7 feature flags (Backend Canonical Integration)
@@ -113,24 +107,6 @@ export function useCampaignWizard(): boolean {
  */
 export function useUnifiedCampaignExperience(): boolean {
   return isFeatureEnabled(UX_REFACTOR_FLAGS.ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE, true);
-}
-
-/**
- * @deprecated Use useUnifiedCampaignExperience instead
- * Check if campaign overview V2 should be shown
- * This flag is now controlled by unified experience
- */
-export function useCampaignOverviewV2(): boolean {
-  return useUnifiedCampaignExperience();
-}
-
-/**
- * @deprecated Use useUnifiedCampaignExperience instead  
- * Check if legacy domains table should be shown (Phase 2)
- * This flag is now controlled by unified experience
- */
-export function useShowLegacyDomainsTable(): boolean {
-  return !useUnifiedCampaignExperience();
 }
 
 /**

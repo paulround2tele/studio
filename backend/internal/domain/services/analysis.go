@@ -1135,7 +1135,18 @@ func (s *analysisService) updateExecutionStatus(campaignID uuid.UUID, status mod
 		case models.PhaseStatusCompleted:
 			_ = s.store.CompletePhase(ctx, exec, campaignID, models.PhaseTypeAnalysis)
 		case models.PhaseStatusFailed:
-			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeAnalysis, errorMsg)
+			failureContext := map[string]interface{}{
+				"itemsProcessed": execution.ItemsProcessed,
+				"itemsTotal":     execution.ItemsTotal,
+				"progressPct":    execution.Progress,
+			}
+			failureDetails := buildPhaseFailureDetails(
+				models.PhaseTypeAnalysis,
+				status,
+				errorMsg,
+				failureContext,
+			)
+			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeAnalysis, errorMsg, failureDetails)
 		case models.PhaseStatusPaused:
 			_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeAnalysis)
 		}

@@ -1943,8 +1943,21 @@ func (s *campaignStorePostgres) PausePhase(ctx context.Context, exec store.Queri
 	return nil
 }
 
-func (s *campaignStorePostgres) FailPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string) error {
-	now := time.Now()
+func (s *campaignStorePostgres) FailPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string, errorDetails map[string]interface{}) error {
+	if exec == nil {
+		exec = s.db
+	}
+	now := time.Now().UTC()
+
+	var errorDetailsJSON interface{}
+	if errorDetails != nil {
+		payload, err := json.Marshal(errorDetails)
+		if err != nil {
+			return fmt.Errorf("failed to marshal error details for phase %s campaign %s: %w", phaseType, campaignID, err)
+		}
+		errorDetailsJSON = json.RawMessage(payload)
+	}
+
 	query := `
 		UPDATE campaign_phases 
 		SET status = 'failed',
@@ -1960,6 +1973,19 @@ func (s *campaignStorePostgres) FailPhase(ctx context.Context, exec store.Querie
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
 		return fmt.Errorf("no phase %s found for campaign %s", phaseType, campaignID)
+	}
+
+	phaseExecQuery := `
+		INSERT INTO phase_executions (campaign_id, phase_type, status, failed_at, error_details, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+		ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
+			status = EXCLUDED.status,
+			failed_at = COALESCE(phase_executions.failed_at, EXCLUDED.failed_at),
+			error_details = COALESCE(EXCLUDED.error_details, phase_executions.error_details),
+			updated_at = NOW()`
+
+	if _, err := exec.ExecContext(ctx, phaseExecQuery, campaignID, phaseType, models.ExecutionStatusFailed, now, errorDetailsJSON); err != nil {
+		return fmt.Errorf("failed to persist phase execution failure state for phase %s campaign %s: %w", phaseType, campaignID, err)
 	}
 
 	log.Printf("Failed phase %s for campaign %s: %s", phaseType, campaignID, errorMessage)
