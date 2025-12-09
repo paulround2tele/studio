@@ -38,16 +38,26 @@ func TestGetCampaignStatusReturnsPhaseData(t *testing.T) {
 	completedDNS := startedDNS.Add(20 * time.Minute)
 	startedHTTP := time.Now().Add(-60 * time.Minute).UTC()
 
-	query := `SELECT phase_type, phase_order, status, progress_percentage, started_at, completed_at, failed_at, error_message
-	               FROM campaign_phases
-	               WHERE campaign_id = $1
-	               ORDER BY phase_order ASC`
+	query := `SELECT 
+		COALESCE(cp.phase_type::text, pe.phase_type::text) AS phase_type,
+		COALESCE(cp.phase_order, 0) AS phase_order,
+		COALESCE(pe.status::text, cp.status::text) AS status,
+		COALESCE(pe.progress_percentage, cp.progress_percentage) AS progress_percentage,
+		COALESCE(pe.started_at, cp.started_at) AS started_at,
+		COALESCE(pe.completed_at, cp.completed_at) AS completed_at,
+		COALESCE(pe.failed_at, cp.failed_at) AS failed_at,
+		pe.error_details->>'message' AS error_message,
+		pe.error_details
+	   FROM campaign_phases cp
+	   FULL OUTER JOIN phase_executions pe ON pe.campaign_id = cp.campaign_id AND pe.phase_type = cp.phase_type
+	   WHERE COALESCE(cp.campaign_id, pe.campaign_id) = $1
+	   ORDER BY COALESCE(cp.phase_order, 0) ASC`
 
-	rows := sqlmock.NewRows([]string{"phase_type", "phase_order", "status", "progress_percentage", "started_at", "completed_at", "failed_at", "error_message"}).
-		AddRow("domain_generation", 1, "completed", 100.0, startedGeneration, completedGeneration, nil, nil).
-		AddRow("dns_validation", 2, "completed", 100.0, startedDNS, completedDNS, nil, nil).
-		AddRow("http_keyword_validation", 3, "in_progress", 75.0, startedHTTP, nil, nil, nil).
-		AddRow("enrichment", 4, "configured", nil, nil, nil, nil, nil)
+	rows := sqlmock.NewRows([]string{"phase_type", "phase_order", "status", "progress_percentage", "started_at", "completed_at", "failed_at", "error_message", "error_details"}).
+		AddRow("domain_generation", 1, "completed", 100.0, startedGeneration, completedGeneration, nil, nil, nil).
+		AddRow("dns_validation", 2, "completed", 100.0, startedDNS, completedDNS, nil, nil, nil).
+		AddRow("http_keyword_validation", 3, "in_progress", 75.0, startedHTTP, nil, nil, nil, nil).
+		AddRow("enrichment", 4, "configured", nil, nil, nil, nil, nil, nil)
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(campaignID).
@@ -133,12 +143,22 @@ func TestGetCampaignStatusDefaultsWhenNoRows(t *testing.T) {
 
 	campaignID := uuid.New()
 
-	query := `SELECT phase_type, phase_order, status, progress_percentage, started_at, completed_at, failed_at, error_message
-	               FROM campaign_phases
-	               WHERE campaign_id = $1
-	               ORDER BY phase_order ASC`
+	query := `SELECT 
+		COALESCE(cp.phase_type::text, pe.phase_type::text) AS phase_type,
+		COALESCE(cp.phase_order, 0) AS phase_order,
+		COALESCE(pe.status::text, cp.status::text) AS status,
+		COALESCE(pe.progress_percentage, cp.progress_percentage) AS progress_percentage,
+		COALESCE(pe.started_at, cp.started_at) AS started_at,
+		COALESCE(pe.completed_at, cp.completed_at) AS completed_at,
+		COALESCE(pe.failed_at, cp.failed_at) AS failed_at,
+		pe.error_details->>'message' AS error_message,
+		pe.error_details
+	   FROM campaign_phases cp
+	   FULL OUTER JOIN phase_executions pe ON pe.campaign_id = cp.campaign_id AND pe.phase_type = cp.phase_type
+	   WHERE COALESCE(cp.campaign_id, pe.campaign_id) = $1
+	   ORDER BY COALESCE(cp.phase_order, 0) ASC`
 
-	rows := sqlmock.NewRows([]string{"phase_type", "phase_order", "status", "progress_percentage", "started_at", "completed_at", "failed_at", "error_message"})
+	rows := sqlmock.NewRows([]string{"phase_type", "phase_order", "status", "progress_percentage", "started_at", "completed_at", "failed_at", "error_message", "error_details"})
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(campaignID).
@@ -171,6 +191,97 @@ func TestGetCampaignStatusDefaultsWhenNoRows(t *testing.T) {
 
 	if dto.OverallProgressPercentage != 0 {
 		t.Fatalf("expected overall progress 0, got %f", dto.OverallProgressPercentage)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("sql expectations: %v", err)
+	}
+}
+
+func TestGetCampaignStatusIncludesErrorDetails(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("sqlmock: %v", err)
+	}
+	defer db.Close()
+
+	repo := stubAggregatesRepo{db: db}
+	cache := NewAggregatesCache()
+
+	campaignID := uuid.New()
+
+	failedAt := time.Now().Add(-10 * time.Minute).UTC()
+	errorDetailsJSON := []byte(`{"code":"TIMEOUT","message":"DNS resolver timeout","context":{"timeout_ms":5000,"resolver":"8.8.8.8"}}`)
+
+	query := `SELECT 
+		COALESCE(cp.phase_type::text, pe.phase_type::text) AS phase_type,
+		COALESCE(cp.phase_order, 0) AS phase_order,
+		COALESCE(pe.status::text, cp.status::text) AS status,
+		COALESCE(pe.progress_percentage, cp.progress_percentage) AS progress_percentage,
+		COALESCE(pe.started_at, cp.started_at) AS started_at,
+		COALESCE(pe.completed_at, cp.completed_at) AS completed_at,
+		COALESCE(pe.failed_at, cp.failed_at) AS failed_at,
+		pe.error_details->>'message' AS error_message,
+		pe.error_details
+	   FROM campaign_phases cp
+	   FULL OUTER JOIN phase_executions pe ON pe.campaign_id = cp.campaign_id AND pe.phase_type = cp.phase_type
+	   WHERE COALESCE(cp.campaign_id, pe.campaign_id) = $1
+	   ORDER BY COALESCE(cp.phase_order, 0) ASC`
+
+	rows := sqlmock.NewRows([]string{"phase_type", "phase_order", "status", "progress_percentage", "started_at", "completed_at", "failed_at", "error_message", "error_details"}).
+		AddRow("dns_validation", 2, "failed", 45.0, time.Now().Add(-30*time.Minute), nil, failedAt, "DNS resolver timeout", errorDetailsJSON)
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(campaignID).
+		WillReturnRows(rows)
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT error_message FROM lead_generation_campaigns WHERE id = $1`)).
+		WithArgs(campaignID).
+		WillReturnRows(sqlmock.NewRows([]string{"error_message"}).AddRow(nil))
+
+	dto, err := GetCampaignStatus(context.Background(), repo, cache, campaignID)
+	if err != nil {
+		t.Fatalf("GetCampaignStatus returned error: %v", err)
+	}
+
+	var dnsPhase *PhaseStatusItem
+	for i, phase := range dto.Phases {
+		if phase.Phase == "dns_validation" {
+			dnsPhase = &dto.Phases[i]
+			break
+		}
+	}
+
+	if dnsPhase == nil {
+		t.Fatalf("expected dns_validation phase to be present")
+	}
+
+	if dnsPhase.Status != "failed" {
+		t.Fatalf("expected dns phase status failed, got %s", dnsPhase.Status)
+	}
+
+	if dnsPhase.ErrorMessage == nil || *dnsPhase.ErrorMessage != "DNS resolver timeout" {
+		t.Fatalf("expected error message to be present")
+	}
+
+	if dnsPhase.ErrorDetails == nil {
+		t.Fatalf("expected errorDetails to be present")
+	}
+
+	if code, ok := dnsPhase.ErrorDetails["code"].(string); !ok || code != "TIMEOUT" {
+		t.Fatalf("expected errorDetails.code to be TIMEOUT, got %v", dnsPhase.ErrorDetails["code"])
+	}
+
+	if msg, ok := dnsPhase.ErrorDetails["message"].(string); !ok || msg != "DNS resolver timeout" {
+		t.Fatalf("expected errorDetails.message to be 'DNS resolver timeout', got %v", dnsPhase.ErrorDetails["message"])
+	}
+
+	if context, ok := dnsPhase.ErrorDetails["context"].(map[string]interface{}); !ok {
+		t.Fatalf("expected errorDetails.context to be present")
+	} else {
+		if timeout, ok := context["timeout_ms"].(float64); !ok || timeout != 5000 {
+			t.Fatalf("expected errorDetails.context.timeout_ms to be 5000, got %v", context["timeout_ms"])
+		}
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {

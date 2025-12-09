@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,7 +23,22 @@ import (
 var (
 	// ErrMissingPhaseConfigs signals one or more downstream phase configurations are missing.
 	ErrMissingPhaseConfigs = fmt.Errorf("missing_phase_configs")
+	// ErrPhaseDependenciesNotMet indicates a requested phase attempted to start before its prerequisites completed.
+	ErrPhaseDependenciesNotMet = fmt.Errorf("phase_dependencies_not_met")
 )
+
+// PhaseDependencyError captures structured context when dependency gating prevents a phase from starting.
+type PhaseDependencyError struct {
+	Phase          models.PhaseTypeEnum
+	BlockingPhase  models.PhaseTypeEnum
+	BlockingStatus models.PhaseStatusEnum
+}
+
+func (e *PhaseDependencyError) Error() string {
+	return fmt.Sprintf("%s cannot start until %s is completed (current status: %s)", e.Phase, e.BlockingPhase, e.BlockingStatus)
+}
+
+func (e *PhaseDependencyError) Unwrap() error { return ErrPhaseDependenciesNotMet }
 
 // MissingPhaseConfigsError wraps ErrMissingPhaseConfigs with the concrete missing phases list.
 type MissingPhaseConfigsError struct {
@@ -72,6 +88,19 @@ type CampaignExecution struct {
 	CompletedAt   *time.Time                                           `json:"completed_at,omitempty"`
 	OverallStatus models.PhaseStatusEnum                               `json:"overall_status"`
 	LastError     string                                               `json:"last_error,omitempty"`
+}
+
+// CampaignRestartResult summarizes which phases were re-queued during a restart attempt.
+type CampaignRestartResult struct {
+	RestartedPhases []models.PhaseTypeEnum
+	FailedPhases    map[models.PhaseTypeEnum]error
+}
+
+var restartablePhaseOrder = []models.PhaseTypeEnum{
+	models.PhaseTypeDNSValidation,
+	models.PhaseTypeHTTPKeywordValidation,
+	models.PhaseTypeAnalysis,
+	models.PhaseTypeEnrichment,
 }
 
 // NewCampaignOrchestrator creates a new campaign orchestrator
@@ -285,6 +314,10 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		}
 	}
 
+	if err := o.ensurePhaseDependencies(ctx, querier, campaignID, phase); err != nil {
+		return err
+	}
+
 	if err := o.ensurePhaseDefaultConfig(ctx, querier, campaignID, phase); err != nil {
 		return fmt.Errorf("failed to ensure default configuration for %s: %w", phase, err)
 	}
@@ -480,6 +513,9 @@ func (o *CampaignOrchestrator) CancelPhase(ctx context.Context, campaignID uuid.
 
 	// Cancel the phase
 	if err := service.Cancel(ctx, campaignID); err != nil {
+		if errors.Is(err, domainservices.ErrPhaseExecutionMissing) || errors.Is(err, domainservices.ErrPhaseNotRunning) {
+			return err
+		}
 		return fmt.Errorf("failed to cancel phase %s: %w", phase, err)
 	}
 	// (Optional) Could add a dedicated cancellation metric in future.
@@ -490,6 +526,153 @@ func (o *CampaignOrchestrator) CancelPhase(ctx context.Context, campaignID uuid.
 	})
 
 	return nil
+}
+
+// PausePhase transitions an in-progress phase to paused and halts execution.
+func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	if o.store == nil {
+		return fmt.Errorf("campaign store not initialized")
+	}
+	o.deps.Logger.Info(ctx, "Pausing campaign phase", map[string]interface{}{
+		"campaign_id": campaignID,
+		"phase":       phase,
+	})
+
+	service, err := o.getPhaseService(phase)
+	if err != nil {
+		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
+	}
+	if err := service.Cancel(ctx, campaignID); err != nil {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "phase pause cancel failed", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"error":       err.Error(),
+			})
+		}
+	}
+
+	querier, ok := o.deps.DB.(store.Querier)
+	if !ok {
+		return fmt.Errorf("invalid database interface in dependencies")
+	}
+	if err := o.store.PausePhase(ctx, querier, campaignID, phase); err != nil {
+		return fmt.Errorf("failed to mark phase %s paused: %w", phase, err)
+	}
+
+	o.deps.Logger.Info(ctx, "Phase paused successfully", map[string]interface{}{
+		"campaign_id": campaignID,
+		"phase":       phase,
+	})
+	return nil
+}
+
+// RestartCampaign replays all restartable phases sequentially, skipping discovery/domain generation.
+func (o *CampaignOrchestrator) RestartCampaign(ctx context.Context, campaignID uuid.UUID) (*CampaignRestartResult, error) {
+	if o == nil {
+		return nil, fmt.Errorf("orchestrator not initialized")
+	}
+	result := &CampaignRestartResult{
+		RestartedPhases: make([]models.PhaseTypeEnum, 0, len(restartablePhaseOrder)),
+		FailedPhases:    make(map[models.PhaseTypeEnum]error),
+	}
+
+	mode := o.campaignMode(ctx, campaignID)
+	if mode == "full_sequence" {
+		phase := restartablePhaseOrder[0]
+		if err := o.StartPhaseInternal(ctx, campaignID, phase); err != nil {
+			result.FailedPhases[phase] = err
+			return result, err
+		}
+		result.RestartedPhases = append(result.RestartedPhases, phase)
+		return result, nil
+	}
+
+	for _, phase := range restartablePhaseOrder {
+		if err := o.StartPhaseInternal(ctx, campaignID, phase); err != nil {
+			result.FailedPhases[phase] = err
+			continue
+		}
+		result.RestartedPhases = append(result.RestartedPhases, phase)
+	}
+
+	if len(result.RestartedPhases) == 0 && len(result.FailedPhases) > 0 {
+		return result, fmt.Errorf("failed to restart any campaign phases: %w", firstRestartError(result.FailedPhases))
+	}
+
+	return result, nil
+}
+
+func firstRestartError(errs map[models.PhaseTypeEnum]error) error {
+	for _, err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// campaignMode resolves the configured execution mode for a campaign, defaulting to step_by_step on lookup errors.
+func (o *CampaignOrchestrator) campaignMode(ctx context.Context, campaignID uuid.UUID) string {
+	if o == nil || o.store == nil || o.deps.DB == nil {
+		return "step_by_step"
+	}
+	querier, ok := o.deps.DB.(store.Querier)
+	if !ok {
+		return "step_by_step"
+	}
+	if mode, err := o.store.GetCampaignMode(ctx, querier, campaignID); err == nil {
+		return mode
+	}
+	return "step_by_step"
+}
+
+func (o *CampaignOrchestrator) ensurePhaseDependencies(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	if o == nil || exec == nil || o.store == nil {
+		return nil
+	}
+	required, ok := upstreamPhase(phase)
+	if !ok {
+		return nil
+	}
+	blocking, err := o.store.GetCampaignPhase(ctx, exec, campaignID, required)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, store.ErrNotFound) || strings.Contains(err.Error(), "not found") {
+			blocking = nil
+		} else {
+			return err
+		}
+	}
+	status := models.PhaseStatusNotStarted
+	if blocking != nil {
+		status = blocking.Status
+	}
+	if dependencySatisfied(status) {
+		return nil
+	}
+	return &PhaseDependencyError{Phase: phase, BlockingPhase: required, BlockingStatus: status}
+}
+
+func dependencySatisfied(status models.PhaseStatusEnum) bool {
+	switch status {
+	case models.PhaseStatusCompleted, models.PhaseStatusSkipped:
+		return true
+	default:
+		return false
+	}
+}
+
+func upstreamPhase(phase models.PhaseTypeEnum) (models.PhaseTypeEnum, bool) {
+	switch phase {
+	case models.PhaseTypeHTTPKeywordValidation:
+		return models.PhaseTypeDNSValidation, true
+	case models.PhaseTypeAnalysis:
+		return models.PhaseTypeHTTPKeywordValidation, true
+	case models.PhaseTypeEnrichment:
+		return models.PhaseTypeAnalysis, true
+	default:
+		return "", false
+	}
 }
 
 // ValidatePhaseConfiguration validates a phase configuration before execution
@@ -808,18 +991,7 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 		if !ok {
 			return
 		}
-		// Under strict model A mid-chain gating is removed; auto-advance simply attempts next phase assuming pre-validation.
-		// Ensure next phase isn't already completed
-		if nextPhaseRow, err := o.store.GetCampaignPhase(ctx, querier, campaignID, next); err == nil {
-			if nextPhaseRow.Status == models.PhaseStatusCompleted {
-				if chainedNext, ok2 := o.nextPhase(next); ok2 { // chain again if needed
-					next = chainedNext
-				} else {
-					_ = o.HandleCampaignCompletion(ctx, campaignID)
-					return
-				}
-			}
-		}
+		// Under strict model A mid-chain gating is removed; auto-advance simply attempts the next phase assuming pre-validation.
 		key := campaignID.String() + ":" + string(next)
 		o.mu.Lock()
 		if _, exists := o.autoStartInProgress[key]; exists {

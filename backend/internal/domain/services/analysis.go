@@ -650,11 +650,11 @@ func (s *analysisService) Cancel(ctx context.Context, campaignID uuid.UUID) erro
 
 	execution, exists := s.executions[campaignID]
 	if !exists {
-		return fmt.Errorf("no analysis in progress for campaign %s", campaignID)
+		return fmt.Errorf("%w: no analysis in progress for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
 
 	if execution.Status != models.PhaseStatusInProgress {
-		return fmt.Errorf("analysis not in progress for campaign %s", campaignID)
+		return fmt.Errorf("%w: analysis not in progress for campaign %s", ErrPhaseNotRunning, campaignID)
 	}
 
 	// Signal cancellation

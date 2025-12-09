@@ -18,6 +18,7 @@ export interface PipelinePhase {
   failedAt?: string;
   lastMessage?: string;
   errorMessage?: string;
+  errorDetails?: Record<string, unknown>;
   lastEventAt?: string;
 }
 
@@ -106,6 +107,8 @@ function PipelinePhaseCard({
 }) {
   const config = resolveStatusConfig(phase.status);
   const Icon = config.icon;
+  const failureText = resolvePhaseErrorText(phase);
+  const showFailureSection = phase.status === 'failed' && (failureText || phase.errorDetails);
 
   const showBadge = showAutoStartBadge && isAutoMode && (
     phase.status === 'in_progress' || 
@@ -161,10 +164,25 @@ function PipelinePhaseCard({
         </div>
       )}
 
-      {phase.status === 'failed' && (phase.errorMessage || phase.lastMessage) && (
-        <p className="mt-3 text-xs text-red-700 dark:text-red-300 line-clamp-3" title={phase.errorMessage || phase.lastMessage}>
-          {phase.errorMessage || phase.lastMessage}
-        </p>
+      {showFailureSection && (
+        <div className="mt-3 text-xs">
+          <p
+            className="text-red-700 dark:text-red-300 line-clamp-2"
+            title={failureText ?? undefined}
+          >
+            {failureText ?? 'Phase failed. Expand for more details.'}
+          </p>
+          {phase.errorDetails && (
+            <details className="mt-2">
+              <summary className="cursor-pointer text-red-600 dark:text-red-400 hover:underline text-xs">
+                View error details
+              </summary>
+              <pre className="mt-1 p-2 bg-red-50 dark:bg-red-900/10 text-red-800 dark:text-red-200 rounded text-xs overflow-x-auto">
+                {JSON.stringify(phase.errorDetails, null, 2)}
+              </pre>
+            </details>
+          )}
+        </div>
       )}
     </div>
   );
@@ -209,4 +227,38 @@ export function PipelineBar({
       ))}
     </div>
   );
+}
+
+function resolvePhaseErrorText(phase: PipelinePhase): string | null {
+  return (
+    extractErrorMessageFromDetails(phase.errorDetails)
+    ?? sanitizePhaseMessage(phase.errorMessage)
+    ?? sanitizePhaseMessage(phase.lastMessage)
+  );
+}
+
+function extractErrorMessageFromDetails(details?: Record<string, unknown> | null): string | null {
+  if (!details || typeof details !== 'object') {
+    return null;
+  }
+
+  const candidate = (details as Record<string, unknown>).message
+    ?? (details as Record<string, unknown>).error
+    ?? (details as Record<string, unknown>).reason;
+
+  if (typeof candidate !== 'string') {
+    return null;
+  }
+
+  const trimmed = candidate.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function sanitizePhaseMessage(message?: string | null): string | null {
+  if (typeof message !== 'string') {
+    return null;
+  }
+
+  const trimmed = message.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }

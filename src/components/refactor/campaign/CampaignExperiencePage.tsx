@@ -14,6 +14,7 @@ import type { SerializedError } from '@reduxjs/toolkit';
 
 import { KpiGrid } from './KpiGrid';
 import { PipelineBar } from './PipelineBar';
+import type { PipelinePhase } from './PipelineBar';
 import { FunnelSnapshot } from './FunnelSnapshot';
 import { RecommendationPanel } from './RecommendationPanel';
 import { LeadResultsPanel } from './LeadResultsPanel';
@@ -30,6 +31,8 @@ import { MoverList } from './MoverList';
 import { Histogram } from './Histogram';
 import { mergeCampaignPhases } from './phaseStatusUtils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useCampaignPhaseStream } from '@/hooks/useCampaignPhaseStream';
 import { 
@@ -40,10 +43,17 @@ import {
   useGetCampaignDomainsQuery,
   useGetCampaignClassificationsQuery,
   useGetCampaignMomentumQuery,
-  useGetCampaignStatusQuery
+  useGetCampaignStatusQuery,
+  useRestartCampaignMutation,
+  useStartPhaseStandaloneMutation,
+  usePausePhaseStandaloneMutation,
+  useStopPhaseStandaloneMutation
 } from '@/store/api/campaignApi';
 import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
-import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import { API_PHASE_ORDER, normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import type { ApiPhase } from '@/lib/utils/phaseNames';
+import type { CampaignPhaseEnum } from '@/lib/api-client/models/campaign-phase-enum';
+import { useToast } from '@/hooks/use-toast';
 
 import type { CampaignKpi } from '../types';
 import type { WarningData } from './WarningDistribution';
@@ -114,9 +124,71 @@ function formatFailureTimestamp(value?: string): string | null {
   });
 }
 
+function sanitizePhaseErrorText(message?: string | null): string | null {
+  if (typeof message !== 'string') {
+    return null;
+  }
+
+  const trimmed = message.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function extractPhaseErrorDetailsMessage(details?: Record<string, unknown> | null): string | null {
+  if (!details || typeof details !== 'object') {
+    return null;
+  }
+
+  const candidate = (details as Record<string, unknown>).message
+    ?? (details as Record<string, unknown>).error
+    ?? (details as Record<string, unknown>).reason;
+
+  if (typeof candidate !== 'string') {
+    return null;
+  }
+
+  const trimmed = candidate.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function formatPhaseActionError(error: unknown): string {
+  if (!error) {
+    return 'Unable to complete the request. Please try again.';
+  }
+
+  const fetchLike = error as (FetchBaseQueryError & { data?: { message?: unknown } }) | undefined;
+  if (fetchLike && typeof fetchLike === 'object' && 'status' in fetchLike) {
+    const payloadMessage = typeof fetchLike.data?.message === 'string' ? fetchLike.data!.message.trim() : '';
+    if (payloadMessage) {
+      return payloadMessage;
+    }
+    if (typeof fetchLike.status === 'number') {
+      return `Request failed (${fetchLike.status})`;
+    }
+    if (typeof fetchLike.status === 'string') {
+      return `Request failed (${fetchLike.status})`;
+    }
+  }
+
+  if (typeof (error as { message?: unknown })?.message === 'string') {
+    const direct = (error as { message: string }).message.trim();
+    if (direct) {
+      return direct;
+    }
+  }
+
+  return 'Unable to complete the request. Please try again.';
+}
+
 export function CampaignExperiencePage({ className: _className, role: _role = "region" }: CampaignExperiencePageProps) {
   const params = useParams();
   const campaignId = params?.id as string;
+  const { toast } = useToast();
+  const [startPhaseMutation, { isLoading: isStartPhaseLoading }] = useStartPhaseStandaloneMutation();
+  const [pausePhaseMutation, { isLoading: isPausePhaseLoading }] = usePausePhaseStandaloneMutation();
+  const [stopPhaseMutation, { isLoading: isStopPhaseLoading }] = useStopPhaseStandaloneMutation();
+  const [restartCampaignMutation] = useRestartCampaignMutation();
+  const [selectedPhaseKey, setSelectedPhaseKey] = React.useState<ApiPhase>('validation');
+  const [bulkAction, setBulkAction] = React.useState<'idle' | 'retryFailed' | 'restartCampaign'>('idle');
 
   const [leadResultLimit, setLeadResultLimit] = React.useState(LEAD_DOMAIN_DEFAULT_LIMIT);
 
@@ -188,13 +260,194 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     sseLastUpdate: lastUpdate
   }), [statusSnapshot, funnelData, phases, lastUpdate]);
 
-  const campaignErrorMessage = React.useMemo(() => {
-    const message = statusSnapshot?.errorMessage;
-    if (typeof message !== 'string') {
-      return null;
+  const phaseOptions = React.useMemo(() => {
+    return pipelinePhases
+      .map((phase) => {
+        const normalized = normalizeToApiPhase(String(phase.key).toLowerCase());
+        if (!normalized) {
+          return null;
+        }
+        return {
+          value: normalized as ApiPhase,
+          label: phase.label ?? getPhaseDisplayName(normalized as ApiPhase),
+          status: phase.status,
+        };
+        })
+        .filter((option): option is { value: ApiPhase; label: string; status: PipelinePhase['status'] } => {
+          if (!option) {
+            return false;
+          }
+          return option.value !== 'discovery';
+        });
+  }, [pipelinePhases]);
+
+  const failedPhaseKeys = React.useMemo(() => {
+    return pipelinePhases.reduce<ApiPhase[]>((acc, phase) => {
+      if (phase.status !== 'failed') {
+        return acc;
+      }
+      const normalized = normalizeToApiPhase(String(phase.key).toLowerCase());
+      if (normalized && normalized !== 'discovery' && !acc.includes(normalized as ApiPhase)) {
+        acc.push(normalized as ApiPhase);
+      }
+      return acc;
+    }, []);
+  }, [pipelinePhases]);
+
+  const orderedPhaseKeys = React.useMemo(() => {
+    const available = new Set<ApiPhase>(phaseOptions.map((option) => option.value));
+    return API_PHASE_ORDER.filter((phase) => phase !== 'discovery' && available.has(phase));
+  }, [phaseOptions]);
+
+  const preferredPhaseSelection = React.useMemo<ApiPhase>(() => {
+    if (failedPhaseKeys.length > 0) {
+      return failedPhaseKeys[0]!;
     }
-    const trimmed = message.trim();
-    return trimmed.length > 0 ? trimmed : null;
+    return phaseOptions[0]?.value ?? ('validation' as ApiPhase);
+  }, [failedPhaseKeys, phaseOptions]);
+
+  React.useEffect(() => {
+    if (selectedPhaseKey !== preferredPhaseSelection) {
+      setSelectedPhaseKey(preferredPhaseSelection);
+    }
+  }, [preferredPhaseSelection, selectedPhaseKey]);
+
+  const hasFailedPhases = failedPhaseKeys.length > 0;
+  const isBulkActionRunning = bulkAction !== 'idle';
+  const isRetryingFailed = bulkAction === 'retryFailed';
+  const isRestartingCampaign = bulkAction === 'restartCampaign';
+  const isActionDisabled = isStartPhaseLoading || isPausePhaseLoading || isStopPhaseLoading || isBulkActionRunning;
+
+  const startPhaseInternal = React.useCallback(
+    async (phaseKey: ApiPhase) => {
+      if (!campaignId) {
+        throw new Error('Campaign not found');
+      }
+      await startPhaseMutation({
+        campaignId,
+        phase: phaseKey as CampaignPhaseEnum,
+      }).unwrap();
+    },
+    [campaignId, startPhaseMutation]
+  );
+
+  const handleRunSelectedPhase = React.useCallback(async () => {
+    if (!selectedPhaseKey) {
+      return;
+    }
+    try {
+      await startPhaseInternal(selectedPhaseKey);
+      toast({
+        title: `${getPhaseDisplayName(selectedPhaseKey)} queued`,
+        description: 'Phase restart requested successfully.',
+      });
+    } catch (error) {
+      toast({
+        title: `Failed to start ${getPhaseDisplayName(selectedPhaseKey)}`,
+        description: formatPhaseActionError(error),
+        variant: 'destructive',
+      });
+    }
+  }, [selectedPhaseKey, startPhaseInternal, toast]);
+
+  const handlePauseSelectedPhase = React.useCallback(async () => {
+    if (!selectedPhaseKey || selectedPhaseKey === 'discovery' || !campaignId) {
+      return;
+    }
+    try {
+      await pausePhaseMutation({ campaignId, phase: selectedPhaseKey as CampaignPhaseEnum }).unwrap();
+      toast({
+        title: `${getPhaseDisplayName(selectedPhaseKey)} pause requested`,
+        description: 'Phase pause signal sent successfully.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Unable to pause phase',
+        description: formatPhaseActionError(error),
+        variant: 'destructive',
+      });
+    }
+  }, [campaignId, pausePhaseMutation, selectedPhaseKey, toast]);
+
+  const handleStopSelectedPhase = React.useCallback(async () => {
+    if (!selectedPhaseKey || selectedPhaseKey === 'discovery' || !campaignId) {
+      return;
+    }
+    try {
+      await stopPhaseMutation({ campaignId, phase: selectedPhaseKey as CampaignPhaseEnum }).unwrap();
+      toast({
+        title: `${getPhaseDisplayName(selectedPhaseKey)} stop requested`,
+        description: 'Phase will wind down and stop shortly.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Unable to stop phase',
+        description: formatPhaseActionError(error),
+        variant: 'destructive',
+      });
+    }
+  }, [campaignId, selectedPhaseKey, stopPhaseMutation, toast]);
+
+  const handleRetryFailedPhases = React.useCallback(async () => {
+    if (!failedPhaseKeys.length) {
+      return;
+    }
+    setBulkAction('retryFailed');
+    try {
+      for (const phaseKey of failedPhaseKeys) {
+        await startPhaseInternal(phaseKey);
+      }
+      toast({
+        title: 'Retry queued',
+        description: `Restarted ${failedPhaseKeys.length} failed phase${failedPhaseKeys.length > 1 ? 's' : ''}.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Unable to retry failed phases',
+        description: formatPhaseActionError(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setBulkAction('idle');
+    }
+  }, [failedPhaseKeys, startPhaseInternal, toast]);
+
+  const handleRestartCampaign = React.useCallback(async () => {
+    if (!orderedPhaseKeys.length || !campaignId) {
+      return;
+    }
+    setBulkAction('restartCampaign');
+    try {
+      const response = await restartCampaignMutation(campaignId).unwrap();
+      const restartedCount = response?.phasesRestarted?.length ?? 0;
+      const errorCount = response?.restartErrors?.length ?? 0;
+      const baseDescription = restartedCount
+        ? `Restarted ${restartedCount} phase${restartedCount === 1 ? '' : 's'} in order`
+        : 'No eligible phases were restarted';
+      const description = errorCount > 0 ? `${baseDescription}, but some phases reported errors.` : `${baseDescription}.`;
+      toast({
+        title: errorCount > 0 ? 'Campaign restart partially queued' : 'Campaign restart queued',
+        description,
+        variant: errorCount > 0 ? 'destructive' : undefined,
+      });
+    } catch (error) {
+      toast({
+        title: 'Unable to restart campaign',
+        description: formatPhaseActionError(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setBulkAction('idle');
+    }
+  }, [campaignId, orderedPhaseKeys.length, restartCampaignMutation, toast]);
+
+  const campaignErrorMessage = React.useMemo(() => {
+    const firstFailedPhaseErrorDetails = statusSnapshot?.phases?.find((phase) => phase.status === 'failed')?.errorDetails;
+    const detailsMessage = extractPhaseErrorDetailsMessage(firstFailedPhaseErrorDetails);
+    if (detailsMessage) {
+      return detailsMessage;
+    }
+    return sanitizePhaseErrorText(statusSnapshot?.errorMessage);
   }, [statusSnapshot]);
 
   const failedPhaseSummaries = React.useMemo(() => {
@@ -207,7 +460,9 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
       .map((phase, index) => ({
         key: `${phase.phase}-${phase.failedAt ?? index}`,
         label: formatPhaseLabelFromSnapshot(phase.phase),
-        description: (phase.errorMessage ?? 'Phase failed').trim(),
+        description: extractPhaseErrorDetailsMessage(phase.errorDetails)
+          ?? sanitizePhaseErrorText(phase.errorMessage)
+          ?? 'Phase failed',
         failedAtLabel: formatFailureTimestamp(phase.failedAt),
       }));
   }, [statusSnapshot]);
@@ -427,6 +682,82 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
           </Alert>
         )}
         <PipelineBar phases={pipelinePhases} />
+        <div className="mt-4 rounded-lg border bg-white p-4 shadow-sm dark:bg-gray-900/40">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+            <div className="flex-1 min-w-[220px]">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Select phase
+              </p>
+              <Select value={selectedPhaseKey} onValueChange={(value) => setSelectedPhaseKey(value as ApiPhase)}>
+                <SelectTrigger className="w-full min-w-[220px]">
+                  <SelectValue placeholder="Choose a phase" />
+                </SelectTrigger>
+                <SelectContent>
+                  {phaseOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Phases can be rerun even after completion for troubleshooting or updated data.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                onClick={handleRunSelectedPhase}
+                disabled={!selectedPhaseKey || isActionDisabled}
+                className="min-w-[150px]"
+              >
+                {isStartPhaseLoading && !isBulkActionRunning && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {isStartPhaseLoading && !isBulkActionRunning ? 'Starting…' : 'Run Selected Phase'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handlePauseSelectedPhase}
+                disabled={!selectedPhaseKey || isActionDisabled}
+                className="min-w-[150px]"
+              >
+                {isPausePhaseLoading && !isBulkActionRunning && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Pause Campaign
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleStopSelectedPhase}
+                disabled={!selectedPhaseKey || isActionDisabled}
+                className="min-w-[150px]"
+              >
+                {isStopPhaseLoading && !isBulkActionRunning && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Stop Campaign
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={handleRetryFailedPhases}
+                disabled={!hasFailedPhases || isActionDisabled}
+                className="min-w-[150px]"
+              >
+                {isRetryingFailed && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Retry Failed Phases
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleRestartCampaign}
+                disabled={isActionDisabled}
+                className="min-w-[150px]"
+              >
+                {isRestartingCampaign && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Restart Campaign
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* KPI Grid */}

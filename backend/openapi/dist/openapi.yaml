@@ -3427,6 +3427,40 @@ paths:
                         description: Phase identifiers that lack configuration
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/phases/{phase}/pause:
+    post:
+      tags:
+        - campaigns
+      summary: Pause campaign phase
+      description: Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+      operationId: campaigns_phase_pause
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: phase
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CampaignPhaseEnum'
+      responses:
+        '200':
+          description: Paused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhaseStatusResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/mode:
     put:
       tags:
@@ -3531,6 +3565,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PhaseStatusResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/restart:
+    post:
+      tags:
+        - campaigns
+      summary: Restart campaign pipeline (excludes discovery)
+      description: Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
+      operationId: campaigns_restart
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Restart scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignRestartResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -6918,6 +6981,55 @@ components:
         - mode
         - campaignId
         - updatedAt
+    CampaignRestartPhaseEnum:
+      type: string
+      description: Campaign phases eligible for manual restart controls (discovery executes offline and is excluded)
+      enum:
+        - validation
+        - extraction
+        - analysis
+        - enrichment
+    CampaignRestartResponse:
+      type: object
+      description: Summary of a restart request that replays all non-discovery phases sequentially.
+      properties:
+        campaignId:
+          type: string
+          format: uuid
+        message:
+          type: string
+          description: Human-readable status message summarizing the restart attempt.
+        phasesRestarted:
+          type: array
+          description: Ordered list of phases that were successfully re-queued.
+          items:
+            $ref: '#/components/schemas/CampaignRestartPhaseEnum'
+        skippedPhases:
+          type: array
+          description: Phases intentionally excluded from restart (always discovery today).
+          items:
+            $ref: '#/components/schemas/CampaignPhaseEnum'
+        restartErrors:
+          type: array
+          description: Optional per-phase error details when some phases could not be restarted.
+          items:
+            type: object
+            properties:
+              phase:
+                $ref: '#/components/schemas/CampaignRestartPhaseEnum'
+              message:
+                type: string
+            required:
+              - phase
+              - message
+        phaseStatuses:
+          type: array
+          description: Latest status snapshot for each restartable phase after enqueueing.
+          items:
+            $ref: '#/components/schemas/PhaseStatusResponse'
+      required:
+        - campaignId
+        - phasesRestarted
     CampaignPhasesStatusResponse:
       type: object
       description: Consolidated phase status list plus overall progress

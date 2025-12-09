@@ -1,0 +1,20 @@
+post:
+  tags: [campaigns]
+  summary: Restart campaign pipeline (excludes discovery)
+  description: Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
+  operationId: campaigns_restart
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: Restart scheduled
+      content:
+        application/json:
+          schema: { $ref: '../../components/schemas/all.yaml#/CampaignRestartResponse' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

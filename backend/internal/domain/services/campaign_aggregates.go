@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"sort"
 	"strings"
@@ -174,24 +175,26 @@ type StatusDTO struct {
 }
 
 type PhaseStatusItem struct {
-	Phase              string     `json:"phase"`
-	Status             string     `json:"status"`
-	ProgressPercentage float64    `json:"progressPercentage"`
-	StartedAt          *time.Time `json:"startedAt"`
-	CompletedAt        *time.Time `json:"completedAt"`
-	FailedAt           *time.Time `json:"failedAt"`
-	ErrorMessage       *string    `json:"errorMessage,omitempty"`
+	Phase              string                 `json:"phase"`
+	Status             string                 `json:"status"`
+	ProgressPercentage float64                `json:"progressPercentage"`
+	StartedAt          *time.Time             `json:"startedAt"`
+	CompletedAt        *time.Time             `json:"completedAt"`
+	FailedAt           *time.Time             `json:"failedAt"`
+	ErrorMessage       *string                `json:"errorMessage,omitempty"`
+	ErrorDetails       map[string]interface{} `json:"errorDetails,omitempty"`
 }
 
 type campaignPhaseRecord struct {
-	PhaseType   models.PhaseTypeEnum
-	PhaseOrder  int
-	Status      string
-	Progress    float64
-	StartedAt   *time.Time
-	CompletedAt *time.Time
-	FailedAt    *time.Time
-	ErrorMsg    *string
+	PhaseType    models.PhaseTypeEnum
+	PhaseOrder   int
+	Status       string
+	Progress     float64
+	StartedAt    *time.Time
+	CompletedAt  *time.Time
+	FailedAt     *time.Time
+	ErrorMsg     *string
+	ErrorDetails map[string]interface{}
 }
 
 // Repository abstraction (minimal) – adapt if broader store layer exists
@@ -266,6 +269,7 @@ func buildPhaseStatusItem(fallbackType models.PhaseTypeEnum, record *campaignPha
 	var completedAt *time.Time
 	var failedAt *time.Time
 	var errorMessage *string
+	var errorDetails map[string]interface{}
 
 	if record != nil {
 		if record.PhaseType != "" {
@@ -280,6 +284,7 @@ func buildPhaseStatusItem(fallbackType models.PhaseTypeEnum, record *campaignPha
 		completedAt = record.CompletedAt
 		failedAt = record.FailedAt
 		errorMessage = record.ErrorMsg
+		errorDetails = record.ErrorDetails
 	}
 
 	progress = clampProgress(progress)
@@ -314,6 +319,7 @@ func buildPhaseStatusItem(fallbackType models.PhaseTypeEnum, record *campaignPha
 		CompletedAt:        completedAt,
 		FailedAt:           failedAt,
 		ErrorMessage:       errorMessage,
+		ErrorDetails:       errorDetails,
 	}
 }
 
@@ -477,10 +483,20 @@ func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *Ag
 	campaignAggregationCacheHits.WithLabelValues("status", "miss").Inc()
 
 	start := time.Now()
-	query := `SELECT phase_type, phase_order, status, progress_percentage, started_at, completed_at, failed_at, error_message
-			   FROM campaign_phases
-			   WHERE campaign_id = $1
-			   ORDER BY phase_order ASC`
+	query := `SELECT 
+		COALESCE(cp.phase_type::text, pe.phase_type::text) AS phase_type,
+		COALESCE(cp.phase_order, 0) AS phase_order,
+		COALESCE(pe.status::text, cp.status::text) AS status,
+		COALESCE(pe.progress_percentage, cp.progress_percentage) AS progress_percentage,
+		COALESCE(pe.started_at, cp.started_at) AS started_at,
+		COALESCE(pe.completed_at, cp.completed_at) AS completed_at,
+		COALESCE(pe.failed_at, cp.failed_at) AS failed_at,
+		pe.error_details->>'message' AS error_message,
+		pe.error_details
+	   FROM campaign_phases cp
+	   FULL OUTER JOIN phase_executions pe ON pe.campaign_id = cp.campaign_id AND pe.phase_type = cp.phase_type
+	   WHERE COALESCE(cp.campaign_id, pe.campaign_id) = $1
+	   ORDER BY COALESCE(cp.phase_order, 0) ASC`
 
 	phaseRecords := make(map[models.PhaseTypeEnum]*campaignPhaseRecord)
 
@@ -495,24 +511,31 @@ func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *Ag
 
 	for rows.Next() {
 		var (
-			phaseTypeStr string
-			phaseOrder   int
-			status       string
-			progressRaw  sql.NullFloat64
-			startedRaw   sql.NullTime
-			completedRaw sql.NullTime
-			failedRaw    sql.NullTime
-			errorRaw     sql.NullString
+			phaseTypeStr    sql.NullString
+			phaseOrder      int
+			status          sql.NullString
+			progressRaw     sql.NullFloat64
+			startedRaw      sql.NullTime
+			completedRaw    sql.NullTime
+			failedRaw       sql.NullTime
+			errorRaw        sql.NullString
+			errorDetailsRaw []byte
 		)
 
-		if err := rows.Scan(&phaseTypeStr, &phaseOrder, &status, &progressRaw, &startedRaw, &completedRaw, &failedRaw, &errorRaw); err != nil {
+		if err := rows.Scan(&phaseTypeStr, &phaseOrder, &status, &progressRaw, &startedRaw, &completedRaw, &failedRaw, &errorRaw, &errorDetailsRaw); err != nil {
 			return StatusDTO{}, err
 		}
 
+		if !phaseTypeStr.Valid || phaseTypeStr.String == "" {
+			continue
+		}
+
 		record := &campaignPhaseRecord{
-			PhaseType:  models.PhaseTypeEnum(phaseTypeStr),
+			PhaseType:  models.PhaseTypeEnum(phaseTypeStr.String),
 			PhaseOrder: phaseOrder,
-			Status:     status,
+		}
+		if status.Valid {
+			record.Status = status.String
 		}
 		if progressRaw.Valid {
 			record.Progress = progressRaw.Float64
@@ -532,6 +555,12 @@ func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *Ag
 		if errorRaw.Valid {
 			err := errorRaw.String
 			record.ErrorMsg = &err
+		}
+		if len(errorDetailsRaw) > 0 {
+			var details map[string]interface{}
+			if err := json.Unmarshal(errorDetailsRaw, &details); err == nil {
+				record.ErrorDetails = details
+			}
 		}
 
 		phaseRecords[record.PhaseType] = record

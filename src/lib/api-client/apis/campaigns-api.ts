@@ -62,6 +62,8 @@ import type { CampaignRecommendationsResponse } from '../models';
 // @ts-ignore
 import type { CampaignResponse } from '../models';
 // @ts-ignore
+import type { CampaignRestartResponse } from '../models';
+// @ts-ignore
 import type { CampaignState } from '../models';
 // @ts-ignore
 import type { CampaignStateUpdate } from '../models';
@@ -1274,6 +1276,50 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
+         * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+         * @summary Pause campaign phase
+         * @param {string} campaignId 
+         * @param {CampaignPhaseEnum} phase 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhasePause: async (campaignId: string, phase: CampaignPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsPhasePause', 'campaignId', campaignId)
+            // verify required parameter 'phase' is not null or undefined
+            assertParamExists('campaignsPhasePause', 'phase', phase)
+            const localVarPath = `/campaigns/{campaignId}/phases/{phase}/pause`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)))
+                .replace(`{${"phase"}}`, encodeURIComponent(String(phase)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+
+            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
+            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
+            const localVarQueryParameter: Record<string, unknown> = {};
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
+            if (baseOptions.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            
+            if (options.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            localVarRequestOptions.headers = headerParams.toJSON();
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * 
          * @summary Start campaign phase
          * @param {string} campaignId 
@@ -1462,6 +1508,46 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
 
             const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
+            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
+            const localVarQueryParameter: Record<string, unknown> = {};
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
+            if (baseOptions.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            
+            if (options.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            localVarRequestOptions.headers = headerParams.toJSON();
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
+         * @summary Restart campaign pipeline (excludes discovery)
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsRestart: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsRestart', 'campaignId', campaignId)
+            const localVarPath = `/campaigns/{campaignId}/restart`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+
+            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
             const localVarQueryParameter: Record<string, unknown> = {};
 
@@ -2188,6 +2274,20 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+         * @summary Pause campaign phase
+         * @param {string} campaignId 
+         * @param {CampaignPhaseEnum} phase 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhasePause(campaignId, phase, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhasePause']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * 
          * @summary Start campaign phase
          * @param {string} campaignId 
@@ -2253,6 +2353,19 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsRecommendationsGet(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsRecommendationsGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
+         * @summary Restart campaign pipeline (excludes discovery)
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsRestart(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignRestartResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsRestart(campaignId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsRestart']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -2654,6 +2767,17 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.campaignsPhaseExecutionsList(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
+         * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+         * @summary Pause campaign phase
+         * @param {string} campaignId 
+         * @param {CampaignPhaseEnum} phase 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
+            return localVarFp.campaignsPhasePause(campaignId, phase, options).then((request) => request(axios, basePath));
+        },
+        /**
          * 
          * @summary Start campaign phase
          * @param {string} campaignId 
@@ -2705,6 +2829,16 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          */
         campaignsRecommendationsGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignRecommendationsResponse> {
             return localVarFp.campaignsRecommendationsGet(campaignId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
+         * @summary Restart campaign pipeline (excludes discovery)
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsRestart(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignRestartResponse> {
+            return localVarFp.campaignsRestart(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
          * Delete campaign state
@@ -3080,6 +3214,17 @@ export interface CampaignsApiInterface {
     campaignsPhaseExecutionsList(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignStateWithExecutions>;
 
     /**
+     * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+     * @summary Pause campaign phase
+     * @param {string} campaignId 
+     * @param {CampaignPhaseEnum} phase 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
+
+    /**
      * 
      * @summary Start campaign phase
      * @param {string} campaignId 
@@ -3131,6 +3276,16 @@ export interface CampaignsApiInterface {
      * @memberof CampaignsApiInterface
      */
     campaignsRecommendationsGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignRecommendationsResponse>;
+
+    /**
+     * Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
+     * @summary Restart campaign pipeline (excludes discovery)
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsRestart(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignRestartResponse>;
 
     /**
      * Delete campaign state
@@ -3558,6 +3713,19 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
     }
 
     /**
+     * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+     * @summary Pause campaign phase
+     * @param {string} campaignId 
+     * @param {CampaignPhaseEnum} phase 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsPhasePause(campaignId, phase, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * 
      * @summary Start campaign phase
      * @param {string} campaignId 
@@ -3618,6 +3786,18 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      */
     public campaignsRecommendationsGet(campaignId: string, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).campaignsRecommendationsGet(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
+     * @summary Restart campaign pipeline (excludes discovery)
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsRestart(campaignId: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsRestart(campaignId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

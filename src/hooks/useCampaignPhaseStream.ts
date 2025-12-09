@@ -24,6 +24,7 @@ export interface PhaseUpdateEvent {
   message?: string;
   lastMessage?: string;
   errorMessage?: string;
+  errorDetails?: Record<string, unknown>;
   lastEventAt?: string;
   failedAt?: string;
 }
@@ -54,7 +55,9 @@ export const DEFAULT_PHASES: PipelinePhase[] = API_PHASE_ORDER.map(buildDefaultP
 const SAFE_PROGRESS_MAX = 100;
 const PHASE_META_STORAGE_PREFIX = 'campaignPhaseMeta:';
 
-type PersistedPhaseMeta = Pick<PipelinePhase, 'lastMessage' | 'errorMessage' | 'lastEventAt' | 'failedAt'>;
+type PersistedPhaseMeta = Pick<PipelinePhase, 'lastMessage' | 'errorMessage' | 'lastEventAt' | 'failedAt'> & {
+  errorDetails?: Record<string, unknown>;
+};
 
 interface PhaseStorage {
   getItem(key: string): string | null;
@@ -83,6 +86,9 @@ function serializePhaseMeta(phases: PipelinePhase[]): Record<string, PersistedPh
     }
     if (typeof phase.errorMessage === 'string' && phase.errorMessage.length > 0) {
       meta.errorMessage = phase.errorMessage;
+    }
+    if (isNonEmptyRecord(phase.errorDetails)) {
+      meta.errorDetails = { ...phase.errorDetails };
     }
     if (typeof phase.lastEventAt === 'string' && phase.lastEventAt.length > 0) {
       meta.lastEventAt = phase.lastEventAt;
@@ -146,6 +152,9 @@ function loadPersistedPhaseMeta(campaignId: string): Record<string, PersistedPha
         }
         if (typeof metaCandidate.errorMessage === 'string' && metaCandidate.errorMessage.length > 0) {
           normalized.errorMessage = metaCandidate.errorMessage;
+        }
+        if (isNonEmptyRecord(metaCandidate.errorDetails)) {
+          normalized.errorDetails = { ...(metaCandidate.errorDetails as Record<string, unknown>) };
         }
         if (typeof metaCandidate.lastEventAt === 'string' && metaCandidate.lastEventAt.length > 0) {
           normalized.lastEventAt = metaCandidate.lastEventAt;
@@ -250,12 +259,11 @@ export function useCampaignPhaseStream(
     (
       phase: ApiPhase,
       patch: Partial<PipelinePhase>,
-      meta?: { message?: string; errorMessage?: string; timestamp?: string }
+      meta?: { message?: string; errorMessage?: string; errorDetails?: Record<string, unknown>; timestamp?: string }
     ) => {
       const patchWithMeta: Partial<PipelinePhase> = { ...patch };
       const timestamp = meta?.timestamp ?? new Date().toISOString();
       const hasMessage = typeof meta?.message === 'string' && meta.message.length > 0;
-      const hasErrorMessage = typeof meta?.errorMessage === 'string' && meta.errorMessage.length > 0;
       const isFailure = patch.status === 'failed';
       const explicitError = typeof patch.errorMessage === 'string' && patch.errorMessage.length > 0 ? patch.errorMessage : undefined;
 
@@ -273,18 +281,28 @@ export function useCampaignPhaseStream(
         patchWithMeta.failedAt = undefined;
       }
 
-      if (hasErrorMessage || isFailure || explicitError) {
-        const resolvedError =
-          explicitError ??
-          meta?.errorMessage ??
-          meta?.message ??
-          (isFailure ? 'Phase failed' : undefined);
-        if (resolvedError) {
-          patchWithMeta.errorMessage = resolvedError;
-          patchWithMeta.lastEventAt = timestamp;
-        }
+      const resolvedErrorDetails = ensureErrorDetails(
+        patch.errorDetails ?? meta?.errorDetails,
+        explicitError ?? meta?.errorMessage ?? meta?.message ?? (isFailure ? 'Phase failed' : undefined)
+      );
+      const resolvedErrorMessage =
+        explicitError ??
+        meta?.errorMessage ??
+        extractDetailsMessage(resolvedErrorDetails) ??
+        meta?.message ??
+        (isFailure ? 'Phase failed' : undefined);
+
+      if (resolvedErrorMessage) {
+        patchWithMeta.errorMessage = resolvedErrorMessage;
+        patchWithMeta.lastEventAt = timestamp;
       } else if (patch.status && patch.status !== 'failed') {
         patchWithMeta.errorMessage = undefined;
+      }
+
+      if (resolvedErrorDetails) {
+        patchWithMeta.errorDetails = resolvedErrorDetails;
+      } else if (patch.status && patch.status !== 'failed') {
+        patchWithMeta.errorDetails = undefined;
       }
 
       const next = updatePhaseState(phase, patchWithMeta);
@@ -302,6 +320,7 @@ export function useCampaignPhaseStream(
         message: meta?.message ?? next.lastMessage,
         lastMessage: next.lastMessage,
         errorMessage: next.errorMessage,
+        errorDetails: next.errorDetails,
         lastEventAt: next.lastEventAt,
         failedAt: next.failedAt,
       });
@@ -404,6 +423,7 @@ export function useCampaignPhaseStream(
         extractTimestamp(event.results, ['failed_at', 'failedAt']) ||
         (event as { timestamp?: string }).timestamp;
       const errorPayload = event.error ?? (event.results?.error ? String(event.results.error) : undefined);
+      const errorDetails = extractErrorDetailsFromResults(event.results);
 
       emitPhaseUpdate(
         normalizedPhase,
@@ -414,6 +434,7 @@ export function useCampaignPhaseStream(
         {
           message: event.message,
           errorMessage: errorPayload,
+          errorDetails,
           timestamp: failedAt ?? (event as { timestamp?: string }).timestamp,
         }
       );
@@ -498,6 +519,51 @@ function cloneDefaultPhases(): PipelinePhase[] {
   return DEFAULT_PHASES.map(phase => ({ ...phase }));
 }
 
+function isNonEmptyRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value as Record<string, unknown>).length > 0;
+}
+
+function normalizeErrorDetailsCandidate(value: unknown): Record<string, unknown> | undefined {
+  if (!isNonEmptyRecord(value)) {
+    return undefined;
+  }
+  return { ...(value as Record<string, unknown>) };
+}
+
+function extractDetailsMessage(details?: Record<string, unknown>): string | undefined {
+  if (!details) {
+    return undefined;
+  }
+  const candidate = details['message'];
+  if (typeof candidate !== 'string') {
+    return undefined;
+  }
+  const trimmed = candidate.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function ensureErrorDetails(details?: Record<string, unknown>, fallbackMessage?: string): Record<string, unknown> | undefined {
+  const normalizedMessage = typeof fallbackMessage === 'string' ? fallbackMessage.trim() : '';
+  const normalizedDetails = normalizeErrorDetailsCandidate(details);
+  if (normalizedDetails) {
+    if (!extractDetailsMessage(normalizedDetails) && normalizedMessage) {
+      return { ...normalizedDetails, message: normalizedMessage };
+    }
+    return normalizedDetails;
+  }
+  if (!normalizedMessage) {
+    return undefined;
+  }
+  return { message: normalizedMessage };
+}
+
+function extractErrorDetailsFromResults(results?: Record<string, unknown>): Record<string, unknown> | undefined {
+  if (!results) {
+    return undefined;
+  }
+  const payload = results['errorDetails'] ?? results['error_details'];
+  return normalizeErrorDetailsCandidate(payload);
+}
 function clampProgress(value: number): number {
   if (!Number.isFinite(value) || value < 0) {
     return 0;

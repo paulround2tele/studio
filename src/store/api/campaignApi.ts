@@ -29,6 +29,7 @@ import type { DomainScoreBreakdownResponse } from '@/lib/api-client/models/domai
 import type { CampaignsModeUpdateRequest } from '@/lib/api-client/models/campaigns-mode-update-request';
 import type { CampaignModeUpdateResponse } from '@/lib/api-client/models/campaign-mode-update-response';
 import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campaign-phases-status-response';
+import type { CampaignRestartResponse } from '@/lib/api-client/models/campaign-restart-response';
 
 // Helper for axios/fetch hybrid responses (no any)
 const unwrap = <T>(resp: { data?: T } | T): T | undefined => {
@@ -170,6 +171,51 @@ export const campaignApi = createApi({
           const response = await campaignsApi.campaignsPhaseStart(campaignId, phase as CampaignPhaseEnum);
           const data = unwrap<PhaseStatusResponse>(response);
           if (!data) return { error: { status: 500, data: { message: 'Empty phase start response' } } };
+          return { data };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
+        }
+      },
+      invalidatesTags: (result, error, { campaignId, phase }) => [
+        { type: 'Campaign', id: campaignId },
+        { type: 'CampaignProgress', id: campaignId },
+        { type: 'CampaignDomains', id: campaignId },
+        { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
+      ],
+    }),
+
+  pausePhaseStandalone: builder.mutation<
+      PhaseStatusResponse,
+      { campaignId: string; phase: string }
+    >({
+      queryFn: async ({ campaignId, phase }) => {
+        try {
+          const response = await campaignsApi.campaignsPhasePause(campaignId, phase as CampaignPhaseEnum);
+          const data = unwrap<PhaseStatusResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty phase pause response' } } };
+          return { data };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
+        }
+      },
+      invalidatesTags: (result, error, { campaignId, phase }) => [
+        { type: 'Campaign', id: campaignId },
+        { type: 'CampaignProgress', id: campaignId },
+        { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
+      ],
+    }),
+
+  stopPhaseStandalone: builder.mutation<
+      PhaseStatusResponse,
+      { campaignId: string; phase: string }
+    >({
+      queryFn: async ({ campaignId, phase }) => {
+        try {
+          const response = await campaignsApi.campaignsPhaseStop(campaignId, phase as CampaignPhaseEnum);
+          const data = unwrap<PhaseStatusResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty phase stop response' } } };
           return { data };
         } catch (error) {
           const norm = toRtkError(error);
@@ -416,6 +462,25 @@ export const campaignApi = createApi({
       },
       invalidatesTags: ['CampaignList'],
     }),
+
+    restartCampaign: builder.mutation<CampaignRestartResponse, string>({
+      queryFn: async (campaignId) => {
+        try {
+          const response = await campaignsApi.campaignsRestart(campaignId);
+          const data = unwrap<CampaignRestartResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty restart response' } } };
+          return { data };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
+        }
+      },
+      invalidatesTags: (result, error, campaignId) => [
+        { type: 'Campaign', id: campaignId },
+        { type: 'CampaignProgress', id: campaignId },
+        { type: 'CampaignDomains', id: campaignId },
+      ],
+    }),
   }),
 });
 
@@ -427,6 +492,8 @@ export const {
   useGetCampaignProgressStandaloneQuery,
   useConfigurePhaseStandaloneMutation,
   useStartPhaseStandaloneMutation,
+  usePausePhaseStandaloneMutation,
+  useStopPhaseStandaloneMutation,
   useGetPhaseStatusStandaloneQuery,
   useGetPatternOffsetQuery,
   useGetCampaignEnrichedQuery,
@@ -441,6 +508,7 @@ export const {
   useGetCampaignRecommendationsQuery,
   useGetCampaignStatusQuery,
   useDuplicateCampaignMutation,
+  useRestartCampaignMutation,
 } = campaignApi;
 
 // Export the reducer for the store configuration

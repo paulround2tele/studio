@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { campaignApi } from '@/store/api/campaignApi';
 import type { CampaignResponse } from '@/lib/api-client/models';
+import { normalizeToApiPhase, type ApiPhase } from '@/lib/utils/phaseNames';
 
 // Destructure hooks from the API
 const { useGetCampaignsStandaloneQuery } = campaignApi;
@@ -12,7 +13,7 @@ const { useGetCampaignsStandaloneQuery } = campaignApi;
 export type CampaignLite = {
   id: string;
   name: string;
-  currentPhase?: string;
+  currentPhase: ApiPhase;
   overallProgress: number;
   domains: unknown[];
   leads: unknown[];
@@ -48,13 +49,16 @@ export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderPro
   // Build a lightweight campaigns map from the list; domains/leads can be fetched per-campaign when needed
   const campaigns = useMemo(() => {
     const campaignsMap = new Map<string, CampaignLite>();
-  (campaignsList || []).forEach((c: CampaignResponse) => {
+    (campaignsList || []).forEach((c: CampaignResponse) => {
       if (!c?.id) return;
+      const normalizedPhase = typeof c.currentPhase === 'string'
+        ? normalizeToApiPhase(c.currentPhase)
+        : null;
       campaignsMap.set(c.id, {
         id: c.id,
         name: c.name || '',
-        currentPhase: c.currentPhase,
-    overallProgress: typeof c.progress?.percentComplete === 'number' ? c.progress.percentComplete : 0,
+        currentPhase: normalizedPhase ?? 'discovery',
+        overallProgress: typeof c.progress?.percentComplete === 'number' ? c.progress.percentComplete : 0,
         domains: [],
         leads: [],
         metadata: c,

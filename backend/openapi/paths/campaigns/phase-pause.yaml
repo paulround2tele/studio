@@ -1,0 +1,24 @@
+post:
+  tags: [campaigns]
+  summary: Pause campaign phase
+  description: Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+  operationId: campaigns_phase_pause
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    - name: phase
+      in: path
+      required: true
+      schema: { $ref: '../../components/schemas/all.yaml#/CampaignPhaseEnum' }
+  responses:
+    '200':
+      description: Paused
+      content:
+        application/json:
+          schema: { $ref: '../../components/schemas/all.yaml#/PhaseStatusResponse' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

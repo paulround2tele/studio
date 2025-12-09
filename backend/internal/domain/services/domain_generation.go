@@ -726,7 +726,7 @@ func (s *domainGenerationService) Cancel(ctx context.Context, campaignID uuid.UU
 
 	execution, exists := s.executions[campaignID]
 	if !exists {
-		return fmt.Errorf("no domain generation execution found for campaign %s", campaignID)
+		return fmt.Errorf("%w: no domain generation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
 
 	if execution.cancelFunc != nil {

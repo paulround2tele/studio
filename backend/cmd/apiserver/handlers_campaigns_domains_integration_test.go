@@ -52,13 +52,21 @@ func (a *dualReadAnalysisStub) ScoreDomains(ctx context.Context, campaignID uuid
 
 // minimal fake campaign store implementing only methods we exercise
 type fakeCampaignStoreForDomains struct {
-	domains     []*models.GeneratedDomain
-	counters    *models.CampaignDomainCounters
-	countersErr error
+	domains         []*models.GeneratedDomain
+	counters        *models.CampaignDomainCounters
+	countersErr     error
+	phaseExecutions []*models.PhaseExecution
+	phaseExecErr    error
+	state           *models.CampaignState
+	stateErr        error
 }
 
 func newFakeCampaignStoreForDomains() *fakeCampaignStoreForDomains {
-	return &fakeCampaignStoreForDomains{domains: []*models.GeneratedDomain{}, counters: &models.CampaignDomainCounters{Total: int64(0)}}
+	return &fakeCampaignStoreForDomains{
+		domains:         []*models.GeneratedDomain{},
+		counters:        &models.CampaignDomainCounters{Total: int64(0)},
+		phaseExecutions: []*models.PhaseExecution{},
+	}
 }
 
 func (f *fakeCampaignStoreForDomains) GetCampaignByID(ctx context.Context, exec store.Querier, id uuid.UUID) (*models.LeadGenerationCampaign, error) {
@@ -99,13 +107,22 @@ func (f *fakeCampaignStoreForDomains) UpdateCampaignMode(ctx context.Context, ex
 	return nil
 }
 func (f *fakeCampaignStoreForDomains) GetCampaignState(ctx context.Context, exec store.Querier, id uuid.UUID) (*models.CampaignState, error) {
-	return nil, store.ErrNotFound
+	if f.stateErr != nil {
+		return nil, f.stateErr
+	}
+	if f.state == nil {
+		return nil, store.ErrNotFound
+	}
+	return f.state, nil
 }
 func (f *fakeCampaignStoreForDomains) CreateCampaignState(ctx context.Context, exec store.Querier, st *models.CampaignState) error {
 	return nil
 }
 func (f *fakeCampaignStoreForDomains) GetPhaseExecutionsByCampaign(ctx context.Context, exec store.Querier, id uuid.UUID) ([]*models.PhaseExecution, error) {
-	return nil, nil
+	if f.phaseExecErr != nil {
+		return nil, f.phaseExecErr
+	}
+	return f.phaseExecutions, nil
 }
 func (f *fakeCampaignStoreForDomains) GetPhaseExecution(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phase models.PhaseTypeEnum) (*models.PhaseExecution, error) {
 	return nil, store.ErrNotFound

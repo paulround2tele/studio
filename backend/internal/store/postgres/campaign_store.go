@@ -709,6 +709,147 @@ SELECT
 FROM campaign_domain_counters
 WHERE campaign_id = $1`
 
+const campaignPhasesSelectBase = `
+SELECT
+	COALESCE(cp.id, pe.id) AS phase_id,
+	COALESCE(cp.campaign_id, pe.campaign_id) AS campaign_id,
+	COALESCE(cp.phase_type::text, pe.phase_type::text) AS phase_type,
+	COALESCE(
+		cp.phase_order,
+		CASE pe.phase_type
+			WHEN 'domain_generation'::phase_type_enum THEN 1
+			WHEN 'dns_validation'::phase_type_enum THEN 2
+			WHEN 'http_keyword_validation'::phase_type_enum THEN 3
+			WHEN 'enrichment'::phase_type_enum THEN 4
+			WHEN 'analysis'::phase_type_enum THEN 5
+			ELSE 99
+		END
+	) AS phase_order,
+	cp.status AS legacy_status,
+	pe.status::text AS execution_status,
+	COALESCE(pe.progress_percentage, cp.progress_percentage) AS progress_percentage,
+	COALESCE(pe.started_at, cp.started_at) AS started_at,
+	COALESCE(pe.completed_at, cp.completed_at) AS completed_at,
+	COALESCE(pe.paused_at, cp.paused_at) AS paused_at,
+	COALESCE(pe.failed_at, cp.failed_at) AS failed_at,
+	pe.error_details->>'message' AS error_message,
+	COALESCE(pe.total_items, cp.total_items) AS total_items,
+	COALESCE(pe.processed_items, cp.processed_items) AS processed_items,
+	COALESCE(pe.successful_items, cp.successful_items) AS successful_items,
+	COALESCE(pe.failed_items, cp.failed_items) AS failed_items,
+	COALESCE(pe.configuration, cp.configuration) AS configuration,
+	COALESCE(pe.created_at, cp.created_at, NOW()) AS created_at,
+	COALESCE(pe.updated_at, cp.updated_at, NOW()) AS updated_at
+FROM campaign_phases cp
+FULL OUTER JOIN phase_executions pe ON pe.campaign_id = cp.campaign_id AND pe.phase_type = cp.phase_type`
+
+type campaignPhaseRow struct {
+	PhaseID         uuid.NullUUID   `db:"phase_id"`
+	CampaignID      uuid.NullUUID   `db:"campaign_id"`
+	PhaseType       sql.NullString  `db:"phase_type"`
+	PhaseOrder      int             `db:"phase_order"`
+	ExecutionStatus sql.NullString  `db:"execution_status"`
+	LegacyStatus    sql.NullString  `db:"legacy_status"`
+	Progress        sql.NullFloat64 `db:"progress_percentage"`
+	StartedAt       sql.NullTime    `db:"started_at"`
+	CompletedAt     sql.NullTime    `db:"completed_at"`
+	PausedAt        sql.NullTime    `db:"paused_at"`
+	FailedAt        sql.NullTime    `db:"failed_at"`
+	ErrorMessage    sql.NullString  `db:"error_message"`
+	TotalItems      sql.NullInt64   `db:"total_items"`
+	ProcessedItems  sql.NullInt64   `db:"processed_items"`
+	SuccessfulItems sql.NullInt64   `db:"successful_items"`
+	FailedItems     sql.NullInt64   `db:"failed_items"`
+	Configuration   []byte          `db:"configuration"`
+	CreatedAt       time.Time       `db:"created_at"`
+	UpdatedAt       time.Time       `db:"updated_at"`
+}
+
+func buildCampaignPhaseFromRow(row campaignPhaseRow, fallbackCampaignID uuid.UUID) (*models.CampaignPhase, error) {
+	if !row.PhaseType.Valid || strings.TrimSpace(row.PhaseType.String) == "" {
+		return nil, fmt.Errorf("phase_type missing for campaign %s", fallbackCampaignID)
+	}
+	phaseType := models.PhaseTypeEnum(row.PhaseType.String)
+	phaseID := row.PhaseID.UUID
+	if !row.PhaseID.Valid {
+		phaseID = uuid.New()
+	}
+	campaignID := fallbackCampaignID
+	if row.CampaignID.Valid {
+		campaignID = row.CampaignID.UUID
+	}
+	execValid := row.ExecutionStatus.Valid && strings.TrimSpace(row.ExecutionStatus.String) != ""
+	legacyValid := row.LegacyStatus.Valid && strings.TrimSpace(row.LegacyStatus.String) != ""
+	status := models.PhaseStatusNotStarted
+	switch {
+	case execValid:
+		status = executionStatusToPhaseStatus(models.ExecutionStatusEnum(row.ExecutionStatus.String))
+		if status == models.PhaseStatusNotStarted && legacyValid {
+			legacy := models.PhaseStatusEnum(row.LegacyStatus.String)
+			if legacy != models.PhaseStatusNotStarted {
+				status = legacy
+			}
+		}
+	case legacyValid:
+		status = models.PhaseStatusEnum(row.LegacyStatus.String)
+	}
+	order := row.PhaseOrder
+	if order == 0 {
+		order = phaseTypeDefaultOrder(phaseType)
+	}
+	phase := &models.CampaignPhase{
+		ID:         phaseID,
+		CampaignID: campaignID,
+		PhaseType:  phaseType,
+		PhaseOrder: order,
+		Status:     status,
+		CreatedAt:  row.CreatedAt,
+		UpdatedAt:  row.UpdatedAt,
+	}
+	if row.Progress.Valid {
+		progress := row.Progress.Float64
+		phase.ProgressPercentage = &progress
+	}
+	phase.StartedAt = nullTimePtr(row.StartedAt)
+	phase.CompletedAt = nullTimePtr(row.CompletedAt)
+	phase.PausedAt = nullTimePtr(row.PausedAt)
+	phase.FailedAt = nullTimePtr(row.FailedAt)
+	phase.ErrorMessage = nullStringPtr(row.ErrorMessage)
+	phase.TotalItems = nullInt64Ptr(row.TotalItems)
+	phase.ProcessedItems = nullInt64Ptr(row.ProcessedItems)
+	phase.SuccessfulItems = nullInt64Ptr(row.SuccessfulItems)
+	phase.FailedItems = nullInt64Ptr(row.FailedItems)
+	if len(row.Configuration) > 0 {
+		cfg := json.RawMessage(append([]byte(nil), row.Configuration...))
+		phase.Configuration = &cfg
+	}
+	return phase, nil
+}
+
+func nullTimePtr(value sql.NullTime) *time.Time {
+	if !value.Valid {
+		return nil
+	}
+	t := value.Time
+	return &t
+}
+
+func nullInt64Ptr(value sql.NullInt64) *int64 {
+	if !value.Valid {
+		return nil
+	}
+	v := value.Int64
+	return &v
+}
+
+func nullStringPtr(value sql.NullString) *string {
+	if !value.Valid {
+		return nil
+	}
+	s := value.String
+	return &s
+}
+
 // GetCampaignDomainCounters returns aggregated counters for a campaign (campaign_domain_counters row)
 // (duplicate GetCampaignDomainCounters removed)
 
@@ -1527,7 +1668,7 @@ func (s *campaignStorePostgres) CreateCampaignPhases(ctx context.Context, exec s
 		{models.PhaseTypeAnalysis, 5},
 	}
 	now := time.Now()
-	insert := `INSERT INTO campaign_phases (id, campaign_id, phase_type, phase_order, status, progress_percentage, started_at, completed_at, error_message, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`
+	insert := `INSERT INTO campaign_phases (id, campaign_id, phase_type, phase_order, status, progress_percentage, started_at, completed_at, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`
 	for _, p := range phases {
 		status := models.PhaseStatusNotStarted
 		_, err := exec.ExecContext(ctx, insert,
@@ -1539,12 +1680,15 @@ func (s *campaignStorePostgres) CreateCampaignPhases(ctx context.Context, exec s
 			0.0,
 			nil, // started_at
 			nil, // completed_at
-			nil, // error_message
 			now,
 			now,
 		)
 		if err != nil {
 			return fmt.Errorf("failed to create campaign phase %s: %w", p.phaseType, err)
+		}
+
+		if err := s.insertPhaseExecutionDefault(ctx, exec, campaignID, p.phaseType); err != nil {
+			return fmt.Errorf("failed to seed phase execution %s: %w", p.phaseType, err)
 		}
 	}
 	log.Printf("Created standard campaign phases for campaign %s", campaignID)
@@ -1628,58 +1772,48 @@ func (s *campaignStorePostgres) UpdateDomainsBulkHTTPStatus(ctx context.Context,
 // (Phase C) Removed legacy domains_data accessors (GetCampaignDomainsData/UpdateCampaignDomainsData)
 
 func (s *campaignStorePostgres) GetCampaignPhases(ctx context.Context, exec store.Querier, campaignID uuid.UUID) ([]*models.CampaignPhase, error) {
-	query := `
-		SELECT id,
-		       campaign_id,
-		       phase_type,
-		       phase_order,
-		       status,
-		       progress_percentage,
-		       started_at,
-		       completed_at,
-		       error_message,
-		       configuration,
-		       created_at,
-		       updated_at
-		FROM campaign_phases
-		WHERE campaign_id = $1
+	if exec == nil {
+		exec = s.db
+	}
+	query := campaignPhasesSelectBase + `
+		WHERE COALESCE(cp.campaign_id, pe.campaign_id) = $1
 		ORDER BY phase_order ASC`
-
-	var phases []*models.CampaignPhase
-	err := exec.SelectContext(ctx, &phases, query, campaignID)
-	if err != nil {
+	rows := []campaignPhaseRow{}
+	if err := exec.SelectContext(ctx, &rows, query, campaignID); err != nil {
 		return nil, fmt.Errorf("failed to query campaign phases: %w", err)
 	}
-
+	phases := make([]*models.CampaignPhase, 0, len(rows))
+	for _, row := range rows {
+		phase, err := buildCampaignPhaseFromRow(row, campaignID)
+		if err != nil {
+			log.Printf("WARN [GetCampaignPhases]: skipping row due to mapping error: %v", err)
+			continue
+		}
+		phases = append(phases, phase)
+	}
 	return phases, nil
 }
 
 func (s *campaignStorePostgres) GetCampaignPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) (*models.CampaignPhase, error) {
-	query := `
-		SELECT id,
-		       campaign_id,
-		       phase_type,
-		       phase_order,
-		       status,
-		       progress_percentage,
-		       started_at,
-		       completed_at,
-		       error_message,
-		       configuration,
-		       created_at,
-		       updated_at
-		FROM campaign_phases
-		WHERE campaign_id = $1 AND phase_type = $2`
-
-	phase := &models.CampaignPhase{}
-	err := exec.GetContext(ctx, phase, query, campaignID, phaseType)
-	if err != nil {
-		if err == sql.ErrNoRows {
+	if exec == nil {
+		exec = s.db
+	}
+	query := campaignPhasesSelectBase + `
+		WHERE COALESCE(cp.campaign_id, pe.campaign_id) = $1
+		  AND COALESCE(cp.phase_type::text, pe.phase_type::text) = $2
+		ORDER BY phase_order ASC
+		LIMIT 1`
+	row := campaignPhaseRow{}
+	if err := exec.GetContext(ctx, &row, query, campaignID, string(phaseType)); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("phase %s not found for campaign %s", phaseType, campaignID)
 		}
 		return nil, fmt.Errorf("failed to get campaign phase: %w", err)
 	}
-
+	phase, err := buildCampaignPhaseFromRow(row, campaignID)
+	if err != nil {
+		return nil, err
+	}
 	return phase, nil
 }
 
@@ -1699,6 +1833,11 @@ func (s *campaignStorePostgres) UpdatePhaseStatus(ctx context.Context, exec stor
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
 		return fmt.Errorf("no phase %s found for campaign %s", phaseType, campaignID)
+	}
+
+	execStatus := phaseStatusToExecutionStatus(status)
+	if err := s.upsertPhaseExecutionStatus(ctx, exec, campaignID, phaseType, execStatus); err != nil {
+		return fmt.Errorf("failed to mirror status %s for phase %s in campaign %s: %w", status, phaseType, campaignID, err)
 	}
 
 	log.Printf("Updated phase %s status to %s for campaign %s", phaseType, status, campaignID)
@@ -1725,6 +1864,10 @@ func (s *campaignStorePostgres) UpdatePhaseProgress(ctx context.Context, exec st
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
 		return fmt.Errorf("no phase %s found for campaign %s", phaseType, campaignID)
+	}
+
+	if err := s.upsertPhaseExecutionProgress(ctx, exec, campaignID, phaseType, progress, totalItems, processedItems, successfulItems, failedItems); err != nil {
+		return fmt.Errorf("failed to persist execution progress for phase %s campaign %s: %w", phaseType, campaignID, err)
 	}
 
 	log.Printf("Updated phase %s progress to %.1f%% for campaign %s", phaseType, progress, campaignID)
@@ -1765,6 +1908,9 @@ func (s *campaignStorePostgres) UpdatePhaseConfiguration(ctx context.Context, ex
 	}
 
 	log.Printf("Updated phase %s configuration for campaign %s", phaseType, campaignID)
+	if err := s.upsertPhaseExecutionConfiguration(ctx, exec, campaignID, phaseType, config); err != nil {
+		return fmt.Errorf("failed to persist execution configuration for phase %s campaign %s: %w", phaseType, campaignID, err)
+	}
 	return nil
 }
 
@@ -1801,6 +1947,10 @@ func (s *campaignStorePostgres) CompletePhase(ctx context.Context, exec store.Qu
 		log.Printf("Completed phase %s for campaign %s", phaseType, campaignID)
 	}
 
+	if err := s.upsertPhaseExecutionCompletion(ctx, exec, campaignID, phaseType, now); err != nil {
+		return fmt.Errorf("failed to mark execution completion for phase %s campaign %s: %w", phaseType, campaignID, err)
+	}
+
 	return nil
 }
 
@@ -1811,15 +1961,14 @@ func (s *campaignStorePostgres) SkipPhase(ctx context.Context, exec store.Querie
 		SET status = 'skipped',
 		    progress_percentage = COALESCE(progress_percentage, 0.0),
 		    completed_at = $1,
-		    updated_at = $1,
-		    error_message = NULLIF($2, '')
-		WHERE campaign_id = $3 AND phase_type = $4 AND status != 'skipped'`
+		    updated_at = $1
+		WHERE campaign_id = $2 AND phase_type = $3 AND status != 'skipped'`
 
 	if exec == nil {
 		exec = s.db
 	}
 
-	result, err := exec.ExecContext(ctx, query, now, reason, campaignID, phaseType)
+	result, err := exec.ExecContext(ctx, query, now, campaignID, phaseType)
 	if err != nil {
 		return fmt.Errorf("failed to skip phase %s for campaign %s: %w", phaseType, campaignID, err)
 	}
@@ -1827,7 +1976,7 @@ func (s *campaignStorePostgres) SkipPhase(ctx context.Context, exec store.Querie
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
 		if err := s.ensurePhaseRow(ctx, exec, campaignID, phaseType); err == nil {
-			if _, err2 := exec.ExecContext(ctx, query, now, reason, campaignID, phaseType); err2 != nil {
+			if _, err2 := exec.ExecContext(ctx, query, now, campaignID, phaseType); err2 != nil {
 				log.Printf("Failed to mark newly inserted phase %s as skipped for campaign %s: %v", phaseType, campaignID, err2)
 			} else {
 				log.Printf("Inserted & skipped missing phase %s for campaign %s", phaseType, campaignID)
@@ -1840,6 +1989,10 @@ func (s *campaignStorePostgres) SkipPhase(ctx context.Context, exec store.Querie
 		log.Printf("Skipped phase %s for campaign %s (reason=%s)", phaseType, campaignID, reason)
 	}
 
+	if err := s.upsertPhaseExecutionSkip(ctx, exec, campaignID, phaseType, now, reason); err != nil {
+		return fmt.Errorf("failed to persist skip metadata for phase %s campaign %s: %w", phaseType, campaignID, err)
+	}
+
 	return nil
 }
 
@@ -1850,9 +2003,13 @@ func (s *campaignStorePostgres) StartPhase(ctx context.Context, exec store.Queri
 	query := `
 		UPDATE campaign_phases 
 		SET status = 'in_progress',
-		    started_at = COALESCE(started_at, $1),
+		    started_at = $1,
+		    completed_at = NULL,
+		    paused_at = NULL,
+		    failed_at = NULL,
+		    progress_percentage = 0,
 		    updated_at = $1
-		WHERE campaign_id = $2 AND phase_type = $3 AND status IN ('not_started','configured')`
+		WHERE campaign_id = $2 AND phase_type = $3 AND status != 'in_progress'`
 
 	result, err := exec.ExecContext(ctx, query, now, campaignID, phaseType)
 	if err != nil {
@@ -1863,7 +2020,6 @@ func (s *campaignStorePostgres) StartPhase(ctx context.Context, exec store.Queri
 	if rowsAffected == 0 {
 		// Attempt to ensure row exists (idempotent) then retry
 		if err := s.ensurePhaseRow(ctx, exec, campaignID, phaseType); err == nil {
-			// Retry update after insertion (will only match not_started newly inserted row)
 			if _, err2 := exec.ExecContext(ctx, query, now, campaignID, phaseType); err2 != nil {
 				log.Printf("Failed to start newly inserted phase %s for campaign %s: %v", phaseType, campaignID, err2)
 			} else {
@@ -1877,45 +2033,55 @@ func (s *campaignStorePostgres) StartPhase(ctx context.Context, exec store.Queri
 				if row := s.db.QueryRowContext(ctx, statusQuery, campaignID, phaseType); row != nil {
 					var curStatus string
 					if scanErr := row.Scan(&curStatus); scanErr == nil {
-						log.Printf("StartPhase no-op: phase %s for campaign %s currently in status '%s' (expected one of not_started, configured)", phaseType, campaignID, curStatus)
+						log.Printf("StartPhase no-op: phase %s for campaign %s currently in status '%s' (likely already running)", phaseType, campaignID, curStatus)
 					}
 				}
 			}
-			log.Printf("No phase %s found to start for campaign %s (may already be in progress or completed) and insertion failed: %v", phaseType, campaignID, err)
+			log.Printf("No phase %s found to start for campaign %s (may already be running) and insertion failed: %v", phaseType, campaignID, err)
 		}
 	} else {
 		log.Printf("Started phase %s for campaign %s", phaseType, campaignID)
+	}
+
+	if err := s.upsertPhaseExecutionStart(ctx, exec, campaignID, phaseType, now); err != nil {
+		return fmt.Errorf("failed to persist execution start for phase %s campaign %s: %w", phaseType, campaignID, err)
 	}
 
 	return nil
 }
 
 // ensurePhaseRow inserts a campaign_phases row if it does not already exist (best-effort, silent on unique conflict)
+func phaseTypeDefaultOrder(phaseType models.PhaseTypeEnum) int {
+	switch phaseType {
+	case models.PhaseTypeDomainGeneration:
+		return 1
+	case models.PhaseTypeDNSValidation:
+		return 2
+	case models.PhaseTypeHTTPKeywordValidation:
+		return 3
+	case models.PhaseTypeEnrichment:
+		return 4
+	case models.PhaseTypeAnalysis:
+		return 5
+	default:
+		return 5
+	}
+}
+
 func (s *campaignStorePostgres) ensurePhaseRow(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
 	if exec == nil {
 		exec = s.db
 	}
 	// Determine phase order (default mapping). Keep in sync with setup_campaign_phases function.
-	order := 0
-	switch phaseType {
-	case models.PhaseTypeDomainGeneration:
-		order = 1
-	case models.PhaseTypeDNSValidation:
-		order = 2
-	case models.PhaseTypeHTTPKeywordValidation:
-		order = 3
-	case models.PhaseTypeEnrichment:
-		order = 4
-	case models.PhaseTypeAnalysis:
-		order = 5
-	default:
-		order = 5
-	}
+	order := phaseTypeDefaultOrder(phaseType)
 	q := `INSERT INTO campaign_phases (campaign_id, phase_type, phase_order, status, progress_percentage, created_at, updated_at)
           VALUES ($1,$2,$3,'not_started',0,NOW(),NOW())
           ON CONFLICT DO NOTHING`
 	if _, err := exec.ExecContext(ctx, q, campaignID, phaseType, order); err != nil {
 		return fmt.Errorf("ensurePhaseRow insert failed: %w", err)
+	}
+	if err := s.insertPhaseExecutionDefault(ctx, exec, campaignID, phaseType); err != nil {
+		return fmt.Errorf("ensurePhaseExecution insert failed: %w", err)
 	}
 	return nil
 }
@@ -1940,7 +2106,246 @@ func (s *campaignStorePostgres) PausePhase(ctx context.Context, exec store.Queri
 		log.Printf("Paused phase %s for campaign %s", phaseType, campaignID)
 	}
 
+	if err := s.upsertPhaseExecutionPause(ctx, exec, campaignID, phaseType, now); err != nil {
+		return fmt.Errorf("failed to persist pause state for phase %s campaign %s: %w", phaseType, campaignID, err)
+	}
+
 	return nil
+}
+
+// --- Phase execution synchronization helpers ----------------------------------------------------
+
+func phaseStatusToExecutionStatus(status models.PhaseStatusEnum) models.ExecutionStatusEnum {
+	switch status {
+	case models.PhaseStatusReady:
+		return models.ExecutionStatusReady
+	case models.PhaseStatusConfigured:
+		return models.ExecutionStatusConfigured
+	case models.PhaseStatusInProgress:
+		return models.ExecutionStatusInProgress
+	case models.PhaseStatusPaused:
+		return models.ExecutionStatusPaused
+	case models.PhaseStatusCompleted:
+		return models.ExecutionStatusCompleted
+	case models.PhaseStatusFailed:
+		return models.ExecutionStatusFailed
+	case models.PhaseStatusSkipped:
+		return models.ExecutionStatusCompleted
+	default:
+		return models.ExecutionStatusNotStarted
+	}
+}
+
+func executionStatusToPhaseStatus(status models.ExecutionStatusEnum) models.PhaseStatusEnum {
+	switch status {
+	case models.ExecutionStatusReady:
+		return models.PhaseStatusReady
+	case models.ExecutionStatusConfigured:
+		return models.PhaseStatusConfigured
+	case models.ExecutionStatusInProgress:
+		return models.PhaseStatusInProgress
+	case models.ExecutionStatusPaused:
+		return models.PhaseStatusPaused
+	case models.ExecutionStatusCompleted:
+		return models.PhaseStatusCompleted
+	case models.ExecutionStatusFailed:
+		return models.PhaseStatusFailed
+	default:
+		return models.PhaseStatusNotStarted
+	}
+}
+
+func (s *campaignStorePostgres) insertPhaseExecutionDefault(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
+	if exec == nil {
+		exec = s.db
+	}
+	if exec == nil {
+		return fmt.Errorf("nil exec provided")
+	}
+	query := `INSERT INTO phase_executions (campaign_id, phase_type, status, created_at, updated_at)
+	          VALUES ($1,$2,$3,NOW(),NOW())
+	          ON CONFLICT (campaign_id, phase_type) DO NOTHING`
+	_, err := exec.ExecContext(ctx, query, campaignID, phaseType, models.ExecutionStatusNotStarted)
+	return err
+}
+
+func (s *campaignStorePostgres) upsertPhaseExecutionStatus(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, status models.ExecutionStatusEnum) error {
+	if exec == nil {
+		exec = s.db
+	}
+	if exec == nil {
+		return fmt.Errorf("nil exec provided")
+	}
+	query := `INSERT INTO phase_executions (campaign_id, phase_type, status, created_at, updated_at)
+	          VALUES ($1,$2,$3,NOW(),NOW())
+	          ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
+			status = EXCLUDED.status,
+			updated_at = NOW()`
+	_, err := exec.ExecContext(ctx, query, campaignID, phaseType, status)
+	return err
+}
+
+func (s *campaignStorePostgres) upsertPhaseExecutionStart(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, startedAt time.Time) error {
+	if exec == nil {
+		exec = s.db
+	}
+	if exec == nil {
+		return fmt.Errorf("nil exec provided")
+	}
+	query := `INSERT INTO phase_executions (campaign_id, phase_type, status, started_at, created_at, updated_at)
+	          VALUES ($1,$2,$3,$4,NOW(),NOW())
+	          ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
+		status = EXCLUDED.status,
+		started_at = EXCLUDED.started_at,
+		completed_at = NULL,
+		failed_at = NULL,
+		paused_at = NULL,
+		progress_percentage = 0,
+		error_details = NULL,
+		updated_at = NOW()`
+	_, err := exec.ExecContext(ctx, query, campaignID, phaseType, models.ExecutionStatusInProgress, startedAt)
+	return err
+}
+
+func (s *campaignStorePostgres) upsertPhaseExecutionPause(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, pausedAt time.Time) error {
+	if exec == nil {
+		exec = s.db
+	}
+	if exec == nil {
+		return fmt.Errorf("nil exec provided")
+	}
+	query := `INSERT INTO phase_executions (campaign_id, phase_type, status, paused_at, created_at, updated_at)
+	          VALUES ($1,$2,$3,$4,NOW(),NOW())
+	          ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
+			status = EXCLUDED.status,
+			paused_at = EXCLUDED.paused_at,
+			updated_at = NOW()`
+	_, err := exec.ExecContext(ctx, query, campaignID, phaseType, models.ExecutionStatusPaused, pausedAt)
+	return err
+}
+
+func nullableInt64(v *int64) interface{} {
+	if v == nil {
+		return nil
+	}
+	return *v
+}
+
+func (s *campaignStorePostgres) upsertPhaseExecutionProgress(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, progress float64, totalItems, processedItems, successfulItems, failedItems *int64) error {
+	if exec == nil {
+		exec = s.db
+	}
+	if exec == nil {
+		return fmt.Errorf("nil exec provided")
+	}
+	query := `INSERT INTO phase_executions (
+		campaign_id, phase_type, status, progress_percentage,
+		total_items, processed_items, successful_items, failed_items,
+		created_at, updated_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW())
+		ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
+			progress_percentage = EXCLUDED.progress_percentage,
+			total_items = COALESCE(EXCLUDED.total_items, phase_executions.total_items),
+			processed_items = COALESCE(EXCLUDED.processed_items, phase_executions.processed_items),
+			successful_items = COALESCE(EXCLUDED.successful_items, phase_executions.successful_items),
+			failed_items = COALESCE(EXCLUDED.failed_items, phase_executions.failed_items),
+			updated_at = NOW()`
+	_, err := exec.ExecContext(ctx, query,
+		campaignID,
+		phaseType,
+		models.ExecutionStatusInProgress,
+		progress,
+		nullableInt64(totalItems),
+		nullableInt64(processedItems),
+		nullableInt64(successfulItems),
+		nullableInt64(failedItems),
+	)
+	return err
+}
+
+func (s *campaignStorePostgres) upsertPhaseExecutionCompletion(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, completedAt time.Time) error {
+	if exec == nil {
+		exec = s.db
+	}
+	if exec == nil {
+		return fmt.Errorf("nil exec provided")
+	}
+	query := `INSERT INTO phase_executions (campaign_id, phase_type, status, completed_at, progress_percentage, created_at, updated_at)
+	          VALUES ($1,$2,$3,$4,100.0,NOW(),NOW())
+	          ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
+			status = EXCLUDED.status,
+			completed_at = EXCLUDED.completed_at,
+			progress_percentage = 100.0,
+			failed_at = NULL,
+			paused_at = NULL,
+			updated_at = NOW()`
+	_, err := exec.ExecContext(ctx, query, campaignID, phaseType, models.ExecutionStatusCompleted, completedAt)
+	return err
+}
+
+func (s *campaignStorePostgres) upsertPhaseExecutionSkip(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, completedAt time.Time, reason string) error {
+	if exec == nil {
+		exec = s.db
+	}
+	if exec == nil {
+		return fmt.Errorf("nil exec provided")
+	}
+	details := map[string]interface{}{
+		"code":   "phase_skipped",
+		"phase":  string(phaseType),
+		"status": string(models.PhaseStatusSkipped),
+	}
+	if reason != "" {
+		details["message"] = reason
+	}
+	payload, err := json.Marshal(details)
+	if err != nil {
+		return err
+	}
+	query := `INSERT INTO phase_executions (campaign_id, phase_type, status, completed_at, progress_percentage, error_details, created_at, updated_at)
+	          VALUES ($1,$2,$3,$4,100.0,$5,NOW(),NOW())
+	          ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
+			status = EXCLUDED.status,
+			completed_at = EXCLUDED.completed_at,
+			progress_percentage = 100.0,
+			error_details = EXCLUDED.error_details,
+			updated_at = NOW()`
+	_, err = exec.ExecContext(ctx, query, campaignID, phaseType, models.ExecutionStatusCompleted, completedAt, json.RawMessage(payload))
+	return err
+}
+
+func (s *campaignStorePostgres) upsertPhaseExecutionFailure(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, failedAt time.Time, errorDetails json.RawMessage) error {
+	if exec == nil {
+		exec = s.db
+	}
+	if exec == nil {
+		return fmt.Errorf("nil exec provided")
+	}
+	query := `INSERT INTO phase_executions (campaign_id, phase_type, status, failed_at, error_details, created_at, updated_at)
+	          VALUES ($1,$2,$3,$4,$5,NOW(),NOW())
+	          ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
+		status = EXCLUDED.status,
+		failed_at = COALESCE(EXCLUDED.failed_at, phase_executions.failed_at),
+		error_details = COALESCE(EXCLUDED.error_details, phase_executions.error_details),
+		updated_at = NOW()`
+	_, err := exec.ExecContext(ctx, query, campaignID, phaseType, models.ExecutionStatusFailed, failedAt, errorDetails)
+	return err
+}
+
+func (s *campaignStorePostgres) upsertPhaseExecutionConfiguration(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, config json.RawMessage) error {
+	if exec == nil {
+		exec = s.db
+	}
+	if exec == nil {
+		return fmt.Errorf("nil exec provided")
+	}
+	query := `INSERT INTO phase_executions (campaign_id, phase_type, status, configuration, created_at, updated_at)
+	          VALUES ($1,$2,$3,$4,NOW(),NOW())
+	          ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
+			configuration = EXCLUDED.configuration,
+			updated_at = NOW()`
+	_, err := exec.ExecContext(ctx, query, campaignID, phaseType, models.ExecutionStatusConfigured, config)
+	return err
 }
 
 func (s *campaignStorePostgres) FailPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string, errorDetails map[string]interface{}) error {
@@ -1949,9 +2354,19 @@ func (s *campaignStorePostgres) FailPhase(ctx context.Context, exec store.Querie
 	}
 	now := time.Now().UTC()
 
-	var errorDetailsJSON interface{}
-	if errorDetails != nil {
-		payload, err := json.Marshal(errorDetails)
+	var errorDetailsJSON json.RawMessage
+	detailsPayload := errorDetails
+	if detailsPayload == nil && strings.TrimSpace(errorMessage) != "" {
+		detailsPayload = map[string]interface{}{}
+	}
+	if detailsPayload != nil {
+		if _, ok := detailsPayload["message"]; !ok && strings.TrimSpace(errorMessage) != "" {
+			detailsPayload["message"] = errorMessage
+		}
+		if _, ok := detailsPayload["code"]; !ok {
+			detailsPayload["code"] = "phase_failed"
+		}
+		payload, err := json.Marshal(detailsPayload)
 		if err != nil {
 			return fmt.Errorf("failed to marshal error details for phase %s campaign %s: %w", phaseType, campaignID, err)
 		}
@@ -1961,11 +2376,10 @@ func (s *campaignStorePostgres) FailPhase(ctx context.Context, exec store.Querie
 	query := `
 		UPDATE campaign_phases 
 		SET status = 'failed',
-		    error_message = $1,
-		    updated_at = $2
-		WHERE campaign_id = $3 AND phase_type = $4`
+		    updated_at = $1
+		WHERE campaign_id = $2 AND phase_type = $3`
 
-	result, err := exec.ExecContext(ctx, query, errorMessage, now, campaignID, phaseType)
+	result, err := exec.ExecContext(ctx, query, now, campaignID, phaseType)
 	if err != nil {
 		return fmt.Errorf("failed to fail phase %s for campaign %s: %w", phaseType, campaignID, err)
 	}
@@ -1975,16 +2389,7 @@ func (s *campaignStorePostgres) FailPhase(ctx context.Context, exec store.Querie
 		return fmt.Errorf("no phase %s found for campaign %s", phaseType, campaignID)
 	}
 
-	phaseExecQuery := `
-		INSERT INTO phase_executions (campaign_id, phase_type, status, failed_at, error_details, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-		ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
-			status = EXCLUDED.status,
-			failed_at = COALESCE(phase_executions.failed_at, EXCLUDED.failed_at),
-			error_details = COALESCE(EXCLUDED.error_details, phase_executions.error_details),
-			updated_at = NOW()`
-
-	if _, err := exec.ExecContext(ctx, phaseExecQuery, campaignID, phaseType, models.ExecutionStatusFailed, now, errorDetailsJSON); err != nil {
+	if err := s.upsertPhaseExecutionFailure(ctx, exec, campaignID, phaseType, now, errorDetailsJSON); err != nil {
 		return fmt.Errorf("failed to persist phase execution failure state for phase %s campaign %s: %w", phaseType, campaignID, err)
 	}
 

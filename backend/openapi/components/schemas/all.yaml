@@ -200,6 +200,10 @@ CampaignPhaseEnum:
   type: string
   description: Canonical campaign phase identifier
   enum: [discovery, validation, enrichment, extraction, analysis]
+CampaignRestartPhaseEnum:
+  type: string
+  description: Campaign phases eligible for manual restart controls (discovery executes offline and is excluded)
+  enum: [validation, extraction, analysis, enrichment]
 ExecutionStatusEnum:
   type: string
   enum: [not_started, ready, configured, in_progress, paused, completed, failed]
@@ -1855,6 +1859,38 @@ PhaseStatusResponse:
           timestamp: { type: string, format: date-time }
           code: { type: string }
   required: [phase, status, progress]
+CampaignRestartResponse:
+  type: object
+  description: Summary of a restart request that replays all non-discovery phases sequentially.
+  properties:
+    campaignId:
+      type: string
+      format: uuid
+    message:
+      type: string
+      description: Human-readable status message summarizing the restart attempt.
+    phasesRestarted:
+      type: array
+      description: Ordered list of phases that were successfully re-queued.
+      items: { $ref: '#/CampaignRestartPhaseEnum' }
+    skippedPhases:
+      type: array
+      description: Phases intentionally excluded from restart (always discovery today).
+      items: { $ref: '#/CampaignPhaseEnum' }
+    restartErrors:
+      type: array
+      description: Optional per-phase error details when some phases could not be restarted.
+      items:
+        type: object
+        properties:
+          phase: { $ref: '#/CampaignRestartPhaseEnum' }
+          message: { type: string }
+        required: [phase, message]
+    phaseStatuses:
+      type: array
+      description: Latest status snapshot for each restartable phase after enqueueing.
+      items: { $ref: '#/PhaseStatusResponse' }
+  required: [campaignId, phasesRestarted]
 CampaignProgressResponse:
   type: object
   properties:

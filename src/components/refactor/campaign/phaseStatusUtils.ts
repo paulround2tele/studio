@@ -70,8 +70,56 @@ function applySnapshot(phases: Map<PhaseKey, MutablePhase>, snapshot?: CampaignP
     phase.completedAt = phaseSnapshot.completedAt;
     const snapshotFailed = phaseSnapshot.status === 'failed';
     phase.failedAt = snapshotFailed ? phaseSnapshot.failedAt : undefined;
-    phase.errorMessage = snapshotFailed ? phaseSnapshot.errorMessage : undefined;
+    const normalizedErrorDetails = snapshotFailed
+      ? normalizePhaseErrorDetails(phaseSnapshot.errorDetails, phaseSnapshot.errorMessage)
+      : undefined;
+    phase.errorDetails = normalizedErrorDetails ?? undefined;
+    phase.errorMessage = snapshotFailed
+      ? extractErrorMessage(normalizedErrorDetails) ?? sanitizeErrorMessage(phaseSnapshot.errorMessage)
+      : undefined;
   });
+}
+
+function normalizePhaseErrorDetails(
+  details: Record<string, unknown> | null | undefined,
+  fallbackMessage?: string | null,
+): Record<string, unknown> | undefined {
+  if (isNonEmptyRecord(details)) {
+    return { ...details };
+  }
+
+  const sanitizedFallback = sanitizeErrorMessage(fallbackMessage);
+  return sanitizedFallback ? { message: sanitizedFallback } : undefined;
+}
+
+function extractErrorMessage(details?: Record<string, unknown> | null): string | undefined {
+  if (!details) {
+    return undefined;
+  }
+
+  const candidate = details.message ?? details.error ?? details.reason;
+  if (typeof candidate !== 'string') {
+    return undefined;
+  }
+
+  return sanitizeErrorMessage(candidate);
+}
+
+function sanitizeErrorMessage(message?: string | null): string | undefined {
+  if (typeof message !== 'string') {
+    return undefined;
+  }
+
+  const trimmed = message.trim();
+  return trimmed.length ? trimmed : undefined;
+}
+
+function isNonEmptyRecord(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+
+  return Boolean(Object.keys(value as Record<string, unknown>).length);
 }
 
 function applyFunnelFallback(phases: Map<PhaseKey, MutablePhase>, funnel?: FunnelData | null) {
@@ -125,11 +173,20 @@ function applySseOverlay(phases: Map<PhaseKey, MutablePhase>, ssePhases?: Pipeli
     if (ssePhase.status && ssePhase.status !== 'failed') {
       target.failedAt = undefined;
       target.errorMessage = undefined;
+      target.errorDetails = undefined;
     }
     assignIfPresent(target, ssePhase, 'lastMessage');
     assignIfPresent(target, ssePhase, 'errorMessage');
+    assignIfPresent(target, ssePhase, 'errorDetails');
     assignIfPresent(target, ssePhase, 'lastEventAt');
     assignIfPresent(target, ssePhase, 'failedAt');
+
+    if (!target.errorMessage) {
+      const derived = extractErrorMessage(target.errorDetails);
+      if (derived) {
+        target.errorMessage = derived;
+      }
+    }
   });
 }
 

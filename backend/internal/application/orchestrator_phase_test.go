@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -137,4 +138,111 @@ func containsAll(s string, subs []string) bool {
 		}
 	}
 	return true
+}
+
+func TestStartPhaseAnalysisRequiresHTTPCompletion(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := &testLogger{t: t}
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	campID := createTestCampaign(t, cs)
+
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, nil)
+
+	err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeAnalysis)
+	if err == nil {
+		t.Fatalf("expected dependency error when HTTP not completed")
+	}
+	var depErr *PhaseDependencyError
+	if !errors.As(err, &depErr) {
+		t.Fatalf("expected PhaseDependencyError, got %v", err)
+	}
+	if depErr.BlockingPhase != models.PhaseTypeHTTPKeywordValidation {
+		t.Fatalf("expected HTTP dependency, got %s", depErr.BlockingPhase)
+	}
+
+	if _, err := db.Exec(`INSERT INTO campaign_phases (campaign_id, phase_type, phase_order, status, progress_percentage, created_at, updated_at)
+		VALUES ($1,'http_keyword_validation',3,'completed',100,NOW(),NOW())`, campID); err != nil {
+		t.Fatalf("insert http row: %v", err)
+	}
+
+	if err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeAnalysis); err != nil {
+		t.Fatalf("analysis should start once HTTP completed: %v", err)
+	}
+}
+
+func TestStartPhaseHTTPRequiresDNSCompletion(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := &testLogger{t: t}
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	campID := createTestCampaign(t, cs)
+
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, nil)
+
+	err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeHTTPKeywordValidation)
+	if err == nil {
+		t.Fatalf("expected dependency error when DNS not completed")
+	}
+	var depErr *PhaseDependencyError
+	if !errors.As(err, &depErr) {
+		t.Fatalf("expected PhaseDependencyError, got %v", err)
+	}
+	if depErr.BlockingPhase != models.PhaseTypeDNSValidation {
+		t.Fatalf("expected DNS dependency, got %s", depErr.BlockingPhase)
+	}
+
+	if _, err := db.Exec(`INSERT INTO campaign_phases (campaign_id, phase_type, phase_order, status, progress_percentage, created_at, updated_at)
+		VALUES ($1,'dns_validation',2,'completed',100,NOW(),NOW())`, campID); err != nil {
+		t.Fatalf("insert dns row: %v", err)
+	}
+
+	if err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeHTTPKeywordValidation); err != nil {
+		t.Fatalf("http validation should start once DNS completes: %v", err)
+	}
+}
+
+func TestRestartCampaignFullSequenceRespectsMode(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := &testLogger{t: t}
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	campID := createTestCampaign(t, cs)
+	if err := cs.UpdateCampaignMode(context.Background(), nil, campID, "full_sequence"); err != nil {
+		t.Fatalf("set mode: %v", err)
+	}
+
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, nil)
+
+	result, err := orch.RestartCampaign(context.Background(), campID)
+	if err != nil {
+		t.Fatalf("restart full_sequence: %v", err)
+	}
+	if len(result.RestartedPhases) != 1 {
+		t.Fatalf("expected single phase restart, got %d", len(result.RestartedPhases))
+	}
+	if result.RestartedPhases[0] != models.PhaseTypeDNSValidation {
+		t.Fatalf("expected DNS to be restarted first, got %s", result.RestartedPhases[0])
+	}
+
+	waitPoll(t, time.Second, func() bool { return dnsSvc.executions(campID) >= 1 })
+	waitPoll(t, time.Second, func() bool { return httpSvc.executions(campID) >= 1 })
 }

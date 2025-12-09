@@ -1461,6 +1461,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/{campaignId}/phases/{phase}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pause campaign phase
+         * @description Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+         */
+        post: operations["campaigns_phase_pause"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/{campaignId}/mode": {
         parameters: {
             query?: never;
@@ -1506,6 +1526,26 @@ export interface paths {
         put?: never;
         /** Stop campaign phase */
         post: operations["campaigns_phase_stop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/restart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restart campaign pipeline (excludes discovery)
+         * @description Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
+         */
+        post: operations["campaigns_restart"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3155,6 +3195,29 @@ export interface components {
             campaignId: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        /**
+         * @description Campaign phases eligible for manual restart controls (discovery executes offline and is excluded)
+         * @enum {string}
+         */
+        CampaignRestartPhaseEnum: "validation" | "extraction" | "analysis" | "enrichment";
+        /** @description Summary of a restart request that replays all non-discovery phases sequentially. */
+        CampaignRestartResponse: {
+            /** Format: uuid */
+            campaignId: string;
+            /** @description Human-readable status message summarizing the restart attempt. */
+            message?: string;
+            /** @description Ordered list of phases that were successfully re-queued. */
+            phasesRestarted: components["schemas"]["CampaignRestartPhaseEnum"][];
+            /** @description Phases intentionally excluded from restart (always discovery today). */
+            skippedPhases?: components["schemas"]["CampaignPhaseEnum"][];
+            /** @description Optional per-phase error details when some phases could not be restarted. */
+            restartErrors?: {
+                phase: components["schemas"]["CampaignRestartPhaseEnum"];
+                message: string;
+            }[];
+            /** @description Latest status snapshot for each restartable phase after enqueueing. */
+            phaseStatuses?: components["schemas"]["PhaseStatusResponse"][];
         };
         /** @description Consolidated phase status list plus overall progress */
         CampaignPhasesStatusResponse: {
@@ -6942,6 +7005,33 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    campaigns_phase_pause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+                phase: components["schemas"]["CampaignPhaseEnum"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paused */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhaseStatusResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     campaigns_mode_update: {
         parameters: {
             query?: never;
@@ -7028,6 +7118,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PhaseStatusResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_restart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Restart scheduled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignRestartResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];

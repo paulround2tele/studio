@@ -1775,7 +1775,6 @@ BEGIN
         started_at = NULL,
         completed_at = NULL,
         failed_at = NULL,
-        error_message = NULL,
         progress_percentage = NULL,
         processed_items = NULL,
         successful_items = NULL,

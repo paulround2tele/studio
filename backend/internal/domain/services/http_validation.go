@@ -20,6 +20,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/fntelecomllc/studio/backend/internal/extraction"
+	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
 	"golang.org/x/net/html"
 
@@ -762,7 +763,9 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 
 	// Log keyword configuration snapshot (counts only) for transparency
 	var keywordSetCount, inlineKeywordCount, adHocCount int
-	var enrichmentFlag, microcrawlFlag bool
+	enrichmentFlag := isFeatureEnabled("ENABLE_HTTP_ENRICHMENT")
+	microcrawlFlag := isFeatureEnabled("ENABLE_HTTP_MICROCRAWL")
+	var enrichmentForced bool
 	if s.store != nil {
 		var exec store.Querier
 		if q, ok := s.deps.DB.(store.Querier); ok {
@@ -777,17 +780,15 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 				adHocCount = len(cfg.AdHocKeywords)
 				if cfg.EnrichmentEnabled != nil {
 					enrichmentFlag = *cfg.EnrichmentEnabled
-				} else {
-					enrichmentFlag = isFeatureEnabled("ENABLE_HTTP_ENRICHMENT")
 				}
 				if cfg.MicroCrawlEnabled != nil {
 					microcrawlFlag = *cfg.MicroCrawlEnabled
-				} else {
-					microcrawlFlag = isFeatureEnabled("ENABLE_HTTP_MICROCRAWL")
 				}
 			}
 		}
 	}
+	enrichmentFlag, forced := enforceEnrichmentForAnalysis(enrichmentFlag)
+	enrichmentForced = enrichmentForced || forced
 	s.deps.Logger.Info(ctx, "HTTP validation domain set ready", map[string]interface{}{
 		"campaign_id":        campaignID,
 		"domains_total":      len(domains),
@@ -795,6 +796,7 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 		"inline_keywords":    inlineKeywordCount,
 		"ad_hoc_keywords":    adHocCount,
 		"enrichment_enabled": enrichmentFlag,
+		"enrichment_forced":  enrichmentForced,
 		"microcrawl_enabled": microcrawlFlag,
 	})
 
@@ -863,11 +865,11 @@ func (s *httpValidationService) Cancel(ctx context.Context, campaignID uuid.UUID
 
 	execution, exists := s.executions[campaignID]
 	if !exists {
-		return fmt.Errorf("no HTTP validation in progress for campaign %s", campaignID)
+		return fmt.Errorf("%w: no HTTP validation in progress for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
 
 	if execution.Status != models.PhaseStatusInProgress {
-		return fmt.Errorf("HTTP validation not in progress for campaign %s", campaignID)
+		return fmt.Errorf("%w: HTTP validation not in progress for campaign %s", ErrPhaseNotRunning, campaignID)
 	}
 
 	// Signal cancellation
@@ -921,6 +923,7 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 
 	// Feature flags & config parsing
 	enrichmentEnabled := isFeatureEnabled("ENABLE_HTTP_ENRICHMENT")
+	enrichmentForced := false
 	microcrawlEnabled := isFeatureEnabled("ENABLE_HTTP_MICROCRAWL")
 	microMaxPages := 3
 	microByteBudget := 150000
@@ -946,6 +949,15 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 					microByteBudget = *cfg.MicroCrawlByteBudget
 				}
 			}
+		}
+	}
+	enrichmentEnabled, forced := enforceEnrichmentForAnalysis(enrichmentEnabled)
+	if forced {
+		enrichmentForced = true
+		if s.deps.Logger != nil {
+			s.deps.Logger.Info(ctx, "HTTP enrichment auto-enabled to satisfy analysis feature-table reads", map[string]interface{}{
+				"campaign_id": campaignID,
+			})
 		}
 	}
 
@@ -1385,6 +1397,7 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 		"results_count":      len(allResults),
 		"domains_tested":     len(domains),
 		"enrichment_enabled": enrichmentEnabled,
+		"enrichment_forced":  enrichmentForced,
 		"microcrawl_enabled": microcrawlEnabled,
 	})
 
@@ -2494,6 +2507,19 @@ func coalesceKeywordSources(cfg *models.HTTPPhaseConfigRequest) ([]string, []str
 		setIDs = nil
 	}
 	return setIDs, inlineKeywords
+}
+
+// enforceEnrichmentForAnalysis ensures enrichment is enabled whenever the analysis phase
+// is configured to read from the feature table. Returns the potentially updated flag and
+// whether the value was coerced.
+func enforceEnrichmentForAnalysis(enabled bool) (bool, bool) {
+	if !featureflags.IsAnalysisReadsFeatureTableEnabled() {
+		return enabled, false
+	}
+	if enabled {
+		return true, false
+	}
+	return true, true
 }
 
 func partitionKeywordInputs(inputs []string) ([]string, []string) {

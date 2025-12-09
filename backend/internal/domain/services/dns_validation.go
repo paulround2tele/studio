@@ -649,7 +649,7 @@ func (s *dnsValidationService) Cancel(ctx context.Context, campaignID uuid.UUID)
 
 	execution, exists := s.executions[campaignID]
 	if !exists {
-		return fmt.Errorf("no DNS validation execution found for campaign %s", campaignID)
+		return fmt.Errorf("%w: no DNS validation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
 
 	if execution.cancelFunc != nil {

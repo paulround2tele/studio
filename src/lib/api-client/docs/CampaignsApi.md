@@ -30,11 +30,13 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsPhaseExecutionGet**](#campaignsphaseexecutionget) | **GET** /campaigns/{campaignId}/phase-executions/{phaseType} | Get phase execution by phase type|
 |[**campaignsPhaseExecutionPut**](#campaignsphaseexecutionput) | **PUT** /campaigns/{campaignId}/phase-executions/{phaseType} | Update phase execution by phase type|
 |[**campaignsPhaseExecutionsList**](#campaignsphaseexecutionslist) | **GET** /campaigns/{campaignId}/phase-executions | List phase executions for a campaign|
+|[**campaignsPhasePause**](#campaignsphasepause) | **POST** /campaigns/{campaignId}/phases/{phase}/pause | Pause campaign phase|
 |[**campaignsPhaseStart**](#campaignsphasestart) | **POST** /campaigns/{campaignId}/phases/{phase}/start | Start campaign phase|
 |[**campaignsPhaseStatus**](#campaignsphasestatus) | **GET** /campaigns/{campaignId}/phases/{phase}/status | Get phase status|
 |[**campaignsPhaseStop**](#campaignsphasestop) | **POST** /campaigns/{campaignId}/phases/{phase}/stop | Stop campaign phase|
 |[**campaignsProgress**](#campaignsprogress) | **GET** /campaigns/{campaignId}/progress | Get campaign progress|
 |[**campaignsRecommendationsGet**](#campaignsrecommendationsget) | **GET** /campaigns/{campaignId}/insights/recommendations | Get campaign recommendations|
+|[**campaignsRestart**](#campaignsrestart) | **POST** /campaigns/{campaignId}/restart | Restart campaign pipeline (excludes discovery)|
 |[**campaignsStateDelete**](#campaignsstatedelete) | **DELETE** /campaigns/{campaignId}/state | Delete campaign state|
 |[**campaignsStateGet**](#campaignsstateget) | **GET** /campaigns/{campaignId}/state | Get campaign state|
 |[**campaignsStatePut**](#campaignsstateput) | **PUT** /campaigns/{campaignId}/state | Update campaign state|
@@ -1497,6 +1499,64 @@ const { status, data } = await apiInstance.campaignsPhaseExecutionsList(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **campaignsPhasePause**
+> PhaseStatusResponse campaignsPhasePause()
+
+Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let phase: CampaignPhaseEnum; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsPhasePause(
+    campaignId,
+    phase
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+| **phase** | **CampaignPhaseEnum** |  | defaults to undefined|
+
+
+### Return type
+
+**PhaseStatusResponse**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Paused |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **campaignsPhaseStart**
 > PhaseStatusResponse campaignsPhaseStart()
 
@@ -1768,6 +1828,61 @@ const { status, data } = await apiInstance.campaignsRecommendationsGet(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | OK |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsRestart**
+> CampaignRestartResponse campaignsRestart()
+
+Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsRestart(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignRestartResponse**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Restart scheduled |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
 

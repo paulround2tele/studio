@@ -105,6 +105,9 @@ docs/CampaignRecommendation.md
 docs/CampaignRecommendationsResponse.md
 docs/CampaignResponse.md
 docs/CampaignResponseProgress.md
+docs/CampaignRestartPhaseEnum.md
+docs/CampaignRestartResponse.md
+docs/CampaignRestartResponseRestartErrorsInner.md
 docs/CampaignSseAnalysisFailedEvent.md
 docs/CampaignSseAnalysisReuseEnrichmentEvent.md
 docs/CampaignSseCompletedEvent.md
@@ -348,6 +351,9 @@ models/campaign-recommendation.ts
 models/campaign-recommendations-response.ts
 models/campaign-response-progress.ts
 models/campaign-response.ts
+models/campaign-restart-phase-enum.ts
+models/campaign-restart-response-restart-errors-inner.ts
+models/campaign-restart-response.ts
 models/campaign-sse-analysis-failed-event.ts
 models/campaign-sse-analysis-reuse-enrichment-event.ts
 models/campaign-sse-completed-event.ts
