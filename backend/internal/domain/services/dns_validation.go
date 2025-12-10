@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -65,6 +66,9 @@ type dnsExecution struct {
 	invalidDomains    []string
 	lastError         string
 	pendingDomainLoad bool
+	pauseRequested    bool
+	pauseAck          chan struct{}
+	stopRequested     bool
 }
 
 // NewDNSValidationService creates a new DNS validation service
@@ -282,12 +286,10 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 		s.mu.Unlock()
 		return nil, fmt.Errorf("DNS validation not configured for campaign %s", campaignID)
 	}
-
 	if execution.status == models.PhaseStatusInProgress {
 		s.mu.Unlock()
 		return nil, fmt.Errorf("DNS validation already in progress for campaign %s", campaignID)
 	}
-
 	needsReload := execution.pendingDomainLoad || len(execution.domainsToValidate) == 0
 	s.mu.Unlock()
 
@@ -319,7 +321,6 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 			progressCh := execution.progressCh
 			s.mu.Unlock()
 
-			// Mark phase started so downstream logic observes a completed phase
 			if s.store != nil {
 				var exec store.Querier
 				if q, ok := s.deps.DB.(store.Querier); ok {
@@ -352,6 +353,8 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 		execution.itemsTotal = int64(len(domains))
 		execution.itemsProcessed = 0
 		execution.pendingDomainLoad = false
+		execution.pauseRequested = false
+		execution.pauseAck = nil
 		s.mu.Unlock()
 	}
 
@@ -361,16 +364,28 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 		s.mu.Unlock()
 		return nil, fmt.Errorf("DNS validation not configured for campaign %s", campaignID)
 	}
-
 	if execution.status == models.PhaseStatusInProgress {
 		s.mu.Unlock()
 		return nil, fmt.Errorf("DNS validation already in progress for campaign %s", campaignID)
 	}
-
+	resuming := execution.status == models.PhaseStatusPaused
+	if !resuming {
+		execution.itemsProcessed = 0
+		execution.validDomains = make([]string, 0)
+		execution.invalidDomains = make([]string, 0)
+	}
+	execution.pauseRequested = false
+	execution.stopRequested = false
+	if execution.pauseAck != nil {
+		close(execution.pauseAck)
+		execution.pauseAck = nil
+	}
 	execution.cancelCtx, execution.cancelFunc = context.WithCancel(ctx)
 	execution.progressCh = make(chan PhaseProgress, 100)
 	execution.status = models.PhaseStatusInProgress
-	execution.startedAt = time.Now()
+	if execution.startedAt.IsZero() {
+		execution.startedAt = time.Now()
+	}
 	domainCount := len(execution.domainsToValidate)
 	config := execution.config
 	progressCh := execution.progressCh
@@ -387,10 +402,10 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 				return execution.domainsToValidate
 			}(),
 			"configured_batch_size": config.BatchSize,
+			"resume":                resuming,
 		})
 	}
 
-	// Mark phase started
 	if s.store != nil {
 		var exec store.Querier
 		if q, ok := s.deps.DB.(store.Querier); ok {
@@ -399,7 +414,6 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 		_ = s.store.StartPhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation)
 	}
 
-	// Start execution in goroutine
 	go s.executeValidation(execution)
 
 	return progressCh, nil
@@ -407,20 +421,17 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 
 // executeValidation performs the actual DNS validation using dnsvalidator engine
 func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
-	defer close(execution.progressCh)
+	defer s.closeProgressChannel(execution)
 
 	ctx := execution.cancelCtx
 	campaignID := execution.campaignID
 	config := execution.config
-
+	domains := execution.domainsToValidate
 	batchSize := config.BatchSize
 	if batchSize <= 0 {
-		batchSize = 50 // Default batch size for DNS validation
+		batchSize = 50
 	}
 
-	domains := execution.domainsToValidate
-
-	// Load optional stealth runtime config and order from campaign domains data
 	jitterMin, jitterMax := 0, 0
 	if order, jMin, jMax, ok := s.loadStealthForDNS(execution.cancelCtx, execution.campaignID); ok {
 		if len(order) > 0 {
@@ -428,33 +439,42 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 		}
 		jitterMin, jitterMax = jMin, jMax
 	}
-	var processedCount int64
 
-	// Process domains in batches
-	for i := 0; i < len(domains); i += batchSize {
-		select {
-		case <-ctx.Done():
-			s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Execution cancelled by caller context")
+	for {
+		if err := ctx.Err(); err != nil {
+			if s.shouldPause(execution) {
+				s.handlePause(execution, "pause acknowledged")
+			} else {
+				s.handleFailure(execution, fmt.Sprintf("execution cancelled: %v", err))
+			}
 			return
-		default:
+		}
+		if s.shouldPause(execution) {
+			s.handlePause(execution, "pause acknowledged")
+			return
 		}
 
-		// Calculate batch end
-		end := i + batchSize
+		start := s.currentOffset(execution)
+		if start >= len(domains) {
+			break
+		}
+		end := start + batchSize
 		if end > len(domains) {
 			end = len(domains)
 		}
 
-		batch := domains[i:end]
-
-		// Validate batch using dnsvalidator engine
+		batch := domains[start:end]
 		results, err := s.validateDomainBatch(ctx, batch, config)
 		if err != nil {
-			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, fmt.Sprintf("DNS validation failed: %v", err))
+			if errors.Is(err, context.Canceled) && s.shouldPause(execution) {
+				s.handlePause(execution, "pause acknowledged")
+				return
+			}
+			s.handleFailure(execution, fmt.Sprintf("DNS validation failed: %v", err))
 			return
 		}
 
-		// Process results
+		var processedCount int64
 		for domain, outcome := range results {
 			s.mu.Lock()
 			if outcome.ok {
@@ -466,7 +486,6 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 			processedCount = execution.itemsProcessed
 			s.mu.Unlock()
 
-			// Record metrics for validation results
 			if s.metrics != nil {
 				if outcome.ok {
 					s.metrics.RecordMetric("dns_validation_valid_domains", 1.0)
@@ -476,30 +495,28 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 			}
 		}
 
-		// Store validation results
 		if err := s.storeValidationResults(ctx, campaignID, results); err != nil {
-			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, fmt.Sprintf("Failed to store validation results: %v", err))
+			s.handleFailure(execution, fmt.Sprintf("Failed to store validation results: %v", err))
 			return
 		}
 
-		// Send progress update
+		totalDomains := len(domains)
 		progress := PhaseProgress{
 			CampaignID:     campaignID,
 			Phase:          models.PhaseTypeDNSValidation,
 			Status:         models.PhaseStatusInProgress,
-			ProgressPct:    float64(processedCount) / float64(len(domains)) * 100,
-			ItemsTotal:     int64(len(domains)),
+			ProgressPct:    float64(processedCount) / float64(totalDomains) * 100,
+			ItemsTotal:     int64(totalDomains),
 			ItemsProcessed: processedCount,
 			Message:        fmt.Sprintf("Validated %d domains", processedCount),
 			Timestamp:      time.Now(),
 		}
-		// Persist progress
 		if s.store != nil {
 			var exec store.Querier
 			if q, ok := s.deps.DB.(store.Querier); ok {
 				exec = q
 			}
-			total := int64(len(domains))
+			total := int64(totalDomains)
 			processed := processedCount
 			_ = s.store.UpdatePhaseProgress(ctx, exec, campaignID, models.PhaseTypeDNSValidation, float64(processed)/float64(total)*100, &total, &processed, nil, nil)
 		}
@@ -507,10 +524,14 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 		select {
 		case execution.progressCh <- progress:
 		case <-ctx.Done():
+			if s.shouldPause(execution) {
+				s.handlePause(execution, "pause acknowledged")
+			} else {
+				s.handleFailure(execution, "execution cancelled while publishing progress")
+			}
 			return
 		}
 
-		// Publish progress event (guard EventBus)
 		if s.deps.EventBus != nil {
 			if err := s.deps.EventBus.PublishProgress(ctx, progress); err != nil {
 				if s.deps.Logger != nil {
@@ -519,32 +540,24 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 						"error":       err.Error(),
 					})
 				}
-
-				// Apply stealth jitter between batches if configured
-				if jitterMax > 0 {
-					delay := calcJitterMillis(jitterMin, jitterMax)
-					time.Sleep(time.Duration(delay) * time.Millisecond)
-				}
 			}
+		}
+		if jitterMax > 0 {
+			delay := calcJitterMillis(jitterMin, jitterMax)
+			time.Sleep(time.Duration(delay) * time.Millisecond)
+		}
+
+		if s.shouldPause(execution) {
+			s.handlePause(execution, "pause acknowledged")
+			return
 		}
 	}
 
-	// Mark as completed
 	s.mu.RLock()
 	validCount := len(execution.validDomains)
 	invalidCount := len(execution.invalidDomains)
 	s.mu.RUnlock()
-
-	s.updateExecutionStatus(campaignID, models.PhaseStatusCompleted, "DNS validation completed successfully")
-
-	if s.deps.Logger != nil {
-		s.deps.Logger.Info(ctx, "DNS validation completed", map[string]interface{}{
-			"campaign_id":     campaignID,
-			"domains_total":   len(domains),
-			"domains_valid":   validCount,
-			"domains_invalid": invalidCount,
-		})
-	}
+	s.handleCompletion(execution, len(domains), validCount, invalidCount)
 }
 
 // validateDomainBatch validates a batch of domains using the dnsvalidator engine
@@ -623,6 +636,7 @@ func (s *dnsValidationService) GetStatus(ctx context.Context, campaignID uuid.UU
 	if b, err := json.Marshal(execution.config); err == nil {
 		_ = json.Unmarshal(b, &cfgMap)
 	}
+	cfgMap["runtime_controls"] = s.Capabilities()
 	status := &PhaseStatus{
 		CampaignID:     campaignID,
 		Phase:          models.PhaseTypeDNSValidation,
@@ -642,6 +656,85 @@ func (s *dnsValidationService) GetStatus(ctx context.Context, campaignID uuid.UU
 	return status, nil
 }
 
+// Capabilities declares supported runtime controls for DNS validation.
+func (s *dnsValidationService) Capabilities() PhaseControlCapabilities {
+	return PhaseControlCapabilities{
+		CanPause:   true,
+		CanResume:  true,
+		CanStop:    true,
+		CanRestart: true,
+	}
+}
+
+// Pause requests a cooperative pause of the in-flight DNS validation run.
+func (s *dnsValidationService) Pause(ctx context.Context, campaignID uuid.UUID) error {
+	s.mu.Lock()
+	execution, exists := s.executions[campaignID]
+	if !exists {
+		s.mu.Unlock()
+		return fmt.Errorf("%w: no DNS validation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
+	}
+	if execution.status != models.PhaseStatusInProgress {
+		s.mu.Unlock()
+		return ErrPhaseNotRunning
+	}
+	if execution.pauseRequested {
+		ch := execution.pauseAck
+		s.mu.Unlock()
+		if ch == nil {
+			return nil
+		}
+		select {
+		case <-ch:
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(30 * time.Second):
+			return ErrPhasePauseTimeout
+		}
+	}
+	if execution.pauseAck == nil {
+		execution.pauseAck = make(chan struct{})
+	}
+	ch := execution.pauseAck
+	execution.pauseRequested = true
+	s.mu.Unlock()
+
+	select {
+	case <-ch:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(30 * time.Second):
+		return ErrPhasePauseTimeout
+	}
+}
+
+// Resume restarts a previously paused DNS validation execution.
+func (s *dnsValidationService) Resume(ctx context.Context, campaignID uuid.UUID) error {
+	s.mu.RLock()
+	execution, exists := s.executions[campaignID]
+	s.mu.RUnlock()
+	if !exists {
+		return fmt.Errorf("%w: no DNS validation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
+	}
+	if execution.status != models.PhaseStatusPaused {
+		return ErrPhaseNotPaused
+	}
+
+	progressCh, err := s.Execute(ctx, campaignID)
+	if err != nil {
+		return err
+	}
+	if progressCh != nil {
+		go func() {
+			for range progressCh {
+			}
+		}()
+	}
+	return nil
+}
+
 // Cancel stops the DNS validation execution
 func (s *dnsValidationService) Cancel(ctx context.Context, campaignID uuid.UUID) error {
 	s.mu.Lock()
@@ -653,6 +746,7 @@ func (s *dnsValidationService) Cancel(ctx context.Context, campaignID uuid.UUID)
 	}
 
 	if execution.cancelFunc != nil {
+		execution.stopRequested = true
 		execution.cancelFunc()
 	}
 
@@ -837,6 +931,61 @@ func calcJitterMillis(min, max int) int {
 		return max
 	}
 	return min + int(n.Int64())
+}
+
+func (s *dnsValidationService) closeProgressChannel(execution *dnsExecution) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if execution.progressCh != nil {
+		close(execution.progressCh)
+		execution.progressCh = nil
+	}
+}
+
+func (s *dnsValidationService) shouldPause(execution *dnsExecution) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return execution.pauseRequested
+}
+
+func (s *dnsValidationService) currentOffset(execution *dnsExecution) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return int(execution.itemsProcessed)
+}
+
+func (s *dnsValidationService) signalPauseAck(execution *dnsExecution) {
+	s.mu.Lock()
+	if execution.pauseAck != nil {
+		close(execution.pauseAck)
+		execution.pauseAck = nil
+	}
+	execution.pauseRequested = false
+	s.mu.Unlock()
+}
+
+func (s *dnsValidationService) handlePause(execution *dnsExecution, reason string) {
+	s.updateExecutionStatus(execution.campaignID, models.PhaseStatusPaused, reason)
+	s.signalPauseAck(execution)
+	s.closeProgressChannel(execution)
+}
+
+func (s *dnsValidationService) handleFailure(execution *dnsExecution, message string) {
+	s.updateExecutionStatus(execution.campaignID, models.PhaseStatusFailed, message)
+	s.signalPauseAck(execution)
+}
+
+func (s *dnsValidationService) handleCompletion(execution *dnsExecution, total int, validCount int, invalidCount int) {
+	s.updateExecutionStatus(execution.campaignID, models.PhaseStatusCompleted, "DNS validation completed successfully")
+	s.signalPauseAck(execution)
+	if s.deps.Logger != nil {
+		s.deps.Logger.Info(context.Background(), "DNS validation completed", map[string]interface{}{
+			"campaign_id":     execution.campaignID,
+			"domains_total":   total,
+			"domains_valid":   validCount,
+			"domains_invalid": invalidCount,
+		})
+	}
 }
 
 func (s *dnsValidationService) storeValidationResults(ctx context.Context, campaignID uuid.UUID, results map[string]dnsResultOutcome) error {

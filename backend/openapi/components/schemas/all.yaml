@@ -1834,6 +1834,9 @@ PhaseStatusResponse:
     configuration:
       type: object
       description: Current phase configuration
+    runtimeControls:
+      $ref: '#/PhaseRuntimeControls'
+      description: Supported runtime controls for this phase
     startedAt:
       type: string
       format: date-time
@@ -1859,6 +1862,15 @@ PhaseStatusResponse:
           timestamp: { type: string, format: date-time }
           code: { type: string }
   required: [phase, status, progress]
+PhaseRuntimeControls:
+  type: object
+  description: Declares which runtime controls are supported for a phase
+  properties:
+    canPause: { type: boolean }
+    canResume: { type: boolean }
+    canStop: { type: boolean }
+    canRestart: { type: boolean }
+  required: [canPause, canResume, canStop, canRestart]
 CampaignRestartResponse:
   type: object
   description: Summary of a restart request that replays all non-discovery phases sequentially.

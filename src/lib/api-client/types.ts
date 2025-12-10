@@ -1481,6 +1481,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/{campaignId}/phases/{phase}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume campaign phase
+         * @description Resume a previously paused phase and transition it back to in_progress when supported.
+         */
+        post: operations["campaigns_phase_resume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/{campaignId}/mode": {
         parameters: {
             query?: never;
@@ -3146,6 +3166,13 @@ export interface components {
          * @enum {string}
          */
         CampaignPhaseEnum: "discovery" | "validation" | "enrichment" | "extraction" | "analysis";
+        /** @description Declares which runtime controls are supported for a phase */
+        PhaseRuntimeControls: {
+            canPause: boolean;
+            canResume: boolean;
+            canStop: boolean;
+            canRestart: boolean;
+        };
         PhaseStatusResponse: {
             /** @enum {string} */
             phase: "discovery" | "validation" | "enrichment" | "extraction" | "analysis";
@@ -3153,6 +3180,8 @@ export interface components {
             status: "not_started" | "configured" | "running" | "paused" | "completed" | "failed";
             /** @description Current phase configuration */
             configuration?: Record<string, never>;
+            /** @description Supported runtime controls for this phase */
+            runtimeControls?: components["schemas"]["PhaseRuntimeControls"];
             /** Format: date-time */
             startedAt?: string | null;
             /** Format: date-time */
@@ -7018,6 +7047,33 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Paused */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhaseStatusResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_phase_resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+                phase: components["schemas"]["CampaignPhaseEnum"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resumed */
             200: {
                 headers: {
                     [name: string]: unknown;

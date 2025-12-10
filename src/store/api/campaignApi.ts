@@ -207,6 +207,28 @@ export const campaignApi = createApi({
       ],
     }),
 
+  resumePhaseStandalone: builder.mutation<
+      PhaseStatusResponse,
+      { campaignId: string; phase: string }
+    >({
+      queryFn: async ({ campaignId, phase }) => {
+        try {
+          const response = await campaignsApi.campaignsPhaseResume(campaignId, phase as CampaignPhaseEnum);
+          const data = unwrap<PhaseStatusResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty phase resume response' } } };
+          return { data };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
+        }
+      },
+      invalidatesTags: (result, error, { campaignId, phase }) => [
+        { type: 'Campaign', id: campaignId },
+        { type: 'CampaignProgress', id: campaignId },
+        { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
+      ],
+    }),
+
   stopPhaseStandalone: builder.mutation<
       PhaseStatusResponse,
       { campaignId: string; phase: string }
@@ -493,6 +515,7 @@ export const {
   useConfigurePhaseStandaloneMutation,
   useStartPhaseStandaloneMutation,
   usePausePhaseStandaloneMutation,
+  useResumePhaseStandaloneMutation,
   useStopPhaseStandaloneMutation,
   useGetPhaseStatusStandaloneQuery,
   useGetPatternOffsetQuery,

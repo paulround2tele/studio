@@ -18,7 +18,6 @@ func TestHTTPValidationPhase_StallCancellation(t *testing.T) {
 		Status:         models.PhaseStatusInProgress,
 		ItemsTotal:     10,
 		ItemsProcessed: 2,
-		CancelChan:     make(chan struct{}),
 		ProgressChan:   make(chan PhaseProgress, 1),
 	}
 	// Invoke cancel

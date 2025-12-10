@@ -113,6 +113,17 @@ type domainGenerationService struct {
 	executions map[uuid.UUID]*domainExecution
 }
 
+func (s *domainGenerationService) ensurePauseControl(execution *domainExecution) {
+	if execution == nil {
+		return
+	}
+	execution.pauseMu.Lock()
+	defer execution.pauseMu.Unlock()
+	if execution.pauseCond == nil {
+		execution.pauseCond = sync.NewCond(&execution.pauseMu)
+	}
+}
+
 // domainExecution tracks the state of a domain generation execution
 type domainExecution struct {
 	campaignID     uuid.UUID
@@ -129,6 +140,9 @@ type domainExecution struct {
 	itemsTotal     int64
 	itemsProcessed int64
 	lastError      string
+	pauseMu        sync.Mutex
+	pauseCond      *sync.Cond
+	paused         bool
 }
 
 // NewDomainGenerationService creates a new domain generation service
@@ -358,6 +372,9 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 		itemsTotal:     domainConfig.NumDomains,
 		itemsProcessed: 0,
 	}
+	if exec := s.executions[campaignID]; exec != nil {
+		exec.pauseCond = sync.NewCond(&exec.pauseMu)
+	}
 
 	s.deps.Logger.Info(ctx, "Domain generation phase configured successfully", map[string]interface{}{
 		"campaign_id":  campaignID,
@@ -392,6 +409,7 @@ func (s *domainGenerationService) Execute(ctx context.Context, campaignID uuid.U
 	if !exists {
 		return nil, fmt.Errorf("domain generation not configured for campaign %s", campaignID)
 	}
+	s.ensurePauseControl(execution)
 	// Allow execution to start when the phase has been configured but not yet running
 	if execution.status == models.PhaseStatusInProgress {
 		return nil, fmt.Errorf("domain generation already started for campaign %s", campaignID)
@@ -515,6 +533,7 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 	s.mu.Unlock()
 
 	for processedCount < config.NumDomains {
+		s.waitWhilePaused(execution)
 		select {
 		case <-ctx.Done():
 			// Treat external cancellation as a graceful pause; do not mark as failed
@@ -677,6 +696,20 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 	s.deps.Logger.Info(ctx, "Domain generation completed", logFields)
 }
 
+func (s *domainGenerationService) waitWhilePaused(execution *domainExecution) {
+	if execution == nil {
+		return
+	}
+	execution.pauseMu.Lock()
+	if execution.pauseCond == nil {
+		execution.pauseCond = sync.NewCond(&execution.pauseMu)
+	}
+	defer execution.pauseMu.Unlock()
+	for execution.paused {
+		execution.pauseCond.Wait()
+	}
+}
+
 // GetStatus returns the current status of domain generation
 func (s *domainGenerationService) GetStatus(ctx context.Context, campaignID uuid.UUID) (*PhaseStatus, error) {
 	s.mu.RLock()
@@ -700,6 +733,7 @@ func (s *domainGenerationService) GetStatus(ctx context.Context, campaignID uuid
 	if b, err := json.Marshal(execution.config); err == nil {
 		_ = json.Unmarshal(b, &cfgMap)
 	}
+	cfgMap["runtime_controls"] = s.Capabilities()
 	status := &PhaseStatus{
 		CampaignID:     campaignID,
 		Phase:          models.PhaseTypeDomainGeneration,
@@ -728,14 +762,93 @@ func (s *domainGenerationService) Cancel(ctx context.Context, campaignID uuid.UU
 	if !exists {
 		return fmt.Errorf("%w: no domain generation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
+	if execution.pauseCond == nil {
+		execution.pauseCond = sync.NewCond(&execution.pauseMu)
+	}
 
 	if execution.cancelFunc != nil {
+		execution.pauseMu.Lock()
+		execution.paused = false
+		execution.pauseCond.Broadcast()
+		execution.pauseMu.Unlock()
 		execution.cancelFunc()
 	}
 
 	s.deps.Logger.Info(ctx, "Domain generation cancelled", map[string]interface{}{
 		"campaign_id": campaignID,
 	})
+
+	return nil
+}
+
+// Capabilities exposes supported runtime controls for domain generation.
+func (s *domainGenerationService) Capabilities() PhaseControlCapabilities {
+	return PhaseControlCapabilities{
+		CanPause:   true,
+		CanResume:  true,
+		CanStop:    true,
+		CanRestart: true,
+	}
+}
+
+// Pause requests a cooperative pause of domain generation.
+func (s *domainGenerationService) Pause(ctx context.Context, campaignID uuid.UUID) error {
+	s.mu.Lock()
+	execution, exists := s.executions[campaignID]
+	if !exists {
+		s.mu.Unlock()
+		return fmt.Errorf("%w: no domain generation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
+	}
+	if execution.status != models.PhaseStatusInProgress {
+		s.mu.Unlock()
+		return ErrPhaseNotRunning
+	}
+	s.ensurePauseControl(execution)
+	execution.pauseMu.Lock()
+	if execution.paused {
+		execution.pauseMu.Unlock()
+		s.mu.Unlock()
+		return nil
+	}
+	execution.paused = true
+	execution.pauseMu.Unlock()
+	s.mu.Unlock()
+	s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Pause requested")
+	return nil
+}
+
+// Resume clears a prior pause and resumes domain generation progress.
+func (s *domainGenerationService) Resume(ctx context.Context, campaignID uuid.UUID) error {
+	s.mu.Lock()
+	execution, exists := s.executions[campaignID]
+	if !exists {
+		s.mu.Unlock()
+		return fmt.Errorf("%w: no domain generation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
+	}
+	if execution.status != models.PhaseStatusPaused {
+		s.mu.Unlock()
+		return ErrPhaseNotPaused
+	}
+	s.ensurePauseControl(execution)
+	execution.pauseMu.Lock()
+	if !execution.paused {
+		execution.pauseMu.Unlock()
+		s.mu.Unlock()
+		return nil
+	}
+	execution.paused = false
+	execution.pauseCond.Broadcast()
+	execution.pauseMu.Unlock()
+	execution.status = models.PhaseStatusInProgress
+	s.mu.Unlock()
+
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		_ = s.store.UpdatePhaseStatus(ctx, exec, campaignID, models.PhaseTypeDomainGeneration, models.PhaseStatusInProgress)
+	}
 
 	return nil
 }

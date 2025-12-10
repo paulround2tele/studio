@@ -22,6 +22,55 @@ type enrichmentService struct {
 	deps     Dependencies
 	mu       sync.RWMutex
 	statuses map[uuid.UUID]*PhaseStatus
+	controls map[uuid.UUID]*pauseControl
+	ctrlMu   sync.Mutex
+}
+
+func (s *enrichmentService) getControl(campaignID uuid.UUID) *pauseControl {
+	s.ctrlMu.Lock()
+	defer s.ctrlMu.Unlock()
+	if ctrl, ok := s.controls[campaignID]; ok {
+		return ctrl
+	}
+	ctrl := newPauseControl()
+	s.controls[campaignID] = ctrl
+	return ctrl
+}
+
+func (s *enrichmentService) waitIfPaused(ctrl *pauseControl) {
+	if ctrl == nil {
+		return
+	}
+	ctrl.wait()
+}
+
+type pauseControl struct {
+	mu     sync.Mutex
+	cond   *sync.Cond
+	paused bool
+}
+
+func newPauseControl() *pauseControl {
+	pc := &pauseControl{}
+	pc.cond = sync.NewCond(&pc.mu)
+	return pc
+}
+
+func (pc *pauseControl) setPaused(paused bool) {
+	pc.mu.Lock()
+	pc.paused = paused
+	if !paused {
+		pc.cond.Broadcast()
+	}
+	pc.mu.Unlock()
+}
+
+func (pc *pauseControl) wait() {
+	pc.mu.Lock()
+	for pc.paused {
+		pc.cond.Wait()
+	}
+	pc.mu.Unlock()
 }
 
 const (
@@ -95,6 +144,7 @@ func NewEnrichmentService(store store.CampaignStore, deps Dependencies) Enrichme
 		store:    store,
 		deps:     deps,
 		statuses: make(map[uuid.UUID]*PhaseStatus),
+		controls: make(map[uuid.UUID]*pauseControl),
 	}
 }
 
@@ -176,15 +226,26 @@ func (s *enrichmentService) GetStatus(ctx context.Context, campaignID uuid.UUID)
 	defer s.mu.RUnlock()
 	if st, ok := s.statuses[campaignID]; ok {
 		cp := *st
+		if cp.Configuration == nil {
+			cp.Configuration = map[string]interface{}{}
+		}
+		cp.Configuration["runtime_controls"] = s.Capabilities()
 		return &cp, nil
 	}
-	return &PhaseStatus{CampaignID: campaignID, Phase: models.PhaseTypeEnrichment, Status: models.PhaseStatusNotStarted}, nil
+	return &PhaseStatus{
+		CampaignID:    campaignID,
+		Phase:         models.PhaseTypeEnrichment,
+		Status:        models.PhaseStatusNotStarted,
+		Configuration: map[string]interface{}{"runtime_controls": s.Capabilities()},
+	}, nil
 }
 
 func (s *enrichmentService) Cancel(ctx context.Context, campaignID uuid.UUID) error {
 	if s.deps.Logger != nil {
 		s.deps.Logger.Warn(ctx, "Enrichment execution cancelled", map[string]interface{}{"campaign_id": campaignID})
 	}
+	ctrl := s.getControl(campaignID)
+	ctrl.setPaused(false)
 	s.updateStatus(campaignID, func(st *PhaseStatus) {
 		st.Status = models.PhaseStatusFailed
 		st.LastError = "enrichment cancelled"
@@ -203,8 +264,63 @@ func (s *enrichmentService) Validate(ctx context.Context, config interface{}) er
 	return nil
 }
 
+func (s *enrichmentService) Capabilities() PhaseControlCapabilities {
+	return PhaseControlCapabilities{
+		CanPause:   true,
+		CanResume:  true,
+		CanStop:    true,
+		CanRestart: true,
+	}
+}
+
+func (s *enrichmentService) Pause(ctx context.Context, campaignID uuid.UUID) error {
+	ctrl := s.getControl(campaignID)
+	s.mu.RLock()
+	status, ok := s.statuses[campaignID]
+	s.mu.RUnlock()
+	if !ok || status.Status != models.PhaseStatusInProgress {
+		return ErrPhaseNotRunning
+	}
+	ctrl.setPaused(true)
+	s.updateStatus(campaignID, func(st *PhaseStatus) {
+		st.Status = models.PhaseStatusPaused
+	})
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeEnrichment)
+	}
+	return nil
+}
+
+func (s *enrichmentService) Resume(ctx context.Context, campaignID uuid.UUID) error {
+	ctrl := s.getControl(campaignID)
+	s.mu.RLock()
+	status, ok := s.statuses[campaignID]
+	s.mu.RUnlock()
+	if !ok || status.Status != models.PhaseStatusPaused {
+		return ErrPhaseNotPaused
+	}
+	ctrl.setPaused(false)
+	s.updateStatus(campaignID, func(st *PhaseStatus) {
+		st.Status = models.PhaseStatusInProgress
+	})
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		_ = s.store.UpdatePhaseStatus(ctx, exec, campaignID, models.PhaseTypeEnrichment, models.PhaseStatusInProgress)
+	}
+	return nil
+}
+
 func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.UUID, exec store.Querier, cfg enrichmentConfig, total int, progressCh chan<- PhaseProgress) {
 	defer close(progressCh)
+
+	ctrl := s.getControl(campaignID)
 
 	examined := 0
 	updated := 0
@@ -235,6 +351,7 @@ func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.U
 	var runErr error
 
 	for offset := 0; offset < total && runErr == nil; offset += enrichmentBatchSize {
+		s.waitIfPaused(ctrl)
 		if err := ctx.Err(); err != nil {
 			s.failWithContextError(campaignID, err)
 			s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, "Enrichment cancelled", progressCh)
@@ -251,6 +368,7 @@ func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.U
 		}
 
 		for _, candidate := range batch {
+			s.waitIfPaused(ctrl)
 			if err := ctx.Err(); err != nil {
 				s.failWithContextError(campaignID, err)
 				s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, "Enrichment cancelled", progressCh)

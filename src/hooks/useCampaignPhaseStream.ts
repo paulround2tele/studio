@@ -368,11 +368,13 @@ export function useCampaignPhaseStream(
       }
 
       const startedAt = extractTimestamp(event.results, ['started_at', 'startedAt']);
+      const backendStatus = mapBackendStatus(event.status);
+      const nextStatus: PipelinePhase['status'] = backendStatus ?? 'in_progress';
 
       emitPhaseUpdate(
         normalizedPhase,
         {
-          status: 'in_progress',
+          status: nextStatus,
           ...(startedAt ? { startedAt } : {}),
         },
         {

@@ -209,6 +209,7 @@ docs/PhaseExecution.md
 docs/PhaseExecutionUpdate.md
 docs/PhaseFailedEvent.md
 docs/PhaseProgressSummary.md
+docs/PhaseRuntimeControls.md
 docs/PhaseStatusResponse.md
 docs/PhaseStatusResponseErrorsInner.md
 docs/PhaseStatusResponseProgress.md
@@ -448,6 +449,7 @@ models/phase-execution-update.ts
 models/phase-execution.ts
 models/phase-failed-event.ts
 models/phase-progress-summary.ts
+models/phase-runtime-controls.ts
 models/phase-status-response-errors-inner.ts
 models/phase-status-response-progress.ts
 models/phase-status-response.ts

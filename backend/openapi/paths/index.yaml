@@ -179,6 +179,8 @@
   $ref: "./campaigns/phase-start.yaml"
 "/campaigns/{campaignId}/phases/{phase}/pause":
   $ref: "./campaigns/phase-pause.yaml"
+"/campaigns/{campaignId}/phases/{phase}/resume":
+  $ref: "./campaigns/phase-resume.yaml"
 "/campaigns/{campaignId}/mode":
   $ref: "./campaigns/mode-update.yaml"
 "/campaigns/{campaignId}/configs":

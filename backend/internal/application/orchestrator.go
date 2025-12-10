@@ -542,25 +542,52 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 	if err != nil {
 		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
 	}
-	if err := service.Cancel(ctx, campaignID); err != nil {
-		if o.deps.Logger != nil {
-			o.deps.Logger.Warn(ctx, "phase pause cancel failed", map[string]interface{}{
-				"campaign_id": campaignID,
-				"phase":       phase,
-				"error":       err.Error(),
-			})
-		}
-	}
-
-	querier, ok := o.deps.DB.(store.Querier)
+	controller, ok := service.(domainservices.PhaseController)
 	if !ok {
-		return fmt.Errorf("invalid database interface in dependencies")
+		return domainservices.ErrPhasePauseUnsupported
 	}
-	if err := o.store.PausePhase(ctx, querier, campaignID, phase); err != nil {
-		return fmt.Errorf("failed to mark phase %s paused: %w", phase, err)
+	caps := controller.Capabilities()
+	if !caps.CanPause {
+		return domainservices.ErrPhasePauseUnsupported
+	}
+	if err := controller.Pause(ctx, campaignID); err != nil {
+		return fmt.Errorf("failed to pause phase %s: %w", phase, err)
 	}
 
 	o.deps.Logger.Info(ctx, "Phase paused successfully", map[string]interface{}{
+		"campaign_id": campaignID,
+		"phase":       phase,
+	})
+	return nil
+}
+
+// ResumePhase transitions a paused phase back to in-progress execution when supported.
+func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	if o.store == nil {
+		return fmt.Errorf("campaign store not initialized")
+	}
+	o.deps.Logger.Info(ctx, "Resuming campaign phase", map[string]interface{}{
+		"campaign_id": campaignID,
+		"phase":       phase,
+	})
+
+	service, err := o.getPhaseService(phase)
+	if err != nil {
+		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
+	}
+	controller, ok := service.(domainservices.PhaseController)
+	if !ok {
+		return domainservices.ErrPhaseResumeUnsupported
+	}
+	caps := controller.Capabilities()
+	if !caps.CanResume {
+		return domainservices.ErrPhaseResumeUnsupported
+	}
+	if err := controller.Resume(ctx, campaignID); err != nil {
+		return fmt.Errorf("failed to resume phase %s: %w", phase, err)
+	}
+
+	o.deps.Logger.Info(ctx, "Phase resumed successfully", map[string]interface{}{
 		"campaign_id": campaignID,
 		"phase":       phase,
 	})

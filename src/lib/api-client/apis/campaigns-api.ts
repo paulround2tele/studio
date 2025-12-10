@@ -1320,6 +1320,50 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
+         * Resume a previously paused phase and transition it back to in_progress when supported.
+         * @summary Resume campaign phase
+         * @param {string} campaignId 
+         * @param {CampaignPhaseEnum} phase 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhaseResume: async (campaignId: string, phase: CampaignPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsPhaseResume', 'campaignId', campaignId)
+            // verify required parameter 'phase' is not null or undefined
+            assertParamExists('campaignsPhaseResume', 'phase', phase)
+            const localVarPath = `/campaigns/{campaignId}/phases/{phase}/resume`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)))
+                .replace(`{${"phase"}}`, encodeURIComponent(String(phase)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+
+            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
+            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
+            const localVarQueryParameter: Record<string, unknown> = {};
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
+            if (baseOptions.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            
+            if (options.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            localVarRequestOptions.headers = headerParams.toJSON();
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * 
          * @summary Start campaign phase
          * @param {string} campaignId 
@@ -2288,6 +2332,20 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Resume a previously paused phase and transition it back to in_progress when supported.
+         * @summary Resume campaign phase
+         * @param {string} campaignId 
+         * @param {CampaignPhaseEnum} phase 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseResume(campaignId, phase, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseResume']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * 
          * @summary Start campaign phase
          * @param {string} campaignId 
@@ -2778,6 +2836,17 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.campaignsPhasePause(campaignId, phase, options).then((request) => request(axios, basePath));
         },
         /**
+         * Resume a previously paused phase and transition it back to in_progress when supported.
+         * @summary Resume campaign phase
+         * @param {string} campaignId 
+         * @param {CampaignPhaseEnum} phase 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
+            return localVarFp.campaignsPhaseResume(campaignId, phase, options).then((request) => request(axios, basePath));
+        },
+        /**
          * 
          * @summary Start campaign phase
          * @param {string} campaignId 
@@ -3223,6 +3292,17 @@ export interface CampaignsApiInterface {
      * @memberof CampaignsApiInterface
      */
     campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
+
+    /**
+     * Resume a previously paused phase and transition it back to in_progress when supported.
+     * @summary Resume campaign phase
+     * @param {string} campaignId 
+     * @param {CampaignPhaseEnum} phase 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
 
     /**
      * 
@@ -3723,6 +3803,19 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      */
     public campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).campaignsPhasePause(campaignId, phase, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Resume a previously paused phase and transition it back to in_progress when supported.
+     * @summary Resume campaign phase
+     * @param {string} campaignId 
+     * @param {CampaignPhaseEnum} phase 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsPhaseResume(campaignId, phase, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

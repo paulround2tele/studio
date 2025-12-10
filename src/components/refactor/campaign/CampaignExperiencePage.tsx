@@ -47,6 +47,7 @@ import {
   useRestartCampaignMutation,
   useStartPhaseStandaloneMutation,
   usePausePhaseStandaloneMutation,
+  useResumePhaseStandaloneMutation,
   useStopPhaseStandaloneMutation
 } from '@/store/api/campaignApi';
 import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
@@ -185,6 +186,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   const { toast } = useToast();
   const [startPhaseMutation, { isLoading: isStartPhaseLoading }] = useStartPhaseStandaloneMutation();
   const [pausePhaseMutation, { isLoading: isPausePhaseLoading }] = usePausePhaseStandaloneMutation();
+  const [resumePhaseMutation, { isLoading: isResumePhaseLoading }] = useResumePhaseStandaloneMutation();
   const [stopPhaseMutation, { isLoading: isStopPhaseLoading }] = useStopPhaseStandaloneMutation();
   const [restartCampaignMutation] = useRestartCampaignMutation();
   const [selectedPhaseKey, setSelectedPhaseKey] = React.useState<ApiPhase>('validation');
@@ -260,6 +262,33 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     sseLastUpdate: lastUpdate
   }), [statusSnapshot, funnelData, phases, lastUpdate]);
 
+  const activePhaseKey = React.useMemo(() => {
+    const runningPhase = pipelinePhases.find((phase) => phase.status === 'in_progress');
+    if (!runningPhase) {
+      return null;
+    }
+    return normalizeToApiPhase(String(runningPhase.key).toLowerCase());
+  }, [pipelinePhases]);
+
+  const selectedPhaseMeta = React.useMemo(() => {
+    if (!selectedPhaseKey) {
+      return null;
+    }
+    return pipelinePhases.find((phase) => normalizeToApiPhase(String(phase.key).toLowerCase()) === selectedPhaseKey) ?? null;
+  }, [pipelinePhases, selectedPhaseKey]);
+
+  const selectedPhaseStatus = selectedPhaseMeta?.status ?? 'not_started';
+  const isSelectedPhasePaused = selectedPhaseStatus === 'paused';
+  const isSelectedPhaseRunning = selectedPhaseStatus === 'in_progress';
+  
+  // Simple logic: if running → can pause/stop, if paused → can resume
+  const canPauseSelectedPhase = isSelectedPhaseRunning;
+  const canStopSelectedPhase = isSelectedPhaseRunning;
+  const canRunSelectedPhase = !isSelectedPhaseRunning; // Can run if not already running
+  
+  const runButtonLabel = isSelectedPhasePaused ? 'Resume Selected Phase' : 'Run Selected Phase';
+  const runButtonBusyLabel = isSelectedPhasePaused ? 'Resuming…' : 'Starting…';
+
   const phaseOptions = React.useMemo(() => {
     return pipelinePhases
       .map((phase) => {
@@ -272,13 +301,8 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
           label: phase.label ?? getPhaseDisplayName(normalized as ApiPhase),
           status: phase.status,
         };
-        })
-        .filter((option): option is { value: ApiPhase; label: string; status: PipelinePhase['status'] } => {
-          if (!option) {
-            return false;
-          }
-          return option.value !== 'discovery';
-        });
+      })
+      .filter((option): option is { value: ApiPhase; label: string; status: PipelinePhase['status'] } => Boolean(option));
   }, [pipelinePhases]);
 
   const failedPhaseKeys = React.useMemo(() => {
@@ -287,7 +311,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         return acc;
       }
       const normalized = normalizeToApiPhase(String(phase.key).toLowerCase());
-      if (normalized && normalized !== 'discovery' && !acc.includes(normalized as ApiPhase)) {
+      if (normalized && !acc.includes(normalized as ApiPhase)) {
         acc.push(normalized as ApiPhase);
       }
       return acc;
@@ -296,7 +320,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
 
   const orderedPhaseKeys = React.useMemo(() => {
     const available = new Set<ApiPhase>(phaseOptions.map((option) => option.value));
-    return API_PHASE_ORDER.filter((phase) => phase !== 'discovery' && available.has(phase));
+    return API_PHASE_ORDER.filter((phase) => available.has(phase));
   }, [phaseOptions]);
 
   const preferredPhaseSelection = React.useMemo<ApiPhase>(() => {
@@ -307,16 +331,28 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   }, [failedPhaseKeys, phaseOptions]);
 
   React.useEffect(() => {
+    if (!activePhaseKey) {
+      return;
+    }
+    if (selectedPhaseKey !== activePhaseKey) {
+      setSelectedPhaseKey(activePhaseKey as ApiPhase);
+    }
+  }, [activePhaseKey, selectedPhaseKey]);
+
+  React.useEffect(() => {
+    if (activePhaseKey) {
+      return;
+    }
     if (selectedPhaseKey !== preferredPhaseSelection) {
       setSelectedPhaseKey(preferredPhaseSelection);
     }
-  }, [preferredPhaseSelection, selectedPhaseKey]);
+  }, [activePhaseKey, preferredPhaseSelection, selectedPhaseKey]);
 
   const hasFailedPhases = failedPhaseKeys.length > 0;
   const isBulkActionRunning = bulkAction !== 'idle';
   const isRetryingFailed = bulkAction === 'retryFailed';
   const isRestartingCampaign = bulkAction === 'restartCampaign';
-  const isActionDisabled = isStartPhaseLoading || isPausePhaseLoading || isStopPhaseLoading || isBulkActionRunning;
+  const isActionDisabled = isStartPhaseLoading || isPausePhaseLoading || isResumePhaseLoading || isStopPhaseLoading || isBulkActionRunning;
 
   const startPhaseInternal = React.useCallback(
     async (phaseKey: ApiPhase) => {
@@ -331,15 +367,37 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     [campaignId, startPhaseMutation]
   );
 
+  const resumePhaseInternal = React.useCallback(
+    async (phaseKey: ApiPhase) => {
+      if (!campaignId) {
+        throw new Error('Campaign not found');
+      }
+      await resumePhaseMutation({
+        campaignId,
+        phase: phaseKey as CampaignPhaseEnum,
+      }).unwrap();
+    },
+    [campaignId, resumePhaseMutation]
+  );
+
   const handleRunSelectedPhase = React.useCallback(async () => {
-    if (!selectedPhaseKey) {
+    if (!selectedPhaseKey || !canRunSelectedPhase) {
       return;
     }
     try {
-      await startPhaseInternal(selectedPhaseKey);
+      const isResume = selectedPhaseStatus === 'paused';
+      if (isResume) {
+        await resumePhaseInternal(selectedPhaseKey);
+      } else {
+        await startPhaseInternal(selectedPhaseKey);
+      }
       toast({
-        title: `${getPhaseDisplayName(selectedPhaseKey)} queued`,
-        description: 'Phase restart requested successfully.',
+        title: isResume
+          ? `${getPhaseDisplayName(selectedPhaseKey)} resume requested`
+          : `${getPhaseDisplayName(selectedPhaseKey)} queued`,
+        description: isResume
+          ? 'Phase resume requested successfully.'
+          : 'Phase restart requested successfully.',
       });
     } catch (error) {
       toast({
@@ -348,10 +406,10 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         variant: 'destructive',
       });
     }
-  }, [selectedPhaseKey, startPhaseInternal, toast]);
+  }, [canRunSelectedPhase, resumePhaseInternal, selectedPhaseKey, selectedPhaseStatus, startPhaseInternal, toast]);
 
   const handlePauseSelectedPhase = React.useCallback(async () => {
-    if (!selectedPhaseKey || selectedPhaseKey === 'discovery' || !campaignId) {
+    if (!selectedPhaseKey || !campaignId || !canPauseSelectedPhase) {
       return;
     }
     try {
@@ -367,10 +425,10 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         variant: 'destructive',
       });
     }
-  }, [campaignId, pausePhaseMutation, selectedPhaseKey, toast]);
+  }, [campaignId, canPauseSelectedPhase, pausePhaseMutation, selectedPhaseKey, toast]);
 
   const handleStopSelectedPhase = React.useCallback(async () => {
-    if (!selectedPhaseKey || selectedPhaseKey === 'discovery' || !campaignId) {
+    if (!selectedPhaseKey || !campaignId || !canStopSelectedPhase) {
       return;
     }
     try {
@@ -386,7 +444,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         variant: 'destructive',
       });
     }
-  }, [campaignId, selectedPhaseKey, stopPhaseMutation, toast]);
+  }, [campaignId, canStopSelectedPhase, selectedPhaseKey, stopPhaseMutation, toast]);
 
   const handleRetryFailedPhases = React.useCallback(async () => {
     if (!failedPhaseKeys.length) {
@@ -707,35 +765,35 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
             <div className="flex flex-wrap gap-3">
               <Button
                 onClick={handleRunSelectedPhase}
-                disabled={!selectedPhaseKey || isActionDisabled}
+                disabled={!selectedPhaseKey || isActionDisabled || !canRunSelectedPhase}
                 className="min-w-[150px]"
               >
                 {isStartPhaseLoading && !isBulkActionRunning && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {isStartPhaseLoading && !isBulkActionRunning ? 'Starting…' : 'Run Selected Phase'}
+                {isStartPhaseLoading && !isBulkActionRunning ? runButtonBusyLabel : runButtonLabel}
               </Button>
               <Button
                 variant="outline"
                 onClick={handlePauseSelectedPhase}
-                disabled={!selectedPhaseKey || isActionDisabled}
+                disabled={!selectedPhaseKey || isActionDisabled || !canPauseSelectedPhase}
                 className="min-w-[150px]"
               >
                 {isPausePhaseLoading && !isBulkActionRunning && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Pause Campaign
+                Pause Phase
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleStopSelectedPhase}
-                disabled={!selectedPhaseKey || isActionDisabled}
+                disabled={!selectedPhaseKey || isActionDisabled || !canStopSelectedPhase}
                 className="min-w-[150px]"
               >
                 {isStopPhaseLoading && !isBulkActionRunning && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Stop Campaign
+                Stop Phase
               </Button>
               <Button
                 variant="secondary"

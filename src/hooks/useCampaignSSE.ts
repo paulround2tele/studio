@@ -190,18 +190,42 @@ function _mapRawToCampaignSSE(event: SSEEvent): CampaignSSEEvent | undefined {
       }
       case 'phase_started': {
         if (!(event.data && typeof event.data === 'object')) return undefined;
-        const payload = event.data as { phase?: CampaignPhase | string; message?: string; results?: Record<string, unknown> };
-        return { type: 'phase_started', phase: (payload.phase as CampaignPhase) || ('' as CampaignPhase), message: payload.message || 'Phase started', results: payload.results, ...base } as SsePhaseStartedEvent;
+        const payload = event.data as { phase?: CampaignPhase | string; message?: string; status?: string; results?: Record<string, unknown> };
+        const status = typeof payload.status === 'string' ? payload.status : undefined;
+        return {
+          type: 'phase_started',
+          phase: (payload.phase as CampaignPhase) || ('' as CampaignPhase),
+          message: payload.message || 'Phase started',
+          status,
+          results: payload.results,
+          ...base,
+        } as SsePhaseStartedEvent;
       }
       case 'phase_completed': {
         if (!(event.data && typeof event.data === 'object')) return undefined;
-        const payload = event.data as { phase?: CampaignPhase | string; message?: string; results?: Record<string, unknown> };
-        return { type: 'phase_completed', phase: (payload.phase as CampaignPhase) || ('' as CampaignPhase), message: payload.message || 'Phase completed', results: payload.results, ...base } as SsePhaseCompletedEvent;
+        const payload = event.data as { phase?: CampaignPhase | string; message?: string; status?: string; results?: Record<string, unknown> };
+        const status = typeof payload.status === 'string' ? payload.status : undefined;
+        return {
+          type: 'phase_completed',
+          phase: (payload.phase as CampaignPhase) || ('' as CampaignPhase),
+          message: payload.message || 'Phase completed',
+          status,
+          results: payload.results,
+          ...base,
+        } as SsePhaseCompletedEvent;
       }
       case 'phase_failed': {
         if (!(event.data && typeof event.data === 'object')) return undefined;
-        const payload = event.data as { phase?: CampaignPhase | string; message?: string; error?: string };
-        return { type: 'phase_failed', phase: (payload.phase as CampaignPhase) || ('' as CampaignPhase), message: payload.message || 'Phase failed', error: payload.error || 'Phase failed', ...base } as SsePhaseFailedEvent;
+        const payload = event.data as { phase?: CampaignPhase | string; message?: string; error?: string; status?: string };
+        const status = typeof payload.status === 'string' ? payload.status : undefined;
+        return {
+          type: 'phase_failed',
+          phase: (payload.phase as CampaignPhase) || ('' as CampaignPhase),
+          message: payload.message || 'Phase failed',
+          error: payload.error || 'Phase failed',
+          status,
+          ...base,
+        } as SsePhaseFailedEvent;
       }
       default:
         return undefined;

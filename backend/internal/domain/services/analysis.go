@@ -255,6 +255,39 @@ type analysisExecution struct {
 	KeywordResults map[string][]keywordextractor.KeywordExtractionResult `json:"keyword_results,omitempty"` // domain -> keywords
 	CancelChan     chan struct{}                                         `json:"-"`
 	ProgressChan   chan PhaseProgress                                    `json:"-"`
+	pauseMu        sync.Mutex
+	pauseCond      *sync.Cond
+	paused         bool
+}
+
+func (s *analysisService) ensurePauseControl(execution *analysisExecution) {
+	if execution == nil {
+		return
+	}
+	execution.pauseMu.Lock()
+	if execution.pauseCond == nil {
+		execution.pauseCond = sync.NewCond(&execution.pauseMu)
+	}
+	execution.pauseMu.Unlock()
+}
+
+func (s *analysisService) getExecution(campaignID uuid.UUID) *analysisExecution {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.executions[campaignID]
+}
+
+func (s *analysisService) waitIfPausedByCampaign(campaignID uuid.UUID) {
+	execution := s.getExecution(campaignID)
+	if execution == nil {
+		return
+	}
+	s.ensurePauseControl(execution)
+	execution.pauseMu.Lock()
+	for execution.paused {
+		execution.pauseCond.Wait()
+	}
+	execution.pauseMu.Unlock()
 }
 
 // AnalysisConfig represents configuration for analysis phase
@@ -540,6 +573,11 @@ func (s *analysisService) Execute(ctx context.Context, campaignID uuid.UUID) (<-
 			}
 			existing.ContentResults = make(map[string][]byte)
 			existing.KeywordResults = make(map[string][]keywordextractor.KeywordExtractionResult)
+			s.ensurePauseControl(existing)
+			existing.pauseMu.Lock()
+			existing.paused = false
+			existing.pauseCond.Broadcast()
+			existing.pauseMu.Unlock()
 			reuseExisting = true
 		case models.PhaseStatusCompleted, models.PhaseStatusFailed, models.PhaseStatusPaused:
 			if existing.ProgressChan != nil {
@@ -562,6 +600,7 @@ func (s *analysisService) Execute(ctx context.Context, campaignID uuid.UUID) (<-
 			ContentResults: make(map[string][]byte),
 			KeywordResults: make(map[string][]keywordextractor.KeywordExtractionResult),
 		}
+		s.ensurePauseControl(execution)
 		s.executions[campaignID] = execution
 	}
 	s.mu.Unlock()
@@ -614,7 +653,7 @@ func (s *analysisService) GetStatus(ctx context.Context, campaignID uuid.UUID) (
 			ProgressPct:    0.0,
 			ItemsTotal:     0,
 			ItemsProcessed: 0,
-			Configuration:  map[string]interface{}{},
+			Configuration:  map[string]interface{}{"runtime_controls": s.Capabilities()},
 		}, nil
 	}
 
@@ -622,9 +661,11 @@ func (s *analysisService) GetStatus(ctx context.Context, campaignID uuid.UUID) (
 	if !execution.StartedAt.IsZero() {
 		startedPtr = &execution.StartedAt
 	}
-	cfgMap := map[string]interface{}{}
-	cfgMap["itemsTotal"] = execution.ItemsTotal
-	cfgMap["itemsProcessed"] = execution.ItemsProcessed
+	cfgMap := map[string]interface{}{
+		"runtime_controls": s.Capabilities(),
+		"itemsTotal":       execution.ItemsTotal,
+		"itemsProcessed":   execution.ItemsProcessed,
+	}
 
 	return &PhaseStatus{
 		Phase:          models.PhaseTypeAnalysis,
@@ -637,6 +678,75 @@ func (s *analysisService) GetStatus(ctx context.Context, campaignID uuid.UUID) (
 		LastError:      execution.ErrorMessage,
 		Configuration:  cfgMap,
 	}, nil
+}
+
+func (s *analysisService) Capabilities() PhaseControlCapabilities {
+	return PhaseControlCapabilities{
+		CanPause:   true,
+		CanResume:  true,
+		CanStop:    true,
+		CanRestart: true,
+	}
+}
+
+func (s *analysisService) Pause(ctx context.Context, campaignID uuid.UUID) error {
+	s.mu.Lock()
+	execution, exists := s.executions[campaignID]
+	if !exists {
+		s.mu.Unlock()
+		return fmt.Errorf("%w: no analysis execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
+	}
+	if execution.Status != models.PhaseStatusInProgress {
+		s.mu.Unlock()
+		return ErrPhaseNotRunning
+	}
+	s.ensurePauseControl(execution)
+	execution.pauseMu.Lock()
+	if execution.paused {
+		execution.pauseMu.Unlock()
+		s.mu.Unlock()
+		return nil
+	}
+	execution.paused = true
+	execution.pauseMu.Unlock()
+	s.mu.Unlock()
+
+	s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Pause requested")
+	return nil
+}
+
+func (s *analysisService) Resume(ctx context.Context, campaignID uuid.UUID) error {
+	s.mu.Lock()
+	execution, exists := s.executions[campaignID]
+	if !exists {
+		s.mu.Unlock()
+		return fmt.Errorf("%w: no analysis execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
+	}
+	if execution.Status != models.PhaseStatusPaused {
+		s.mu.Unlock()
+		return ErrPhaseNotPaused
+	}
+	s.ensurePauseControl(execution)
+	execution.pauseMu.Lock()
+	if !execution.paused {
+		execution.pauseMu.Unlock()
+		s.mu.Unlock()
+		return nil
+	}
+	execution.paused = false
+	execution.pauseCond.Broadcast()
+	execution.pauseMu.Unlock()
+	execution.Status = models.PhaseStatusInProgress
+	s.mu.Unlock()
+
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		_ = s.store.UpdatePhaseStatus(ctx, exec, campaignID, models.PhaseTypeAnalysis, models.PhaseStatusInProgress)
+	}
+	return nil
 }
 
 // Cancel stops analysis for a campaign
@@ -653,9 +763,16 @@ func (s *analysisService) Cancel(ctx context.Context, campaignID uuid.UUID) erro
 		return fmt.Errorf("%w: no analysis in progress for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
 
-	if execution.Status != models.PhaseStatusInProgress {
+	if execution.Status != models.PhaseStatusInProgress && execution.Status != models.PhaseStatusPaused {
 		return fmt.Errorf("%w: analysis not in progress for campaign %s", ErrPhaseNotRunning, campaignID)
 	}
+	s.ensurePauseControl(execution)
+	execution.pauseMu.Lock()
+	execution.paused = false
+	if execution.pauseCond != nil {
+		execution.pauseCond.Broadcast()
+	}
+	execution.pauseMu.Unlock()
 
 	// Signal cancellation
 	close(execution.CancelChan)
@@ -758,6 +875,8 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 		})
 	}
 
+	s.waitIfPausedByCampaign(campaignID)
+
 	// Directly proceed to scoring; repurpose majority of remaining progress window.
 	s.sendProgress(campaignID, 85.0, "Starting scoring computation (reused HTTP enrichment)")
 	// ANCHOR (SCORING-ENGINE): All future scoring feature additions (penalties, new components,
@@ -830,6 +949,7 @@ func (s *analysisService) fetchContent(ctx context.Context, campaignID uuid.UUID
 
 	// Fetch content for each domain using the contentfetcher engine
 	for i, domain := range domains {
+		s.waitIfPausedByCampaign(campaignID)
 		// Check for cancellation
 		if execution, exists := s.executions[campaignID]; exists {
 			select {
@@ -901,6 +1021,7 @@ func (s *analysisService) extractKeywords(ctx context.Context, campaignID uuid.U
 
 	i := 0
 	for domain, content := range contentResults {
+		s.waitIfPausedByCampaign(campaignID)
 		// Check for cancellation
 		if execution, exists := s.executions[campaignID]; exists {
 			select {
@@ -1274,6 +1395,7 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 	correlationId := uuid.New().String()
 	now := time.Now()
 	for rows.Next() {
+		s.waitIfPausedByCampaign(campaignID)
 		var domain string
 		var raw json.RawMessage
 		var fetchedAt *time.Time

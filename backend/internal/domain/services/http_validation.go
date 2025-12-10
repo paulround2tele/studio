@@ -536,8 +536,13 @@ type httpValidationExecution struct {
 	ItemsTotal     int                               `json:"items_total"`
 	ErrorMessage   string                            `json:"error_message,omitempty"`
 	Results        []*httpvalidator.ValidationResult `json:"results,omitempty"`
-	CancelChan     chan struct{}                     `json:"-"`
 	ProgressChan   chan PhaseProgress                `json:"-"`
+	Domains        []string                          `json:"-"`
+	cancelCtx      context.Context
+	cancelFunc     context.CancelFunc
+	pauseRequested bool
+	pauseAck       chan struct{}
+	stopRequested  bool
 }
 
 // NewHTTPValidationService creates a new HTTP validation service
@@ -675,67 +680,134 @@ func (s *httpValidationService) Validate(ctx context.Context, config interface{}
 	return nil
 }
 
+// Capabilities exposes supported runtime controls for the HTTP validation phase.
+func (s *httpValidationService) Capabilities() PhaseControlCapabilities {
+	return PhaseControlCapabilities{
+		CanPause:   true,
+		CanResume:  true,
+		CanStop:    true,
+		CanRestart: true,
+	}
+}
+
+// Pause requests a cooperative pause for the HTTP validation execution.
+func (s *httpValidationService) Pause(ctx context.Context, campaignID uuid.UUID) error {
+	s.mu.Lock()
+	execution, exists := s.executions[campaignID]
+	if !exists {
+		s.mu.Unlock()
+		return fmt.Errorf("%w: no HTTP validation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
+	}
+	if execution.Status != models.PhaseStatusInProgress {
+		s.mu.Unlock()
+		return ErrPhaseNotRunning
+	}
+	if execution.pauseRequested {
+		ch := execution.pauseAck
+		s.mu.Unlock()
+		if ch == nil {
+			return nil
+		}
+		select {
+		case <-ch:
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(30 * time.Second):
+			return ErrPhasePauseTimeout
+		}
+	}
+	if execution.pauseAck == nil {
+		execution.pauseAck = make(chan struct{})
+	}
+	ch := execution.pauseAck
+	execution.pauseRequested = true
+	s.mu.Unlock()
+
+	select {
+	case <-ch:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(30 * time.Second):
+		return ErrPhasePauseTimeout
+	}
+}
+
+// Resume restarts a paused HTTP validation execution.
+func (s *httpValidationService) Resume(ctx context.Context, campaignID uuid.UUID) error {
+	s.mu.RLock()
+	execution, exists := s.executions[campaignID]
+	s.mu.RUnlock()
+	if !exists {
+		return fmt.Errorf("%w: no HTTP validation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
+	}
+	if execution.Status != models.PhaseStatusPaused {
+		return ErrPhaseNotPaused
+	}
+	progressCh, err := s.Execute(ctx, campaignID)
+	if err != nil {
+		return err
+	}
+	if progressCh != nil {
+		go func() {
+			for range progressCh {
+			}
+		}()
+	}
+	return nil
+}
+
 // Execute starts HTTP validation for a campaign
 func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUID) (<-chan PhaseProgress, error) {
 	s.deps.Logger.Info(ctx, "Starting HTTP validation execution", map[string]interface{}{
 		"campaign_id": campaignID,
 	})
 
-	// Enforce phase order at runtime as a hard precondition
 	if err := s.ensureDNSCompleted(ctx, campaignID); err != nil {
 		return nil, fmt.Errorf("cannot start HTTP validation before DNS validation completes: %w", err)
 	}
 
-	// Handle existing execution state (Configured -> InProgress transition, idempotent restarts)
-	reuseExisting := false
 	s.mu.Lock()
-	if existing, exists := s.executions[campaignID]; exists {
-		switch existing.Status {
-		case models.PhaseStatusInProgress:
-			// Idempotent: attach to existing execution instead of treating as error (Blocker B2)
-			ch := existing.ProgressChan
-			s.mu.Unlock()
-			s.deps.Logger.Debug(ctx, "HTTP validation Execute idempotent attach to existing in-progress execution", map[string]interface{}{"campaign_id": campaignID})
-			return ch, nil
-		case models.PhaseStatusConfigured:
-			// Transition configured stub to active execution
-			existing.Status = models.PhaseStatusInProgress
-			existing.StartedAt = time.Now()
-			existing.Progress = 0
-			existing.ItemsProcessed = 0
-			if existing.CancelChan == nil {
-				existing.CancelChan = make(chan struct{})
-			}
-			if existing.ProgressChan == nil {
-				existing.ProgressChan = make(chan PhaseProgress, 100)
-			}
-			reuseExisting = true
-		case models.PhaseStatusCompleted, models.PhaseStatusFailed, models.PhaseStatusPaused:
-			if existing.ProgressChan != nil {
-				close(existing.ProgressChan)
-			}
-			// Will create new execution below
-		}
-	}
-	var execution *httpValidationExecution
-	if reuseExisting {
-		execution = s.executions[campaignID]
-		s.deps.Logger.Debug(ctx, "HTTP validation resumed from configured state", map[string]interface{}{"campaign_id": campaignID})
-	} else {
-		// Create new execution tracking (first start or restart after terminal state)
-		execution = &httpValidationExecution{
-			CampaignID:   campaignID,
-			Status:       models.PhaseStatusInProgress,
-			StartedAt:    time.Now(),
-			Progress:     0.0,
-			CancelChan:   make(chan struct{}),
-			ProgressChan: make(chan PhaseProgress, 100),
-		}
+	execution, exists := s.executions[campaignID]
+	if !exists {
+		execution = &httpValidationExecution{CampaignID: campaignID, Status: models.PhaseStatusConfigured}
 		s.executions[campaignID] = execution
 	}
+	if execution.Status == models.PhaseStatusInProgress {
+		ch := execution.ProgressChan
+		s.mu.Unlock()
+		s.deps.Logger.Debug(ctx, "HTTP validation Execute idempotent attach to existing in-progress execution", map[string]interface{}{"campaign_id": campaignID})
+		return ch, nil
+	}
+	resuming := execution.Status == models.PhaseStatusPaused
+	if !resuming {
+		execution.ItemsProcessed = 0
+		execution.ItemsTotal = 0
+		execution.Progress = 0
+		execution.Results = nil
+		execution.ErrorMessage = ""
+		execution.CompletedAt = nil
+		execution.StartedAt = time.Now()
+	}
+	if execution.ProgressChan != nil {
+		close(execution.ProgressChan)
+	}
+	execution.ProgressChan = make(chan PhaseProgress, 100)
+	if execution.pauseAck != nil {
+		close(execution.pauseAck)
+		execution.pauseAck = nil
+	}
+	execution.pauseRequested = false
+	execution.stopRequested = false
+	if execution.cancelFunc != nil {
+		execution.cancelFunc()
+	}
+	execution.cancelCtx, execution.cancelFunc = context.WithCancel(ctx)
+	execution.Status = models.PhaseStatusInProgress
+	progressCh := execution.ProgressChan
 	s.mu.Unlock()
 
-	// Mark phase started in store
 	if s.store != nil {
 		var exec store.Querier
 		if q, ok := s.deps.DB.(store.Querier); ok {
@@ -744,22 +816,33 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 		_ = s.store.StartPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation)
 	}
 
-	// Get domains from previous phase (DNS validation)
 	domains, err := s.getValidatedDomains(ctx, campaignID)
 	if err != nil {
 		s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, fmt.Sprintf("failed to get validated domains: %v", err))
+		s.closeProgressChannel(execution)
 		return nil, fmt.Errorf("failed to get validated domains: %w", err)
 	}
 
 	if len(domains) == 0 {
 		s.updateExecutionStatus(campaignID, models.PhaseStatusSkipped, "no validated domains found")
-		close(execution.ProgressChan)
-		return execution.ProgressChan, nil
+		s.closeProgressChannel(execution)
+		return progressCh, nil
+	}
+
+	s.mu.Lock()
+	execution, _ = s.executions[campaignID]
+	execution.Domains = domains
+	execution.ItemsTotal = len(domains)
+	if !resuming {
+		execution.ItemsProcessed = 0
+	}
+	s.mu.Unlock()
+
+	if resuming {
+		s.deps.Logger.Debug(ctx, "HTTP validation resumed from paused state", map[string]interface{}{"campaign_id": campaignID})
 	}
 
 	// NOTE: Legacy stealth loader removed. Stealth ordering now exclusively handled by stealth-aware wrapper service.
-
-	execution.ItemsTotal = len(domains)
 
 	// Log keyword configuration snapshot (counts only) for transparency
 	var keywordSetCount, inlineKeywordCount, adHocCount int
@@ -800,15 +883,14 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 		"microcrawl_enabled": microcrawlFlag,
 	})
 
-	// Start HTTP validation in goroutine
-	go s.executeHTTPValidation(ctx, campaignID, domains)
+	go s.executeHTTPValidation(execution)
 
 	s.deps.Logger.Info(ctx, "HTTP validation execution started", map[string]interface{}{
 		"campaign_id":  campaignID,
 		"domain_count": len(domains),
 	})
 
-	return execution.ProgressChan, nil
+	return progressCh, nil
 }
 
 // GetStatus returns the current status of HTTP validation for a campaign
@@ -833,6 +915,7 @@ func (s *httpValidationService) GetStatus(ctx context.Context, campaignID uuid.U
 	// Attempt to include counts for richer UI
 	cfgMap["itemsTotal"] = execution.ItemsTotal
 	cfgMap["itemsProcessed"] = execution.ItemsProcessed
+	cfgMap["runtime_controls"] = s.Capabilities()
 
 	var startedPtr *time.Time
 	if !execution.StartedAt.IsZero() {
@@ -861,32 +944,23 @@ func (s *httpValidationService) Cancel(ctx context.Context, campaignID uuid.UUID
 	}
 
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	execution, exists := s.executions[campaignID]
 	if !exists {
+		s.mu.Unlock()
 		return fmt.Errorf("%w: no HTTP validation in progress for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
-
 	if execution.Status != models.PhaseStatusInProgress {
+		s.mu.Unlock()
 		return fmt.Errorf("%w: HTTP validation not in progress for campaign %s", ErrPhaseNotRunning, campaignID)
 	}
-
-	// Signal cancellation
-	close(execution.CancelChan)
-	execution.Status = models.PhaseStatusFailed // Use Failed for cancellation
-	execution.ErrorMessage = "HTTP validation cancelled by user"
-	now := time.Now()
-	execution.CompletedAt = &now
-
-	// Close progress channel
-	close(execution.ProgressChan)
-
-	if s.deps.Logger != nil {
-		s.deps.Logger.Info(ctx, "HTTP validation cancelled", map[string]interface{}{
-			"campaign_id": campaignID,
-		})
+	if execution.cancelFunc != nil {
+		execution.stopRequested = true
+		execution.cancelFunc()
 	}
+	s.mu.Unlock()
+
+	s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, "HTTP validation cancelled by user")
+	s.closeProgressChannel(execution)
 
 	return nil
 }
@@ -894,14 +968,16 @@ func (s *httpValidationService) Cancel(ctx context.Context, campaignID uuid.UUID
 // Helper methods
 
 // executeHTTPValidation performs the actual HTTP validation using the engine
-func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campaignID uuid.UUID, domains []string) {
-	defer func() {
-		s.mu.Lock()
-		if execution, exists := s.executions[campaignID]; exists && execution.ProgressChan != nil {
-			close(execution.ProgressChan)
-		}
-		s.mu.Unlock()
-	}()
+func (s *httpValidationService) executeHTTPValidation(execution *httpValidationExecution) {
+	defer s.closeProgressChannel(execution)
+	defer s.signalPauseAck(execution)
+
+	ctx := execution.cancelCtx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	campaignID := execution.CampaignID
+	domains := execution.Domains
 
 	s.deps.Logger.Info(ctx, "Starting HTTP validation engine execution", map[string]interface{}{
 		"campaign_id":  campaignID,
@@ -918,7 +994,13 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 	// Process in batches for progress visibility
 	const batchSize = 50
 	total := len(domains)
-	processed := 0
+	processed := execution.ItemsProcessed
+	if processed < 0 {
+		processed = 0
+	}
+	if processed > total {
+		processed = total
+	}
 	allResults := make([]*httpvalidator.ValidationResult, 0, total)
 
 	// Feature flags & config parsing
@@ -976,7 +1058,23 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 	// Use shared helper for parked heuristic
 	parkedHeuristic := realParkedHeuristic
 
-	for i := 0; i < total; i += batchSize {
+	for i := processed; i < total; i += batchSize {
+		if err := ctx.Err(); err != nil {
+			if s.shouldPause(execution) {
+				s.handlePause(execution, "pause acknowledged")
+				return
+			}
+			if s.isStopRequested(execution) {
+				s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, "HTTP validation cancelled by user")
+			} else {
+				s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, fmt.Sprintf("execution cancelled: %v", err))
+			}
+			return
+		}
+		if s.shouldPause(execution) {
+			s.handlePause(execution, "pause acknowledged")
+			return
+		}
 		// metrics registration (idempotent)
 		s.ensureMetricsRegistered()
 		select {
@@ -1312,23 +1410,23 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 
 		// Update in-memory execution and emit progress
 		s.mu.Lock()
-		if execution, exists := s.executions[campaignID]; exists {
-			execution.Results = append(execution.Results, results...)
-			execution.ItemsProcessed = processed
-			execution.Progress = (float64(processed) / float64(total)) * 100
+		if state, exists := s.executions[campaignID]; exists {
+			state.Results = append(state.Results, results...)
+			state.ItemsProcessed = processed
+			state.Progress = (float64(processed) / float64(total)) * 100
 			// Send progress update
-			if execution.ProgressChan != nil {
+			if state.ProgressChan != nil {
 				progress := PhaseProgress{
 					Phase:          models.PhaseTypeHTTPKeywordValidation,
 					Status:         models.PhaseStatusInProgress,
-					ProgressPct:    execution.Progress,
-					ItemsProcessed: int64(execution.ItemsProcessed),
-					ItemsTotal:     int64(execution.ItemsTotal),
+					ProgressPct:    state.Progress,
+					ItemsProcessed: int64(state.ItemsProcessed),
+					ItemsTotal:     int64(state.ItemsTotal),
 					Message:        fmt.Sprintf("Validated %d/%d domains", processed, total),
 					Timestamp:      time.Now(),
 				}
 				select {
-				case execution.ProgressChan <- progress:
+				case state.ProgressChan <- progress:
 				default:
 				}
 				// Publish via EventBus if available
@@ -1358,26 +1456,26 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 
 	// Finalize execution
 	s.mu.Lock()
-	if execution, exists := s.executions[campaignID]; exists {
-		execution.Status = models.PhaseStatusCompleted
-		execution.Progress = 100.0
-		execution.ItemsProcessed = processed
+	if state, exists := s.executions[campaignID]; exists {
+		state.Status = models.PhaseStatusCompleted
+		state.Progress = 100.0
+		state.ItemsProcessed = processed
 		now := time.Now()
-		execution.CompletedAt = &now
-		if s.mtx.phaseDuration != nil && !execution.StartedAt.IsZero() {
-			s.mtx.phaseDuration.Observe(now.Sub(execution.StartedAt).Seconds())
+		state.CompletedAt = &now
+		if s.mtx.phaseDuration != nil && !state.StartedAt.IsZero() {
+			s.mtx.phaseDuration.Observe(now.Sub(state.StartedAt).Seconds())
 		}
-		if s.mtx.phaseDurationVec != nil && !execution.StartedAt.IsZero() {
-			s.mtx.phaseDurationVec.WithLabelValues("http_validation").Observe(now.Sub(execution.StartedAt).Seconds())
+		if s.mtx.phaseDurationVec != nil && !state.StartedAt.IsZero() {
+			s.mtx.phaseDurationVec.WithLabelValues("http_validation").Observe(now.Sub(state.StartedAt).Seconds())
 		}
-		if execution.ProgressChan != nil {
+		if state.ProgressChan != nil {
 			select {
-			case execution.ProgressChan <- PhaseProgress{
+			case state.ProgressChan <- PhaseProgress{
 				Phase:          models.PhaseTypeHTTPKeywordValidation,
 				Status:         models.PhaseStatusCompleted,
 				ProgressPct:    100.0,
-				ItemsProcessed: int64(execution.ItemsProcessed),
-				ItemsTotal:     int64(execution.ItemsTotal),
+				ItemsProcessed: int64(state.ItemsProcessed),
+				ItemsTotal:     int64(state.ItemsTotal),
 				Timestamp:      time.Now(),
 			}:
 			default:
@@ -2616,4 +2714,46 @@ func (s *httpValidationService) updateExecutionStatus(campaignID uuid.UUID, stat
 			_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation)
 		}
 	}
+}
+
+func (s *httpValidationService) closeProgressChannel(execution *httpValidationExecution) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if execution == nil {
+		return
+	}
+	if execution.ProgressChan != nil {
+		close(execution.ProgressChan)
+		execution.ProgressChan = nil
+	}
+}
+
+func (s *httpValidationService) shouldPause(execution *httpValidationExecution) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return execution != nil && execution.pauseRequested
+}
+
+func (s *httpValidationService) isStopRequested(execution *httpValidationExecution) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return execution != nil && execution.stopRequested
+}
+
+func (s *httpValidationService) signalPauseAck(execution *httpValidationExecution) {
+	s.mu.Lock()
+	if execution != nil {
+		if execution.pauseAck != nil {
+			close(execution.pauseAck)
+			execution.pauseAck = nil
+		}
+		execution.pauseRequested = false
+	}
+	s.mu.Unlock()
+}
+
+func (s *httpValidationService) handlePause(execution *httpValidationExecution, reason string) {
+	s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusPaused, reason)
+	s.signalPauseAck(execution)
+	s.closeProgressChannel(execution)
 }

@@ -180,6 +180,7 @@ export * from './phase-execution';
 export * from './phase-execution-update';
 export * from './phase-failed-event';
 export * from './phase-progress-summary';
+export * from './phase-runtime-controls';
 export * from './phase-status-response';
 export * from './phase-status-response-errors-inner';
 export * from './phase-status-response-progress';

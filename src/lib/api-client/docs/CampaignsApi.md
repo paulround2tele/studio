@@ -31,6 +31,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsPhaseExecutionPut**](#campaignsphaseexecutionput) | **PUT** /campaigns/{campaignId}/phase-executions/{phaseType} | Update phase execution by phase type|
 |[**campaignsPhaseExecutionsList**](#campaignsphaseexecutionslist) | **GET** /campaigns/{campaignId}/phase-executions | List phase executions for a campaign|
 |[**campaignsPhasePause**](#campaignsphasepause) | **POST** /campaigns/{campaignId}/phases/{phase}/pause | Pause campaign phase|
+|[**campaignsPhaseResume**](#campaignsphaseresume) | **POST** /campaigns/{campaignId}/phases/{phase}/resume | Resume campaign phase|
 |[**campaignsPhaseStart**](#campaignsphasestart) | **POST** /campaigns/{campaignId}/phases/{phase}/start | Start campaign phase|
 |[**campaignsPhaseStatus**](#campaignsphasestatus) | **GET** /campaigns/{campaignId}/phases/{phase}/status | Get phase status|
 |[**campaignsPhaseStop**](#campaignsphasestop) | **POST** /campaigns/{campaignId}/phases/{phase}/stop | Stop campaign phase|
@@ -1550,6 +1551,64 @@ const { status, data } = await apiInstance.campaignsPhasePause(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | Paused |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsPhaseResume**
+> PhaseStatusResponse campaignsPhaseResume()
+
+Resume a previously paused phase and transition it back to in_progress when supported.
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let phase: CampaignPhaseEnum; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsPhaseResume(
+    campaignId,
+    phase
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+| **phase** | **CampaignPhaseEnum** |  | defaults to undefined|
+
+
+### Return type
+
+**PhaseStatusResponse**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Resumed |  -  |
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |

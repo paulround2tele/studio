@@ -34,6 +34,22 @@ type PhaseService interface {
 	GetPhaseType() models.PhaseTypeEnum
 }
 
+// PhaseControlCapabilities describes which runtime controls a phase service supports.
+type PhaseControlCapabilities struct {
+	CanPause   bool `json:"can_pause"`
+	CanResume  bool `json:"can_resume"`
+	CanStop    bool `json:"can_stop"`
+	CanRestart bool `json:"can_restart"`
+}
+
+// PhaseController is an optional extension implemented by services that support
+// cooperative runtime controls (pause/resume, etc.).
+type PhaseController interface {
+	Capabilities() PhaseControlCapabilities
+	Pause(ctx context.Context, campaignID uuid.UUID) error
+	Resume(ctx context.Context, campaignID uuid.UUID) error
+}
+
 // PhaseProgress represents progress updates during phase execution
 type PhaseProgress struct {
 	CampaignID     uuid.UUID              `json:"campaign_id"`

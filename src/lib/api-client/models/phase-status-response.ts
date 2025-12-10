@@ -15,6 +15,9 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
+import type { PhaseRuntimeControls } from './phase-runtime-controls';
+// May contain unused imports in some cases
+// @ts-ignore
 import type { PhaseStatusResponseErrorsInner } from './phase-status-response-errors-inner';
 // May contain unused imports in some cases
 // @ts-ignore
@@ -46,6 +49,15 @@ export interface PhaseStatusResponse {
    */
   'configuration'?: 
         Record<string, unknown>
+    ;
+  /**
+   * Supported runtime controls for this phase
+   * @memberof PhaseStatusResponse
+   */
+  'runtimeControls'?: 
+        
+          
+          PhaseRuntimeControls
     ;
   /**
    * 

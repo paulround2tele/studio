@@ -3461,6 +3461,40 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/phases/{phase}/resume:
+    post:
+      tags:
+        - campaigns
+      summary: Resume campaign phase
+      description: Resume a previously paused phase and transition it back to in_progress when supported.
+      operationId: campaigns_phase_resume
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: phase
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CampaignPhaseEnum'
+      responses:
+        '200':
+          description: Resumed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhaseStatusResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/mode:
     put:
       tags:
@@ -6874,6 +6908,23 @@ components:
         - enrichment
         - extraction
         - analysis
+    PhaseRuntimeControls:
+      type: object
+      description: Declares which runtime controls are supported for a phase
+      properties:
+        canPause:
+          type: boolean
+        canResume:
+          type: boolean
+        canStop:
+          type: boolean
+        canRestart:
+          type: boolean
+      required:
+        - canPause
+        - canResume
+        - canStop
+        - canRestart
     PhaseStatusResponse:
       type: object
       properties:
@@ -6897,6 +6948,9 @@ components:
         configuration:
           type: object
           description: Current phase configuration
+        runtimeControls:
+          $ref: '#/components/schemas/PhaseRuntimeControls'
+          description: Supported runtime controls for this phase
         startedAt:
           type: string
           format: date-time

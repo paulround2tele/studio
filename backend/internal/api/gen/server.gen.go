@@ -2021,6 +2021,14 @@ type PhaseProgressSummary struct {
 // PhaseProgressSummaryStatus defines model for PhaseProgressSummary.Status.
 type PhaseProgressSummaryStatus string
 
+// PhaseRuntimeControls Declares which runtime controls are supported for a phase
+type PhaseRuntimeControls struct {
+	CanPause   bool `json:"canPause"`
+	CanRestart bool `json:"canRestart"`
+	CanResume  bool `json:"canResume"`
+	CanStop    bool `json:"canStop"`
+}
+
 // PhaseStatusResponse defines model for PhaseStatusResponse.
 type PhaseStatusResponse struct {
 	CompletedAt *time.Time `json:"completedAt"`
@@ -2040,8 +2048,11 @@ type PhaseStatusResponse struct {
 		SuccessfulItems *int     `json:"successfulItems,omitempty"`
 		TotalItems      *int     `json:"totalItems,omitempty"`
 	} `json:"progress"`
-	StartedAt *time.Time                `json:"startedAt"`
-	Status    PhaseStatusResponseStatus `json:"status"`
+
+	// RuntimeControls Declares which runtime controls are supported for a phase
+	RuntimeControls *PhaseRuntimeControls     `json:"runtimeControls,omitempty"`
+	StartedAt       *time.Time                `json:"startedAt"`
+	Status          PhaseStatusResponseStatus `json:"status"`
 }
 
 // PhaseStatusResponsePhase defines model for PhaseStatusResponse.Phase.
@@ -3617,6 +3628,9 @@ type ServerInterface interface {
 	// Pause campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/pause)
 	CampaignsPhasePause(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
+	// Resume campaign phase
+	// (POST /campaigns/{campaignId}/phases/{phase}/resume)
+	CampaignsPhaseResume(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
 	// Start campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/start)
 	CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
@@ -4142,6 +4156,12 @@ func (_ Unimplemented) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Re
 // Pause campaign phase
 // (POST /campaigns/{campaignId}/phases/{phase}/pause)
 func (_ Unimplemented) CampaignsPhasePause(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Resume campaign phase
+// (POST /campaigns/{campaignId}/phases/{phase}/resume)
+func (_ Unimplemented) CampaignsPhaseResume(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5926,6 +5946,46 @@ func (siw *ServerInterfaceWrapper) CampaignsPhasePause(w http.ResponseWriter, r 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CampaignsPhasePause(w, r, campaignId, phase)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsPhaseResume operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsPhaseResume(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "phase" -------------
+	var phase CampaignPhaseEnum
+
+	err = runtime.BindStyledParameterWithOptions("simple", "phase", chi.URLParam(r, "phase"), &phase, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "phase", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsPhaseResume(w, r, campaignId, phase)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -8953,6 +9013,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/campaigns/{campaignId}/phases/{phase}/pause", wrapper.CampaignsPhasePause)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/campaigns/{campaignId}/phases/{phase}/resume", wrapper.CampaignsPhaseResume)
+	})
+	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/campaigns/{campaignId}/phases/{phase}/start", wrapper.CampaignsPhaseStart)
 	})
 	r.Group(func(r chi.Router) {
@@ -11095,6 +11158,62 @@ type CampaignsPhasePause500JSONResponse struct {
 }
 
 func (response CampaignsPhasePause500JSONResponse) VisitCampaignsPhasePauseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseResumeRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Phase      CampaignPhaseEnum  `json:"phase"`
+}
+
+type CampaignsPhaseResumeResponseObject interface {
+	VisitCampaignsPhaseResumeResponse(w http.ResponseWriter) error
+}
+
+type CampaignsPhaseResume200JSONResponse PhaseStatusResponse
+
+func (response CampaignsPhaseResume200JSONResponse) VisitCampaignsPhaseResumeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseResume400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CampaignsPhaseResume400JSONResponse) VisitCampaignsPhaseResumeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseResume401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsPhaseResume401JSONResponse) VisitCampaignsPhaseResumeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseResume404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsPhaseResume404JSONResponse) VisitCampaignsPhaseResumeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseResume500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsPhaseResume500JSONResponse) VisitCampaignsPhaseResumeResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -16920,6 +17039,9 @@ type StrictServerInterface interface {
 	// Pause campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/pause)
 	CampaignsPhasePause(ctx context.Context, request CampaignsPhasePauseRequestObject) (CampaignsPhasePauseResponseObject, error)
+	// Resume campaign phase
+	// (POST /campaigns/{campaignId}/phases/{phase}/resume)
+	CampaignsPhaseResume(ctx context.Context, request CampaignsPhaseResumeRequestObject) (CampaignsPhaseResumeResponseObject, error)
 	// Start campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/start)
 	CampaignsPhaseStart(ctx context.Context, request CampaignsPhaseStartRequestObject) (CampaignsPhaseStartResponseObject, error)
@@ -18277,6 +18399,33 @@ func (sh *strictHandler) CampaignsPhasePause(w http.ResponseWriter, r *http.Requ
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CampaignsPhasePauseResponseObject); ok {
 		if err := validResponse.VisitCampaignsPhasePauseResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsPhaseResume operation middleware
+func (sh *strictHandler) CampaignsPhaseResume(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
+	var request CampaignsPhaseResumeRequestObject
+
+	request.CampaignId = campaignId
+	request.Phase = phase
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsPhaseResume(ctx, request.(CampaignsPhaseResumeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsPhaseResume")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsPhaseResumeResponseObject); ok {
+		if err := validResponse.VisitCampaignsPhaseResumeResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

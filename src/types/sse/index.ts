@@ -31,6 +31,7 @@ export interface SsePhaseStartedEvent extends BaseSSEEvent {
   type: 'phase_started';
   phase: CampaignPhase;
   message: string;
+  status?: string;
   results?: Record<string, unknown>;
 }
 
@@ -41,6 +42,7 @@ export interface SsePhaseCompletedEvent extends BaseSSEEvent {
   type: 'phase_completed';
   phase: CampaignPhase;
   message: string;
+  status?: string;
   results?: Record<string, unknown>;
 }
 
@@ -52,6 +54,7 @@ export interface SsePhaseFailedEvent extends BaseSSEEvent {
   phase: CampaignPhase;
   message: string;
   error: string;
+  status?: string;
 }
 
 /**
@@ -175,6 +178,7 @@ export interface PhaseEvent {
   campaign_id: string;
   phase: string;
   message: string;
+  status?: string;
   results?: Record<string, unknown>;
   error?: string;
 }
