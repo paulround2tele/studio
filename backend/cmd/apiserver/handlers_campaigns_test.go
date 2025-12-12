@@ -61,7 +61,7 @@ func TestCampaignsPhaseStop_Returns400WhenPhaseNotRunning(t *testing.T) {
 	campaignID := uuid.New()
 	deps := domainservices.Dependencies{Logger: &noopDomainLogger{}}
 	httpSvc := &stubHTTPService{cancelErr: fmt.Errorf("%w: not running", domainservices.ErrPhaseNotRunning)}
-	orchestrator := application.NewCampaignOrchestrator(store, deps, nil, nil, httpSvc, nil, nil, nil, nil)
+	orchestrator := application.NewCampaignOrchestrator(store, deps, nil, nil, httpSvc, nil, nil, nil, nil, nil)
 
 	appDeps := &AppDeps{DB: sqlxDB, Orchestrator: orchestrator}
 	appDeps.Stores.Campaign = store

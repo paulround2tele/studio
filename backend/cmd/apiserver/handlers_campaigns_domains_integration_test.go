@@ -536,7 +536,7 @@ func TestCampaignsDomainsListServerSortFieldVariations(t *testing.T) {
 // newTestOrchestratorWithFeatures constructs a real CampaignOrchestrator with only analysis service stubbed
 func newTestOrchestratorWithFeatures(fm map[string]map[string]any) *application.CampaignOrchestrator {
 	deps := domainservices.Dependencies{Logger: &SimpleLogger{}}
-	return application.NewCampaignOrchestrator(nil, deps, nil, nil, nil, nil, &dualReadAnalysisStub{fm: fm}, nil, nil)
+	return application.NewCampaignOrchestrator(nil, deps, nil, nil, nil, nil, nil, &dualReadAnalysisStub{fm: fm}, nil, nil)
 }
 
 // extractListAndMeta extracts response data list + metadata from handler response

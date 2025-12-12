@@ -33,39 +33,57 @@ func ToInternal(api string) string {
 
 // AllInternal returns the canonical ordered list of internal phase identifiers.
 func AllInternal() []string {
-	return []string{PhaseDomainGeneration, PhaseDNSValidation, PhaseHTTPKeywordValidation, PhaseAnalysis, PhaseEnrichmentInternal}
+	return []string{
+		PhaseDomainGeneration,
+		PhaseDNSValidation,
+		PhaseHTTPKeywordValidation,
+		PhaseExtractionInternal,
+		PhaseAnalysis,
+		PhaseEnrichmentInternal,
+	}
 }
 
 // AllAPI returns the canonical ordered list of API phase identifiers.
 func AllAPI() []string {
-	return []string{PhaseDiscovery, PhaseValidation, PhaseExtraction, PhaseAnalysis, PhaseEnrichment}
+	return []string{
+		PhaseDiscovery,
+		PhaseValidation,
+		PhaseExtraction,
+		PhaseFeatureExtraction,
+		PhaseAnalysis,
+		PhaseEnrichment,
+	}
 }
 
 const (
 	PhaseDomainGeneration      = "domain_generation"
 	PhaseDNSValidation         = "dns_validation"
 	PhaseHTTPKeywordValidation = "http_keyword_validation"
+	PhaseExtractionInternal    = "extraction"
 	PhaseEnrichmentInternal    = "enrichment"
 	PhaseAnalysis              = "analysis"
 
-	PhaseDiscovery  = "discovery"
-	PhaseValidation = "validation"
-	PhaseExtraction = "extraction"
-	PhaseEnrichment = "enrichment"
+	PhaseDiscovery         = "discovery"
+	PhaseValidation        = "validation"
+	PhaseExtraction        = "extraction"
+	PhaseFeatureExtraction = "feature_extraction"
+	PhaseEnrichment        = "enrichment"
 )
 
 var internalToAPI = map[string]string{
 	PhaseDomainGeneration:      PhaseDiscovery,
 	PhaseDNSValidation:         PhaseValidation,
 	PhaseHTTPKeywordValidation: PhaseExtraction,
+	PhaseExtractionInternal:    PhaseFeatureExtraction,
 	PhaseEnrichmentInternal:    PhaseEnrichment,
 	PhaseAnalysis:              PhaseAnalysis,
 }
 
 var apiToInternal = map[string]string{
-	PhaseDiscovery:  PhaseDomainGeneration,
-	PhaseValidation: PhaseDNSValidation,
-	PhaseExtraction: PhaseHTTPKeywordValidation,
-	PhaseEnrichment: PhaseEnrichmentInternal,
-	PhaseAnalysis:   PhaseAnalysis,
+	PhaseDiscovery:         PhaseDomainGeneration,
+	PhaseValidation:        PhaseDNSValidation,
+	PhaseExtraction:        PhaseHTTPKeywordValidation,
+	PhaseFeatureExtraction: PhaseExtractionInternal,
+	PhaseEnrichment:        PhaseEnrichmentInternal,
+	PhaseAnalysis:          PhaseAnalysis,
 }

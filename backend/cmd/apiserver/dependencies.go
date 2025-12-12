@@ -373,6 +373,37 @@ func initAppDependencies() (*AppDeps, error) {
 	enrichmentSvc := domainservices.NewEnrichmentService(deps.Stores.Campaign, domainDeps)
 	analysisSvc := domainservices.NewAnalysisService(deps.Stores.Campaign, domainDeps, contentFetcherSvc, deps.Stores.Persona, deps.Stores.Proxy)
 
+	var extractionPhaseSvc domainservices.PhaseService
+	if deps.DB != nil {
+		featureExtractionSvc := domainservices.NewFeatureExtractionService(deps.DB, simpleLogger)
+		keywordExtractionSvc := domainservices.NewKeywordExtractionService(deps.DB, simpleLogger)
+		microcrawler := extraction.NewHTTPMicrocrawler()
+		adaptiveCrawlingSvc := domainservices.NewAdaptiveCrawlingService(deps.DB, simpleLogger, microcrawler, featureExtractionSvc, keywordExtractionSvc)
+		advancedScoringSvc := domainservices.NewAdvancedScoringService(deps.DB, simpleLogger)
+		batchExtractionSvc := domainservices.NewBatchExtractionService(
+			deps.DB,
+			simpleLogger,
+			featureExtractionSvc,
+			keywordExtractionSvc,
+			adaptiveCrawlingSvc,
+			advancedScoringSvc,
+			domainservices.BatchProcessingConfig{},
+		)
+		dataMigrationSvc := domainservices.NewDataMigrationService(deps.DB, simpleLogger)
+		extractionOrchestrator := domainservices.NewExtractionAnalysisOrchestrator(
+			deps.DB,
+			simpleLogger,
+			featureExtractionSvc,
+			keywordExtractionSvc,
+			adaptiveCrawlingSvc,
+			advancedScoringSvc,
+			batchExtractionSvc,
+			dataMigrationSvc,
+			domainservices.OrchestratorConfig{},
+		)
+		extractionPhaseSvc = domainservices.NewExtractionPhaseService(deps.Stores.Campaign, domainDeps, extractionOrchestrator, batchExtractionSvc)
+	}
+
 	// Stealth integration and wrappers (decoupled from legacy)
 	// Use toggleable stealth: frontend can flip enableStealth via /config/features
 	realStealth := domaininfra.NewRealStealthIntegration(deps.Stores.Campaign)
@@ -395,6 +426,7 @@ func initAppDependencies() (*AppDeps, error) {
 			domainGenSvc,
 			stealthAwareDNS,
 			stealthAwareHTTP,
+			extractionPhaseSvc,
 			enrichmentSvc,
 			analysisSvc,
 			deps.SSE,

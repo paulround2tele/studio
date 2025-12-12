@@ -40,6 +40,7 @@ const (
 var (
 	domainsListMetricsOnce        sync.Once
 	domainsListServerSortRequests *prometheus.CounterVec
+	totalPhaseCount                = len(phases.AllInternal())
 )
 
 // aggregatesRepo implements domainservices.AggregatesRepository
@@ -782,7 +783,7 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 					h.deps.Logger.Info(ctx, "campaign.create.phases_seeded", map[string]interface{}{
 						"correlation_id": correlationID.String(),
 						"campaign_id":    campaign.ID.String(),
-						"phase_count":    5,
+						"phase_count":    totalPhaseCount,
 					})
 				}
 				return gen.CampaignsCreate201JSONResponse{Body: resp, Headers: gen.CampaignsCreate201ResponseHeaders{XRequestId: reqID()}}, nil
@@ -818,7 +819,7 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 		h.deps.Logger.Info(ctx, "campaign.create.phases_seeded", map[string]interface{}{
 			"correlation_id": correlationID.String(),
 			"campaign_id":    campaign.ID.String(),
-			"phase_count":    5,
+			"phase_count":    totalPhaseCount,
 		})
 	}
 
@@ -1641,7 +1642,12 @@ func mapCampaignToResponse(c *models.LeadGenerationCampaign) gen.CampaignRespons
 func mapAPIPhaseToModel(p string) (models.PhaseTypeEnum, error) {
 	internal := phases.ToInternal(p)
 	switch internal {
-	case string(models.PhaseTypeDomainGeneration), string(models.PhaseTypeDNSValidation), string(models.PhaseTypeHTTPKeywordValidation), string(models.PhaseTypeEnrichment), string(models.PhaseTypeAnalysis):
+	case string(models.PhaseTypeDomainGeneration),
+		string(models.PhaseTypeDNSValidation),
+		string(models.PhaseTypeHTTPKeywordValidation),
+		string(models.PhaseTypeExtraction),
+		string(models.PhaseTypeEnrichment),
+		string(models.PhaseTypeAnalysis):
 		return models.PhaseTypeEnum(internal), nil
 	default:
 		return "", fmt.Errorf("unknown phase: %s", p)
@@ -1665,6 +1671,7 @@ func mapModelPhaseToRestartEnum(phase models.PhaseTypeEnum) gen.CampaignRestartP
 var restartablePhaseSequence = []models.PhaseTypeEnum{
 	models.PhaseTypeDNSValidation,
 	models.PhaseTypeHTTPKeywordValidation,
+	models.PhaseTypeExtraction,
 	models.PhaseTypeAnalysis,
 	models.PhaseTypeEnrichment,
 }
@@ -1770,24 +1777,109 @@ func buildPhaseStatusResponse(phase models.PhaseTypeEnum, st *domainservices.Pha
 }
 
 func convertRuntimeControls(payload interface{}) *gen.PhaseRuntimeControls {
+	caps := parsePhaseControlCapabilities(payload)
+	if caps == nil {
+		return nil
+	}
+	return runtimeControlsFromCapabilities(*caps)
+}
+
+type controlCapability string
+
+const (
+	controlCapabilityPause  controlCapability = "pause"
+	controlCapabilityResume controlCapability = "resume"
+	controlCapabilityStop   controlCapability = "stop"
+)
+
+func (c controlCapability) label() string {
+	switch c {
+	case controlCapabilityPause:
+		return "pausing"
+	case controlCapabilityResume:
+		return "resuming"
+	case controlCapabilityStop:
+		return "stopping"
+	default:
+		return string(c)
+	}
+}
+
+func parsePhaseControlCapabilities(payload interface{}) *domainservices.PhaseControlCapabilities {
 	switch rc := payload.(type) {
 	case domainservices.PhaseControlCapabilities:
-		return runtimeControlsFromCapabilities(rc)
+		clone := rc
+		return &clone
 	case *domainservices.PhaseControlCapabilities:
 		if rc == nil {
 			return nil
 		}
-		return runtimeControlsFromCapabilities(*rc)
+		return rc
 	case map[string]interface{}:
-		return &gen.PhaseRuntimeControls{
+		return &domainservices.PhaseControlCapabilities{
 			CanPause:   boolFromInterfaceMap(rc, "can_pause", "canPause"),
 			CanResume:  boolFromInterfaceMap(rc, "can_resume", "canResume"),
 			CanStop:    boolFromInterfaceMap(rc, "can_stop", "canStop"),
 			CanRestart: boolFromInterfaceMap(rc, "can_restart", "canRestart"),
 		}
+	case gen.PhaseRuntimeControls:
+		return &domainservices.PhaseControlCapabilities{
+			CanPause:   rc.CanPause,
+			CanResume:  rc.CanResume,
+			CanStop:    rc.CanStop,
+			CanRestart: rc.CanRestart,
+		}
+	case *gen.PhaseRuntimeControls:
+		if rc == nil {
+			return nil
+		}
+		return &domainservices.PhaseControlCapabilities{
+			CanPause:   rc.CanPause,
+			CanResume:  rc.CanResume,
+			CanStop:    rc.CanStop,
+			CanRestart: rc.CanRestart,
+		}
 	default:
 		return nil
 	}
+}
+
+func (h *strictHandlers) ensurePhaseSupportsControl(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, capability controlCapability) error {
+	caps := h.getPhaseControlCapabilities(ctx, campaignID, phase)
+	if caps == nil {
+		return nil
+	}
+	var allowed bool
+	switch capability {
+	case controlCapabilityPause:
+		allowed = caps.CanPause
+	case controlCapabilityResume:
+		allowed = caps.CanResume
+	case controlCapabilityStop:
+		allowed = caps.CanStop
+	default:
+		allowed = true
+	}
+	if allowed {
+		return nil
+	}
+	phaseName := phases.ToAPI(string(phase))
+	return fmt.Errorf("%s phase does not support %s", phaseName, capability.label())
+}
+
+func (h *strictHandlers) getPhaseControlCapabilities(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) *domainservices.PhaseControlCapabilities {
+	if h.deps == nil || h.deps.Orchestrator == nil {
+		return nil
+	}
+	st, err := h.deps.Orchestrator.GetPhaseStatus(ctx, campaignID, phase)
+	if err != nil || st == nil || st.Configuration == nil {
+		return nil
+	}
+	payload, ok := st.Configuration["runtime_controls"]
+	if !ok {
+		return nil
+	}
+	return parsePhaseControlCapabilities(payload)
 }
 
 func runtimeControlsFromCapabilities(caps domainservices.PhaseControlCapabilities) *gen.PhaseRuntimeControls {
@@ -1855,7 +1947,8 @@ func (h *strictHandlers) CampaignsPhaseStop(ctx context.Context, r gen.Campaigns
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
 		return gen.CampaignsPhaseStop401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+	campaignID := uuid.UUID(r.CampaignId)
+	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, campaignID); err != nil {
 		if err == store.ErrNotFound {
 			return gen.CampaignsPhaseStop404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
@@ -1865,7 +1958,10 @@ func (h *strictHandlers) CampaignsPhaseStop(ctx context.Context, r gen.Campaigns
 	if err != nil {
 		return gen.CampaignsPhaseStop400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if err := h.deps.Orchestrator.CancelPhase(ctx, uuid.UUID(r.CampaignId), phaseModel); err != nil {
+	if err := h.ensurePhaseSupportsControl(ctx, campaignID, phaseModel, controlCapabilityStop); err != nil {
+		return gen.CampaignsPhaseStop400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if err := h.deps.Orchestrator.CancelPhase(ctx, campaignID, phaseModel); err != nil {
 		if errors.Is(err, domainservices.ErrPhaseExecutionMissing) || errors.Is(err, domainservices.ErrPhaseNotRunning) {
 			phaseName := phases.ToAPI(string(phaseModel))
 			msg := fmt.Sprintf("%s phase is not currently running", phaseName)
@@ -1873,7 +1969,7 @@ func (h *strictHandlers) CampaignsPhaseStop(ctx context.Context, r gen.Campaigns
 		}
 		return gen.CampaignsPhaseStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to stop phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
+	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, campaignID, phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
 	return gen.CampaignsPhaseStop200JSONResponse(data), nil
 }
@@ -1883,7 +1979,8 @@ func (h *strictHandlers) CampaignsPhasePause(ctx context.Context, r gen.Campaign
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
 		return gen.CampaignsPhasePause401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+	campaignID := uuid.UUID(r.CampaignId)
+	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, campaignID); err != nil {
 		if err == store.ErrNotFound {
 			return gen.CampaignsPhasePause404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
@@ -1893,10 +1990,10 @@ func (h *strictHandlers) CampaignsPhasePause(ctx context.Context, r gen.Campaign
 	if err != nil {
 		return gen.CampaignsPhasePause400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if phaseModel == models.PhaseTypeDomainGeneration {
-		return gen.CampaignsPhasePause400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "discovery phase runs offline and cannot be paused", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	if err := h.ensurePhaseSupportsControl(ctx, campaignID, phaseModel, controlCapabilityPause); err != nil {
+		return gen.CampaignsPhasePause400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if err := h.deps.Orchestrator.PausePhase(ctx, uuid.UUID(r.CampaignId), phaseModel); err != nil {
+	if err := h.deps.Orchestrator.PausePhase(ctx, campaignID, phaseModel); err != nil {
 		switch {
 		case errors.Is(err, domainservices.ErrPhasePauseUnsupported):
 			msg := fmt.Sprintf("%s phase does not support pausing", phases.ToAPI(string(phaseModel)))
@@ -1910,7 +2007,7 @@ func (h *strictHandlers) CampaignsPhasePause(ctx context.Context, r gen.Campaign
 			return gen.CampaignsPhasePause500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to pause phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 	}
-	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
+	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, campaignID, phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
 	return gen.CampaignsPhasePause200JSONResponse(data), nil
 }
@@ -1920,7 +2017,8 @@ func (h *strictHandlers) CampaignsPhaseResume(ctx context.Context, r gen.Campaig
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
 		return gen.CampaignsPhaseResume401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+	campaignID := uuid.UUID(r.CampaignId)
+	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, campaignID); err != nil {
 		if err == store.ErrNotFound {
 			return gen.CampaignsPhaseResume404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
@@ -1930,10 +2028,10 @@ func (h *strictHandlers) CampaignsPhaseResume(ctx context.Context, r gen.Campaig
 	if err != nil {
 		return gen.CampaignsPhaseResume400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if phaseModel == models.PhaseTypeDomainGeneration {
-		return gen.CampaignsPhaseResume400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "discovery phase runs offline and cannot be resumed", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	if err := h.ensurePhaseSupportsControl(ctx, campaignID, phaseModel, controlCapabilityResume); err != nil {
+		return gen.CampaignsPhaseResume400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if err := h.deps.Orchestrator.ResumePhase(ctx, uuid.UUID(r.CampaignId), phaseModel); err != nil {
+	if err := h.deps.Orchestrator.ResumePhase(ctx, campaignID, phaseModel); err != nil {
 		switch {
 		case errors.Is(err, domainservices.ErrPhaseResumeUnsupported):
 			msg := fmt.Sprintf("%s phase does not support resuming", phases.ToAPI(string(phaseModel)))
@@ -1945,7 +2043,7 @@ func (h *strictHandlers) CampaignsPhaseResume(ctx context.Context, r gen.Campaig
 			return gen.CampaignsPhaseResume500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to resume phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 	}
-	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
+	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, campaignID, phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
 	return gen.CampaignsPhaseResume200JSONResponse(data), nil
 }

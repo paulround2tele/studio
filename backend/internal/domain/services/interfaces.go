@@ -50,6 +50,26 @@ type PhaseController interface {
 	Resume(ctx context.Context, campaignID uuid.UUID) error
 }
 
+// ControlSignal represents a runtime control command sent from the orchestrator to a phase service.
+type ControlSignal string
+
+const (
+	ControlSignalPause  ControlSignal = "pause"
+	ControlSignalResume ControlSignal = "resume"
+	ControlSignalStop   ControlSignal = "stop"
+)
+
+// ControlCommand is delivered over the control bus and optionally carries an ack channel.
+type ControlCommand struct {
+	Signal ControlSignal
+	Ack    chan<- error
+}
+
+// ControlAwarePhase can consume runtime control signals via an attached channel.
+type ControlAwarePhase interface {
+	AttachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, commands <-chan ControlCommand)
+}
+
 // PhaseProgress represents progress updates during phase execution
 type PhaseProgress struct {
 	CampaignID     uuid.UUID              `json:"campaign_id"`

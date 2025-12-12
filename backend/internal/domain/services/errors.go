@@ -13,6 +13,8 @@ var (
 	ErrPhaseResumeUnsupported = errors.New("phase resume unsupported")
 	// ErrPhasePauseTimeout indicates the phase did not acknowledge the pause request within the allotted time.
 	ErrPhasePauseTimeout = errors.New("phase pause timed out")
+	// ErrPhaseResumeTimeout indicates the phase did not acknowledge the resume request within the allotted time.
+	ErrPhaseResumeTimeout = errors.New("phase resume timed out")
 	// ErrPhaseNotPaused indicates a resume request was made for a phase that is not paused.
 	ErrPhaseNotPaused = errors.New("phase not paused")
 )

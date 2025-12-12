@@ -18,59 +18,43 @@ import (
 )
 
 type enrichmentService struct {
-	store    store.CampaignStore
-	deps     Dependencies
-	mu       sync.RWMutex
-	statuses map[uuid.UUID]*PhaseStatus
-	controls map[uuid.UUID]*pauseControl
-	ctrlMu   sync.Mutex
+	store             store.CampaignStore
+	deps              Dependencies
+	mu                sync.RWMutex
+	statuses          map[uuid.UUID]*PhaseStatus
+	executions        map[uuid.UUID]*enrichmentExecution
+	ctrlMu            sync.Mutex
+	controlWatchers   map[uuid.UUID]enrichmentControlWatcher
+	controlWatcherSeq uint64
 }
 
-func (s *enrichmentService) getControl(campaignID uuid.UUID) *pauseControl {
-	s.ctrlMu.Lock()
-	defer s.ctrlMu.Unlock()
-	if ctrl, ok := s.controls[campaignID]; ok {
-		return ctrl
-	}
-	ctrl := newPauseControl()
-	s.controls[campaignID] = ctrl
-	return ctrl
+type enrichmentExecution struct {
+	campaignID    uuid.UUID
+	cancel        context.CancelFunc
+	controlCh     <-chan ControlCommand
+	paused        bool
+	stopRequested bool
+	cancelOnce    sync.Once
 }
 
-func (s *enrichmentService) waitIfPaused(ctrl *pauseControl) {
-	if ctrl == nil {
-		return
-	}
-	ctrl.wait()
+type enrichmentControlWatcher struct {
+	cancel   context.CancelFunc
+	token    uint64
+	commands chan ControlCommand
 }
 
-type pauseControl struct {
-	mu     sync.Mutex
-	cond   *sync.Cond
-	paused bool
+var _ ControlAwarePhase = (*enrichmentService)(nil)
+
+func (s *enrichmentService) getExecution(campaignID uuid.UUID) *enrichmentExecution {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.executions[campaignID]
 }
 
-func newPauseControl() *pauseControl {
-	pc := &pauseControl{}
-	pc.cond = sync.NewCond(&pc.mu)
-	return pc
-}
-
-func (pc *pauseControl) setPaused(paused bool) {
-	pc.mu.Lock()
-	pc.paused = paused
-	if !paused {
-		pc.cond.Broadcast()
-	}
-	pc.mu.Unlock()
-}
-
-func (pc *pauseControl) wait() {
-	pc.mu.Lock()
-	for pc.paused {
-		pc.cond.Wait()
-	}
-	pc.mu.Unlock()
+func (s *enrichmentService) clearExecution(campaignID uuid.UUID) {
+	s.mu.Lock()
+	delete(s.executions, campaignID)
+	s.mu.Unlock()
 }
 
 const (
@@ -141,10 +125,11 @@ type featureVectorMetrics struct {
 // chain into analysis while the full enrichment engine is brought online.
 func NewEnrichmentService(store store.CampaignStore, deps Dependencies) EnrichmentService {
 	return &enrichmentService{
-		store:    store,
-		deps:     deps,
-		statuses: make(map[uuid.UUID]*PhaseStatus),
-		controls: make(map[uuid.UUID]*pauseControl),
+		store:           store,
+		deps:            deps,
+		statuses:        make(map[uuid.UUID]*PhaseStatus),
+		executions:      make(map[uuid.UUID]*enrichmentExecution),
+		controlWatchers: make(map[uuid.UUID]enrichmentControlWatcher),
 	}
 }
 
@@ -216,7 +201,20 @@ func (s *enrichmentService) Execute(ctx context.Context, campaignID uuid.UUID) (
 	})
 
 	progressCh := make(chan PhaseProgress, 4)
-	go s.runEnrichment(ctx, campaignID, exec, cfg, total, progressCh)
+	runCtx, cancel := context.WithCancel(ctx)
+	execution := &enrichmentExecution{campaignID: campaignID, cancel: cancel}
+	s.mu.Lock()
+	if s.executions == nil {
+		s.executions = make(map[uuid.UUID]*enrichmentExecution)
+	}
+	s.executions[campaignID] = execution
+	s.mu.Unlock()
+	s.ctrlMu.Lock()
+	if watcher, ok := s.controlWatchers[campaignID]; ok {
+		execution.controlCh = watcher.commands
+	}
+	s.ctrlMu.Unlock()
+	go s.runEnrichment(runCtx, campaignID, exec, cfg, total, progressCh, execution)
 
 	return progressCh, nil
 }
@@ -244,8 +242,12 @@ func (s *enrichmentService) Cancel(ctx context.Context, campaignID uuid.UUID) er
 	if s.deps.Logger != nil {
 		s.deps.Logger.Warn(ctx, "Enrichment execution cancelled", map[string]interface{}{"campaign_id": campaignID})
 	}
-	ctrl := s.getControl(campaignID)
-	ctrl.setPaused(false)
+	if execution := s.getExecution(campaignID); execution != nil {
+		s.mu.Lock()
+		execution.stopRequested = true
+		s.mu.Unlock()
+		s.requestStop(execution)
+	}
 	s.updateStatus(campaignID, func(st *PhaseStatus) {
 		st.Status = models.PhaseStatusFailed
 		st.LastError = "enrichment cancelled"
@@ -273,54 +275,79 @@ func (s *enrichmentService) Capabilities() PhaseControlCapabilities {
 	}
 }
 
-func (s *enrichmentService) Pause(ctx context.Context, campaignID uuid.UUID) error {
-	ctrl := s.getControl(campaignID)
-	s.mu.RLock()
-	status, ok := s.statuses[campaignID]
-	s.mu.RUnlock()
-	if !ok || status.Status != models.PhaseStatusInProgress {
-		return ErrPhaseNotRunning
+const enrichmentControlBuffer = 8
+
+// AttachControlChannel wires the orchestrator control bus into enrichment execution.
+func (s *enrichmentService) AttachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, commands <-chan ControlCommand) {
+	if phase != models.PhaseTypeEnrichment || commands == nil {
+		return
 	}
-	ctrl.setPaused(true)
-	s.updateStatus(campaignID, func(st *PhaseStatus) {
-		st.Status = models.PhaseStatusPaused
-	})
-	if s.store != nil {
-		var exec store.Querier
-		if q, ok := s.deps.DB.(store.Querier); ok {
-			exec = q
-		}
-		_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeEnrichment)
-	}
-	return nil
+	controlCtx, cancel := context.WithCancel(context.Background())
+	downstream := make(chan ControlCommand, enrichmentControlBuffer)
+	token := s.registerControlWatcher(campaignID, cancel, downstream)
+	go s.consumeControlSignals(controlCtx, campaignID, token, commands, downstream)
 }
 
-func (s *enrichmentService) Resume(ctx context.Context, campaignID uuid.UUID) error {
-	ctrl := s.getControl(campaignID)
-	s.mu.RLock()
-	status, ok := s.statuses[campaignID]
-	s.mu.RUnlock()
-	if !ok || status.Status != models.PhaseStatusPaused {
-		return ErrPhaseNotPaused
+func (s *enrichmentService) registerControlWatcher(campaignID uuid.UUID, cancel context.CancelFunc, downstream chan ControlCommand) uint64 {
+	s.ctrlMu.Lock()
+	s.controlWatcherSeq++
+	token := s.controlWatcherSeq
+	if s.controlWatchers == nil {
+		s.controlWatchers = make(map[uuid.UUID]enrichmentControlWatcher)
 	}
-	ctrl.setPaused(false)
-	s.updateStatus(campaignID, func(st *PhaseStatus) {
-		st.Status = models.PhaseStatusInProgress
-	})
-	if s.store != nil {
-		var exec store.Querier
-		if q, ok := s.deps.DB.(store.Querier); ok {
-			exec = q
+	if existing, ok := s.controlWatchers[campaignID]; ok {
+		if existing.cancel != nil {
+			existing.cancel()
 		}
-		_ = s.store.UpdatePhaseStatus(ctx, exec, campaignID, models.PhaseTypeEnrichment, models.PhaseStatusInProgress)
 	}
-	return nil
+	s.controlWatchers[campaignID] = enrichmentControlWatcher{cancel: cancel, token: token, commands: downstream}
+	s.ctrlMu.Unlock()
+	s.mu.Lock()
+	if exec, ok := s.executions[campaignID]; ok {
+		exec.controlCh = downstream
+	}
+	s.mu.Unlock()
+	return token
 }
 
-func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.UUID, exec store.Querier, cfg enrichmentConfig, total int, progressCh chan<- PhaseProgress) {
+func (s *enrichmentService) clearControlWatcher(campaignID uuid.UUID, token uint64, downstream chan ControlCommand) {
+	s.ctrlMu.Lock()
+	if current, ok := s.controlWatchers[campaignID]; ok && current.token == token {
+		delete(s.controlWatchers, campaignID)
+	}
+	s.ctrlMu.Unlock()
+	s.mu.Lock()
+	if exec, ok := s.executions[campaignID]; ok {
+		if exec.controlCh == downstream {
+			exec.controlCh = nil
+		}
+	}
+	s.mu.Unlock()
+}
+
+func (s *enrichmentService) consumeControlSignals(ctx context.Context, campaignID uuid.UUID, token uint64, upstream <-chan ControlCommand, downstream chan ControlCommand) {
+	defer func() {
+		close(downstream)
+		s.clearControlWatcher(campaignID, token, downstream)
+	}()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case cmd, ok := <-upstream:
+			if !ok {
+				return
+			}
+			if err := s.dispatchControlCommand(campaignID, downstream, cmd); err != nil {
+				s.ackControl(cmd, err)
+			}
+		}
+	}
+}
+
+func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.UUID, exec store.Querier, cfg enrichmentConfig, total int, progressCh chan<- PhaseProgress, execution *enrichmentExecution) {
 	defer close(progressCh)
-
-	ctrl := s.getControl(campaignID)
+	defer s.clearExecution(campaignID)
 
 	examined := 0
 	updated := 0
@@ -350,11 +377,21 @@ func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.U
 
 	var runErr error
 
+	stopMsg := "Enrichment stopped by user"
 	for offset := 0; offset < total && runErr == nil; offset += enrichmentBatchSize {
-		s.waitIfPaused(ctrl)
+		if s.processPendingControlSignals(ctx, execution) {
+			s.failWithError(campaignID, fmt.Errorf(stopMsg))
+			s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, stopMsg, progressCh)
+			return
+		}
 		if err := ctx.Err(); err != nil {
-			s.failWithContextError(campaignID, err)
-			s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, "Enrichment cancelled", progressCh)
+			if execution != nil && s.isStopRequested(execution) {
+				s.failWithError(campaignID, fmt.Errorf(stopMsg))
+				s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, stopMsg, progressCh)
+			} else {
+				s.failWithContextError(campaignID, err)
+				s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, "Enrichment cancelled", progressCh)
+			}
 			return
 		}
 
@@ -368,10 +405,19 @@ func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.U
 		}
 
 		for _, candidate := range batch {
-			s.waitIfPaused(ctrl)
+			if s.processPendingControlSignals(ctx, execution) {
+				s.failWithError(campaignID, fmt.Errorf(stopMsg))
+				s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, stopMsg, progressCh)
+				return
+			}
 			if err := ctx.Err(); err != nil {
-				s.failWithContextError(campaignID, err)
-				s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, "Enrichment cancelled", progressCh)
+				if execution != nil && s.isStopRequested(execution) {
+					s.failWithError(campaignID, fmt.Errorf(stopMsg))
+					s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, stopMsg, progressCh)
+				} else {
+					s.failWithContextError(campaignID, err)
+					s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, "Enrichment cancelled", progressCh)
+				}
 				return
 			}
 
@@ -829,4 +875,200 @@ func clampInt(value, min, max int) int {
 		return max
 	}
 	return value
+}
+
+func (s *enrichmentService) dispatchControlCommand(campaignID uuid.UUID, downstream chan ControlCommand, cmd ControlCommand) error {
+	s.mu.RLock()
+	execution, exists := s.executions[campaignID]
+	status := models.PhaseStatusNotStarted
+	if st, ok := s.statuses[campaignID]; ok && st != nil {
+		status = st.Status
+	}
+	var controlCh <-chan ControlCommand
+	if execution != nil {
+		controlCh = execution.controlCh
+	}
+	s.mu.RUnlock()
+	if !exists || execution == nil {
+		return fmt.Errorf("%w: no enrichment execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
+	}
+	if controlCh != downstream {
+		return fmt.Errorf("enrichment control channel not bound for campaign %s", campaignID)
+	}
+	if status != models.PhaseStatusInProgress && status != models.PhaseStatusPaused {
+		return ErrPhaseNotRunning
+	}
+	select {
+	case downstream <- cmd:
+		return nil
+	default:
+		return fmt.Errorf("enrichment control channel backpressure for campaign %s", campaignID)
+	}
+}
+
+func (s *enrichmentService) ackControl(cmd ControlCommand, err error) {
+	if cmd.Ack == nil {
+		return
+	}
+	cmd.Ack <- err
+}
+
+func (s *enrichmentService) processPendingControlSignals(ctx context.Context, execution *enrichmentExecution) bool {
+	if execution == nil || execution.controlCh == nil {
+		return false
+	}
+	for {
+		select {
+		case cmd, ok := <-execution.controlCh:
+			if !ok {
+				return s.isStopRequested(execution)
+			}
+			if s.handleControlCommand(ctx, execution, cmd) {
+				return true
+			}
+		default:
+			return false
+		}
+	}
+}
+
+func (s *enrichmentService) handleControlCommand(ctx context.Context, execution *enrichmentExecution, cmd ControlCommand) bool {
+	if execution == nil {
+		s.ackControl(cmd, fmt.Errorf("no enrichment execution bound"))
+		return true
+	}
+	s.mu.RLock()
+	paused := execution.paused
+	s.mu.RUnlock()
+	signalCtx := context.Background()
+	switch cmd.Signal {
+	case ControlSignalPause:
+		if paused {
+			s.ackControl(cmd, nil)
+			return false
+		}
+		s.mu.Lock()
+		execution.paused = true
+		s.mu.Unlock()
+		s.updateStatus(execution.campaignID, func(st *PhaseStatus) {
+			st.Status = models.PhaseStatusPaused
+		})
+		if s.store != nil {
+			if exec := s.getQuerier(); exec != nil {
+				_ = s.store.PausePhase(signalCtx, exec, execution.campaignID, models.PhaseTypeEnrichment)
+			}
+		}
+		s.ackControl(cmd, nil)
+		return s.awaitResume(ctx, execution)
+	case ControlSignalResume:
+		if !paused {
+			s.ackControl(cmd, nil)
+			return false
+		}
+		s.mu.Lock()
+		execution.paused = false
+		s.mu.Unlock()
+		s.updateStatus(execution.campaignID, func(st *PhaseStatus) {
+			st.Status = models.PhaseStatusInProgress
+		})
+		if s.store != nil {
+			if exec := s.getQuerier(); exec != nil {
+				_ = s.store.UpdatePhaseStatus(signalCtx, exec, execution.campaignID, models.PhaseTypeEnrichment, models.PhaseStatusInProgress)
+			}
+		}
+		s.ackControl(cmd, nil)
+		return false
+	case ControlSignalStop:
+		s.mu.Lock()
+		execution.stopRequested = true
+		s.mu.Unlock()
+		s.requestStop(execution)
+		s.updateStatus(execution.campaignID, func(st *PhaseStatus) {
+			st.Status = models.PhaseStatusFailed
+			st.LastError = "enrichment stopped by user"
+		})
+		if s.store != nil {
+			if exec := s.getQuerier(); exec != nil {
+				_ = s.store.FailPhase(signalCtx, exec, execution.campaignID, models.PhaseTypeEnrichment, "enrichment stopped by user", nil)
+			}
+		}
+		s.ackControl(cmd, nil)
+		return true
+	default:
+		s.ackControl(cmd, fmt.Errorf("unknown control signal: %s", cmd.Signal))
+		return false
+	}
+}
+
+func (s *enrichmentService) awaitResume(ctx context.Context, execution *enrichmentExecution) bool {
+	if execution == nil || execution.controlCh == nil {
+		return false
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			s.updateStatus(execution.campaignID, func(st *PhaseStatus) {
+				st.Status = models.PhaseStatusFailed
+				st.LastError = "execution cancelled while paused"
+			})
+			return true
+		case cmd, ok := <-execution.controlCh:
+			if !ok {
+				return s.isStopRequested(execution)
+			}
+			switch cmd.Signal {
+			case ControlSignalResume:
+				s.mu.Lock()
+				execution.paused = false
+				s.mu.Unlock()
+				s.updateStatus(execution.campaignID, func(st *PhaseStatus) {
+					st.Status = models.PhaseStatusInProgress
+				})
+				if s.store != nil {
+					if exec := s.getQuerier(); exec != nil {
+						_ = s.store.UpdatePhaseStatus(context.Background(), exec, execution.campaignID, models.PhaseTypeEnrichment, models.PhaseStatusInProgress)
+					}
+				}
+				s.ackControl(cmd, nil)
+				return false
+			case ControlSignalStop:
+				s.mu.Lock()
+				execution.stopRequested = true
+				s.mu.Unlock()
+				s.requestStop(execution)
+				s.updateStatus(execution.campaignID, func(st *PhaseStatus) {
+					st.Status = models.PhaseStatusFailed
+					st.LastError = "enrichment stopped by user"
+				})
+				if s.store != nil {
+					if exec := s.getQuerier(); exec != nil {
+						_ = s.store.FailPhase(context.Background(), exec, execution.campaignID, models.PhaseTypeEnrichment, "enrichment stopped by user", nil)
+					}
+				}
+				s.ackControl(cmd, nil)
+				return true
+			case ControlSignalPause:
+				s.ackControl(cmd, nil)
+			default:
+				s.ackControl(cmd, fmt.Errorf("unknown control signal: %s", cmd.Signal))
+			}
+		}
+	}
+}
+
+func (s *enrichmentService) isStopRequested(execution *enrichmentExecution) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return execution != nil && execution.stopRequested
+}
+
+func (s *enrichmentService) requestStop(execution *enrichmentExecution) {
+	if execution == nil {
+		return
+	}
+	execution.cancelOnce.Do(func() {
+		if execution.cancel != nil {
+			execution.cancel()
+		}
+	})
 }

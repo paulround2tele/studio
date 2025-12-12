@@ -109,9 +109,20 @@ type domainGenerationService struct {
 	cache       Cache
 
 	// Execution state tracking
-	mu         sync.RWMutex
-	executions map[uuid.UUID]*domainExecution
+	mu                sync.RWMutex
+	executions        map[uuid.UUID]*domainExecution
+	ctrlMu            sync.Mutex
+	controlWatchers   map[uuid.UUID]domainControlWatcher
+	controlWatcherSeq uint64
 }
+
+type domainControlWatcher struct {
+	cancel   context.CancelFunc
+	token    uint64
+	commands chan ControlCommand
+}
+
+var _ ControlAwarePhase = (*domainGenerationService)(nil)
 
 func (s *domainGenerationService) ensurePauseControl(execution *domainExecution) {
 	if execution == nil {
@@ -143,7 +154,14 @@ type domainExecution struct {
 	pauseMu        sync.Mutex
 	pauseCond      *sync.Cond
 	paused         bool
+	controlCh      <-chan ControlCommand
+	stopRequested  bool
+	cancelOnce     sync.Once
 }
+
+const domainControlBuffer = 8
+
+const domainStopMessage = "Domain generation stopped by user"
 
 // NewDomainGenerationService creates a new domain generation service
 func NewDomainGenerationService(
@@ -151,9 +169,10 @@ func NewDomainGenerationService(
 	deps Dependencies,
 ) DomainGenerationService {
 	svc := &domainGenerationService{
-		store:      store,
-		deps:       deps,
-		executions: make(map[uuid.UUID]*domainExecution),
+		store:           store,
+		deps:            deps,
+		executions:      make(map[uuid.UUID]*domainExecution),
+		controlWatchers: make(map[uuid.UUID]domainControlWatcher),
 	}
 	// Prefer provided deps; fall back to minimal no-ops
 	if deps.AuditLogger != nil {
@@ -533,13 +552,24 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 	s.mu.Unlock()
 
 	for processedCount < config.NumDomains {
+		if s.processPendingControlSignals(ctx, execution) {
+			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, domainStopMessage)
+			return
+		}
 		s.waitWhilePaused(execution)
 		select {
 		case <-ctx.Done():
-			// Treat external cancellation as a graceful pause; do not mark as failed
-			s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Execution cancelled by caller context")
+			if s.isStopRequested(execution) {
+				s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, domainStopMessage)
+			} else {
+				s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Execution cancelled by caller context")
+			}
 			return
 		default:
+		}
+		if s.processPendingControlSignals(ctx, execution) {
+			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, domainStopMessage)
+			return
 		}
 
 		// Calculate batch size for this iteration
@@ -756,23 +786,17 @@ func (s *domainGenerationService) GetStatus(ctx context.Context, campaignID uuid
 // Cancel stops the domain generation execution
 func (s *domainGenerationService) Cancel(ctx context.Context, campaignID uuid.UUID) error {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	execution, exists := s.executions[campaignID]
 	if !exists {
+		s.mu.Unlock()
 		return fmt.Errorf("%w: no domain generation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
 	if execution.pauseCond == nil {
 		execution.pauseCond = sync.NewCond(&execution.pauseMu)
 	}
-
-	if execution.cancelFunc != nil {
-		execution.pauseMu.Lock()
-		execution.paused = false
-		execution.pauseCond.Broadcast()
-		execution.pauseMu.Unlock()
-		execution.cancelFunc()
-	}
+	execution.stopRequested = true
+	s.mu.Unlock()
+	s.requestStop(execution)
 
 	s.deps.Logger.Info(ctx, "Domain generation cancelled", map[string]interface{}{
 		"campaign_id": campaignID,
@@ -789,6 +813,272 @@ func (s *domainGenerationService) Capabilities() PhaseControlCapabilities {
 		CanStop:    true,
 		CanRestart: true,
 	}
+}
+
+// AttachControlChannel wires the orchestrator control bus into domain generation execution.
+func (s *domainGenerationService) AttachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, commands <-chan ControlCommand) {
+	if phase != models.PhaseTypeDomainGeneration || commands == nil {
+		return
+	}
+	controlCtx, cancel := context.WithCancel(context.Background())
+	downstream := make(chan ControlCommand, domainControlBuffer)
+	token := s.registerControlWatcher(campaignID, cancel, downstream)
+	go s.consumeControlSignals(controlCtx, campaignID, token, commands, downstream)
+}
+
+func (s *domainGenerationService) registerControlWatcher(campaignID uuid.UUID, cancel context.CancelFunc, downstream chan ControlCommand) uint64 {
+	s.ctrlMu.Lock()
+	s.controlWatcherSeq++
+	token := s.controlWatcherSeq
+	if existing, ok := s.controlWatchers[campaignID]; ok {
+		if existing.cancel != nil {
+			existing.cancel()
+		}
+	}
+	s.controlWatchers[campaignID] = domainControlWatcher{cancel: cancel, token: token, commands: downstream}
+	s.ctrlMu.Unlock()
+
+	s.mu.Lock()
+	if exec, ok := s.executions[campaignID]; ok {
+		exec.controlCh = downstream
+	}
+	s.mu.Unlock()
+
+	return token
+}
+
+func (s *domainGenerationService) clearControlWatcher(campaignID uuid.UUID, token uint64, downstream chan ControlCommand) {
+	s.ctrlMu.Lock()
+	if current, ok := s.controlWatchers[campaignID]; ok && current.token == token {
+		delete(s.controlWatchers, campaignID)
+	}
+	s.ctrlMu.Unlock()
+
+	s.mu.Lock()
+	if exec, ok := s.executions[campaignID]; ok {
+		if exec.controlCh == downstream {
+			exec.controlCh = nil
+		}
+	}
+	s.mu.Unlock()
+}
+
+func (s *domainGenerationService) consumeControlSignals(ctx context.Context, campaignID uuid.UUID, token uint64, upstream <-chan ControlCommand, downstream chan ControlCommand) {
+	defer func() {
+		close(downstream)
+		s.clearControlWatcher(campaignID, token, downstream)
+	}()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case cmd, ok := <-upstream:
+			if !ok {
+				return
+			}
+			if err := s.dispatchControlCommand(campaignID, downstream, cmd); err != nil {
+				s.ackControl(cmd, err)
+			}
+		}
+	}
+}
+
+func (s *domainGenerationService) dispatchControlCommand(campaignID uuid.UUID, downstream chan ControlCommand, cmd ControlCommand) error {
+	s.mu.RLock()
+	execution, exists := s.executions[campaignID]
+	status := models.PhaseStatusNotStarted
+	if execution != nil {
+		status = execution.status
+	}
+	var controlCh <-chan ControlCommand
+	if execution != nil {
+		controlCh = execution.controlCh
+	}
+	s.mu.RUnlock()
+	if !exists || execution == nil {
+		return fmt.Errorf("%w: no domain generation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
+	}
+	if controlCh != downstream {
+		return fmt.Errorf("domain generation control channel not bound for campaign %s", campaignID)
+	}
+	if status != models.PhaseStatusInProgress && status != models.PhaseStatusPaused {
+		return ErrPhaseNotRunning
+	}
+	select {
+	case downstream <- cmd:
+		return nil
+	default:
+		return fmt.Errorf("domain generation control channel backpressure for campaign %s", campaignID)
+	}
+}
+
+func (s *domainGenerationService) ackControl(cmd ControlCommand, err error) {
+	if cmd.Ack == nil {
+		return
+	}
+	cmd.Ack <- err
+}
+
+func (s *domainGenerationService) processPendingControlSignals(ctx context.Context, execution *domainExecution) bool {
+	if execution == nil || execution.controlCh == nil {
+		return false
+	}
+	for {
+		select {
+		case cmd, ok := <-execution.controlCh:
+			if !ok {
+				return s.isStopRequested(execution)
+			}
+			if s.handleControlCommand(ctx, execution, cmd) {
+				return true
+			}
+		default:
+			return false
+		}
+	}
+}
+
+func (s *domainGenerationService) handleControlCommand(ctx context.Context, execution *domainExecution, cmd ControlCommand) bool {
+	if execution == nil {
+		s.ackControl(cmd, fmt.Errorf("no domain generation execution bound"))
+		return true
+	}
+	switch cmd.Signal {
+	case ControlSignalPause:
+		s.ensurePauseControl(execution)
+		execution.pauseMu.Lock()
+		alreadyPaused := execution.paused
+		if !alreadyPaused {
+			execution.paused = true
+		}
+		execution.pauseMu.Unlock()
+		if alreadyPaused {
+			s.ackControl(cmd, nil)
+			return false
+		}
+		s.updateExecutionStatus(execution.campaignID, models.PhaseStatusPaused, "pause requested")
+		if s.deps.Logger != nil {
+			s.deps.Logger.Info(ctx, "domain_generation.pause", map[string]interface{}{
+				"campaign_id": execution.campaignID,
+				"signal":      cmd.Signal,
+			})
+		}
+		s.ackControl(cmd, nil)
+		return s.awaitResume(ctx, execution)
+	case ControlSignalResume:
+		s.ensurePauseControl(execution)
+		execution.pauseMu.Lock()
+		if !execution.paused {
+			execution.pauseMu.Unlock()
+			s.ackControl(cmd, nil)
+			return false
+		}
+		execution.paused = false
+		execution.pauseCond.Broadcast()
+		execution.pauseMu.Unlock()
+		execution.status = models.PhaseStatusInProgress
+		s.updateExecutionStatus(execution.campaignID, models.PhaseStatusInProgress, "")
+		if s.deps.Logger != nil {
+			s.deps.Logger.Info(ctx, "domain_generation.resume", map[string]interface{}{
+				"campaign_id": execution.campaignID,
+				"signal":      cmd.Signal,
+			})
+		}
+		s.ackControl(cmd, nil)
+		return false
+	case ControlSignalStop:
+		s.mu.Lock()
+		execution.stopRequested = true
+		s.mu.Unlock()
+		s.requestStop(execution)
+		s.updateExecutionStatus(execution.campaignID, models.PhaseStatusFailed, domainStopMessage)
+		if s.deps.Logger != nil {
+			s.deps.Logger.Info(ctx, "domain_generation.stop", map[string]interface{}{
+				"campaign_id": execution.campaignID,
+				"signal":      cmd.Signal,
+			})
+		}
+		s.ackControl(cmd, nil)
+		return true
+	default:
+		s.ackControl(cmd, fmt.Errorf("unknown control signal: %s", cmd.Signal))
+		return false
+	}
+}
+
+func (s *domainGenerationService) awaitResume(ctx context.Context, execution *domainExecution) bool {
+	if execution == nil {
+		return false
+	}
+	if execution.controlCh == nil {
+		execution.pauseMu.Lock()
+		for execution.paused {
+			execution.pauseCond.Wait()
+		}
+		execution.pauseMu.Unlock()
+		return false
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			s.updateExecutionStatus(execution.campaignID, models.PhaseStatusFailed, "execution cancelled while paused")
+			return true
+		case cmd, ok := <-execution.controlCh:
+			if !ok {
+				return s.isStopRequested(execution)
+			}
+			switch cmd.Signal {
+			case ControlSignalResume:
+				s.ensurePauseControl(execution)
+				execution.pauseMu.Lock()
+				execution.paused = false
+				execution.pauseCond.Broadcast()
+				execution.pauseMu.Unlock()
+				execution.status = models.PhaseStatusInProgress
+				s.updateExecutionStatus(execution.campaignID, models.PhaseStatusInProgress, "")
+				s.ackControl(cmd, nil)
+				return false
+			case ControlSignalStop:
+				s.mu.Lock()
+				execution.stopRequested = true
+				s.mu.Unlock()
+				s.requestStop(execution)
+				s.updateExecutionStatus(execution.campaignID, models.PhaseStatusFailed, domainStopMessage)
+				s.ackControl(cmd, nil)
+				return true
+			case ControlSignalPause:
+				s.ackControl(cmd, nil)
+			default:
+				s.ackControl(cmd, fmt.Errorf("unknown control signal: %s", cmd.Signal))
+			}
+		}
+	}
+}
+
+func (s *domainGenerationService) requestStop(execution *domainExecution) {
+	if execution == nil {
+		return
+	}
+	execution.pauseMu.Lock()
+	execution.paused = false
+	if execution.pauseCond != nil {
+		execution.pauseCond.Broadcast()
+	}
+	execution.pauseMu.Unlock()
+	execution.cancelOnce.Do(func() {
+		if execution.cancelFunc != nil {
+			execution.cancelFunc()
+		}
+	})
+}
+
+func (s *domainGenerationService) isStopRequested(execution *domainExecution) bool {
+	if execution == nil {
+		return false
+	}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return execution.stopRequested
 }
 
 // Pause requests a cooperative pause of domain generation.
@@ -1060,12 +1350,13 @@ func (s *domainGenerationService) persistBatchWithGlobalOffset(ctx context.Conte
 	if len(domains) == 0 {
 		return nil
 	}
+	writeCtx := safeWriteContext(ctx)
 	// Start a sqlx transaction via store to obtain a Querier compatible exec
 
 	// Attempt to open a transaction through the store.Transactor if available
 	if s.store != nil {
 		if t, ok := s.store.(store.Transactor); ok {
-			tx, err := t.BeginTxx(ctx, nil)
+			tx, err := t.BeginTxx(writeCtx, nil)
 			if err != nil {
 				return fmt.Errorf("begin tx: %w", err)
 			}
@@ -1079,7 +1370,7 @@ func (s *domainGenerationService) persistBatchWithGlobalOffset(ctx context.Conte
 
 			var txq store.Querier = tx
 			// Persist domains
-			if err := s.storeGeneratedDomainsWithExec(ctx, txq, campaignID, domains, baseOffset); err != nil {
+			if err := s.storeGeneratedDomainsWithExec(writeCtx, txq, campaignID, domains, baseOffset); err != nil {
 				return err
 			}
 
@@ -1093,7 +1384,7 @@ func (s *domainGenerationService) persistBatchWithGlobalOffset(ctx context.Conte
 				ConfigDetails: details,
 				UpdatedAt:     now,
 			}
-			if err := s.store.CreateOrUpdateDomainGenerationPhaseConfigState(ctx, txq, state); err != nil {
+			if err := s.store.CreateOrUpdateDomainGenerationPhaseConfigState(writeCtx, txq, state); err != nil {
 				return fmt.Errorf("upsert config state: %w", err)
 			}
 
@@ -1106,7 +1397,7 @@ func (s *domainGenerationService) persistBatchWithGlobalOffset(ctx context.Conte
 	}
 
 	// Fallback: no transaction, do best-effort separate operations
-	if err := s.storeGeneratedDomains(ctx, campaignID, domains, baseOffset); err != nil {
+	if err := s.storeGeneratedDomains(writeCtx, campaignID, domains, baseOffset); err != nil {
 		return err
 	}
 	if s.store != nil {
@@ -1123,11 +1414,18 @@ func (s *domainGenerationService) persistBatchWithGlobalOffset(ctx context.Conte
 		if q, ok := s.deps.DB.(store.Querier); ok {
 			exec = q
 		}
-		if err := s.store.CreateOrUpdateDomainGenerationPhaseConfigState(ctx, exec, state); err != nil {
+		if err := s.store.CreateOrUpdateDomainGenerationPhaseConfigState(writeCtx, exec, state); err != nil {
 			s.deps.Logger.Warn(ctx, "Failed to upsert config state without tx", map[string]interface{}{"error": err.Error()})
 		}
 	}
 	return nil
+}
+
+func safeWriteContext(ctx context.Context) context.Context {
+	if ctx == nil {
+		return context.Background()
+	}
+	return context.WithoutCancel(ctx)
 }
 
 // storeGeneratedDomainsWithExec persists domains using the provided Querier (e.g., within a transaction)

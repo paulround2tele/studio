@@ -37,7 +37,7 @@ func TestStartPhaseFromConfigured(t *testing.T) {
 	// Create campaign
 	campID := uuid.New()
 	now := time.Now()
-	c := &models.LeadGenerationCampaign{ID: campID, Name: "configured-phase-camp", CreatedAt: now, UpdatedAt: now, CampaignType: "lead_generation", TotalPhases: 5}
+	c := &models.LeadGenerationCampaign{ID: campID, Name: "configured-phase-camp", CreatedAt: now, UpdatedAt: now, CampaignType: "lead_generation", TotalPhases: 6}
 	if err := cs.CreateCampaign(context.Background(), nil, c); err != nil {
 		t.Fatalf("create campaign: %v", err)
 	}
@@ -62,9 +62,10 @@ func TestStartPhaseFromConfigured(t *testing.T) {
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
 	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	extractionSvc := newStubPhaseService(models.PhaseTypeExtraction, logger)
 	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, nil)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, nil)
 
 	if err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeDomainGeneration); err != nil {
 		t.Fatalf("start from configured: %v", err)
@@ -95,7 +96,7 @@ func TestHTTPConfigureBlockedUntilDNSCompleted(t *testing.T) {
 	// Create campaign (DNS phase not run/completed)
 	campID := uuid.New()
 	now := time.Now()
-	c := &models.LeadGenerationCampaign{ID: campID, Name: "http-gate-camp", CreatedAt: now, UpdatedAt: now, CampaignType: "lead_generation", TotalPhases: 5}
+	c := &models.LeadGenerationCampaign{ID: campID, Name: "http-gate-camp", CreatedAt: now, UpdatedAt: now, CampaignType: "lead_generation", TotalPhases: 6}
 	if err := cs.CreateCampaign(context.Background(), nil, c); err != nil {
 		t.Fatalf("create campaign: %v", err)
 	}
@@ -140,7 +141,7 @@ func containsAll(s string, subs []string) bool {
 	return true
 }
 
-func TestStartPhaseAnalysisRequiresHTTPCompletion(t *testing.T) {
+func TestStartPhaseAnalysisRequiresExtractionCompletion(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
 	logger := &testLogger{t: t}
@@ -151,11 +152,50 @@ func TestStartPhaseAnalysisRequiresHTTPCompletion(t *testing.T) {
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
 	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	extractionSvc := newStubPhaseService(models.PhaseTypeExtraction, logger)
 	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, nil)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, nil)
 
 	err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeAnalysis)
+	if err == nil {
+		t.Fatalf("expected dependency error when extraction not completed")
+	}
+	var depErr *PhaseDependencyError
+	if !errors.As(err, &depErr) {
+		t.Fatalf("expected PhaseDependencyError, got %v", err)
+	}
+	if depErr.BlockingPhase != models.PhaseTypeExtraction {
+		t.Fatalf("expected extraction dependency, got %s", depErr.BlockingPhase)
+	}
+
+	if _, err := db.Exec(`INSERT INTO campaign_phases (campaign_id, phase_type, phase_order, status, progress_percentage, created_at, updated_at)
+		VALUES ($1,'extraction',4,'completed',100,NOW(),NOW())`, campID); err != nil {
+		t.Fatalf("insert extraction row: %v", err)
+	}
+
+	if err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeAnalysis); err != nil {
+		t.Fatalf("analysis should start once extraction completed: %v", err)
+	}
+}
+
+func TestStartPhaseExtractionRequiresHTTPCompletion(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := &testLogger{t: t}
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	campID := createTestCampaign(t, cs)
+
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	extractionSvc := newStubPhaseService(models.PhaseTypeExtraction, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, nil)
+
+	err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeExtraction)
 	if err == nil {
 		t.Fatalf("expected dependency error when HTTP not completed")
 	}
@@ -172,8 +212,8 @@ func TestStartPhaseAnalysisRequiresHTTPCompletion(t *testing.T) {
 		t.Fatalf("insert http row: %v", err)
 	}
 
-	if err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeAnalysis); err != nil {
-		t.Fatalf("analysis should start once HTTP completed: %v", err)
+	if err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeExtraction); err != nil {
+		t.Fatalf("extraction should start once HTTP completed: %v", err)
 	}
 }
 
@@ -188,9 +228,10 @@ func TestStartPhaseHTTPRequiresDNSCompletion(t *testing.T) {
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
 	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	extractionSvc := newStubPhaseService(models.PhaseTypeExtraction, logger)
 	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, nil)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, nil)
 
 	err := orch.StartPhaseInternal(context.Background(), campID, models.PhaseTypeHTTPKeywordValidation)
 	if err == nil {
@@ -228,9 +269,10 @@ func TestRestartCampaignFullSequenceRespectsMode(t *testing.T) {
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
 	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	extractionSvc := newStubPhaseService(models.PhaseTypeExtraction, logger)
 	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, enrichmentSvc, analysisSvc, nil, nil)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, nil)
 
 	result, err := orch.RestartCampaign(context.Background(), campID)
 	if err != nil {

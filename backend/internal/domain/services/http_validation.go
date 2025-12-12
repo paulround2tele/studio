@@ -86,10 +86,20 @@ type httpValidationService struct {
 	}
 
 	// Execution tracking per campaign
-	mu         sync.RWMutex
-	executions map[uuid.UUID]*httpValidationExecution
-	status     models.PhaseStatusEnum
+	mu                sync.RWMutex
+	executions        map[uuid.UUID]*httpValidationExecution
+	status            models.PhaseStatusEnum
+	controlWatchers   map[uuid.UUID]httpControlWatcher
+	controlWatcherSeq uint64
 }
+
+type httpControlWatcher struct {
+	cancel   context.CancelFunc
+	token    uint64
+	commands chan ControlCommand
+}
+
+var _ ControlAwarePhase = (*httpValidationService)(nil)
 
 type keywordCount struct {
 	keyword string
@@ -540,21 +550,22 @@ type httpValidationExecution struct {
 	Domains        []string                          `json:"-"`
 	cancelCtx      context.Context
 	cancelFunc     context.CancelFunc
-	pauseRequested bool
-	pauseAck       chan struct{}
+	controlCh      <-chan ControlCommand
+	paused         bool
 	stopRequested  bool
 }
 
 // NewHTTPValidationService creates a new HTTP validation service
 func NewHTTPValidationService(store store.CampaignStore, deps Dependencies, httpValidator *httpvalidator.HTTPValidator, personaStore store.PersonaStore, proxyStore store.ProxyStore, keywordStore store.KeywordStore) HTTPValidationService {
 	return &httpValidationService{
-		store:         store,
-		personaStore:  personaStore,
-		proxyStore:    proxyStore,
-		deps:          deps,
-		httpValidator: httpValidator,
-		executions:    make(map[uuid.UUID]*httpValidationExecution),
-		status:        models.PhaseStatusNotStarted,
+		store:           store,
+		personaStore:    personaStore,
+		proxyStore:      proxyStore,
+		deps:            deps,
+		httpValidator:   httpValidator,
+		executions:      make(map[uuid.UUID]*httpValidationExecution),
+		controlWatchers: make(map[uuid.UUID]httpControlWatcher),
+		status:          models.PhaseStatusNotStarted,
 		kwScanner: func() *keywordscanner.Service {
 			if keywordStore != nil {
 				return keywordscanner.NewService(keywordStore)
@@ -690,72 +701,94 @@ func (s *httpValidationService) Capabilities() PhaseControlCapabilities {
 	}
 }
 
-// Pause requests a cooperative pause for the HTTP validation execution.
-func (s *httpValidationService) Pause(ctx context.Context, campaignID uuid.UUID) error {
-	s.mu.Lock()
-	execution, exists := s.executions[campaignID]
-	if !exists {
-		s.mu.Unlock()
-		return fmt.Errorf("%w: no HTTP validation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
-	}
-	if execution.Status != models.PhaseStatusInProgress {
-		s.mu.Unlock()
-		return ErrPhaseNotRunning
-	}
-	if execution.pauseRequested {
-		ch := execution.pauseAck
-		s.mu.Unlock()
-		if ch == nil {
-			return nil
-		}
-		select {
-		case <-ch:
-			return nil
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(30 * time.Second):
-			return ErrPhasePauseTimeout
-		}
-	}
-	if execution.pauseAck == nil {
-		execution.pauseAck = make(chan struct{})
-	}
-	ch := execution.pauseAck
-	execution.pauseRequested = true
-	s.mu.Unlock()
+const httpControlBuffer = 8
 
-	select {
-	case <-ch:
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-time.After(30 * time.Second):
-		return ErrPhasePauseTimeout
+// AttachControlChannel wires the orchestrator control bus into HTTP validation execution.
+func (s *httpValidationService) AttachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, commands <-chan ControlCommand) {
+	if phase != models.PhaseTypeHTTPKeywordValidation || commands == nil {
+		return
+	}
+	controlCtx, cancel := context.WithCancel(context.Background())
+	downstream := make(chan ControlCommand, httpControlBuffer)
+	token := s.registerControlWatcher(campaignID, cancel, downstream)
+	go s.consumeControlSignals(controlCtx, campaignID, token, commands, downstream)
+}
+
+func (s *httpValidationService) registerControlWatcher(campaignID uuid.UUID, cancel context.CancelFunc, downstream chan ControlCommand) uint64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.controlWatcherSeq++
+	token := s.controlWatcherSeq
+	if s.controlWatchers == nil {
+		s.controlWatchers = make(map[uuid.UUID]httpControlWatcher)
+	}
+	if existing, ok := s.controlWatchers[campaignID]; ok {
+		if existing.cancel != nil {
+			existing.cancel()
+		}
+	}
+	s.controlWatchers[campaignID] = httpControlWatcher{cancel: cancel, token: token, commands: downstream}
+	if exec, ok := s.executions[campaignID]; ok {
+		exec.controlCh = downstream
+	}
+	return token
+}
+
+func (s *httpValidationService) clearControlWatcher(campaignID uuid.UUID, token uint64, downstream chan ControlCommand) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	current, ok := s.controlWatchers[campaignID]
+	if !ok || current.token != token {
+		return
+	}
+	delete(s.controlWatchers, campaignID)
+	if exec, ok := s.executions[campaignID]; ok && exec.controlCh == downstream {
+		exec.controlCh = nil
 	}
 }
 
-// Resume restarts a paused HTTP validation execution.
-func (s *httpValidationService) Resume(ctx context.Context, campaignID uuid.UUID) error {
+func (s *httpValidationService) consumeControlSignals(ctx context.Context, campaignID uuid.UUID, token uint64, upstream <-chan ControlCommand, downstream chan ControlCommand) {
+	defer func() {
+		close(downstream)
+		s.clearControlWatcher(campaignID, token, downstream)
+	}()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case cmd, ok := <-upstream:
+			if !ok {
+				return
+			}
+			if err := s.dispatchControlCommand(campaignID, downstream, cmd); err != nil {
+				s.ackControl(cmd, err)
+			}
+		}
+	}
+}
+
+func (s *httpValidationService) dispatchControlCommand(campaignID uuid.UUID, downstream chan ControlCommand, cmd ControlCommand) error {
 	s.mu.RLock()
 	execution, exists := s.executions[campaignID]
-	s.mu.RUnlock()
 	if !exists {
+		s.mu.RUnlock()
 		return fmt.Errorf("%w: no HTTP validation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
-	if execution.Status != models.PhaseStatusPaused {
-		return ErrPhaseNotPaused
+	status := execution.Status
+	controlCh := execution.controlCh
+	s.mu.RUnlock()
+	if controlCh != downstream {
+		return fmt.Errorf("http validation control channel not bound for campaign %s", campaignID)
 	}
-	progressCh, err := s.Execute(ctx, campaignID)
-	if err != nil {
-		return err
+	if status != models.PhaseStatusInProgress && status != models.PhaseStatusPaused {
+		return ErrPhaseNotRunning
 	}
-	if progressCh != nil {
-		go func() {
-			for range progressCh {
-			}
-		}()
+	select {
+	case downstream <- cmd:
+		return nil
+	default:
+		return fmt.Errorf("http validation control channel backpressure for campaign %s", campaignID)
 	}
-	return nil
 }
 
 // Execute starts HTTP validation for a campaign
@@ -794,12 +827,11 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 		close(execution.ProgressChan)
 	}
 	execution.ProgressChan = make(chan PhaseProgress, 100)
-	if execution.pauseAck != nil {
-		close(execution.pauseAck)
-		execution.pauseAck = nil
-	}
-	execution.pauseRequested = false
 	execution.stopRequested = false
+	execution.paused = false
+	if watcher, ok := s.controlWatchers[campaignID]; ok {
+		execution.controlCh = watcher.commands
+	}
 	if execution.cancelFunc != nil {
 		execution.cancelFunc()
 	}
@@ -970,7 +1002,6 @@ func (s *httpValidationService) Cancel(ctx context.Context, campaignID uuid.UUID
 // executeHTTPValidation performs the actual HTTP validation using the engine
 func (s *httpValidationService) executeHTTPValidation(execution *httpValidationExecution) {
 	defer s.closeProgressChannel(execution)
-	defer s.signalPauseAck(execution)
 
 	ctx := execution.cancelCtx
 	if ctx == nil {
@@ -1002,6 +1033,9 @@ func (s *httpValidationService) executeHTTPValidation(execution *httpValidationE
 		processed = total
 	}
 	allResults := make([]*httpvalidator.ValidationResult, 0, total)
+	if s.processPendingControlSignals(ctx, execution) {
+		return
+	}
 
 	// Feature flags & config parsing
 	enrichmentEnabled := isFeatureEnabled("ENABLE_HTTP_ENRICHMENT")
@@ -1059,11 +1093,10 @@ func (s *httpValidationService) executeHTTPValidation(execution *httpValidationE
 	parkedHeuristic := realParkedHeuristic
 
 	for i := processed; i < total; i += batchSize {
+		if s.processPendingControlSignals(ctx, execution) {
+			return
+		}
 		if err := ctx.Err(); err != nil {
-			if s.shouldPause(execution) {
-				s.handlePause(execution, "pause acknowledged")
-				return
-			}
 			if s.isStopRequested(execution) {
 				s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, "HTTP validation cancelled by user")
 			} else {
@@ -1071,15 +1104,11 @@ func (s *httpValidationService) executeHTTPValidation(execution *httpValidationE
 			}
 			return
 		}
-		if s.shouldPause(execution) {
-			s.handlePause(execution, "pause acknowledged")
-			return
-		}
 		// metrics registration (idempotent)
 		s.ensureMetricsRegistered()
 		select {
 		case <-ctx.Done():
-			s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Execution cancelled by caller context")
+			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, "Execution cancelled by caller context")
 			return
 		default:
 		}
@@ -1140,6 +1169,9 @@ func (s *httpValidationService) executeHTTPValidation(execution *httpValidationE
 				adHocKeywords = uniq
 			}
 			for _, r := range results {
+				if s.processPendingControlSignals(ctx, execution) {
+					return
+				}
 				if r == nil || r.Domain == "" {
 					continue
 				}
@@ -2728,32 +2760,125 @@ func (s *httpValidationService) closeProgressChannel(execution *httpValidationEx
 	}
 }
 
-func (s *httpValidationService) shouldPause(execution *httpValidationExecution) bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return execution != nil && execution.pauseRequested
-}
-
 func (s *httpValidationService) isStopRequested(execution *httpValidationExecution) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return execution != nil && execution.stopRequested
 }
 
-func (s *httpValidationService) signalPauseAck(execution *httpValidationExecution) {
-	s.mu.Lock()
-	if execution != nil {
-		if execution.pauseAck != nil {
-			close(execution.pauseAck)
-			execution.pauseAck = nil
-		}
-		execution.pauseRequested = false
+func (s *httpValidationService) processPendingControlSignals(ctx context.Context, execution *httpValidationExecution) bool {
+	if execution == nil || execution.controlCh == nil {
+		return false
 	}
-	s.mu.Unlock()
+	for {
+		select {
+		case cmd, ok := <-execution.controlCh:
+			if !ok {
+				return s.isStopRequested(execution)
+			}
+			if s.handleControlCommand(ctx, execution, cmd) {
+				return true
+			}
+		default:
+			return false
+		}
+	}
 }
 
-func (s *httpValidationService) handlePause(execution *httpValidationExecution, reason string) {
-	s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusPaused, reason)
-	s.signalPauseAck(execution)
-	s.closeProgressChannel(execution)
+func (s *httpValidationService) handleControlCommand(ctx context.Context, execution *httpValidationExecution, cmd ControlCommand) bool {
+	if execution == nil {
+		s.ackControl(cmd, fmt.Errorf("no HTTP validation execution bound"))
+		return true
+	}
+	switch cmd.Signal {
+	case ControlSignalPause:
+		s.mu.RLock()
+		alreadyPaused := execution.paused
+		s.mu.RUnlock()
+		if alreadyPaused {
+			s.ackControl(cmd, nil)
+			return false
+		}
+		s.mu.Lock()
+		execution.paused = true
+		s.mu.Unlock()
+		s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusPaused, "pause requested")
+		s.ackControl(cmd, nil)
+		return s.awaitResume(ctx, execution)
+	case ControlSignalResume:
+		s.mu.RLock()
+		currentlyPaused := execution.paused
+		s.mu.RUnlock()
+		if !currentlyPaused {
+			s.ackControl(cmd, nil)
+			return false
+		}
+		s.mu.Lock()
+		execution.paused = false
+		s.mu.Unlock()
+		s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusInProgress, "resumed")
+		s.ackControl(cmd, nil)
+		return false
+	case ControlSignalStop:
+		s.mu.Lock()
+		execution.stopRequested = true
+		s.mu.Unlock()
+		if execution.cancelFunc != nil {
+			execution.cancelFunc()
+		}
+		s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusFailed, "HTTP validation stopped by user")
+		s.ackControl(cmd, nil)
+		return true
+	default:
+		err := fmt.Errorf("unknown control signal: %s", cmd.Signal)
+		s.ackControl(cmd, err)
+		return false
+	}
+}
+
+func (s *httpValidationService) awaitResume(ctx context.Context, execution *httpValidationExecution) bool {
+	if execution == nil || execution.controlCh == nil {
+		return false
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusFailed, "execution cancelled while paused")
+			return true
+		case cmd, ok := <-execution.controlCh:
+			if !ok {
+				return s.isStopRequested(execution)
+			}
+			switch cmd.Signal {
+			case ControlSignalResume:
+				s.mu.Lock()
+				execution.paused = false
+				s.mu.Unlock()
+				s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusInProgress, "resumed")
+				s.ackControl(cmd, nil)
+				return false
+			case ControlSignalStop:
+				s.mu.Lock()
+				execution.stopRequested = true
+				s.mu.Unlock()
+				if execution.cancelFunc != nil {
+					execution.cancelFunc()
+				}
+				s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusFailed, "HTTP validation stopped by user")
+				s.ackControl(cmd, nil)
+				return true
+			case ControlSignalPause:
+				s.ackControl(cmd, nil)
+			default:
+				s.ackControl(cmd, fmt.Errorf("unknown control signal: %s", cmd.Signal))
+			}
+		}
+	}
+}
+
+func (s *httpValidationService) ackControl(cmd ControlCommand, err error) {
+	if cmd.Ack == nil {
+		return
+	}
+	cmd.Ack <- err
 }

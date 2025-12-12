@@ -45,9 +45,19 @@ type dnsValidationService struct {
 	configManager ConfigManager
 
 	// Execution state tracking
-	mu         sync.RWMutex
-	executions map[uuid.UUID]*dnsExecution
+	mu                sync.RWMutex
+	executions        map[uuid.UUID]*dnsExecution
+	controlWatchers   map[uuid.UUID]dnsControlWatcher
+	controlWatcherSeq uint64
 }
+
+type dnsControlWatcher struct {
+	cancel   context.CancelFunc
+	token    uint64
+	commands chan ControlCommand
+}
+
+var _ ControlAwarePhase = (*dnsValidationService)(nil)
 
 // dnsExecution tracks the state of a DNS validation execution
 type dnsExecution struct {
@@ -66,8 +76,8 @@ type dnsExecution struct {
 	invalidDomains    []string
 	lastError         string
 	pendingDomainLoad bool
-	pauseRequested    bool
-	pauseAck          chan struct{}
+	controlCh         <-chan ControlCommand
+	paused            bool
 	stopRequested     bool
 }
 
@@ -353,8 +363,10 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 		execution.itemsTotal = int64(len(domains))
 		execution.itemsProcessed = 0
 		execution.pendingDomainLoad = false
-		execution.pauseRequested = false
-		execution.pauseAck = nil
+		execution.paused = false
+		if watcher, ok := s.controlWatchers[campaignID]; ok {
+			execution.controlCh = watcher.commands
+		}
 		s.mu.Unlock()
 	}
 
@@ -374,11 +386,10 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 		execution.validDomains = make([]string, 0)
 		execution.invalidDomains = make([]string, 0)
 	}
-	execution.pauseRequested = false
+	execution.paused = false
 	execution.stopRequested = false
-	if execution.pauseAck != nil {
-		close(execution.pauseAck)
-		execution.pauseAck = nil
+	if watcher, ok := s.controlWatchers[campaignID]; ok {
+		execution.controlCh = watcher.commands
 	}
 	execution.cancelCtx, execution.cancelFunc = context.WithCancel(ctx)
 	execution.progressCh = make(chan PhaseProgress, 100)
@@ -441,16 +452,15 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 	}
 
 	for {
+		if s.processPendingControlSignals(ctx, execution) {
+			return
+		}
 		if err := ctx.Err(); err != nil {
-			if s.shouldPause(execution) {
-				s.handlePause(execution, "pause acknowledged")
+			if s.isStopRequested(execution) {
+				s.handleFailure(execution, "DNS validation cancelled by user")
 			} else {
 				s.handleFailure(execution, fmt.Sprintf("execution cancelled: %v", err))
 			}
-			return
-		}
-		if s.shouldPause(execution) {
-			s.handlePause(execution, "pause acknowledged")
 			return
 		}
 
@@ -466,11 +476,15 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 		batch := domains[start:end]
 		results, err := s.validateDomainBatch(ctx, batch, config)
 		if err != nil {
-			if errors.Is(err, context.Canceled) && s.shouldPause(execution) {
-				s.handlePause(execution, "pause acknowledged")
-				return
+			if errors.Is(err, context.Canceled) && s.isStopRequested(execution) {
+				s.handleFailure(execution, "DNS validation cancelled by user")
+			} else {
+				s.handleFailure(execution, fmt.Sprintf("DNS validation failed: %v", err))
 			}
-			s.handleFailure(execution, fmt.Sprintf("DNS validation failed: %v", err))
+			return
+		}
+
+		if s.processPendingControlSignals(ctx, execution) {
 			return
 		}
 
@@ -524,8 +538,8 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 		select {
 		case execution.progressCh <- progress:
 		case <-ctx.Done():
-			if s.shouldPause(execution) {
-				s.handlePause(execution, "pause acknowledged")
+			if s.isStopRequested(execution) {
+				s.handleFailure(execution, "DNS validation cancelled while publishing progress")
 			} else {
 				s.handleFailure(execution, "execution cancelled while publishing progress")
 			}
@@ -546,11 +560,10 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 			delay := calcJitterMillis(jitterMin, jitterMax)
 			time.Sleep(time.Duration(delay) * time.Millisecond)
 		}
+	}
 
-		if s.shouldPause(execution) {
-			s.handlePause(execution, "pause acknowledged")
-			return
-		}
+	if s.processPendingControlSignals(ctx, execution) {
+		return
 	}
 
 	s.mu.RLock()
@@ -666,73 +679,94 @@ func (s *dnsValidationService) Capabilities() PhaseControlCapabilities {
 	}
 }
 
-// Pause requests a cooperative pause of the in-flight DNS validation run.
-func (s *dnsValidationService) Pause(ctx context.Context, campaignID uuid.UUID) error {
-	s.mu.Lock()
-	execution, exists := s.executions[campaignID]
-	if !exists {
-		s.mu.Unlock()
-		return fmt.Errorf("%w: no DNS validation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
-	}
-	if execution.status != models.PhaseStatusInProgress {
-		s.mu.Unlock()
-		return ErrPhaseNotRunning
-	}
-	if execution.pauseRequested {
-		ch := execution.pauseAck
-		s.mu.Unlock()
-		if ch == nil {
-			return nil
-		}
-		select {
-		case <-ch:
-			return nil
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(30 * time.Second):
-			return ErrPhasePauseTimeout
-		}
-	}
-	if execution.pauseAck == nil {
-		execution.pauseAck = make(chan struct{})
-	}
-	ch := execution.pauseAck
-	execution.pauseRequested = true
-	s.mu.Unlock()
+const dnsControlBuffer = 8
 
-	select {
-	case <-ch:
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-time.After(30 * time.Second):
-		return ErrPhasePauseTimeout
+// AttachControlChannel wires the phase control bus into DNS validation.
+func (s *dnsValidationService) AttachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, commands <-chan ControlCommand) {
+	if phase != models.PhaseTypeDNSValidation || commands == nil {
+		return
+	}
+	controlCtx, cancel := context.WithCancel(context.Background())
+	downstream := make(chan ControlCommand, dnsControlBuffer)
+	token := s.registerControlWatcher(campaignID, cancel, downstream)
+	go s.consumeControlSignals(controlCtx, campaignID, token, commands, downstream)
+}
+
+func (s *dnsValidationService) registerControlWatcher(campaignID uuid.UUID, cancel context.CancelFunc, downstream chan ControlCommand) uint64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.controlWatcherSeq++
+	token := s.controlWatcherSeq
+	if s.controlWatchers == nil {
+		s.controlWatchers = make(map[uuid.UUID]dnsControlWatcher)
+	}
+	if existing, ok := s.controlWatchers[campaignID]; ok {
+		if existing.cancel != nil {
+			existing.cancel()
+		}
+	}
+	s.controlWatchers[campaignID] = dnsControlWatcher{cancel: cancel, token: token, commands: downstream}
+	if exec, ok := s.executions[campaignID]; ok {
+		exec.controlCh = downstream
+	}
+	return token
+}
+
+func (s *dnsValidationService) clearControlWatcher(campaignID uuid.UUID, token uint64, downstream chan ControlCommand) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	current, ok := s.controlWatchers[campaignID]
+	if !ok || current.token != token {
+		return
+	}
+	delete(s.controlWatchers, campaignID)
+	if exec, ok := s.executions[campaignID]; ok && exec.controlCh == downstream {
+		exec.controlCh = nil
 	}
 }
 
-// Resume restarts a previously paused DNS validation execution.
-func (s *dnsValidationService) Resume(ctx context.Context, campaignID uuid.UUID) error {
+func (s *dnsValidationService) consumeControlSignals(ctx context.Context, campaignID uuid.UUID, token uint64, upstream <-chan ControlCommand, downstream chan ControlCommand) {
+	defer func() {
+		close(downstream)
+		s.clearControlWatcher(campaignID, token, downstream)
+	}()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case cmd, ok := <-upstream:
+			if !ok {
+				return
+			}
+			if err := s.dispatchControlCommand(campaignID, downstream, cmd); err != nil {
+				s.ackControl(cmd, err)
+			}
+		}
+	}
+}
+
+func (s *dnsValidationService) dispatchControlCommand(campaignID uuid.UUID, downstream chan ControlCommand, cmd ControlCommand) error {
 	s.mu.RLock()
 	execution, exists := s.executions[campaignID]
-	s.mu.RUnlock()
 	if !exists {
+		s.mu.RUnlock()
 		return fmt.Errorf("%w: no DNS validation execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
-	if execution.status != models.PhaseStatusPaused {
-		return ErrPhaseNotPaused
+	status := execution.status
+	controlCh := execution.controlCh
+	s.mu.RUnlock()
+	if controlCh != downstream {
+		return fmt.Errorf("dns validation control channel not bound for campaign %s", campaignID)
 	}
-
-	progressCh, err := s.Execute(ctx, campaignID)
-	if err != nil {
-		return err
+	if status != models.PhaseStatusInProgress && status != models.PhaseStatusPaused {
+		return ErrPhaseNotRunning
 	}
-	if progressCh != nil {
-		go func() {
-			for range progressCh {
-			}
-		}()
+	select {
+	case downstream <- cmd:
+		return nil
+	default:
+		return fmt.Errorf("dns validation control channel backpressure for campaign %s", campaignID)
 	}
-	return nil
 }
 
 // Cancel stops the DNS validation execution
@@ -942,42 +976,18 @@ func (s *dnsValidationService) closeProgressChannel(execution *dnsExecution) {
 	}
 }
 
-func (s *dnsValidationService) shouldPause(execution *dnsExecution) bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return execution.pauseRequested
-}
-
 func (s *dnsValidationService) currentOffset(execution *dnsExecution) int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return int(execution.itemsProcessed)
 }
 
-func (s *dnsValidationService) signalPauseAck(execution *dnsExecution) {
-	s.mu.Lock()
-	if execution.pauseAck != nil {
-		close(execution.pauseAck)
-		execution.pauseAck = nil
-	}
-	execution.pauseRequested = false
-	s.mu.Unlock()
-}
-
-func (s *dnsValidationService) handlePause(execution *dnsExecution, reason string) {
-	s.updateExecutionStatus(execution.campaignID, models.PhaseStatusPaused, reason)
-	s.signalPauseAck(execution)
-	s.closeProgressChannel(execution)
-}
-
 func (s *dnsValidationService) handleFailure(execution *dnsExecution, message string) {
 	s.updateExecutionStatus(execution.campaignID, models.PhaseStatusFailed, message)
-	s.signalPauseAck(execution)
 }
 
 func (s *dnsValidationService) handleCompletion(execution *dnsExecution, total int, validCount int, invalidCount int) {
 	s.updateExecutionStatus(execution.campaignID, models.PhaseStatusCompleted, "DNS validation completed successfully")
-	s.signalPauseAck(execution)
 	if s.deps.Logger != nil {
 		s.deps.Logger.Info(context.Background(), "DNS validation completed", map[string]interface{}{
 			"campaign_id":     execution.campaignID,
@@ -986,6 +996,126 @@ func (s *dnsValidationService) handleCompletion(execution *dnsExecution, total i
 			"domains_invalid": invalidCount,
 		})
 	}
+}
+
+func (s *dnsValidationService) ackControl(cmd ControlCommand, err error) {
+	if cmd.Ack == nil {
+		return
+	}
+	cmd.Ack <- err
+}
+
+func (s *dnsValidationService) processPendingControlSignals(ctx context.Context, execution *dnsExecution) bool {
+	if execution == nil || execution.controlCh == nil {
+		return false
+	}
+	for {
+		select {
+		case cmd, ok := <-execution.controlCh:
+			if !ok {
+				return s.isStopRequested(execution)
+			}
+			if s.handleControlCommand(ctx, execution, cmd) {
+				return true
+			}
+		default:
+			return false
+		}
+	}
+}
+
+func (s *dnsValidationService) handleControlCommand(ctx context.Context, execution *dnsExecution, cmd ControlCommand) bool {
+	if execution == nil {
+		s.ackControl(cmd, fmt.Errorf("no DNS validation execution bound"))
+		return true
+	}
+	s.mu.RLock()
+	paused := execution.paused
+	status := execution.status
+	s.mu.RUnlock()
+	switch cmd.Signal {
+	case ControlSignalPause:
+		if paused {
+			s.ackControl(cmd, nil)
+			return false
+		}
+		s.mu.Lock()
+		execution.paused = true
+		s.mu.Unlock()
+		s.updateExecutionStatus(execution.campaignID, models.PhaseStatusPaused, "pause requested")
+		s.ackControl(cmd, nil)
+		return s.awaitResume(ctx, execution)
+	case ControlSignalResume:
+		if !paused || status != models.PhaseStatusPaused {
+			s.ackControl(cmd, nil)
+			return false
+		}
+		s.mu.Lock()
+		execution.paused = false
+		s.mu.Unlock()
+		s.updateExecutionStatus(execution.campaignID, models.PhaseStatusInProgress, "resumed")
+		s.ackControl(cmd, nil)
+		return false
+	case ControlSignalStop:
+		s.mu.Lock()
+		execution.stopRequested = true
+		s.mu.Unlock()
+		if execution.cancelFunc != nil {
+			execution.cancelFunc()
+		}
+		s.updateExecutionStatus(execution.campaignID, models.PhaseStatusFailed, "DNS validation stopped by user")
+		s.ackControl(cmd, nil)
+		return true
+	default:
+		s.ackControl(cmd, fmt.Errorf("unknown control signal: %s", cmd.Signal))
+		return false
+	}
+}
+
+func (s *dnsValidationService) awaitResume(ctx context.Context, execution *dnsExecution) bool {
+	if execution == nil || execution.controlCh == nil {
+		return false
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			s.handleFailure(execution, "execution cancelled while paused")
+			return true
+		case cmd, ok := <-execution.controlCh:
+			if !ok {
+				return s.isStopRequested(execution)
+			}
+			switch cmd.Signal {
+			case ControlSignalResume:
+				s.mu.Lock()
+				execution.paused = false
+				s.mu.Unlock()
+				s.updateExecutionStatus(execution.campaignID, models.PhaseStatusInProgress, "resumed")
+				s.ackControl(cmd, nil)
+				return false
+			case ControlSignalStop:
+				s.mu.Lock()
+				execution.stopRequested = true
+				s.mu.Unlock()
+				if execution.cancelFunc != nil {
+					execution.cancelFunc()
+				}
+				s.updateExecutionStatus(execution.campaignID, models.PhaseStatusFailed, "DNS validation stopped by user")
+				s.ackControl(cmd, nil)
+				return true
+			case ControlSignalPause:
+				s.ackControl(cmd, nil)
+			default:
+				s.ackControl(cmd, fmt.Errorf("unknown control signal: %s", cmd.Signal))
+			}
+		}
+	}
+}
+
+func (s *dnsValidationService) isStopRequested(execution *dnsExecution) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return execution != nil && execution.stopRequested
 }
 
 func (s *dnsValidationService) storeValidationResults(ctx context.Context, campaignID uuid.UUID, results map[string]dnsResultOutcome) error {

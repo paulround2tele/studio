@@ -46,6 +46,7 @@ import {
   useGetCampaignStatusQuery,
   useRestartCampaignMutation,
   useStartPhaseStandaloneMutation,
+  useGetPhaseStatusStandaloneQuery,
   usePausePhaseStandaloneMutation,
   useResumePhaseStandaloneMutation,
   useStopPhaseStandaloneMutation
@@ -280,12 +281,40 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   const selectedPhaseStatus = selectedPhaseMeta?.status ?? 'not_started';
   const isSelectedPhasePaused = selectedPhaseStatus === 'paused';
   const isSelectedPhaseRunning = selectedPhaseStatus === 'in_progress';
-  
-  // Simple logic: if running → can pause/stop, if paused → can resume
-  const canPauseSelectedPhase = isSelectedPhaseRunning;
-  const canStopSelectedPhase = isSelectedPhaseRunning;
-  const canRunSelectedPhase = !isSelectedPhaseRunning; // Can run if not already running
-  
+
+  const { data: selectedPhaseStatusData, isFetching: isPhaseStatusFetching } = useGetPhaseStatusStandaloneQuery(
+    { campaignId, phase: selectedPhaseKey as CampaignPhaseEnum },
+    { skip: !campaignId || !selectedPhaseKey }
+  );
+
+  const selectedPhaseRuntimeControls = selectedPhaseStatusData?.runtimeControls;
+
+  const resolvedControlSupport = React.useMemo(() => {
+    const fallback = {
+      canPause: isSelectedPhaseRunning,
+      canResume: isSelectedPhasePaused,
+      canStop: isSelectedPhaseRunning,
+      canRestart: !isSelectedPhaseRunning,
+    };
+
+    if (!selectedPhaseRuntimeControls) {
+      return fallback;
+    }
+
+    return {
+      canPause: selectedPhaseRuntimeControls.canPause,
+      canResume: selectedPhaseRuntimeControls.canResume,
+      canStop: selectedPhaseRuntimeControls.canStop,
+      canRestart: selectedPhaseRuntimeControls.canRestart,
+    };
+  }, [isSelectedPhasePaused, isSelectedPhaseRunning, selectedPhaseRuntimeControls]);
+
+  const canPauseSelectedPhase = resolvedControlSupport.canPause;
+  const canStopSelectedPhase = resolvedControlSupport.canStop;
+  const canRunSelectedPhase = selectedPhaseStatus === 'paused'
+    ? resolvedControlSupport.canResume
+    : resolvedControlSupport.canRestart;
+
   const runButtonLabel = isSelectedPhasePaused ? 'Resume Selected Phase' : 'Run Selected Phase';
   const runButtonBusyLabel = isSelectedPhasePaused ? 'Resuming…' : 'Starting…';
 
@@ -352,7 +381,8 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   const isBulkActionRunning = bulkAction !== 'idle';
   const isRetryingFailed = bulkAction === 'retryFailed';
   const isRestartingCampaign = bulkAction === 'restartCampaign';
-  const isActionDisabled = isStartPhaseLoading || isPausePhaseLoading || isResumePhaseLoading || isStopPhaseLoading || isBulkActionRunning;
+  const isControlStatusLoading = Boolean(selectedPhaseKey && isPhaseStatusFetching);
+  const isActionDisabled = isStartPhaseLoading || isPausePhaseLoading || isResumePhaseLoading || isStopPhaseLoading || isBulkActionRunning || isControlStatusLoading;
 
   const startPhaseInternal = React.useCallback(
     async (phaseKey: ApiPhase) => {

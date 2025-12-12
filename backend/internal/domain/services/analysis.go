@@ -70,7 +70,15 @@ type analysisService struct {
 		at   time.Time
 		data map[string]map[string]any
 	}
-	featureCacheMu sync.RWMutex // guards _featureCacheTTL
+	featureCacheMu    sync.RWMutex // guards _featureCacheTTL
+	controlWatchers   map[uuid.UUID]controlWatcher
+	controlWatcherSeq uint64
+}
+
+type controlWatcher struct {
+	cancel   context.CancelFunc
+	token    uint64
+	commands chan ControlCommand
 }
 
 // DomainAnalysisFeaturesTyped provides a strongly typed internal view of domain analysis features.
@@ -255,39 +263,16 @@ type analysisExecution struct {
 	KeywordResults map[string][]keywordextractor.KeywordExtractionResult `json:"keyword_results,omitempty"` // domain -> keywords
 	CancelChan     chan struct{}                                         `json:"-"`
 	ProgressChan   chan PhaseProgress                                    `json:"-"`
-	pauseMu        sync.Mutex
-	pauseCond      *sync.Cond
+	controlCh      <-chan ControlCommand
 	paused         bool
-}
-
-func (s *analysisService) ensurePauseControl(execution *analysisExecution) {
-	if execution == nil {
-		return
-	}
-	execution.pauseMu.Lock()
-	if execution.pauseCond == nil {
-		execution.pauseCond = sync.NewCond(&execution.pauseMu)
-	}
-	execution.pauseMu.Unlock()
+	stopRequested  bool
+	cancelOnce     sync.Once
 }
 
 func (s *analysisService) getExecution(campaignID uuid.UUID) *analysisExecution {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.executions[campaignID]
-}
-
-func (s *analysisService) waitIfPausedByCampaign(campaignID uuid.UUID) {
-	execution := s.getExecution(campaignID)
-	if execution == nil {
-		return
-	}
-	s.ensurePauseControl(execution)
-	execution.pauseMu.Lock()
-	for execution.paused {
-		execution.pauseCond.Wait()
-	}
-	execution.pauseMu.Unlock()
 }
 
 // AnalysisConfig represents configuration for analysis phase
@@ -352,13 +337,14 @@ func NewAnalysisService(
 		}
 	}
 	return &analysisService{
-		store:          store,
-		personaStore:   personaStore,
-		proxyStore:     proxyStore,
-		deps:           deps,
-		contentFetcher: contentFetcher,
-		executions:     make(map[uuid.UUID]*analysisExecution),
-		status:         models.PhaseStatusNotStarted,
+		store:           store,
+		personaStore:    personaStore,
+		proxyStore:      proxyStore,
+		deps:            deps,
+		contentFetcher:  contentFetcher,
+		executions:      make(map[uuid.UUID]*analysisExecution),
+		status:          models.PhaseStatusNotStarted,
+		controlWatchers: make(map[uuid.UUID]controlWatcher),
 		_featureCacheTTL: map[uuid.UUID]struct {
 			at   time.Time
 			data map[string]map[string]any
@@ -392,6 +378,8 @@ func NewAnalysisService(
 		},
 	}
 }
+
+var _ ControlAwarePhase = (*analysisService)(nil)
 
 // GetPhaseType returns the phase type this service handles
 func (s *analysisService) GetPhaseType() models.PhaseTypeEnum {
@@ -565,19 +553,18 @@ func (s *analysisService) Execute(ctx context.Context, campaignID uuid.UUID) (<-
 			existing.StartedAt = time.Now()
 			existing.Progress = 0
 			existing.ItemsProcessed = 0
-			if existing.CancelChan == nil {
-				existing.CancelChan = make(chan struct{})
-			}
-			if existing.ProgressChan == nil {
-				existing.ProgressChan = make(chan PhaseProgress, 100)
-			}
+			existing.CancelChan = make(chan struct{})
+			existing.cancelOnce = sync.Once{}
+			existing.ProgressChan = make(chan PhaseProgress, 100)
 			existing.ContentResults = make(map[string][]byte)
 			existing.KeywordResults = make(map[string][]keywordextractor.KeywordExtractionResult)
-			s.ensurePauseControl(existing)
-			existing.pauseMu.Lock()
 			existing.paused = false
-			existing.pauseCond.Broadcast()
-			existing.pauseMu.Unlock()
+			existing.stopRequested = false
+			if watcher, ok := s.controlWatchers[campaignID]; ok {
+				existing.controlCh = watcher.commands
+			} else {
+				existing.controlCh = nil
+			}
 			reuseExisting = true
 		case models.PhaseStatusCompleted, models.PhaseStatusFailed, models.PhaseStatusPaused:
 			if existing.ProgressChan != nil {
@@ -600,7 +587,10 @@ func (s *analysisService) Execute(ctx context.Context, campaignID uuid.UUID) (<-
 			ContentResults: make(map[string][]byte),
 			KeywordResults: make(map[string][]keywordextractor.KeywordExtractionResult),
 		}
-		s.ensurePauseControl(execution)
+		execution.cancelOnce = sync.Once{}
+		if watcher, ok := s.controlWatchers[campaignID]; ok {
+			execution.controlCh = watcher.commands
+		}
 		s.executions[campaignID] = execution
 	}
 	s.mu.Unlock()
@@ -689,64 +679,223 @@ func (s *analysisService) Capabilities() PhaseControlCapabilities {
 	}
 }
 
-func (s *analysisService) Pause(ctx context.Context, campaignID uuid.UUID) error {
-	s.mu.Lock()
-	execution, exists := s.executions[campaignID]
-	if !exists {
-		s.mu.Unlock()
-		return fmt.Errorf("%w: no analysis execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
-	}
-	if execution.Status != models.PhaseStatusInProgress {
-		s.mu.Unlock()
-		return ErrPhaseNotRunning
-	}
-	s.ensurePauseControl(execution)
-	execution.pauseMu.Lock()
-	if execution.paused {
-		execution.pauseMu.Unlock()
-		s.mu.Unlock()
-		return nil
-	}
-	execution.paused = true
-	execution.pauseMu.Unlock()
-	s.mu.Unlock()
+const analysisControlBuffer = 8
 
-	s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Pause requested")
-	return nil
+// AttachControlChannel wires the orchestrator's control bus into the analysis execution lifecycle.
+func (s *analysisService) AttachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, commands <-chan ControlCommand) {
+	if phase != models.PhaseTypeAnalysis || commands == nil {
+		return
+	}
+	controlCtx, cancel := context.WithCancel(context.Background())
+	downstream := make(chan ControlCommand, analysisControlBuffer)
+	token := s.registerControlWatcher(campaignID, cancel, downstream)
+	go s.consumeControlSignals(controlCtx, campaignID, token, commands, downstream)
 }
 
-func (s *analysisService) Resume(ctx context.Context, campaignID uuid.UUID) error {
+func (s *analysisService) registerControlWatcher(campaignID uuid.UUID, cancel context.CancelFunc, downstream chan ControlCommand) uint64 {
 	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.controlWatcherSeq++
+	token := s.controlWatcherSeq
+	if s.controlWatchers == nil {
+		s.controlWatchers = make(map[uuid.UUID]controlWatcher)
+	}
+	if existing, ok := s.controlWatchers[campaignID]; ok {
+		if existing.cancel != nil {
+			existing.cancel()
+		}
+	}
+	s.controlWatchers[campaignID] = controlWatcher{cancel: cancel, token: token, commands: downstream}
+	if exec, ok := s.executions[campaignID]; ok {
+		exec.controlCh = downstream
+	}
+	return token
+}
+
+func (s *analysisService) clearControlWatcher(campaignID uuid.UUID, token uint64, downstream chan ControlCommand) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if current, ok := s.controlWatchers[campaignID]; ok {
+		if current.token == token {
+			delete(s.controlWatchers, campaignID)
+		}
+	}
+	if exec, ok := s.executions[campaignID]; ok {
+		if exec.controlCh == downstream {
+			exec.controlCh = nil
+		}
+	}
+}
+
+func (s *analysisService) consumeControlSignals(ctx context.Context, campaignID uuid.UUID, token uint64, upstream <-chan ControlCommand, downstream chan ControlCommand) {
+	defer func() {
+		close(downstream)
+		s.clearControlWatcher(campaignID, token, downstream)
+	}()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case cmd, ok := <-upstream:
+			if !ok {
+				return
+			}
+			if err := s.dispatchControlCommand(campaignID, downstream, cmd); err != nil {
+				s.ackControl(cmd, err)
+			}
+		}
+	}
+}
+
+func (s *analysisService) dispatchControlCommand(campaignID uuid.UUID, downstream chan ControlCommand, cmd ControlCommand) error {
+	s.mu.RLock()
 	execution, exists := s.executions[campaignID]
 	if !exists {
-		s.mu.Unlock()
+		s.mu.RUnlock()
 		return fmt.Errorf("%w: no analysis execution found for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
-	if execution.Status != models.PhaseStatusPaused {
-		s.mu.Unlock()
-		return ErrPhaseNotPaused
+	status := execution.Status
+	controlCh := execution.controlCh
+	s.mu.RUnlock()
+	if controlCh != downstream {
+		return fmt.Errorf("analysis control channel not bound for campaign %s", campaignID)
 	}
-	s.ensurePauseControl(execution)
-	execution.pauseMu.Lock()
-	if !execution.paused {
-		execution.pauseMu.Unlock()
-		s.mu.Unlock()
+	if status != models.PhaseStatusInProgress && status != models.PhaseStatusPaused {
+		return ErrPhaseNotRunning
+	}
+	select {
+	case downstream <- cmd:
 		return nil
+	default:
+		return fmt.Errorf("analysis control channel backpressure for campaign %s", campaignID)
 	}
-	execution.paused = false
-	execution.pauseCond.Broadcast()
-	execution.pauseMu.Unlock()
-	execution.Status = models.PhaseStatusInProgress
-	s.mu.Unlock()
+}
 
-	if s.store != nil {
-		var exec store.Querier
-		if q, ok := s.deps.DB.(store.Querier); ok {
-			exec = q
-		}
-		_ = s.store.UpdatePhaseStatus(ctx, exec, campaignID, models.PhaseTypeAnalysis, models.PhaseStatusInProgress)
+func (s *analysisService) ackControl(cmd ControlCommand, err error) {
+	if cmd.Ack == nil {
+		return
 	}
-	return nil
+	cmd.Ack <- err
+}
+
+func (s *analysisService) processPendingControlSignals(ctx context.Context, execution *analysisExecution) bool {
+	if execution == nil || execution.controlCh == nil {
+		return false
+	}
+	for {
+		select {
+		case cmd, ok := <-execution.controlCh:
+			if !ok {
+				return s.isStopRequested(execution)
+			}
+			if s.handleControlCommand(ctx, execution, cmd) {
+				return true
+			}
+		default:
+			return false
+		}
+	}
+}
+
+func (s *analysisService) handleControlCommand(ctx context.Context, execution *analysisExecution, cmd ControlCommand) bool {
+	if execution == nil {
+		s.ackControl(cmd, fmt.Errorf("no analysis execution bound"))
+		return true
+	}
+	s.mu.RLock()
+	paused := execution.paused
+	status := execution.Status
+	s.mu.RUnlock()
+	switch cmd.Signal {
+	case ControlSignalPause:
+		if paused || status == models.PhaseStatusPaused {
+			s.ackControl(cmd, nil)
+			return false
+		}
+		s.mu.Lock()
+		execution.paused = true
+		s.mu.Unlock()
+		s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusPaused, "pause requested")
+		s.ackControl(cmd, nil)
+		return s.awaitResume(ctx, execution)
+	case ControlSignalResume:
+		if !paused {
+			s.ackControl(cmd, nil)
+			return false
+		}
+		s.mu.Lock()
+		execution.paused = false
+		s.mu.Unlock()
+		s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusInProgress, "resumed")
+		s.ackControl(cmd, nil)
+		return false
+	case ControlSignalStop:
+		s.mu.Lock()
+		execution.stopRequested = true
+		s.mu.Unlock()
+		s.requestStop(execution)
+		s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusFailed, "Analysis stopped by user")
+		s.ackControl(cmd, nil)
+		return true
+	default:
+		s.ackControl(cmd, fmt.Errorf("unknown control signal: %s", cmd.Signal))
+		return false
+	}
+}
+
+func (s *analysisService) awaitResume(ctx context.Context, execution *analysisExecution) bool {
+	if execution == nil || execution.controlCh == nil {
+		return false
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusFailed, "execution cancelled while paused")
+			return true
+		case cmd, ok := <-execution.controlCh:
+			if !ok {
+				return s.isStopRequested(execution)
+			}
+			switch cmd.Signal {
+			case ControlSignalResume:
+				s.mu.Lock()
+				execution.paused = false
+				s.mu.Unlock()
+				s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusInProgress, "resumed")
+				s.ackControl(cmd, nil)
+				return false
+			case ControlSignalStop:
+				s.mu.Lock()
+				execution.stopRequested = true
+				s.mu.Unlock()
+				s.requestStop(execution)
+				s.updateExecutionStatus(execution.CampaignID, models.PhaseStatusFailed, "Analysis stopped by user")
+				s.ackControl(cmd, nil)
+				return true
+			case ControlSignalPause:
+				s.ackControl(cmd, nil)
+			default:
+				s.ackControl(cmd, fmt.Errorf("unknown control signal: %s", cmd.Signal))
+			}
+		}
+	}
+}
+
+func (s *analysisService) isStopRequested(execution *analysisExecution) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return execution != nil && execution.stopRequested
+}
+
+func (s *analysisService) requestStop(execution *analysisExecution) {
+	if execution == nil {
+		return
+	}
+	execution.cancelOnce.Do(func() {
+		if execution.CancelChan != nil {
+			close(execution.CancelChan)
+		}
+	})
 }
 
 // Cancel stops analysis for a campaign
@@ -756,33 +905,21 @@ func (s *analysisService) Cancel(ctx context.Context, campaignID uuid.UUID) erro
 	})
 
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	execution, exists := s.executions[campaignID]
 	if !exists {
+		s.mu.Unlock()
 		return fmt.Errorf("%w: no analysis in progress for campaign %s", ErrPhaseExecutionMissing, campaignID)
 	}
-
 	if execution.Status != models.PhaseStatusInProgress && execution.Status != models.PhaseStatusPaused {
+		s.mu.Unlock()
 		return fmt.Errorf("%w: analysis not in progress for campaign %s", ErrPhaseNotRunning, campaignID)
 	}
-	s.ensurePauseControl(execution)
-	execution.pauseMu.Lock()
 	execution.paused = false
-	if execution.pauseCond != nil {
-		execution.pauseCond.Broadcast()
-	}
-	execution.pauseMu.Unlock()
+	execution.stopRequested = true
+	s.mu.Unlock()
 
-	// Signal cancellation
-	close(execution.CancelChan)
-	execution.Status = models.PhaseStatusFailed // Use Failed for cancellation
-	execution.ErrorMessage = "Analysis cancelled by user"
-	now := time.Now()
-	execution.CompletedAt = &now
-
-	// Close progress channel
-	close(execution.ProgressChan)
+	s.requestStop(execution)
+	s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, "Analysis cancelled by user")
 
 	s.deps.Logger.Info(ctx, "Analysis cancelled", map[string]interface{}{
 		"campaign_id": campaignID,
@@ -875,7 +1012,9 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 		})
 	}
 
-	s.waitIfPausedByCampaign(campaignID)
+	if s.processPendingControlSignals(ctx, s.getExecution(campaignID)) {
+		return
+	}
 
 	// Directly proceed to scoring; repurpose majority of remaining progress window.
 	s.sendProgress(campaignID, 85.0, "Starting scoring computation (reused HTTP enrichment)")
@@ -883,6 +1022,9 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 	// rescore batching improvements) MUST extend scoreDomains / helpers in this file. Do NOT
 	// create a parallel scoring service. Keep weight validation in scoring_helpers.go.
 	if _, err := s.scoreDomains(ctx, campaignID); err != nil {
+		if exec := s.getExecution(campaignID); exec != nil && exec.Status == models.PhaseStatusFailed {
+			return
+		}
 		s.deps.Logger.Warn(ctx, "Scoring failed", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
 	} else {
 		s.sendProgress(campaignID, 99.0, "Scoring completed")
@@ -949,9 +1091,12 @@ func (s *analysisService) fetchContent(ctx context.Context, campaignID uuid.UUID
 
 	// Fetch content for each domain using the contentfetcher engine
 	for i, domain := range domains {
-		s.waitIfPausedByCampaign(campaignID)
+		execution := s.getExecution(campaignID)
+		if s.processPendingControlSignals(ctx, execution) {
+			return nil, fmt.Errorf("content fetching interrupted")
+		}
 		// Check for cancellation
-		if execution, exists := s.executions[campaignID]; exists {
+		if execution != nil {
 			select {
 			case <-execution.CancelChan:
 				return nil, fmt.Errorf("content fetching cancelled")
@@ -1021,9 +1166,12 @@ func (s *analysisService) extractKeywords(ctx context.Context, campaignID uuid.U
 
 	i := 0
 	for domain, content := range contentResults {
-		s.waitIfPausedByCampaign(campaignID)
+		execution := s.getExecution(campaignID)
+		if s.processPendingControlSignals(ctx, execution) {
+			return nil, fmt.Errorf("keyword extraction interrupted")
+		}
 		// Check for cancellation
-		if execution, exists := s.executions[campaignID]; exists {
+		if execution != nil {
 			select {
 			case <-execution.CancelChan:
 				return nil, fmt.Errorf("keyword extraction cancelled")
@@ -1395,7 +1543,17 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 	correlationId := uuid.New().String()
 	now := time.Now()
 	for rows.Next() {
-		s.waitIfPausedByCampaign(campaignID)
+		execution := s.getExecution(campaignID)
+		if s.processPendingControlSignals(ctx, execution) {
+			return correlationId, fmt.Errorf("analysis scoring interrupted")
+		}
+		if execution != nil {
+			select {
+			case <-execution.CancelChan:
+				return correlationId, fmt.Errorf("analysis scoring cancelled")
+			default:
+			}
+		}
 		var domain string
 		var raw json.RawMessage
 		var fetchedAt *time.Time

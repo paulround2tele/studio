@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -26,6 +27,8 @@ var (
 	// ErrPhaseDependenciesNotMet indicates a requested phase attempted to start before its prerequisites completed.
 	ErrPhaseDependenciesNotMet = fmt.Errorf("phase_dependencies_not_met")
 )
+
+const controlAckTimeout = 30 * time.Second
 
 // PhaseDependencyError captures structured context when dependency gating prevents a phase from starting.
 type PhaseDependencyError struct {
@@ -57,11 +60,13 @@ type CampaignOrchestrator struct {
 	deps  domainservices.Dependencies
 
 	metrics OrchestratorMetrics
+	control PhaseControlManager
 
 	// Domain services that orchestrate engines
 	domainGenerationSvc domainservices.DomainGenerationService
 	dnsValidationSvc    domainservices.DNSValidationService
 	httpValidationSvc   domainservices.HTTPValidationService
+	extractionSvc       domainservices.PhaseService
 	enrichmentSvc       domainservices.EnrichmentService
 	analysisSvc         domainservices.AnalysisService
 
@@ -99,6 +104,7 @@ type CampaignRestartResult struct {
 var restartablePhaseOrder = []models.PhaseTypeEnum{
 	models.PhaseTypeDNSValidation,
 	models.PhaseTypeHTTPKeywordValidation,
+	models.PhaseTypeExtraction,
 	models.PhaseTypeAnalysis,
 	models.PhaseTypeEnrichment,
 }
@@ -154,6 +160,7 @@ func NewCampaignOrchestrator(
 	domainGenerationSvc domainservices.DomainGenerationService,
 	dnsValidationSvc domainservices.DNSValidationService,
 	httpValidationSvc domainservices.HTTPValidationService,
+	extractionSvc domainservices.PhaseService,
 	enrichmentSvc domainservices.EnrichmentService,
 	analysisSvc domainservices.AnalysisService,
 	sseService SSEBroadcaster,
@@ -169,14 +176,27 @@ func NewCampaignOrchestrator(
 		domainGenerationSvc: domainGenerationSvc,
 		dnsValidationSvc:    dnsValidationSvc,
 		httpValidationSvc:   httpValidationSvc,
+		extractionSvc:       extractionSvc,
 		enrichmentSvc:       enrichmentSvc,
 		analysisSvc:         analysisSvc,
 		sseService:          sseService,
 		metrics:             metrics,
+		control:             newInMemoryPhaseControlManager(),
 		campaignExecutions:  make(map[uuid.UUID]*CampaignExecution),
 		autoStartInProgress: make(map[string]struct{}),
 		hooks:               make([]PostCompletionHook, 0),
 	}
+}
+
+// SetControlManager overrides the orchestrator's control manager; nil restores the default implementation.
+func (o *CampaignOrchestrator) SetControlManager(control PhaseControlManager) {
+	if o == nil {
+		return
+	}
+	if control == nil {
+		control = newInMemoryPhaseControlManager()
+	}
+	o.control = control
 }
 
 // RescoreCampaign triggers a synchronous domain rescore via the analysis service.
@@ -330,6 +350,11 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
 	}
 
+	// Ensure the domain service has an up-to-date configuration snapshot before execution.
+	if err := o.hydratePhaseConfiguration(ctx, querier, campaignID, phase, service); err != nil {
+		return err
+	}
+
 	// IMPORTANT: Decouple long-running phase execution from the request context.
 	// The incoming ctx is tied to the HTTP request and will be cancelled when the
 	// handler returns or the client disconnects, which previously caused premature
@@ -338,6 +363,9 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	execCtx, cancelFn := context.WithCancel(context.Background())
 	// Non-blocking cleanup when execution finishes
 	go func() { <-execCtx.Done(); cancelFn() }()
+
+	// Wire runtime control channel before kick-off when supported
+	o.attachControlChannel(ctx, campaignID, phase, service)
 
 	// Start phase execution with background-derived context
 	progressCh, err := service.Execute(execCtx, campaignID)
@@ -474,6 +502,7 @@ func (o *CampaignOrchestrator) GetCampaignStatus(ctx context.Context, campaignID
 		models.PhaseTypeDomainGeneration,
 		models.PhaseTypeDNSValidation,
 		models.PhaseTypeHTTPKeywordValidation,
+		models.PhaseTypeExtraction,
 		models.PhaseTypeAnalysis,
 		models.PhaseTypeEnrichment,
 	}
@@ -500,6 +529,13 @@ func (o *CampaignOrchestrator) GetCampaignStatus(ctx context.Context, campaignID
 
 // CancelPhase stops execution of a specific phase
 func (o *CampaignOrchestrator) CancelPhase(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	if err := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalStop, nil); err != nil && o.deps.Logger != nil {
+		o.deps.Logger.Debug(ctx, "phase.control.stop.broadcast_failed", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+			"error":       err.Error(),
+		})
+	}
 	o.deps.Logger.Info(ctx, "Cancelling campaign phase", map[string]interface{}{
 		"campaign_id": campaignID,
 		"phase":       phase,
@@ -538,20 +574,12 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 		"phase":       phase,
 	})
 
-	service, err := o.getPhaseService(phase)
-	if err != nil {
-		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
+	ack := make(chan error, 1)
+	if err := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalPause, ack); err != nil {
+		return err
 	}
-	controller, ok := service.(domainservices.PhaseController)
-	if !ok {
-		return domainservices.ErrPhasePauseUnsupported
-	}
-	caps := controller.Capabilities()
-	if !caps.CanPause {
-		return domainservices.ErrPhasePauseUnsupported
-	}
-	if err := controller.Pause(ctx, campaignID); err != nil {
-		return fmt.Errorf("failed to pause phase %s: %w", phase, err)
+	if err := awaitControlAck(ctx, ack, domainservices.ErrPhasePauseTimeout); err != nil {
+		return err
 	}
 
 	o.deps.Logger.Info(ctx, "Phase paused successfully", map[string]interface{}{
@@ -571,20 +599,12 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 		"phase":       phase,
 	})
 
-	service, err := o.getPhaseService(phase)
-	if err != nil {
-		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
+	ack := make(chan error, 1)
+	if err := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalResume, ack); err != nil {
+		return err
 	}
-	controller, ok := service.(domainservices.PhaseController)
-	if !ok {
-		return domainservices.ErrPhaseResumeUnsupported
-	}
-	caps := controller.Capabilities()
-	if !caps.CanResume {
-		return domainservices.ErrPhaseResumeUnsupported
-	}
-	if err := controller.Resume(ctx, campaignID); err != nil {
-		return fmt.Errorf("failed to resume phase %s: %w", phase, err)
+	if err := awaitControlAck(ctx, ack, domainservices.ErrPhaseResumeTimeout); err != nil {
+		return err
 	}
 
 	o.deps.Logger.Info(ctx, "Phase resumed successfully", map[string]interface{}{
@@ -693,8 +713,10 @@ func upstreamPhase(phase models.PhaseTypeEnum) (models.PhaseTypeEnum, bool) {
 	switch phase {
 	case models.PhaseTypeHTTPKeywordValidation:
 		return models.PhaseTypeDNSValidation, true
-	case models.PhaseTypeAnalysis:
+	case models.PhaseTypeExtraction:
 		return models.PhaseTypeHTTPKeywordValidation, true
+	case models.PhaseTypeAnalysis:
+		return models.PhaseTypeExtraction, true
 	case models.PhaseTypeEnrichment:
 		return models.PhaseTypeAnalysis, true
 	default:
@@ -724,6 +746,8 @@ func (o *CampaignOrchestrator) getPhaseService(phase models.PhaseTypeEnum) (doma
 		return o.dnsValidationSvc, nil
 	case models.PhaseTypeHTTPKeywordValidation:
 		return o.httpValidationSvc, nil
+	case models.PhaseTypeExtraction:
+		return o.extractionSvc, nil
 	case models.PhaseTypeEnrichment:
 		return o.enrichmentSvc, nil
 	case models.PhaseTypeAnalysis:
@@ -784,6 +808,181 @@ func (o *CampaignOrchestrator) ensurePhaseDefaultConfig(ctx context.Context, exe
 	return nil
 }
 
+// hydratePhaseConfiguration reloads persisted configuration for the provided phase and reapplies it
+// to the in-memory domain service before execution resumes. This avoids relying on process-local
+// Configure calls that are lost across restarts.
+func (o *CampaignOrchestrator) hydratePhaseConfiguration(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phase models.PhaseTypeEnum, service domainservices.PhaseService) error {
+	if o == nil || o.store == nil || exec == nil || service == nil {
+		return nil
+	}
+
+	payload, err := o.loadPhaseConfigurationPayload(ctx, exec, campaignID, phase)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) || errors.Is(err, errPhaseConfigMissing) {
+			if o.deps.Logger != nil {
+				o.deps.Logger.Debug(ctx, "campaign.phase.config.rehydrate.skipped", map[string]interface{}{
+					"campaign_id": campaignID,
+					"phase":       phase,
+					"reason":      "config_not_found",
+				})
+			}
+			return nil
+		}
+		return fmt.Errorf("failed to load configuration for %s: %w", phase, err)
+	}
+
+	config, err := decodePhaseConfiguration(phase, payload)
+	if err != nil {
+		return fmt.Errorf("failed to decode stored configuration for %s: %w", phase, err)
+	}
+	if config == nil {
+		return nil
+	}
+
+	if err := service.Configure(ctx, campaignID, config); err != nil {
+		return fmt.Errorf("failed to rehydrate configuration for %s: %w", phase, err)
+	}
+
+	if o.deps.Logger != nil {
+		o.deps.Logger.Debug(ctx, "campaign.phase.config.rehydrated", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+		})
+	}
+	return nil
+}
+
+var errPhaseConfigMissing = errors.New("phase configuration missing")
+
+func (o *CampaignOrchestrator) loadPhaseConfigurationPayload(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phase models.PhaseTypeEnum) ([]byte, error) {
+	if o == nil || o.store == nil || exec == nil {
+		return nil, store.ErrNotFound
+	}
+	phaseRow, err := o.store.GetCampaignPhase(ctx, exec, campaignID, phase)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, store.ErrNotFound) || strings.Contains(err.Error(), "not found") {
+			return nil, store.ErrNotFound
+		}
+		return nil, err
+	}
+	if phaseRow == nil || phaseRow.Configuration == nil {
+		return nil, errPhaseConfigMissing
+	}
+	trimmed := bytes.TrimSpace([]byte(*phaseRow.Configuration))
+	if len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")) {
+		return nil, errPhaseConfigMissing
+	}
+	copyBuf := make([]byte, len(trimmed))
+	copy(copyBuf, trimmed)
+	return copyBuf, nil
+}
+
+func (o *CampaignOrchestrator) attachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, service domainservices.PhaseService) {
+	if o == nil || o.control == nil {
+		return
+	}
+	controlAware, ok := service.(domainservices.ControlAwarePhase)
+	if !ok {
+		return
+	}
+	signalCh, err := o.control.Subscribe(ctx, campaignID, phase)
+	if err != nil {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "phase.control.subscription.failed", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"error":       err.Error(),
+			})
+		}
+		return
+	}
+	controlAware.AttachControlChannel(ctx, campaignID, phase, signalCh)
+}
+
+func (o *CampaignOrchestrator) broadcastControlSignal(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, signal domainservices.ControlSignal, ack chan<- error) error {
+	if o == nil || o.control == nil {
+		err := fmt.Errorf("phase control manager unavailable")
+		if ack != nil {
+			select {
+			case ack <- err:
+			default:
+			}
+		}
+		return err
+	}
+	if err := o.control.Broadcast(ctx, campaignID, phase, signal, ack); err != nil {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "phase.control.signal.drop", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"signal":      signal,
+				"error":       err.Error(),
+			})
+		}
+		return err
+	}
+	return nil
+}
+
+func awaitControlAck(ctx context.Context, ack <-chan error, timeoutErr error) error {
+	if ack == nil {
+		return fmt.Errorf("control ack channel missing")
+	}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-ack:
+		return err
+	case <-time.After(controlAckTimeout):
+		return timeoutErr
+	}
+}
+
+func (o *CampaignOrchestrator) closeControlChannel(campaignID uuid.UUID, phase models.PhaseTypeEnum) {
+	if o == nil || o.control == nil {
+		return
+	}
+	o.control.Close(campaignID, phase)
+}
+
+func phaseRequiresExplicitConfig(phase models.PhaseTypeEnum) bool {
+	switch phase {
+	case models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation:
+		return true
+	default:
+		return false
+	}
+}
+
+func decodePhaseConfiguration(phase models.PhaseTypeEnum, payload []byte) (interface{}, error) {
+	switch phase {
+	case models.PhaseTypeDNSValidation:
+		var cfg domainservices.DNSValidationConfig
+		if err := json.Unmarshal(payload, &cfg); err != nil {
+			return nil, err
+		}
+		return &cfg, nil
+	case models.PhaseTypeHTTPKeywordValidation:
+		var cfg models.HTTPPhaseConfigRequest
+		if err := json.Unmarshal(payload, &cfg); err != nil {
+			return nil, err
+		}
+		return &cfg, nil
+	case models.PhaseTypeEnrichment:
+		copyBuf := make([]byte, len(payload))
+		copy(copyBuf, payload)
+		return json.RawMessage(copyBuf), nil
+	case models.PhaseTypeAnalysis:
+		var cfg domainservices.AnalysisConfig
+		if err := json.Unmarshal(payload, &cfg); err != nil {
+			return nil, err
+		}
+		return &cfg, nil
+	default:
+		return nil, nil
+	}
+}
+
 // monitorPhaseProgress monitors the progress of a phase execution
 func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, progressCh <-chan domainservices.PhaseProgress) {
 	defer func() {
@@ -792,6 +991,8 @@ func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaig
 			"phase":       phase,
 		})
 	}()
+
+	defer o.closeControlChannel(campaignID, phase)
 
 	// Get campaign user ID for SSE broadcasting (cache it to avoid repeated DB calls)
 	var userID *uuid.UUID
@@ -892,6 +1093,7 @@ func (o *CampaignOrchestrator) updateCampaignProgress(campaignID uuid.UUID, phas
 
 // handlePhaseCompletion handles the completion of a phase
 func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) {
+	o.closeControlChannel(campaignID, phase)
 	o.deps.Logger.Info(ctx, "Phase execution completed", map[string]interface{}{
 		"campaign_id": campaignID,
 		"phase":       phase,
@@ -1062,6 +1264,8 @@ func (o *CampaignOrchestrator) nextPhase(current models.PhaseTypeEnum) (models.P
 	case models.PhaseTypeDNSValidation:
 		return models.PhaseTypeHTTPKeywordValidation, true
 	case models.PhaseTypeHTTPKeywordValidation:
+		return models.PhaseTypeExtraction, true
+	case models.PhaseTypeExtraction:
 		return models.PhaseTypeAnalysis, true
 	case models.PhaseTypeAnalysis:
 		return models.PhaseTypeEnrichment, true

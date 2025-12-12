@@ -100,7 +100,7 @@ func createCampaignWithUser(t *testing.T, db *sqlx.DB, cs store.CampaignStore) u
 	if err != nil {
 		t.Fatalf("insert user: %v", err)
 	}
-	c := &models.LeadGenerationCampaign{ID: id, UserID: &user, Name: "sse-camp-" + id.String()[:8], CreatedAt: now, UpdatedAt: now, CampaignType: "lead_generation", TotalPhases: 5}
+	c := &models.LeadGenerationCampaign{ID: id, UserID: &user, Name: "sse-camp-" + id.String()[:8], CreatedAt: now, UpdatedAt: now, CampaignType: "lead_generation", TotalPhases: 6}
 	if err := cs.CreateCampaign(context.Background(), nil, c); err != nil {
 		t.Fatalf("create campaign: %v", err)
 	}
@@ -137,16 +137,24 @@ func TestSSEEventEmissionFullSequence(t *testing.T) {
 	dom := newSSEStub(models.PhaseTypeDomainGeneration)
 	dns := newSSEStub(models.PhaseTypeDNSValidation)
 	http := newSSEStub(models.PhaseTypeHTTPKeywordValidation)
+	extraction := newSSEStub(models.PhaseTypeExtraction)
 	enrichment := newSSEStub(models.PhaseTypeEnrichment)
 	analysis := newSSEStub(models.PhaseTypeAnalysis)
-	orch := NewCampaignOrchestrator(cs, domainservices.Dependencies{DB: db, Logger: &testLogger{t}}, dom, dns, http, enrichment, analysis, cap, nil)
+	orch := NewCampaignOrchestrator(cs, domainservices.Dependencies{DB: db, Logger: &testLogger{t}}, dom, dns, http, extraction, enrichment, analysis, cap, nil)
 
 	campID := createCampaignWithUser(t, db, cs)
 	if err := cs.UpdateCampaignMode(context.Background(), nil, campID, "full_sequence"); err != nil {
 		t.Fatalf("mode: %v", err)
 	}
 	// provide configs (gating)
-	for _, ph := range []models.PhaseTypeEnum{models.PhaseTypeDomainGeneration, models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation, models.PhaseTypeEnrichment, models.PhaseTypeAnalysis} {
+	for _, ph := range []models.PhaseTypeEnum{
+		models.PhaseTypeDomainGeneration,
+		models.PhaseTypeDNSValidation,
+		models.PhaseTypeHTTPKeywordValidation,
+		models.PhaseTypeExtraction,
+		models.PhaseTypeEnrichment,
+		models.PhaseTypeAnalysis,
+	} {
 		if err := cs.UpsertPhaseConfig(context.Background(), nil, campID, ph, []byte(`{"ok":true}`)); err != nil {
 			t.Fatalf("config %s: %v", ph, err)
 		}
@@ -162,17 +170,17 @@ func TestSSEEventEmissionFullSequence(t *testing.T) {
 	})
 
 	evts := cap.snapshot()
-	if countEvents(evts, services.SSEEventPhaseStarted) != 5 {
-		t.Fatalf("expected 5 phase_started got %d", countEvents(evts, services.SSEEventPhaseStarted))
+	if countEvents(evts, services.SSEEventPhaseStarted) != 6 {
+		t.Fatalf("expected 6 phase_started got %d", countEvents(evts, services.SSEEventPhaseStarted))
 	}
-	if countEvents(evts, services.SSEEventPhaseCompleted) != 5 {
-		t.Fatalf("expected 5 phase_completed got %d", countEvents(evts, services.SSEEventPhaseCompleted))
+	if countEvents(evts, services.SSEEventPhaseCompleted) != 6 {
+		t.Fatalf("expected 6 phase_completed got %d", countEvents(evts, services.SSEEventPhaseCompleted))
 	}
-	if countEvents(evts, services.SSEEventPhaseAutoStarted) != 4 {
-		t.Fatalf("expected 4 phase_auto_started got %d", countEvents(evts, services.SSEEventPhaseAutoStarted))
+	if countEvents(evts, services.SSEEventPhaseAutoStarted) != 5 {
+		t.Fatalf("expected 5 phase_auto_started got %d", countEvents(evts, services.SSEEventPhaseAutoStarted))
 	}
-	if countEvents(evts, services.SSEEventCampaignProgress) != 5 {
-		t.Fatalf("expected 5 campaign_progress got %d", countEvents(evts, services.SSEEventCampaignProgress))
+	if countEvents(evts, services.SSEEventCampaignProgress) != 6 {
+		t.Fatalf("expected 6 campaign_progress got %d", countEvents(evts, services.SSEEventCampaignProgress))
 	}
 	if countEvents(evts, services.SSEEventCampaignCompleted) != 1 {
 		t.Fatalf("expected 1 campaign_completed got %d", countEvents(evts, services.SSEEventCampaignCompleted))
@@ -189,15 +197,23 @@ func TestSSEEventEmissionFailureThenRetry(t *testing.T) {
 	dom := newSSEStub(models.PhaseTypeDomainGeneration)
 	dns := newSSEStub(models.PhaseTypeDNSValidation)
 	http := newSSEStub(models.PhaseTypeHTTPKeywordValidation)
+	extraction := newSSEStub(models.PhaseTypeExtraction)
 	enrichment := newSSEStub(models.PhaseTypeEnrichment)
 	analysis := newSSEStub(models.PhaseTypeAnalysis)
-	orch := NewCampaignOrchestrator(cs, domainservices.Dependencies{DB: db, Logger: &testLogger{t}}, dom, dns, http, enrichment, analysis, cap, nil)
+	orch := NewCampaignOrchestrator(cs, domainservices.Dependencies{DB: db, Logger: &testLogger{t}}, dom, dns, http, extraction, enrichment, analysis, cap, nil)
 
 	campID := createCampaignWithUser(t, db, cs)
 	if err := cs.UpdateCampaignMode(context.Background(), nil, campID, "full_sequence"); err != nil {
 		t.Fatalf("mode: %v", err)
 	}
-	for _, ph := range []models.PhaseTypeEnum{models.PhaseTypeDomainGeneration, models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation, models.PhaseTypeEnrichment, models.PhaseTypeAnalysis} {
+	for _, ph := range []models.PhaseTypeEnum{
+		models.PhaseTypeDomainGeneration,
+		models.PhaseTypeDNSValidation,
+		models.PhaseTypeHTTPKeywordValidation,
+		models.PhaseTypeExtraction,
+		models.PhaseTypeEnrichment,
+		models.PhaseTypeAnalysis,
+	} {
 		if err := cs.UpsertPhaseConfig(context.Background(), nil, campID, ph, []byte(`{"ok":true}`)); err != nil {
 			t.Fatalf("config %s: %v", ph, err)
 		}
@@ -222,17 +238,17 @@ func TestSSEEventEmissionFailureThenRetry(t *testing.T) {
 	if countEvents(evts, services.SSEEventPhaseFailed) != 1 {
 		t.Fatalf("expected 1 phase_failed got %d", countEvents(evts, services.SSEEventPhaseFailed))
 	}
-	if countEvents(evts, services.SSEEventPhaseStarted) != 5 {
-		t.Fatalf("expected 5 phase_started got %d", countEvents(evts, services.SSEEventPhaseStarted))
+	if countEvents(evts, services.SSEEventPhaseStarted) != 6 {
+		t.Fatalf("expected 6 phase_started got %d", countEvents(evts, services.SSEEventPhaseStarted))
 	}
-	if countEvents(evts, services.SSEEventPhaseCompleted) != 5 {
-		t.Fatalf("expected 5 phase_completed got %d", countEvents(evts, services.SSEEventPhaseCompleted))
+	if countEvents(evts, services.SSEEventPhaseCompleted) != 6 {
+		t.Fatalf("expected 6 phase_completed got %d", countEvents(evts, services.SSEEventPhaseCompleted))
 	}
-	if countEvents(evts, services.SSEEventPhaseAutoStarted) != 4 {
-		t.Fatalf("expected 4 phase_auto_started got %d", countEvents(evts, services.SSEEventPhaseAutoStarted))
+	if countEvents(evts, services.SSEEventPhaseAutoStarted) != 5 {
+		t.Fatalf("expected 5 phase_auto_started got %d", countEvents(evts, services.SSEEventPhaseAutoStarted))
 	}
-	if countEvents(evts, services.SSEEventCampaignProgress) != 5 {
-		t.Fatalf("expected 5 campaign_progress got %d", countEvents(evts, services.SSEEventCampaignProgress))
+	if countEvents(evts, services.SSEEventCampaignProgress) != 6 {
+		t.Fatalf("expected 6 campaign_progress got %d", countEvents(evts, services.SSEEventCampaignProgress))
 	}
 	if countEvents(evts, services.SSEEventCampaignCompleted) != 1 {
 		t.Fatalf("expected 1 campaign_completed got %d", countEvents(evts, services.SSEEventCampaignCompleted))

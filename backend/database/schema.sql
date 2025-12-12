@@ -411,6 +411,7 @@ CREATE TYPE public.job_type_enum AS ENUM (
     'generation',
     'dns_validation',
     'http_keyword_validation',
+    'extraction',
     'enrichment',
     'analysis'
 );
@@ -472,6 +473,7 @@ CREATE TYPE public.phase_type_enum AS ENUM (
     'domain_generation',
     'dns_validation',
     'http_keyword_validation',
+    'extraction',
     'enrichment',
     'analysis'
 );
@@ -3428,7 +3430,7 @@ CREATE TABLE public.campaign_phases (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT campaign_phases_failed_items_check CHECK ((failed_items >= 0)),
-    CONSTRAINT campaign_phases_phase_order_check CHECK (((phase_order >= 1) AND (phase_order <= 5))),
+    CONSTRAINT campaign_phases_phase_order_check CHECK (((phase_order >= 1) AND (phase_order <= 6))),
     CONSTRAINT campaign_phases_processed_items_check CHECK ((processed_items >= 0)),
     CONSTRAINT campaign_phases_progress_percentage_check CHECK (((progress_percentage >= (0)::numeric) AND (progress_percentage <= (100)::numeric))),
     CONSTRAINT campaign_phases_successful_items_check CHECK ((successful_items >= 0)),
@@ -4039,7 +4041,7 @@ CREATE TABLE public.lead_generation_campaigns (
     campaign_type character varying(50) DEFAULT 'lead_generation'::character varying NOT NULL,
     current_phase_id uuid,
     current_phase public.phase_type_enum,
-    total_phases integer DEFAULT 5 NOT NULL,
+    total_phases integer DEFAULT 6 NOT NULL,
     completed_phases integer DEFAULT 0 NOT NULL,
     overall_progress numeric(5,2),
     is_full_sequence_mode boolean DEFAULT false NOT NULL,
@@ -4063,7 +4065,7 @@ CREATE TABLE public.lead_generation_campaigns (
     http_config jsonb,
     state_version integer DEFAULT 1 NOT NULL,
     state_data jsonb DEFAULT '{}'::jsonb NOT NULL,
-    CONSTRAINT lead_generation_campaigns_completed_phases_check CHECK (((completed_phases >= 0) AND (completed_phases <= 5))),
+    CONSTRAINT lead_generation_campaigns_completed_phases_check CHECK (((completed_phases >= 0) AND (completed_phases <= 6))),
     CONSTRAINT lead_generation_campaigns_failed_items_check CHECK ((failed_items >= 0)),
     CONSTRAINT lead_generation_campaigns_overall_progress_check CHECK (((overall_progress >= (0)::numeric) AND (overall_progress <= (100)::numeric))),
     CONSTRAINT lead_generation_campaigns_processed_items_check CHECK ((processed_items >= 0)),
