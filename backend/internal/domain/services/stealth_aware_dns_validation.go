@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/google/uuid"
 )
+
+var _ ControlAwarePhase = (*stealthAwareDNSService)(nil)
 
 // StealthAwareDNSValidationService extends DNS validation with stealth capabilities
 type StealthAwareDNSValidationService interface {
@@ -92,4 +95,13 @@ func (s *stealthAwareDNSService) Execute(ctx context.Context, campaignID uuid.UU
 
 	log.Printf("StealthAwareDNS: Using standard mode for campaign %s", campaignID)
 	return s.DNSValidationService.Execute(ctx, campaignID)
+}
+
+// AttachControlChannel forwards runtime control wiring to the underlying DNS validation service when supported.
+func (s *stealthAwareDNSService) AttachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, commands <-chan ControlCommand) {
+	aware, ok := s.DNSValidationService.(ControlAwarePhase)
+	log.Printf("StealthAwareDNS: AttachControlChannel invoked (campaign=%s phase=%s aware=%t)", campaignID, phase, ok)
+	if ok {
+		aware.AttachControlChannel(ctx, campaignID, phase, commands)
+	}
 }

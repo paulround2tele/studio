@@ -103,6 +103,7 @@ export * from './campaign-state';
 export * from './campaign-state-enum';
 export * from './campaign-state-update';
 export * from './campaign-state-with-executions';
+export * from './campaign-stop-response';
 export * from './campaigns-bulk-operations-list200-response-inner';
 export * from './campaigns-mode-update-request';
 export * from './campaigns-phase-configs-list200-response';

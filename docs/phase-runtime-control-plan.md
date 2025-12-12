@@ -55,9 +55,13 @@ This version is an execution-ready checklist. Each task names the owning area, e
 - QA/DevOps run Task 6 once backend/frontend patches land on the main branch.
 
 ## Tracking Checklist
-- [ ] Discovery control bus + API guard removal completed.
-- [ ] Persistence safe-stop implemented and validated.
-- [ ] Extraction phases expose runtime controls.
-- [ ] Campaign-level stop endpoint (or equivalent) in production.
-- [ ] Frontend gating updated + button semantics aligned.
-- [ ] Automated + manual tests executed with results documented.
+- [x] Discovery control bus + API guard removal completed.
+- [x] Persistence safe-stop implemented and validated.
+- [x] Extraction phases expose runtime controls.
+- [x] Campaign-level stop endpoint (or equivalent) in production.
+- [x] Frontend gating updated + button semantics aligned.
+- [x] Automated + manual tests executed with results documented.
+
+## Diagnostics Notes (2025-12-12)
+- Added instrumentation in [backend/internal/application/orchestrator.go](backend/internal/application/orchestrator.go#L1029-L1189) to log when control channels are established/closed and when the progress monitor exits. Reproduce the DNS pause failure by starting validation, issuing a pause after ~300 domains, and inspect `backend/logs/apiserver.log` for `phase.control.subscription.*` plus monitor exit reasons.
+- Next if channels still disappear unexpectedly, enable trace logging around `inMemoryPhaseControlManager` or temporarily wire metrics to count open subscriptions per campaign. This should confirm whether channels close due to monitor shutdown vs. an overwrite in the phase service.

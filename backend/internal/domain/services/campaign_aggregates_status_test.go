@@ -57,7 +57,9 @@ func TestGetCampaignStatusReturnsPhaseData(t *testing.T) {
 		AddRow("domain_generation", 1, "completed", 100.0, startedGeneration, completedGeneration, nil, nil, nil).
 		AddRow("dns_validation", 2, "completed", 100.0, startedDNS, completedDNS, nil, nil, nil).
 		AddRow("http_keyword_validation", 3, "in_progress", 75.0, startedHTTP, nil, nil, nil, nil).
-		AddRow("enrichment", 4, "configured", nil, nil, nil, nil, nil, nil)
+		AddRow("extraction", 4, "configured", 0.0, nil, nil, nil, nil, nil).
+		AddRow("analysis", 5, "configured", nil, nil, nil, nil, nil, nil).
+		AddRow("enrichment", 6, "configured", nil, nil, nil, nil, nil, nil)
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(campaignID).
@@ -72,8 +74,8 @@ func TestGetCampaignStatusReturnsPhaseData(t *testing.T) {
 		t.Fatalf("GetCampaignStatus returned error: %v", err)
 	}
 
-	if len(dto.Phases) < 5 {
-		t.Fatalf("expected at least 5 phases, got %d", len(dto.Phases))
+	if len(dto.Phases) < 6 {
+		t.Fatalf("expected at least 6 phases, got %d", len(dto.Phases))
 	}
 
 	ph := make(map[string]PhaseStatusItem, len(dto.Phases))
@@ -106,6 +108,28 @@ func TestGetCampaignStatusReturnsPhaseData(t *testing.T) {
 		}
 	}
 
+	if phase, ok := ph["extraction"]; !ok {
+		t.Fatalf("expected extraction phase to be present")
+	} else {
+		if phase.Status != "configured" {
+			t.Fatalf("expected extraction status configured, got %s", phase.Status)
+		}
+		if phase.ProgressPercentage != 0 {
+			t.Fatalf("expected extraction progress 0, got %f", phase.ProgressPercentage)
+		}
+	}
+
+	if phase, ok := ph["analysis"]; !ok {
+		t.Fatalf("expected analysis phase to be present")
+	} else {
+		if phase.Status != "configured" {
+			t.Fatalf("expected analysis status configured, got %s", phase.Status)
+		}
+		if phase.ProgressPercentage != 0 {
+			t.Fatalf("expected analysis progress 0, got %f", phase.ProgressPercentage)
+		}
+	}
+
 	if phase, ok := ph["enrichment"]; !ok {
 		t.Fatalf("expected enrichment phase to be present")
 	} else {
@@ -117,8 +141,8 @@ func TestGetCampaignStatusReturnsPhaseData(t *testing.T) {
 		}
 	}
 
-	if math.Abs(dto.OverallProgressPercentage-55.0) > 0.001 {
-		t.Fatalf("expected overall progress ~55, got %f", dto.OverallProgressPercentage)
+	if math.Abs(dto.OverallProgressPercentage-45.8333333333) > 0.001 {
+		t.Fatalf("expected overall progress ~45.83, got %f", dto.OverallProgressPercentage)
 	}
 
 	// Second call should hit cache and not query again.
@@ -173,7 +197,7 @@ func TestGetCampaignStatusDefaultsWhenNoRows(t *testing.T) {
 		t.Fatalf("GetCampaignStatus returned error: %v", err)
 	}
 
-	if len(dto.Phases) < 5 {
+	if len(dto.Phases) < 6 {
 		t.Fatalf("expected default phases to be returned, got %d", len(dto.Phases))
 	}
 

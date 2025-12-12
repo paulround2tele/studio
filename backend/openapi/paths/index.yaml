@@ -187,6 +187,8 @@
   $ref: "./campaigns/phase-configs.yaml"
 "/campaigns/{campaignId}/phases/{phase}/stop":
   $ref: "./campaigns/phase-stop.yaml"
+"/campaigns/{campaignId}/stop":
+  $ref: "./campaigns/stop.yaml"
 "/campaigns/{campaignId}/restart":
   $ref: "./campaigns/restart.yaml"
 

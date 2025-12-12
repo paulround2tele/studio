@@ -144,9 +144,17 @@ export function useSSE(
   }, []);
 
   const connect = useCallback(() => {
-    if (!url || !mountedRef.current) return;
+    if (!url || !mountedRef.current) {
+      if (!url && process.env.NODE_ENV !== 'production') {
+        console.warn('[useSSE] connect skipped - no URL');
+      }
+      return;
+    }
     // Ensure we're in a browser with EventSource support
     if (!ES) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[useSSE] EventSource not available in this environment');
+      }
       setError('SSE not supported in this environment');
       setReadyState(ES_CLOSED);
       return;
@@ -157,6 +165,9 @@ export function useSSE(
     setReadyState(ES_CONNECTING);
 
     try {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[useSSE] opening connection', url);
+      }
       // Modern browsers support headers via EventSource constructor
       const eventSource = new ES(url, {
         withCredentials,

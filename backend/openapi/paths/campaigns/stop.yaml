@@ -1,0 +1,20 @@
+post:
+  tags: [campaigns]
+  summary: Stop the currently running campaign phase
+  description: Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+  operationId: campaigns_stop
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: Campaign stop acknowledged
+      content:
+        application/json:
+          schema: { $ref: '../../components/schemas/all.yaml#/CampaignStopResponse' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

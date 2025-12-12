@@ -574,8 +574,9 @@ func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *Ag
 		models.PhaseTypeDomainGeneration,
 		models.PhaseTypeDNSValidation,
 		models.PhaseTypeHTTPKeywordValidation,
-		models.PhaseTypeEnrichment,
+		models.PhaseTypeExtraction,
 		models.PhaseTypeAnalysis,
+		models.PhaseTypeEnrichment,
 	}
 
 	phases := make([]PhaseStatusItem, 0, len(defaultOrder)+len(phaseRecords))

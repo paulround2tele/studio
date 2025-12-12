@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/google/uuid"
 )
+
+var _ ControlAwarePhase = (*stealthAwareHTTPService)(nil)
 
 // StealthAwareHTTPValidationService extends HTTP validation with stealth capabilities
 type StealthAwareHTTPValidationService interface {
@@ -93,4 +96,11 @@ func (s *stealthAwareHTTPService) Execute(ctx context.Context, campaignID uuid.U
 
 	log.Printf("StealthAwareHTTP: Using standard mode for campaign %s", campaignID)
 	return s.HTTPValidationService.Execute(ctx, campaignID)
+}
+
+// AttachControlChannel forwards runtime control wiring to the underlying HTTP validation service when supported.
+func (s *stealthAwareHTTPService) AttachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, commands <-chan ControlCommand) {
+	if aware, ok := s.HTTPValidationService.(ControlAwarePhase); ok {
+		aware.AttachControlChannel(ctx, campaignID, phase, commands)
+	}
 }

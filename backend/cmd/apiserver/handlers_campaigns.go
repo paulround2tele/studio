@@ -40,7 +40,7 @@ const (
 var (
 	domainsListMetricsOnce        sync.Once
 	domainsListServerSortRequests *prometheus.CounterVec
-	totalPhaseCount                = len(phases.AllInternal())
+	totalPhaseCount               = len(phases.AllInternal())
 )
 
 // aggregatesRepo implements domainservices.AggregatesRepository
@@ -1972,6 +1972,48 @@ func (h *strictHandlers) CampaignsPhaseStop(ctx context.Context, r gen.Campaigns
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, campaignID, phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
 	return gen.CampaignsPhaseStop200JSONResponse(data), nil
+}
+
+// CampaignsStop implements POST /campaigns/{campaignId}/stop
+func (h *strictHandlers) CampaignsStop(ctx context.Context, r gen.CampaignsStopRequestObject) (gen.CampaignsStopResponseObject, error) {
+	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsStop401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	campaignID := uuid.UUID(r.CampaignId)
+	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, campaignID); err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsStop404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	result, err := h.deps.Orchestrator.StopCampaign(ctx, campaignID)
+	if err != nil {
+		switch {
+		case errors.Is(err, application.ErrNoActivePhase), errors.Is(err, domainservices.ErrPhaseExecutionMissing), errors.Is(err, domainservices.ErrPhaseNotRunning):
+			msg := "campaign is not currently running"
+			return gen.CampaignsStop400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: msg, Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		default:
+			return gen.CampaignsStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to stop campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+	}
+	if result == nil || result.Phase == "" {
+		return gen.CampaignsStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to resolve stopped phase", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	phaseStatus := buildPhaseStatusResponse(result.Phase, result.Status)
+	phaseLabel := phases.ToAPI(string(result.Phase))
+	message := "Campaign stop acknowledged"
+	if phaseLabel != "" {
+		message = fmt.Sprintf("%s phase stop acknowledged", phaseLabel)
+	}
+	timestamp := time.Now()
+	resp := gen.CampaignStopResponse{
+		CampaignId:   openapi_types.UUID(campaignID),
+		StoppedPhase: mapModelPhaseToCampaignEnum(result.Phase),
+		PhaseStatus:  phaseStatus,
+		Message:      message,
+		Timestamp:    &timestamp,
+	}
+	return gen.CampaignsStop200JSONResponse(resp), nil
 }
 
 // CampaignsPhasePause implements POST /campaigns/{campaignId}/phase/{phase}/pause

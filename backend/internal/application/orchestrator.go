@@ -26,9 +26,14 @@ var (
 	ErrMissingPhaseConfigs = fmt.Errorf("missing_phase_configs")
 	// ErrPhaseDependenciesNotMet indicates a requested phase attempted to start before its prerequisites completed.
 	ErrPhaseDependenciesNotMet = fmt.Errorf("phase_dependencies_not_met")
+	// ErrNoActivePhase indicates no phase is currently running for the campaign when a stop was requested.
+	ErrNoActivePhase = fmt.Errorf("no_active_phase")
 )
 
-const controlAckTimeout = 30 * time.Second
+const (
+	controlAckTimeout   = 30 * time.Second
+	campaignStopMessage = "Campaign stop requested by user"
+)
 
 // PhaseDependencyError captures structured context when dependency gating prevents a phase from starting.
 type PhaseDependencyError struct {
@@ -99,6 +104,12 @@ type CampaignExecution struct {
 type CampaignRestartResult struct {
 	RestartedPhases []models.PhaseTypeEnum
 	FailedPhases    map[models.PhaseTypeEnum]error
+}
+
+// CampaignStopResult summarizes the outcome of a campaign-level stop request.
+type CampaignStopResult struct {
+	Phase  models.PhaseTypeEnum
+	Status *domainservices.PhaseStatus
 }
 
 var restartablePhaseOrder = []models.PhaseTypeEnum{
@@ -599,6 +610,13 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 		"phase":       phase,
 	})
 
+	// Re-attach control channel in case backend restarted or channel was closed
+	service, err := o.getPhaseService(phase)
+	if err != nil {
+		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
+	}
+	o.attachControlChannel(ctx, campaignID, phase, service)
+
 	ack := make(chan error, 1)
 	if err := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalResume, ack); err != nil {
 		return err
@@ -614,9 +632,164 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 	return nil
 }
 
+// StopCampaign cooperatively stops whichever phase is currently active for the campaign and
+// marks the campaign as cancelled in centralized state tracking.
+func (o *CampaignOrchestrator) StopCampaign(ctx context.Context, campaignID uuid.UUID) (*CampaignStopResult, error) {
+	if o == nil || o.store == nil || o.deps.DB == nil {
+		return nil, fmt.Errorf("orchestrator not initialized")
+	}
+	querier, ok := o.deps.DB.(store.Querier)
+	if !ok {
+		return nil, fmt.Errorf("invalid database interface in dependencies")
+	}
+
+	activePhase, err := o.findActivePhase(ctx, querier, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	phase := activePhase.PhaseType
+
+	if err := o.CancelPhase(ctx, campaignID, phase); err != nil {
+		return nil, err
+	}
+
+	if err := o.recordCampaignStop(ctx, querier, campaignID, phase); err != nil {
+		return nil, err
+	}
+
+	status, err := o.GetPhaseStatus(ctx, campaignID, phase)
+	if err != nil && o.deps.Logger != nil {
+		o.deps.Logger.Warn(ctx, "campaign.stop.status_fetch_failed", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+			"error":       err.Error(),
+		})
+	}
+
+	if o.deps.Logger != nil {
+		o.deps.Logger.Info(ctx, "Campaign stop completed", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+		})
+	}
+
+	return &CampaignStopResult{Phase: phase, Status: status}, nil
+}
+
+func (o *CampaignOrchestrator) findActivePhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.CampaignPhase, error) {
+	if o == nil || o.store == nil || exec == nil {
+		return nil, fmt.Errorf("campaign store not initialized")
+	}
+	phases, err := o.store.GetCampaignPhases(ctx, exec, campaignID)
+	if err != nil && !errors.Is(err, store.ErrNotFound) {
+		return nil, fmt.Errorf("failed to load campaign phases: %w", err)
+	}
+	if phase := selectActivePhase(phases); phase != nil {
+		return phase, nil
+	}
+	campaign, err := o.store.GetCampaignByID(ctx, exec, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	if campaign.CurrentPhase == nil || campaign.PhaseStatus == nil || !isPhaseActiveStatus(*campaign.PhaseStatus) {
+		return nil, ErrNoActivePhase
+	}
+	return &models.CampaignPhase{
+		CampaignID: campaign.ID,
+		PhaseType:  *campaign.CurrentPhase,
+		Status:     *campaign.PhaseStatus,
+	}, nil
+}
+
+func selectActivePhase(phases []*models.CampaignPhase) *models.CampaignPhase {
+	var pausedCandidate *models.CampaignPhase
+	for _, phase := range phases {
+		if phase == nil {
+			continue
+		}
+		switch phase.Status {
+		case models.PhaseStatusInProgress:
+			return phase
+		case models.PhaseStatusPaused:
+			if pausedCandidate == nil {
+				pausedCandidate = phase
+			}
+		}
+	}
+	return pausedCandidate
+}
+
+func (o *CampaignOrchestrator) recordCampaignStop(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	if o == nil || o.store == nil || exec == nil {
+		return fmt.Errorf("campaign store not initialized")
+	}
+	if err := o.store.FailPhase(ctx, exec, campaignID, phase, campaignStopMessage, map[string]interface{}{"code": "campaign_stopped"}); err != nil {
+		return fmt.Errorf("failed to update phase state: %w", err)
+	}
+	phaseStatus := models.PhaseStatusFailed
+	if err := o.store.UpdateCampaignPhaseFields(ctx, exec, campaignID, &phase, &phaseStatus); err != nil {
+		return fmt.Errorf("failed to persist campaign phase status: %w", err)
+	}
+	if err := o.store.UpdateCampaignStatus(ctx, exec, campaignID, models.PhaseStatusFailed, sql.NullString{String: campaignStopMessage, Valid: true}); err != nil {
+		return fmt.Errorf("failed to persist campaign status: %w", err)
+	}
+	if err := o.persistCampaignState(ctx, exec, campaignID, models.CampaignStateCancelled); err != nil {
+		return err
+	}
+	o.mu.Lock()
+	if execution, exists := o.campaignExecutions[campaignID]; exists {
+		execution.OverallStatus = models.PhaseStatusFailed
+		execution.LastError = campaignStopMessage
+	}
+	o.mu.Unlock()
+	if o.sseService != nil {
+		if campaign, err := o.store.GetCampaignByID(ctx, exec, campaignID); err == nil && campaign.UserID != nil {
+			evt := services.CreatePhaseFailedEvent(campaignID, *campaign.UserID, phase, campaignStopMessage)
+			o.sseService.BroadcastToCampaign(campaignID, evt)
+		}
+	}
+	return nil
+}
+
+func (o *CampaignOrchestrator) persistCampaignState(ctx context.Context, exec store.Querier, campaignID uuid.UUID, next models.CampaignStateEnum) error {
+	if o.store == nil {
+		return nil
+	}
+	state, err := o.store.GetCampaignState(ctx, exec, campaignID)
+	switch {
+	case err == nil && state != nil:
+		state.CurrentState = next
+		state.Version++
+		return o.store.UpdateCampaignState(ctx, exec, state)
+	case errors.Is(err, store.ErrNotFound):
+		emptyCfg := json.RawMessage([]byte("{}"))
+		fresh := &models.CampaignState{
+			CampaignID:    campaignID,
+			CurrentState:  next,
+			Mode:          models.CampaignModeStepByStep,
+			Configuration: emptyCfg,
+			Version:       1,
+		}
+		return o.store.CreateCampaignState(ctx, exec, fresh)
+	case err != nil:
+		return fmt.Errorf("campaign state lookup failed: %w", err)
+	default:
+		return nil
+	}
+}
+
+func isPhaseActiveStatus(status models.PhaseStatusEnum) bool {
+	switch status {
+	case models.PhaseStatusInProgress, models.PhaseStatusPaused:
+		return true
+	default:
+		return false
+	}
+}
+
 // RestartCampaign replays all restartable phases sequentially, skipping discovery/domain generation.
 func (o *CampaignOrchestrator) RestartCampaign(ctx context.Context, campaignID uuid.UUID) (*CampaignRestartResult, error) {
-	if o == nil {
+	if o == nil || o.store == nil {
 		return nil, fmt.Errorf("orchestrator not initialized")
 	}
 	result := &CampaignRestartResult{
@@ -883,7 +1056,20 @@ func (o *CampaignOrchestrator) attachControlChannel(ctx context.Context, campaig
 	}
 	controlAware, ok := service.(domainservices.ControlAwarePhase)
 	if !ok {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Debug(ctx, "phase.control.attach.skip", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"reason":      "service_not_control_aware",
+			})
+		}
 		return
+	}
+	if o.deps.Logger != nil {
+		o.deps.Logger.Debug(ctx, "phase.control.attach.attempt", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+		})
 	}
 	signalCh, err := o.control.Subscribe(ctx, campaignID, phase)
 	if err != nil {
@@ -896,7 +1082,19 @@ func (o *CampaignOrchestrator) attachControlChannel(ctx context.Context, campaig
 		}
 		return
 	}
+	if o.deps.Logger != nil {
+		o.deps.Logger.Debug(ctx, "phase.control.subscription.established", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+		})
+	}
 	controlAware.AttachControlChannel(ctx, campaignID, phase, signalCh)
+	if o.deps.Logger != nil {
+		o.deps.Logger.Debug(ctx, "phase.control.attach.completed", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+		})
+	}
 }
 
 func (o *CampaignOrchestrator) broadcastControlSignal(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, signal domainservices.ControlSignal, ack chan<- error) error {
@@ -942,6 +1140,12 @@ func (o *CampaignOrchestrator) closeControlChannel(campaignID uuid.UUID, phase m
 	if o == nil || o.control == nil {
 		return
 	}
+	if o.deps.Logger != nil {
+		o.deps.Logger.Debug(context.Background(), "phase.control.subscription.closed", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+		})
+	}
 	o.control.Close(campaignID, phase)
 }
 
@@ -985,11 +1189,15 @@ func decodePhaseConfiguration(phase models.PhaseTypeEnum, payload []byte) (inter
 
 // monitorPhaseProgress monitors the progress of a phase execution
 func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, progressCh <-chan domainservices.PhaseProgress) {
+	exitReason := "unknown"
 	defer func() {
-		o.deps.Logger.Debug(ctx, "Phase progress monitoring ended", map[string]interface{}{
-			"campaign_id": campaignID,
-			"phase":       phase,
-		})
+		if o.deps.Logger != nil {
+			o.deps.Logger.Debug(ctx, "Phase progress monitoring ended", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"reason":      exitReason,
+			})
+		}
 	}()
 
 	defer o.closeControlChannel(campaignID, phase)
@@ -1008,14 +1216,17 @@ func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaig
 	for {
 		select {
 		case <-ctx.Done():
+			exitReason = fmt.Sprintf("context_done:%v", ctx.Err())
 			return
 		case progress, ok := <-progressCh:
 			if !ok {
+				exitReason = "progress_channel_closed"
 				// Channel closed, phase execution completed
 				o.handlePhaseCompletion(ctx, campaignID, phase)
 				return
 			}
 
+			exitReason = "running"
 			// Update campaign execution with progress
 			o.updateCampaignProgress(campaignID, phase, progress)
 

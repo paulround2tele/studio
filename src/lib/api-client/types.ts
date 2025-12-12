@@ -1552,6 +1552,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/{campaignId}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stop the currently running campaign phase
+         * @description Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+         */
+        post: operations["campaigns_stop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/{campaignId}/restart": {
         parameters: {
             query?: never;
@@ -3224,6 +3244,17 @@ export interface components {
             campaignId: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        /** @description Summary payload returned after stopping the active campaign phase. */
+        CampaignStopResponse: {
+            /** Format: uuid */
+            campaignId: string;
+            stoppedPhase: components["schemas"]["CampaignPhaseEnum"];
+            phaseStatus: components["schemas"]["PhaseStatusResponse"];
+            /** @description Human-readable explanation of the stop outcome. */
+            message: string;
+            /** Format: date-time */
+            timestamp?: string;
         };
         /**
          * @description Campaign phases eligible for manual restart controls (discovery executes offline and is excluded)
@@ -7174,6 +7205,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PhaseStatusResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_stop: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign stop acknowledged */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignStopResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];

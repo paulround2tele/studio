@@ -76,7 +76,11 @@ const resolveSseBasePath = (): string => {
   if (isAbsolute) {
     try {
       const parsed = new URL(trimmed);
+      const windowOrigin = `${window.location.protocol}//${window.location.host}`;
       const isMixedContent = window.location.protocol === 'https:' && parsed.protocol === 'http:';
+      const sameOrigin = parsed.origin === windowOrigin;
+      const isLocalDevHost = ['localhost', '127.0.0.1'].includes(window.location.hostname) || window.location.hostname.endsWith('.app.github.dev');
+
       if (isMixedContent) {
         const backendOrigin = inferBackendOrigin();
         if (backendOrigin) {
@@ -84,6 +88,11 @@ const resolveSseBasePath = (): string => {
         }
         const secureOrigin = `https://${parsed.host}`;
         return joinUrl(secureOrigin, parsed.pathname).replace(/\/$/, '');
+      }
+
+      // In local dev we prefer same-origin SSE to avoid CORS/credential headaches.
+      if (!sameOrigin && isLocalDevHost) {
+        return joinUrl(windowOrigin, parsed.pathname).replace(/\/$/, '');
       }
     } catch (error) {
       console.warn('Failed to normalize SSE base path, falling back to resolved value', error);
@@ -330,6 +339,9 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
   useEffect(() => {
     const resolved = resolveSseBasePath();
+    if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+      console.log('[useCampaignSSE] resolved SSE base path', resolved);
+    }
     setSseBasePath(prev => (prev === resolved ? prev : resolved));
   }, []);
 
@@ -341,6 +353,15 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
       ? buildSseUrl(`/sse/campaigns/${campaignId}/events`)
       : buildSseUrl('/sse/events')
     : null;
+
+  if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+    console.log('[useCampaignSSE] configuration', {
+      campaignId,
+      autoConnect,
+      sseBasePath,
+      sseUrl,
+    });
+  }
 
   // Event handler for all SSE events
   const handleSSEEvent = useCallback((event: SSEEvent) => {

@@ -42,6 +42,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsStateGet**](#campaignsstateget) | **GET** /campaigns/{campaignId}/state | Get campaign state|
 |[**campaignsStatePut**](#campaignsstateput) | **PUT** /campaigns/{campaignId}/state | Update campaign state|
 |[**campaignsStatusGet**](#campaignsstatusget) | **GET** /campaigns/{campaignId}/status | Get consolidated campaign phase statuses|
+|[**campaignsStop**](#campaignsstop) | **POST** /campaigns/{campaignId}/stop | Stop the currently running campaign phase|
 |[**campaignsUpdate**](#campaignsupdate) | **PUT** /campaigns/{campaignId} | Update campaign|
 |[**cancelBulkOperation**](#cancelbulkoperation) | **POST** /campaigns/bulk/operations/{operationId}/cancel | Cancel a bulk operation|
 |[**getBulkOperationStatus**](#getbulkoperationstatus) | **GET** /campaigns/bulk/operations/{operationId}/status | Get bulk operation status|
@@ -2156,6 +2157,61 @@ const { status, data } = await apiInstance.campaignsStatusGet(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | OK |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsStop**
+> CampaignStopResponse campaignsStop()
+
+Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsStop(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignStopResponse**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Campaign stop acknowledged |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
 

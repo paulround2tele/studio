@@ -551,25 +551,44 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 	execution.itemsTotal = effectiveTotal
 	s.mu.Unlock()
 
+	stopRequested := false
 	for processedCount < config.NumDomains {
 		if s.processPendingControlSignals(ctx, execution) {
-			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, domainStopMessage)
+			if s.isStopRequested(execution) {
+				stopRequested = true
+				break
+			}
 			return
 		}
+
 		s.waitWhilePaused(execution)
+		if s.isStopRequested(execution) {
+			stopRequested = true
+			break
+		}
+
 		select {
 		case <-ctx.Done():
 			if s.isStopRequested(execution) {
-				s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, domainStopMessage)
-			} else {
-				s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Execution cancelled by caller context")
+				stopRequested = true
+				break
 			}
+			s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Execution cancelled by caller context")
 			return
 		default:
 		}
+
 		if s.processPendingControlSignals(ctx, execution) {
-			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, domainStopMessage)
+			if s.isStopRequested(execution) {
+				stopRequested = true
+				break
+			}
 			return
+		}
+
+		if s.isStopRequested(execution) {
+			stopRequested = true
+			break
 		}
 
 		// Calculate batch size for this iteration
@@ -606,7 +625,7 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 		if s.cache != nil {
 			cacheKey := fmt.Sprintf("domain_generation_progress_%s", campaignID)
 			cacheValue := fmt.Sprintf("processed:%d,total:%d", processedCount, config.NumDomains)
-			s.cache.Set(ctx, cacheKey, cacheValue, 0) // No TTL for progress
+			s.cache.Set(ctx, cacheKey, cacheValue, 0)
 		}
 
 		s.mu.Lock()
@@ -640,10 +659,12 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 		select {
 		case execution.progressCh <- progress:
 		case <-ctx.Done():
+			if s.isStopRequested(execution) {
+				stopRequested = true
+			}
 			return
 		}
 
-		// Publish progress event (guard EventBus)
 		if s.deps.EventBus != nil {
 			if err := s.deps.EventBus.PublishProgress(ctx, progress); err != nil {
 				if s.deps.Logger != nil {
@@ -654,6 +675,23 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 				}
 			}
 		}
+
+		if s.isStopRequested(execution) {
+			stopRequested = true
+			break
+		}
+	}
+
+	if stopRequested {
+		s.emitStopProgress(ctx, execution)
+		s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, domainStopMessage)
+		if s.deps.Logger != nil {
+			s.deps.Logger.Info(ctx, "Domain generation stopped", map[string]interface{}{
+				"campaign_id":       campaignID,
+				"domains_generated": processedCount,
+			})
+		}
+		return
 	}
 
 	// Emit a terminal progress update before we transition to completed status so listeners
@@ -795,8 +833,9 @@ func (s *domainGenerationService) Cancel(ctx context.Context, campaignID uuid.UU
 		execution.pauseCond = sync.NewCond(&execution.pauseMu)
 	}
 	execution.stopRequested = true
+	hasControlChannel := execution.controlCh != nil
 	s.mu.Unlock()
-	s.requestStop(execution)
+	s.requestStop(execution, !hasControlChannel)
 
 	s.deps.Logger.Info(ctx, "Domain generation cancelled", map[string]interface{}{
 		"campaign_id": campaignID,
@@ -817,13 +856,53 @@ func (s *domainGenerationService) Capabilities() PhaseControlCapabilities {
 
 // AttachControlChannel wires the orchestrator control bus into domain generation execution.
 func (s *domainGenerationService) AttachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, commands <-chan ControlCommand) {
-	if phase != models.PhaseTypeDomainGeneration || commands == nil {
+	if phase != models.PhaseTypeDomainGeneration {
+		if s.deps.Logger != nil {
+			s.deps.Logger.Debug(ctx, "domain_generation.control.attach.skipped", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"reason":      "phase_mismatch",
+			})
+		}
+		return
+	}
+	if commands == nil {
+		if s.deps.Logger != nil {
+			s.deps.Logger.Warn(ctx, "domain_generation.control.attach.skipped", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"reason":      "nil_commands",
+			})
+		}
 		return
 	}
 	controlCtx, cancel := context.WithCancel(context.Background())
 	downstream := make(chan ControlCommand, domainControlBuffer)
 	token := s.registerControlWatcher(campaignID, cancel, downstream)
-	go s.consumeControlSignals(controlCtx, campaignID, token, commands, downstream)
+	if s.deps.Logger != nil {
+		s.deps.Logger.Debug(ctx, "domain_generation.control.attach.registered", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+			"token":       token,
+		})
+	}
+	go func() {
+		if s.deps.Logger != nil {
+			s.deps.Logger.Debug(ctx, "domain_generation.control.consumer.started", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"token":       token,
+			})
+		}
+		s.consumeControlSignals(controlCtx, campaignID, token, commands, downstream)
+		if s.deps.Logger != nil {
+			s.deps.Logger.Debug(ctx, "domain_generation.control.consumer.stopped", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"token":       token,
+			})
+		}
+	}()
 }
 
 func (s *domainGenerationService) registerControlWatcher(campaignID uuid.UUID, cancel context.CancelFunc, downstream chan ControlCommand) uint64 {
@@ -920,8 +999,11 @@ func (s *domainGenerationService) ackControl(cmd ControlCommand, err error) {
 }
 
 func (s *domainGenerationService) processPendingControlSignals(ctx context.Context, execution *domainExecution) bool {
-	if execution == nil || execution.controlCh == nil {
+	if execution == nil {
 		return false
+	}
+	if execution.controlCh == nil {
+		return s.isStopRequested(execution)
 	}
 	for {
 		select {
@@ -933,7 +1015,7 @@ func (s *domainGenerationService) processPendingControlSignals(ctx context.Conte
 				return true
 			}
 		default:
-			return false
+			return s.isStopRequested(execution)
 		}
 	}
 }
@@ -990,8 +1072,7 @@ func (s *domainGenerationService) handleControlCommand(ctx context.Context, exec
 		s.mu.Lock()
 		execution.stopRequested = true
 		s.mu.Unlock()
-		s.requestStop(execution)
-		s.updateExecutionStatus(execution.campaignID, models.PhaseStatusFailed, domainStopMessage)
+		s.requestStop(execution, false)
 		if s.deps.Logger != nil {
 			s.deps.Logger.Info(ctx, "domain_generation.stop", map[string]interface{}{
 				"campaign_id": execution.campaignID,
@@ -1042,8 +1123,13 @@ func (s *domainGenerationService) awaitResume(ctx context.Context, execution *do
 				s.mu.Lock()
 				execution.stopRequested = true
 				s.mu.Unlock()
-				s.requestStop(execution)
-				s.updateExecutionStatus(execution.campaignID, models.PhaseStatusFailed, domainStopMessage)
+				s.requestStop(execution, false)
+				if s.deps.Logger != nil {
+					s.deps.Logger.Info(ctx, "domain_generation.stop", map[string]interface{}{
+						"campaign_id": execution.campaignID,
+						"signal":      cmd.Signal,
+					})
+				}
 				s.ackControl(cmd, nil)
 				return true
 			case ControlSignalPause:
@@ -1055,7 +1141,7 @@ func (s *domainGenerationService) awaitResume(ctx context.Context, execution *do
 	}
 }
 
-func (s *domainGenerationService) requestStop(execution *domainExecution) {
+func (s *domainGenerationService) requestStop(execution *domainExecution, cancelContext bool) {
 	if execution == nil {
 		return
 	}
@@ -1065,11 +1151,13 @@ func (s *domainGenerationService) requestStop(execution *domainExecution) {
 		execution.pauseCond.Broadcast()
 	}
 	execution.pauseMu.Unlock()
-	execution.cancelOnce.Do(func() {
-		if execution.cancelFunc != nil {
-			execution.cancelFunc()
-		}
-	})
+	if cancelContext {
+		execution.cancelOnce.Do(func() {
+			if execution.cancelFunc != nil {
+				execution.cancelFunc()
+			}
+		})
+	}
 }
 
 func (s *domainGenerationService) isStopRequested(execution *domainExecution) bool {
@@ -1426,6 +1514,40 @@ func safeWriteContext(ctx context.Context) context.Context {
 		return context.Background()
 	}
 	return context.WithoutCancel(ctx)
+}
+
+func (s *domainGenerationService) emitStopProgress(ctx context.Context, execution *domainExecution) {
+	if execution == nil {
+		return
+	}
+	progressPct := 0.0
+	if execution.itemsTotal > 0 {
+		progressPct = float64(execution.itemsProcessed) / float64(execution.itemsTotal) * 100
+	}
+	progress := PhaseProgress{
+		CampaignID:     execution.campaignID,
+		Phase:          models.PhaseTypeDomainGeneration,
+		Status:         models.PhaseStatusFailed,
+		ProgressPct:    progressPct,
+		ItemsTotal:     execution.itemsTotal,
+		ItemsProcessed: execution.itemsProcessed,
+		Message:        domainStopMessage,
+		Timestamp:      time.Now(),
+	}
+	select {
+	case execution.progressCh <- progress:
+	default:
+	}
+	if s.deps.EventBus != nil {
+		if err := s.deps.EventBus.PublishProgress(ctx, progress); err != nil {
+			if s.deps.Logger != nil {
+				s.deps.Logger.Warn(ctx, "Failed to publish stop progress event", map[string]interface{}{
+					"campaign_id": execution.campaignID,
+					"error":       err.Error(),
+				})
+			}
+		}
+	}
 }
 
 // storeGeneratedDomainsWithExec persists domains using the provided Querier (e.g., within a transaction)

@@ -16,20 +16,30 @@ curl -fsS "$BASE_URL/health" | jq -r '.status // .success // .ok' || true
 echo "[2/10] Login..." >&2
 curl -fsS -c "$COOKIE_JAR" -H 'Content-Type: application/json' \
   -d "$(jq -nc --arg e "$USER_EMAIL" --arg p "$USER_PASSWORD" '{email:$e, password:$p}')" \
-  "$BASE_URL/auth/login" | jq -r '.data.sessionId // .data.session // .success'
+  "$BASE_URL/auth/login" | jq -r '.data.sessionId // .data.session // .success // .token // .id'
 
 echo "[3/10] Me..." >&2
 curl -fsS -b "$COOKIE_JAR" "$BASE_URL/auth/me" | jq '.'
 
 echo "[4/10] Create campaign..." >&2
 CREATE_PAYLOAD=$(jq -nc '{name:"SmokeTest"}')
+DISCOVERY_CONFIG=${DISCOVERY_CONFIG:-$(jq -nc '{
+  configuration: {
+    patternType:"prefix_variable",
+    prefixVariableLength:4,
+    characterSet:"abcdnrst",
+    tlds:[".com"],
+    numDomainsToGenerate:64,
+    batchSize:32
+  }
+}')}
 CAMPAIGN_ID=$(curl -fsS -b "$COOKIE_JAR" -H 'Content-Type: application/json' \
-  -d "$CREATE_PAYLOAD" "$BASE_URL/campaigns" | jq -r '.data.id')
+  -d "$CREATE_PAYLOAD" "$BASE_URL/campaigns" | jq -r '.data.id // .id // empty')
 echo "Created campaign: $CAMPAIGN_ID" >&2
 
 echo "[5/10] Configure discovery phase..." >&2
 curl -fsS -b "$COOKIE_JAR" -H 'Content-Type: application/json' \
-  -d "{}" "$BASE_URL/campaigns/$CAMPAIGN_ID/phases/discovery/configure" | jq '.'
+  -d "$DISCOVERY_CONFIG" "$BASE_URL/campaigns/$CAMPAIGN_ID/phases/discovery/configure" | jq '.'
 
 echo "[6/10] Start discovery phase..." >&2
 curl -fsS -b "$COOKIE_JAR" -H 'Content-Type: application/json' \

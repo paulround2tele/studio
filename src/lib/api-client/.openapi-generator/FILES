@@ -124,6 +124,7 @@ docs/CampaignState.md
 docs/CampaignStateEnum.md
 docs/CampaignStateUpdate.md
 docs/CampaignStateWithExecutions.md
+docs/CampaignStopResponse.md
 docs/CampaignsApi.md
 docs/CampaignsBulkOperationsList200ResponseInner.md
 docs/CampaignsModeUpdateRequest.md
@@ -371,6 +372,7 @@ models/campaign-state-enum.ts
 models/campaign-state-update.ts
 models/campaign-state-with-executions.ts
 models/campaign-state.ts
+models/campaign-stop-response.ts
 models/campaigns-bulk-operations-list200-response-inner.ts
 models/campaigns-mode-update-request.ts
 models/campaigns-phase-configs-list200-response.ts

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -124,7 +125,25 @@ func (s *extractionPhaseService) AttachControlChannel(ctx context.Context, campa
 }
 
 func (s *extractionPhaseService) runExtraction(ctx context.Context, campaignID uuid.UUID, progressCh chan<- PhaseProgress) {
-	defer close(progressCh)
+	var (
+		progressWG   sync.WaitGroup
+		stopProgress chan struct{}
+	)
+	if s.batchSvc != nil {
+		stopProgress = make(chan struct{})
+		progressWG.Add(1)
+		go func() {
+			defer progressWG.Done()
+			s.streamRuntimeProgress(ctx, campaignID, progressCh, stopProgress)
+		}()
+	}
+	defer func() {
+		if stopProgress != nil {
+			close(stopProgress)
+			progressWG.Wait()
+		}
+		close(progressCh)
+	}()
 
 	s.emitProgress(progressCh, campaignID, models.PhaseStatusInProgress, 0, 0, "extraction started", "")
 	s.persistPhaseStart(ctx, campaignID)
@@ -157,6 +176,97 @@ func (s *extractionPhaseService) runExtraction(ctx context.Context, campaignID u
 
 	s.persistPhaseCompletion(ctx, campaignID)
 	s.emitProgress(progressCh, campaignID, models.PhaseStatusCompleted, total, processed, message, "")
+}
+
+func (s *extractionPhaseService) streamRuntimeProgress(ctx context.Context, campaignID uuid.UUID, progressCh chan<- PhaseProgress, stop <-chan struct{}) {
+	if s.batchSvc == nil {
+		return
+	}
+	if snap, ok := s.snapshotBatchExecution(campaignID); ok {
+		progress := snap.AsPhaseProgress(campaignID, models.PhaseTypeExtraction)
+		select {
+		case progressCh <- progress:
+		default:
+		}
+	}
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+	var (
+		last     PhaseExecutionSnapshot
+		haveLast bool
+	)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-stop:
+			return
+		case <-ticker.C:
+			snap, ok := s.snapshotBatchExecution(campaignID)
+			if !ok {
+				continue
+			}
+			if haveLast && snap.Equal(last) {
+				continue
+			}
+			haveLast = true
+			last = snap
+			progress := snap.AsPhaseProgress(campaignID, models.PhaseTypeExtraction)
+			select {
+			case progressCh <- progress:
+			default:
+			}
+		}
+	}
+}
+
+func (s *extractionPhaseService) snapshotBatchExecution(campaignID uuid.UUID) (PhaseExecutionSnapshot, bool) {
+	if s.batchSvc == nil {
+		return PhaseExecutionSnapshot{}, false
+	}
+	s.batchSvc.mu.RLock()
+	exec, ok := s.batchSvc.executions[campaignID]
+	if !ok || exec == nil {
+		s.batchSvc.mu.RUnlock()
+		return PhaseExecutionSnapshot{}, false
+	}
+	status := exec.Status
+	itemsTotal := int64(exec.ItemsTotal)
+	itemsProcessed := int64(exec.ItemsProcessed)
+	progress := exec.Progress
+	lastErr := exec.LastError
+	s.batchSvc.mu.RUnlock()
+
+	snap := PhaseExecutionSnapshot{
+		Status:         status,
+		ItemsTotal:     itemsTotal,
+		ItemsProcessed: itemsProcessed,
+		ProgressPct:    progress,
+		Message:        s.describeBatchExecution(status, itemsProcessed, itemsTotal, lastErr),
+		Error:          lastErr,
+	}
+	return snap, true
+}
+
+func (s *extractionPhaseService) describeBatchExecution(status models.PhaseStatusEnum, processed, total int64, lastErr string) string {
+	switch status {
+	case models.PhaseStatusPaused:
+		return "extraction paused"
+	case models.PhaseStatusInProgress:
+		if total > 0 {
+			return fmt.Sprintf("processing %d/%d domains", processed, total)
+		}
+		return "processing domains"
+	case models.PhaseStatusFailed:
+		if lastErr != "" {
+			return lastErr
+		}
+		return "extraction failed"
+	case models.PhaseStatusCompleted:
+		return "extraction completed"
+	default:
+		return ""
+	}
 }
 
 func (s *extractionPhaseService) emitProgress(ch chan<- PhaseProgress, campaignID uuid.UUID, status models.PhaseStatusEnum, total, processed int64, msg, errMsg string) {

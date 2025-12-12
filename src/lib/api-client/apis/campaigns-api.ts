@@ -70,6 +70,8 @@ import type { CampaignStateUpdate } from '../models';
 // @ts-ignore
 import type { CampaignStateWithExecutions } from '../models';
 // @ts-ignore
+import type { CampaignStopResponse } from '../models';
+// @ts-ignore
 import type { CampaignsBulkOperationsList200ResponseInner } from '../models';
 // @ts-ignore
 import type { CampaignsModeUpdateRequest } from '../models';
@@ -1782,6 +1784,46 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
+         * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+         * @summary Stop the currently running campaign phase
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsStop: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsStop', 'campaignId', campaignId)
+            const localVarPath = `/campaigns/{campaignId}/stop`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+
+            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
+            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
+            const localVarQueryParameter: Record<string, unknown> = {};
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
+            if (baseOptions.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            
+            if (options.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            localVarRequestOptions.headers = headerParams.toJSON();
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * 
          * @summary Update campaign
          * @param {string} campaignId 
@@ -2480,6 +2522,19 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+         * @summary Stop the currently running campaign phase
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsStop(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignStopResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsStop(campaignId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsStop']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * 
          * @summary Update campaign
          * @param {string} campaignId 
@@ -2951,6 +3006,16 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.campaignsStatusGet(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
+         * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+         * @summary Stop the currently running campaign phase
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsStop(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignStopResponse> {
+            return localVarFp.campaignsStop(campaignId, options).then((request) => request(axios, basePath));
+        },
+        /**
          * 
          * @summary Update campaign
          * @param {string} campaignId 
@@ -3407,6 +3472,16 @@ export interface CampaignsApiInterface {
      * @memberof CampaignsApiInterface
      */
     campaignsStatusGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignPhasesStatusResponse>;
+
+    /**
+     * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+     * @summary Stop the currently running campaign phase
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsStop(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignStopResponse>;
 
     /**
      * 
@@ -3940,6 +4015,18 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      */
     public campaignsStatusGet(campaignId: string, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).campaignsStatusGet(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+     * @summary Stop the currently running campaign phase
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsStop(campaignId: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsStop(campaignId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

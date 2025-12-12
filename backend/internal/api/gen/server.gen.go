@@ -1392,6 +1392,19 @@ type CampaignStateWithExecutions struct {
 	PhaseExecutions []PhaseExecution `json:"phaseExecutions"`
 }
 
+// CampaignStopResponse Summary payload returned after stopping the active campaign phase.
+type CampaignStopResponse struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+
+	// Message Human-readable explanation of the stop outcome.
+	Message     string              `json:"message"`
+	PhaseStatus PhaseStatusResponse `json:"phaseStatus"`
+
+	// StoppedPhase Canonical campaign phase identifier
+	StoppedPhase CampaignPhaseEnum `json:"stoppedPhase"`
+	Timestamp    *time.Time        `json:"timestamp,omitempty"`
+}
+
 // CreateCampaignRequest defines model for CreateCampaignRequest.
 type CreateCampaignRequest struct {
 	// Configuration Campaign configuration settings
@@ -3664,6 +3677,9 @@ type ServerInterface interface {
 	// Get consolidated campaign phase statuses
 	// (GET /campaigns/{campaignId}/status)
 	CampaignsStatusGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Stop the currently running campaign phase
+	// (POST /campaigns/{campaignId}/stop)
+	CampaignsStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Get authentication configuration
 	// (GET /config/auth)
 	ConfigGetAuthentication(w http.ResponseWriter, r *http.Request)
@@ -4228,6 +4244,12 @@ func (_ Unimplemented) CampaignsStatePut(w http.ResponseWriter, r *http.Request,
 // Get consolidated campaign phase statuses
 // (GET /campaigns/{campaignId}/status)
 func (_ Unimplemented) CampaignsStatusGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Stop the currently running campaign phase
+// (POST /campaigns/{campaignId}/stop)
+func (_ Unimplemented) CampaignsStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6354,6 +6376,37 @@ func (siw *ServerInterfaceWrapper) CampaignsStatusGet(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CampaignsStatusGet(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsStop operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsStop(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsStop(w, r, campaignId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -9047,6 +9100,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/status", wrapper.CampaignsStatusGet)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/campaigns/{campaignId}/stop", wrapper.CampaignsStop)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/config/auth", wrapper.ConfigGetAuthentication)
@@ -11786,6 +11842,61 @@ type CampaignsStatusGet500JSONResponse struct {
 }
 
 func (response CampaignsStatusGet500JSONResponse) VisitCampaignsStatusGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStopRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+}
+
+type CampaignsStopResponseObject interface {
+	VisitCampaignsStopResponse(w http.ResponseWriter) error
+}
+
+type CampaignsStop200JSONResponse CampaignStopResponse
+
+func (response CampaignsStop200JSONResponse) VisitCampaignsStopResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStop400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CampaignsStop400JSONResponse) VisitCampaignsStopResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStop401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsStop401JSONResponse) VisitCampaignsStopResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStop404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsStop404JSONResponse) VisitCampaignsStopResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStop500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsStop500JSONResponse) VisitCampaignsStopResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -17075,6 +17186,9 @@ type StrictServerInterface interface {
 	// Get consolidated campaign phase statuses
 	// (GET /campaigns/{campaignId}/status)
 	CampaignsStatusGet(ctx context.Context, request CampaignsStatusGetRequestObject) (CampaignsStatusGetResponseObject, error)
+	// Stop the currently running campaign phase
+	// (POST /campaigns/{campaignId}/stop)
+	CampaignsStop(ctx context.Context, request CampaignsStopRequestObject) (CampaignsStopResponseObject, error)
 	// Get authentication configuration
 	// (GET /config/auth)
 	ConfigGetAuthentication(ctx context.Context, request ConfigGetAuthenticationRequestObject) (ConfigGetAuthenticationResponseObject, error)
@@ -18736,6 +18850,32 @@ func (sh *strictHandler) CampaignsStatusGet(w http.ResponseWriter, r *http.Reque
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CampaignsStatusGetResponseObject); ok {
 		if err := validResponse.VisitCampaignsStatusGetResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsStop operation middleware
+func (sh *strictHandler) CampaignsStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsStopRequestObject
+
+	request.CampaignId = campaignId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsStop(ctx, request.(CampaignsStopRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsStop")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsStopResponseObject); ok {
+		if err := validResponse.VisitCampaignsStopResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -9,7 +9,7 @@ import { useRTKCampaignsList } from "@/providers/RTKCampaignDataProvider";
 import type { CampaignLite } from "@/providers/RTKCampaignDataProvider";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { usePausePhaseStandaloneMutation, useStopPhaseStandaloneMutation } from "@/store/api/campaignApi";
+import { useGetPhaseStatusStandaloneQuery, usePausePhaseStandaloneMutation, useStopCampaignMutation } from "@/store/api/campaignApi";
 import type { CampaignPhaseEnum } from "@/lib/api-client/models/campaign-phase-enum";
 import type { ApiPhase } from "@/lib/utils/phaseNames";
 
@@ -46,13 +46,6 @@ const STATUS_VARIANTS: Record<CampaignStatus, "default" | "secondary" | "destruc
 
 const formatLabel = (value: string) => value.replace(/_/g, ' ').replace(/(^|\s)([a-z])/g, (_, space, letter) => `${space}${letter.toUpperCase()}`);
 
-const getActionablePhase = (phase: CampaignCardView['currentPhase']): CampaignPhase | null => {
-  if (!phase || phase === 'discovery') {
-    return null;
-  }
-  return phase;
-};
-
 const getMutationErrorMessage = (error: unknown): string => {
   if (!error) {
     return 'Unable to complete the request. Please try again.';
@@ -78,12 +71,86 @@ const getMutationErrorMessage = (error: unknown): string => {
   return 'Unable to complete the request. Please try again.';
 };
 
+interface CampaignControlButtonsProps {
+  campaign: CampaignCardView;
+  isMutating: boolean;
+  activeAction: { type: 'pause' | 'stop'; campaignId: string } | null;
+  onPause: (campaign: CampaignCardView) => Promise<void> | void;
+  onStop: (campaign: CampaignCardView) => Promise<void> | void;
+  isPausing: boolean;
+  isStopping: boolean;
+}
+
+function CampaignControlButtons({
+  campaign,
+  isMutating,
+  activeAction,
+  onPause,
+  onStop,
+  isPausing,
+  isStopping,
+}: CampaignControlButtonsProps) {
+  const phaseKey = campaign.currentPhase;
+  const shouldFetchControls = Boolean(campaign.campaignId && phaseKey);
+  const {
+    data: phaseStatus,
+    isLoading: isControlStatusLoading,
+    isFetching: isControlStatusFetching,
+  } = useGetPhaseStatusStandaloneQuery(
+    { campaignId: campaign.campaignId, phase: phaseKey as CampaignPhaseEnum },
+    { skip: !shouldFetchControls }
+  );
+  const runtimeControls = phaseStatus?.runtimeControls;
+  const controlStatusBusy = isControlStatusLoading || isControlStatusFetching;
+  const canPause = Boolean(runtimeControls?.canPause);
+  const canStop = Boolean(runtimeControls?.canStop);
+  const disablePause = controlStatusBusy || !canPause || isMutating;
+  const disableStop = controlStatusBusy || !canStop || isMutating;
+  const isPauseInFlight = Boolean(isPausing && activeAction?.type === 'pause' && activeAction.campaignId === campaign.campaignId);
+  const isStopInFlight = Boolean(isStopping && activeAction?.type === 'stop' && activeAction.campaignId === campaign.campaignId);
+
+  return (
+    <>
+      <Button
+        variant="secondary"
+        size="sm"
+        disabled={disablePause}
+        onClick={() => onPause(campaign)}
+        title={controlStatusBusy ? 'Checking runtime controls…' : (!canPause ? 'Pause not available for the current phase.' : undefined)}
+        data-testid="campaign-card-pause"
+      >
+        {isPauseInFlight ? (
+          <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <PauseCircle className="mr-1 h-3.5 w-3.5" />
+        )}
+        Pause Phase
+      </Button>
+      <Button
+        variant="destructive"
+        size="sm"
+        disabled={disableStop}
+        onClick={() => onStop(campaign)}
+        title={controlStatusBusy ? 'Checking runtime controls…' : (!canStop ? 'Stop not available for the current phase.' : undefined)}
+        data-testid="campaign-card-stop"
+      >
+        {isStopInFlight ? (
+          <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Octagon className="mr-1 h-3.5 w-3.5" />
+        )}
+        Stop Campaign
+      </Button>
+    </>
+  );
+}
+
 export default function CampaignsPage() {
   const { toast } = useToast();
   const router = useRouter();
   const { campaigns: enrichedCampaigns, loading, error, refetch } = useRTKCampaignsList();
   const [pausePhase, { isLoading: isPausing }] = usePausePhaseStandaloneMutation();
-  const [stopPhase, { isLoading: isStopping }] = useStopPhaseStandaloneMutation();
+  const [stopCampaign, { isLoading: isStoppingCampaign }] = useStopCampaignMutation();
   const [activeAction, setActiveAction] = useState<{ type: 'pause' | 'stop'; campaignId: string } | null>(null);
   const campaigns: CampaignCardView[] = useMemo(() => {
     return enrichedCampaigns.map((campaign: CampaignLite): CampaignCardView => {
@@ -105,21 +172,13 @@ export default function CampaignsPage() {
     });
   }, [enrichedCampaigns]);
   const fetchCampaigns = refetch;
-  const isMutating = isPausing || isStopping;
+  const isMutating = isPausing || isStoppingCampaign;
 
   const handlePauseCampaign = async (campaign: CampaignCardView) => {
-    const phase = getActionablePhase(campaign.currentPhase);
-    if (!phase) {
-      toast({
-        title: 'Pause unavailable',
-        description: 'Discovery runs offline and cannot be paused.',
-        variant: 'destructive'
-      });
-      return;
-    }
+    const phase = (campaign.currentPhase ?? 'discovery') as CampaignPhaseEnum;
     setActiveAction({ type: 'pause', campaignId: campaign.campaignId });
     try {
-      await pausePhase({ campaignId: campaign.campaignId, phase: phase as CampaignPhaseEnum }).unwrap();
+      await pausePhase({ campaignId: campaign.campaignId, phase }).unwrap();
       toast({
         title: `${campaign.name} pause requested`,
         description: `${formatLabel(PHASE_LABELS[phase] ?? phase)} phase will pause shortly.`
@@ -137,21 +196,12 @@ export default function CampaignsPage() {
   };
 
   const handleStopCampaign = async (campaign: CampaignCardView) => {
-    const phase = getActionablePhase(campaign.currentPhase);
-    if (!phase) {
-      toast({
-        title: 'Stop unavailable',
-        description: 'Discovery runs offline and cannot be stopped.',
-        variant: 'destructive'
-      });
-      return;
-    }
     setActiveAction({ type: 'stop', campaignId: campaign.campaignId });
     try {
-      await stopPhase({ campaignId: campaign.campaignId, phase: phase as CampaignPhaseEnum }).unwrap();
+      await stopCampaign(campaign.campaignId).unwrap();
       toast({
         title: `${campaign.name} stop requested`,
-        description: `${formatLabel(PHASE_LABELS[phase] ?? phase)} phase will wind down safely.`
+        description: 'Active campaign phases will wind down safely.'
       });
       fetchCampaigns();
     } catch (err) {
@@ -296,48 +346,15 @@ export default function CampaignsPage() {
                     {getBulkDataSummary(campaign) || 'No data available'}
                   </div>
                   <div className="flex flex-wrap gap-2 justify-end" data-testid="campaign-card-actions">
-                    {(() => {
-                      const actionablePhase = getActionablePhase(campaign.currentPhase);
-                      const isTerminal = campaign.status === 'completed' || campaign.status === 'cancelled';
-                      const canPause = actionablePhase !== null && campaign.status === 'running';
-                      const canStop = actionablePhase !== null && !isTerminal;
-                      const isPauseInFlight = Boolean(isPausing && activeAction?.type === 'pause' && activeAction.campaignId === campaign.campaignId);
-                      const isStopInFlight = Boolean(isStopping && activeAction?.type === 'stop' && activeAction.campaignId === campaign.campaignId);
-                      return (
-                        <>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            disabled={!canPause || isMutating}
-                            onClick={() => handlePauseCampaign(campaign)}
-                            title={!canPause ? 'Pause is only available for running validation, extraction, or analysis phases.' : undefined}
-                            data-testid="campaign-card-pause"
-                          >
-                            {isPauseInFlight ? (
-                              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <PauseCircle className="mr-1 h-3.5 w-3.5" />
-                            )}
-                            Pause Campaign
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            disabled={!canStop || isMutating}
-                            onClick={() => handleStopCampaign(campaign)}
-                            title={!canStop ? 'Stop is available once a phase beyond discovery is active.' : undefined}
-                            data-testid="campaign-card-stop"
-                          >
-                            {isStopInFlight ? (
-                              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Octagon className="mr-1 h-3.5 w-3.5" />
-                            )}
-                            Stop Campaign
-                          </Button>
-                        </>
-                      );
-                    })()}
+                    <CampaignControlButtons
+                      campaign={campaign}
+                      isMutating={isMutating}
+                      activeAction={activeAction}
+                      onPause={handlePauseCampaign}
+                      onStop={handleStopCampaign}
+                      isPausing={isPausing}
+                      isStopping={isStoppingCampaign}
+                    />
                     <Button
                       variant="outline"
                       size="sm"

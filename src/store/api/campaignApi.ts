@@ -30,6 +30,7 @@ import type { CampaignsModeUpdateRequest } from '@/lib/api-client/models/campaig
 import type { CampaignModeUpdateResponse } from '@/lib/api-client/models/campaign-mode-update-response';
 import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campaign-phases-status-response';
 import type { CampaignRestartResponse } from '@/lib/api-client/models/campaign-restart-response';
+import type { CampaignStopResponse } from '@/lib/api-client/models/campaign-stop-response';
 
 // Helper for axios/fetch hybrid responses (no any)
 const unwrap = <T>(resp: { data?: T } | T): T | undefined => {
@@ -503,6 +504,26 @@ export const campaignApi = createApi({
         { type: 'CampaignDomains', id: campaignId },
       ],
     }),
+    stopCampaign: builder.mutation<CampaignStopResponse, string>({
+      queryFn: async (campaignId) => {
+        try {
+          const response = await campaignsApi.campaignsStop(campaignId);
+          const data = unwrap<CampaignStopResponse>(response);
+          if (!data) {
+            return { error: { status: 500, data: { message: 'Empty campaign stop response' } } };
+          }
+          return { data };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
+        }
+      },
+      invalidatesTags: (result, error, campaignId) => [
+        { type: 'Campaign', id: campaignId },
+        { type: 'CampaignProgress', id: campaignId },
+        { type: 'CampaignDomains', id: campaignId },
+      ],
+    }),
   }),
 });
 
@@ -532,6 +553,7 @@ export const {
   useGetCampaignStatusQuery,
   useDuplicateCampaignMutation,
   useRestartCampaignMutation,
+  useStopCampaignMutation,
 } = campaignApi;
 
 // Export the reducer for the store configuration

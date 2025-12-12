@@ -97,6 +97,41 @@ type PhaseStatus struct {
 	Configuration  map[string]interface{} `json:"configuration,omitempty"`
 }
 
+// PhaseExecutionSnapshot captures a lightweight view of a running phase for streaming progress updates.
+type PhaseExecutionSnapshot struct {
+	Status         models.PhaseStatusEnum
+	ItemsTotal     int64
+	ItemsProcessed int64
+	ProgressPct    float64
+	Message        string
+	Error          string
+}
+
+// Equal reports whether two snapshots are identical.
+func (snap PhaseExecutionSnapshot) Equal(other PhaseExecutionSnapshot) bool {
+	return snap.Status == other.Status &&
+		snap.ItemsTotal == other.ItemsTotal &&
+		snap.ItemsProcessed == other.ItemsProcessed &&
+		snap.ProgressPct == other.ProgressPct &&
+		snap.Message == other.Message &&
+		snap.Error == other.Error
+}
+
+// AsPhaseProgress converts the snapshot into a PhaseProgress event.
+func (snap PhaseExecutionSnapshot) AsPhaseProgress(campaignID uuid.UUID, phase models.PhaseTypeEnum) PhaseProgress {
+	return PhaseProgress{
+		CampaignID:     campaignID,
+		Phase:          phase,
+		Status:         snap.Status,
+		ProgressPct:    snap.ProgressPct,
+		ItemsTotal:     snap.ItemsTotal,
+		ItemsProcessed: snap.ItemsProcessed,
+		Message:        snap.Message,
+		Error:          snap.Error,
+		Timestamp:      time.Now(),
+	}
+}
+
 // DomainGenerationService handles domain generation phase execution
 // Orchestrates domainexpert.DomainGenerator engine
 type DomainGenerationService interface {

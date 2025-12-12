@@ -683,13 +683,53 @@ const dnsControlBuffer = 8
 
 // AttachControlChannel wires the phase control bus into DNS validation.
 func (s *dnsValidationService) AttachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, commands <-chan ControlCommand) {
-	if phase != models.PhaseTypeDNSValidation || commands == nil {
+	if phase != models.PhaseTypeDNSValidation {
+		if s.deps.Logger != nil {
+			s.deps.Logger.Debug(ctx, "dns.control.attach.skipped", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"reason":      "phase_mismatch",
+			})
+		}
+		return
+	}
+	if commands == nil {
+		if s.deps.Logger != nil {
+			s.deps.Logger.Warn(ctx, "dns.control.attach.skipped", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"reason":      "nil_commands",
+			})
+		}
 		return
 	}
 	controlCtx, cancel := context.WithCancel(context.Background())
 	downstream := make(chan ControlCommand, dnsControlBuffer)
 	token := s.registerControlWatcher(campaignID, cancel, downstream)
-	go s.consumeControlSignals(controlCtx, campaignID, token, commands, downstream)
+	if s.deps.Logger != nil {
+		s.deps.Logger.Debug(ctx, "dns.control.attach.registered", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+			"token":       token,
+		})
+	}
+	go func() {
+		if s.deps.Logger != nil {
+			s.deps.Logger.Debug(ctx, "dns.control.consumer.started", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"token":       token,
+			})
+		}
+		s.consumeControlSignals(controlCtx, campaignID, token, commands, downstream)
+		if s.deps.Logger != nil {
+			s.deps.Logger.Debug(ctx, "dns.control.consumer.stopped", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"token":       token,
+			})
+		}
+	}()
 }
 
 func (s *dnsValidationService) registerControlWatcher(campaignID uuid.UUID, cancel context.CancelFunc, downstream chan ControlCommand) uint64 {

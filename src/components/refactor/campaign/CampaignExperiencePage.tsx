@@ -49,7 +49,7 @@ import {
   useGetPhaseStatusStandaloneQuery,
   usePausePhaseStandaloneMutation,
   useResumePhaseStandaloneMutation,
-  useStopPhaseStandaloneMutation
+  useStopCampaignMutation
 } from '@/store/api/campaignApi';
 import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
 import { API_PHASE_ORDER, normalizeToApiPhase } from '@/lib/utils/phaseNames';
@@ -188,15 +188,17 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   const [startPhaseMutation, { isLoading: isStartPhaseLoading }] = useStartPhaseStandaloneMutation();
   const [pausePhaseMutation, { isLoading: isPausePhaseLoading }] = usePausePhaseStandaloneMutation();
   const [resumePhaseMutation, { isLoading: isResumePhaseLoading }] = useResumePhaseStandaloneMutation();
-  const [stopPhaseMutation, { isLoading: isStopPhaseLoading }] = useStopPhaseStandaloneMutation();
+  const [stopCampaignMutation, { isLoading: isStopCampaignLoading }] = useStopCampaignMutation();
   const [restartCampaignMutation] = useRestartCampaignMutation();
   const [selectedPhaseKey, setSelectedPhaseKey] = React.useState<ApiPhase>('validation');
+  const [phaseSelectTouched, setPhaseSelectTouched] = React.useState(false);
   const [bulkAction, setBulkAction] = React.useState<'idle' | 'retryFailed' | 'restartCampaign'>('idle');
 
   const [leadResultLimit, setLeadResultLimit] = React.useState(LEAD_DOMAIN_DEFAULT_LIMIT);
 
   React.useEffect(() => {
     setLeadResultLimit(LEAD_DOMAIN_DEFAULT_LIMIT);
+    setPhaseSelectTouched(false);
   }, [campaignId]);
 
   // Fetch campaign data with caching optimizations
@@ -310,7 +312,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   }, [isSelectedPhasePaused, isSelectedPhaseRunning, selectedPhaseRuntimeControls]);
 
   const canPauseSelectedPhase = resolvedControlSupport.canPause;
-  const canStopSelectedPhase = resolvedControlSupport.canStop;
+  const canStopCampaign = resolvedControlSupport.canStop;
   const canRunSelectedPhase = selectedPhaseStatus === 'paused'
     ? resolvedControlSupport.canResume
     : resolvedControlSupport.canRestart;
@@ -359,30 +361,42 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     return phaseOptions[0]?.value ?? ('validation' as ApiPhase);
   }, [failedPhaseKeys, phaseOptions]);
 
+  const isSelectedPhaseAvailable = React.useMemo(() => {
+    return phaseOptions.some((option) => option.value === selectedPhaseKey);
+  }, [phaseOptions, selectedPhaseKey]);
+
   React.useEffect(() => {
     if (!activePhaseKey) {
+      return;
+    }
+    const shouldSyncToActive = !phaseSelectTouched || !isSelectedPhaseAvailable;
+    if (!shouldSyncToActive) {
       return;
     }
     if (selectedPhaseKey !== activePhaseKey) {
       setSelectedPhaseKey(activePhaseKey as ApiPhase);
     }
-  }, [activePhaseKey, selectedPhaseKey]);
+  }, [activePhaseKey, selectedPhaseKey, phaseSelectTouched, isSelectedPhaseAvailable]);
 
   React.useEffect(() => {
     if (activePhaseKey) {
       return;
     }
+    const shouldSyncToPreferred = !phaseSelectTouched || !isSelectedPhaseAvailable;
+    if (!shouldSyncToPreferred) {
+      return;
+    }
     if (selectedPhaseKey !== preferredPhaseSelection) {
       setSelectedPhaseKey(preferredPhaseSelection);
     }
-  }, [activePhaseKey, preferredPhaseSelection, selectedPhaseKey]);
+  }, [activePhaseKey, preferredPhaseSelection, selectedPhaseKey, phaseSelectTouched, isSelectedPhaseAvailable]);
 
   const hasFailedPhases = failedPhaseKeys.length > 0;
   const isBulkActionRunning = bulkAction !== 'idle';
   const isRetryingFailed = bulkAction === 'retryFailed';
   const isRestartingCampaign = bulkAction === 'restartCampaign';
   const isControlStatusLoading = Boolean(selectedPhaseKey && isPhaseStatusFetching);
-  const isActionDisabled = isStartPhaseLoading || isPausePhaseLoading || isResumePhaseLoading || isStopPhaseLoading || isBulkActionRunning || isControlStatusLoading;
+  const isActionDisabled = isStartPhaseLoading || isPausePhaseLoading || isResumePhaseLoading || isStopCampaignLoading || isBulkActionRunning || isControlStatusLoading;
 
   const startPhaseInternal = React.useCallback(
     async (phaseKey: ApiPhase) => {
@@ -457,24 +471,24 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     }
   }, [campaignId, canPauseSelectedPhase, pausePhaseMutation, selectedPhaseKey, toast]);
 
-  const handleStopSelectedPhase = React.useCallback(async () => {
-    if (!selectedPhaseKey || !campaignId || !canStopSelectedPhase) {
+  const handleStopCampaign = React.useCallback(async () => {
+    if (!campaignId || !canStopCampaign) {
       return;
     }
     try {
-      await stopPhaseMutation({ campaignId, phase: selectedPhaseKey as CampaignPhaseEnum }).unwrap();
+      await stopCampaignMutation(campaignId).unwrap();
       toast({
-        title: `${getPhaseDisplayName(selectedPhaseKey)} stop requested`,
-        description: 'Phase will wind down and stop shortly.',
+        title: 'Campaign stop requested',
+        description: 'Active phase will wind down safely.',
       });
     } catch (error) {
       toast({
-        title: 'Unable to stop phase',
+        title: 'Unable to stop campaign',
         description: formatPhaseActionError(error),
         variant: 'destructive',
       });
     }
-  }, [campaignId, canStopSelectedPhase, selectedPhaseKey, stopPhaseMutation, toast]);
+  }, [campaignId, canStopCampaign, stopCampaignMutation, toast]);
 
   const handleRetryFailedPhases = React.useCallback(async () => {
     if (!failedPhaseKeys.length) {
@@ -776,7 +790,13 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
               <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 Select phase
               </p>
-              <Select value={selectedPhaseKey} onValueChange={(value) => setSelectedPhaseKey(value as ApiPhase)}>
+              <Select
+                value={selectedPhaseKey}
+                onValueChange={(value) => {
+                  setPhaseSelectTouched(true);
+                  setSelectedPhaseKey(value as ApiPhase);
+                }}
+              >
                 <SelectTrigger className="w-full min-w-[220px]">
                   <SelectValue placeholder="Choose a phase" />
                 </SelectTrigger>
@@ -816,14 +836,14 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
               </Button>
               <Button
                 variant="destructive"
-                onClick={handleStopSelectedPhase}
-                disabled={!selectedPhaseKey || isActionDisabled || !canStopSelectedPhase}
+                onClick={handleStopCampaign}
+                disabled={!selectedPhaseKey || isActionDisabled || !canStopCampaign}
                 className="min-w-[150px]"
               >
-                {isStopPhaseLoading && !isBulkActionRunning && (
+                {isStopCampaignLoading && !isBulkActionRunning && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Stop Phase
+                Stop Campaign
               </Button>
               <Button
                 variant="secondary"

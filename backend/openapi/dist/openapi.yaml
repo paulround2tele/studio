@@ -3607,6 +3607,35 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/stop:
+    post:
+      tags:
+        - campaigns
+      summary: Stop the currently running campaign phase
+      description: Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+      operationId: campaigns_stop
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Campaign stop acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignStopResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/restart:
     post:
       tags:
@@ -7035,6 +7064,28 @@ components:
         - mode
         - campaignId
         - updatedAt
+    CampaignStopResponse:
+      type: object
+      description: Summary payload returned after stopping the active campaign phase.
+      properties:
+        campaignId:
+          type: string
+          format: uuid
+        stoppedPhase:
+          $ref: '#/components/schemas/CampaignPhaseEnum'
+        phaseStatus:
+          $ref: '#/components/schemas/PhaseStatusResponse'
+        message:
+          type: string
+          description: Human-readable explanation of the stop outcome.
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - campaignId
+        - stoppedPhase
+        - message
+        - phaseStatus
     CampaignRestartPhaseEnum:
       type: string
       description: Campaign phases eligible for manual restart controls (discovery executes offline and is excluded)

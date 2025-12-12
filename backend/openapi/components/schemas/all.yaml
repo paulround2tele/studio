@@ -1903,6 +1903,24 @@ CampaignRestartResponse:
       description: Latest status snapshot for each restartable phase after enqueueing.
       items: { $ref: '#/PhaseStatusResponse' }
   required: [campaignId, phasesRestarted]
+CampaignStopResponse:
+  type: object
+  description: Summary payload returned after stopping the active campaign phase.
+  properties:
+    campaignId:
+      type: string
+      format: uuid
+    stoppedPhase:
+      $ref: '#/CampaignPhaseEnum'
+    phaseStatus:
+      $ref: '#/PhaseStatusResponse'
+    message:
+      type: string
+      description: Human-readable explanation of the stop outcome.
+    timestamp:
+      type: string
+      format: date-time
+  required: [campaignId, stoppedPhase, message, phaseStatus]
 CampaignProgressResponse:
   type: object
   properties:
