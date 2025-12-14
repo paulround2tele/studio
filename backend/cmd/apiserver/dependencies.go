@@ -362,6 +362,7 @@ func initAppDependencies() (*AppDeps, error) {
 
 	// Provide EventBus adapter early so services can emit events
 	deps.SSE = services.NewSSEService()
+	deps.SSE.Start(context.Background())
 	domainDeps.EventBus = &eventBusAdapter{sse: deps.SSE}
 
 	// Use store-backed config manager and stealth adapter where applicable

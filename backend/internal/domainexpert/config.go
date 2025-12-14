@@ -23,7 +23,7 @@ type MemoryEfficiencyConfig struct {
 var DefaultMemoryEfficiencyConfig = &MemoryEfficiencyConfig{
 	PoolSize:             1000,
 	BatchSize:            100,
-	MaxMemoryUsage:       100 * 1024 * 1024, // 100MB
+	MaxMemoryUsage:       1024 * 1024 * 1024, // 1GB
 	GCInterval:           30 * time.Second,
 	PreallocationEnabled: true,
 	CompressionEnabled:   false,

@@ -37,6 +37,9 @@ const DEFAULT_CONFIG: CachedAuthConfig = {
   maxCacheAgeMs: 15 * 60 * 1000,       // 15 minutes
 };
 
+const SESSION_COOKIE_NAME = 'domainflow_session';
+const PRESENCE_COOKIE_NAME = 'auth_presence';
+
 /**
  * High-Performance Cached Authentication Hook
  * 
@@ -214,6 +217,12 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
     }
   }, [getCachedAuthState, setCachedAuthState, clearCachedAuthState, validateSessionWithBackend]);
 
+  const hasPresenceCookie = useCallback((): boolean => {
+    if (typeof document === 'undefined') return false;
+    const cookies = document.cookie || '';
+    return cookies.includes(`${SESSION_COOKIE_NAME}=`) || cookies.includes(`${PRESENCE_COOKIE_NAME}=1`);
+  }, []);
+
   // Login with backend validation and caching
   const login = useCallback(async (credentials: { email: string; password: string }): Promise<LoginResult> => {
     setIsLoginLoading(true);
@@ -342,13 +351,36 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
   // Initialize auth state on mount
   useEffect(() => {
     console.log('[useCachedAuth] Initializing cached auth...');
-    validateSession();
+    const cachedState = getCachedAuthState();
+    if (cachedState) {
+      console.log('[useCachedAuth] ⚡ Using cached auth state on init');
+      setIsAuthenticated(cachedState.isAuthenticated);
+      setUser(cachedState.user);
+      setIsLoading(false);
+      setIsInitialized(true);
+    } else {
+      const hasPresence = hasPresenceCookie();
+      if (hasPresence) {
+        console.log('[useCachedAuth] 👀 Presence cookie found, optimistic auth while validating');
+        setIsAuthenticated(true);
+        setIsInitialized(true); // allow UI to render while we validate
+        setIsLoading(true);
+        validateSession(true);
+      } else {
+        console.log('[useCachedAuth] 🚪 No cache or presence cookie, treat as logged out');
+        setIsAuthenticated(false);
+        setUser(null);
+        setIsInitialized(true);
+        setIsLoading(false);
+      }
+    }
+
     startBackgroundValidation();
 
     return () => {
       stopBackgroundValidation();
     };
-  }, [validateSession, startBackgroundValidation, stopBackgroundValidation]);
+  }, [getCachedAuthState, hasPresenceCookie, startBackgroundValidation, stopBackgroundValidation, validateSession]);
 
   // Cleanup on unmount
   useEffect(() => {

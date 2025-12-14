@@ -49,6 +49,65 @@ const WIZARD_STEPS = [
   { id: 'review', title: 'Review & Launch', description: 'Confirm and create' }
 ];
 
+type PhaseConfigurationPlan = {
+  phase: APIPhaseEnum;
+  configuration: Record<string, unknown>;
+  keywordSetIds?: string[];
+};
+
+function buildPhaseConfigurations(wizardState: CampaignWizardState): {
+  firstPhase: APIPhaseEnum;
+  phaseConfigurations: PhaseConfigurationPlan[];
+} {
+  const firstPhase: APIPhaseEnum = getFirstPhase();
+  const domainGenConfig = mapPatternToDomainGeneration(wizardState.pattern);
+  const dnsConfig = mapTargetingToDNSValidation(wizardState.targeting);
+  const extractionPhaseConfig = mapTargetingToHTTPValidation(wizardState.targeting);
+  const enrichmentPersonaIds = (wizardState.targeting.analysisPersonas && wizardState.targeting.analysisPersonas.length > 0)
+    ? wizardState.targeting.analysisPersonas
+    : wizardState.targeting.httpPersonas;
+  const enrichmentPhaseConfig: Record<string, unknown> = {
+    // Enrichment phase currently reuses analysis outputs until dedicated controls are exposed through the UI.
+    reuseEnrichment: true,
+    requestedBy: 'auto_wizard',
+    personaIds: enrichmentPersonaIds || [],
+  };
+  const analysisConfig = mapTargetingToAnalysis(wizardState.targeting);
+  const extractionKeywordSetIds = Array.isArray(extractionPhaseConfig.keywordSetIds) && extractionPhaseConfig.keywordSetIds.length > 0
+    ? [...extractionPhaseConfig.keywordSetIds]
+    : undefined;
+
+  const phaseConfigurations: PhaseConfigurationPlan[] = [
+    {
+      phase: firstPhase,
+      configuration: domainGenConfig as unknown as Record<string, unknown>,
+    },
+    {
+      phase: 'validation',
+      configuration: dnsConfig as unknown as Record<string, unknown>,
+    },
+    {
+      phase: 'extraction',
+      configuration: extractionPhaseConfig as unknown as Record<string, unknown>,
+      keywordSetIds: extractionKeywordSetIds,
+    },
+  ];
+
+  if (analysisConfig) {
+    phaseConfigurations.push({
+      phase: 'analysis',
+      configuration: analysisConfig as unknown as Record<string, unknown>,
+    });
+  }
+
+  phaseConfigurations.push({
+    phase: 'enrichment',
+    configuration: enrichmentPhaseConfig,
+  });
+
+  return { firstPhase, phaseConfigurations };
+}
+
 interface CampaignCreateWizardProps {
   className?: string;
 }
@@ -268,6 +327,25 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
     setWizardState(prev => ({ ...prev, targeting: { ...prev.targeting, ...targeting } }));
   };
 
+  const applyPhaseConfigurations = React.useCallback(
+    async (campaignId: string, configurations: PhaseConfigurationPlan[]) => {
+      for (const { phase, configuration, keywordSetIds } of configurations) {
+        const configRequest: PhaseConfigurationRequest = {
+          configuration,
+        };
+        if (keywordSetIds && keywordSetIds.length > 0) {
+          configRequest.keywordSetIds = [...keywordSetIds];
+        }
+        await configurePhase({
+          campaignId,
+          phase,
+          config: configRequest,
+        }).unwrap();
+      }
+    },
+    [configurePhase]
+  );
+
   const handleSubmit = async () => {
     try {
       const campaignName = wizardState.goal.campaignName || '';
@@ -327,13 +405,20 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
         mode: backendMode
       }).unwrap();
 
+      const { firstPhase, phaseConfigurations } = buildPhaseConfigurations(wizardState);
+
       // For auto mode, trigger auto-start of the first phase (discovery)
       if (wizardState.goal.executionMode === 'auto') {
-        await attemptAutoStartWithRetry(campaignId, campaignName);
+        await attemptAutoStartWithRetry(campaignId, campaignName, phaseConfigurations, firstPhase);
       } else {
+        const discoveryConfig = phaseConfigurations.find(plan => plan.phase === firstPhase);
+        if (!discoveryConfig) {
+          throw new Error('Domain discovery configuration is missing.');
+        }
+        await applyPhaseConfigurations(campaignId, [discoveryConfig]);
         toast({
-          title: "Campaign Created Successfully",
-          description: `Campaign "${campaignName}" has been created in ${wizardState.goal.executionMode} mode.`,
+          title: 'Campaign Ready',
+          description: `Campaign "${campaignName}" has been created in manual mode and discovery is configured. Start it whenever you're ready.`,
         });
       }
 
@@ -381,7 +466,12 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
     }
   };
 
-  const attemptAutoStartWithRetry = async (campaignId: string, campaignName: string) => {
+  const attemptAutoStartWithRetry = async (
+    campaignId: string,
+    campaignName: string,
+    phaseConfigurations: PhaseConfigurationPlan[],
+    firstPhase: APIPhaseEnum
+  ) => {
     const MAX_RETRIES = 2;
     const BACKOFF_BASE = 1000; // 1 second
 
@@ -395,67 +485,7 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
           showStarting(`Retrying auto-start (attempt ${attempt})...`);
         }
         
-        const firstPhase: APIPhaseEnum = getFirstPhase();
-        const domainGenConfig = mapPatternToDomainGeneration(wizardState.pattern);
-        const dnsConfig = mapTargetingToDNSValidation(wizardState.targeting);
-        const extractionPhaseConfig = mapTargetingToHTTPValidation(wizardState.targeting);
-        const enrichmentPersonaIds = (wizardState.targeting.analysisPersonas && wizardState.targeting.analysisPersonas.length > 0)
-          ? wizardState.targeting.analysisPersonas
-          : wizardState.targeting.httpPersonas;
-        const enrichmentPhaseConfig: Record<string, unknown> = {
-          // Enrichment phase currently reuses analysis outputs until dedicated controls are exposed through the UI.
-          reuseEnrichment: true,
-          requestedBy: 'auto_wizard',
-          personaIds: enrichmentPersonaIds || [],
-        };
-        const analysisConfig = mapTargetingToAnalysis(wizardState.targeting);
-
-        const extractionKeywordSetIds = Array.isArray(extractionPhaseConfig.keywordSetIds) && extractionPhaseConfig.keywordSetIds.length > 0
-          ? [...extractionPhaseConfig.keywordSetIds]
-          : undefined;
-
-        const phaseConfigurations: Array<{ phase: APIPhaseEnum; configuration: Record<string, unknown>; keywordSetIds?: string[] }> = [
-          {
-            phase: firstPhase,
-            configuration: domainGenConfig as unknown as Record<string, unknown>,
-          },
-          {
-            phase: 'validation',
-            configuration: dnsConfig as unknown as Record<string, unknown>,
-          },
-          {
-            phase: 'extraction',
-            configuration: extractionPhaseConfig as unknown as Record<string, unknown>,
-            keywordSetIds: extractionKeywordSetIds,
-          },
-        ];
-
-        if (analysisConfig) {
-          phaseConfigurations.push({
-            phase: 'analysis',
-            configuration: analysisConfig as unknown as Record<string, unknown>,
-          });
-        }
-
-        phaseConfigurations.push({
-          phase: 'enrichment',
-          configuration: enrichmentPhaseConfig,
-        });
-
-        for (const { phase, configuration, keywordSetIds } of phaseConfigurations) {
-          const configRequest: PhaseConfigurationRequest = {
-            configuration,
-          };
-          if (keywordSetIds && keywordSetIds.length > 0) {
-            configRequest.keywordSetIds = keywordSetIds;
-          }
-          await configurePhase({
-            campaignId,
-            phase,
-            config: configRequest,
-          }).unwrap();
-        }
-
+        await applyPhaseConfigurations(campaignId, phaseConfigurations);
         await startPhase({
           campaignId,
           phase: firstPhase,
@@ -524,7 +554,7 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
       }
     }
   };
-  
+
 
   const renderStepContent = () => {
     switch (wizardState.currentStep) {

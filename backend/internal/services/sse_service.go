@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -39,6 +41,18 @@ const (
 	SSEEventError             SSEEventType = "error"
 )
 
+const (
+	defaultKeepAliveInterval = 12 * time.Second
+	defaultStaleClientTTL    = 45 * time.Second
+	defaultCleanupInterval   = 30 * time.Second
+)
+
+type SSEConfig struct {
+	KeepAliveInterval time.Duration
+	StaleClientTTL    time.Duration
+	CleanupInterval   time.Duration
+}
+
 // SSEEvent represents a server-sent event
 type SSEEvent struct {
 	ID         string                 `json:"id,omitempty"`
@@ -59,28 +73,67 @@ type SSEClient struct {
 	Context        context.Context
 	Cancel         context.CancelFunc
 	LastSeen       time.Time
+	writeMu        sync.Mutex
 }
 
 // SSEService manages Server-Sent Events connections and broadcasting
 type SSEService struct {
-	clients     map[string]*SSEClient
-	mutex       sync.RWMutex
-	keepAlive   time.Duration
-	maxClients  int
-	eventBuffer int
+	clients         map[string]*SSEClient
+	mutex           sync.RWMutex
+	keepAlive       time.Duration
+	staleClientTTL  time.Duration
+	cleanupInterval time.Duration
+	maxClients      int
+	eventBuffer     int
 	// metrics
 	startTime   time.Time
 	totalEvents uint64
+	cleanupOnce sync.Once
 }
 
 // NewSSEService creates a new SSE service
 func NewSSEService() *SSEService {
+	cfg := defaultSSEConfig()
 	return &SSEService{
-		clients:     make(map[string]*SSEClient),
-		keepAlive:   30 * time.Second,
-		maxClients:  1000, // Reasonable limit to prevent resource exhaustion
-		eventBuffer: 100,  // Buffer size for event channels
-		startTime:   time.Now(),
+		clients:         make(map[string]*SSEClient),
+		keepAlive:       cfg.KeepAliveInterval,
+		staleClientTTL:  cfg.StaleClientTTL,
+		cleanupInterval: cfg.CleanupInterval,
+		maxClients:      1000, // Reasonable limit to prevent resource exhaustion
+		eventBuffer:     100,  // Buffer size for event channels
+		startTime:       time.Now(),
+	}
+}
+
+func defaultSSEConfig() SSEConfig {
+	return SSEConfig{
+		KeepAliveInterval: defaultKeepAliveInterval,
+		StaleClientTTL:    defaultStaleClientTTL,
+		CleanupInterval:   defaultCleanupInterval,
+	}
+}
+
+// Start begins periodic cleanup for stale SSE clients.
+func (s *SSEService) Start(ctx context.Context) {
+	s.cleanupOnce.Do(func() {
+		if s.cleanupInterval <= 0 {
+			return
+		}
+		go s.runCleanupLoop(ctx)
+	})
+}
+
+func (s *SSEService) runCleanupLoop(ctx context.Context) {
+	ticker := time.NewTicker(s.cleanupInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.Cleanup()
+		}
 	}
 }
 
@@ -88,14 +141,15 @@ func NewSSEService() *SSEService {
 func (s *SSEService) RegisterClient(ctx context.Context, w http.ResponseWriter, userID uuid.UUID, campaignID *uuid.UUID, allowedOrigin string) (*SSEClient, error) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
+		log.Printf("[SSE] registration failed: flusher unavailable (user=%s campaign=%v)", userID.String(), campaignID)
 		return nil, fmt.Errorf("streaming not supported by this response writer")
 	}
 
 	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
 	// Check client limit
 	if len(s.clients) >= s.maxClients {
+		s.mutex.Unlock()
+		log.Printf("[SSE] registration failed: max clients reached (user=%s campaign=%v)", userID.String(), campaignID)
 		return nil, fmt.Errorf("maximum number of SSE clients reached")
 	}
 
@@ -107,14 +161,15 @@ func (s *SSEService) RegisterClient(ctx context.Context, w http.ResponseWriter, 
 	headers.Set("X-Accel-Buffering", "no")
 	headers.Set("Access-Control-Allow-Headers", "Cache-Control, Last-Event-ID")
 	headers.Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	// Preserve any CORS headers already applied by upstream middleware; only override when an
+	// explicit allowed origin is provided. Clearing here would strip the origin echoed by the
+	// CORS layer and cause the browser to immediately drop the connection.
 	if allowedOrigin != "" {
 		headers.Set("Access-Control-Allow-Origin", allowedOrigin)
 		headers.Set("Access-Control-Allow-Credentials", "true")
 		ensureHeaderValue(headers, "Vary", "Origin")
-	} else {
-		headers.Del("Access-Control-Allow-Origin")
-		headers.Del("Access-Control-Allow-Credentials")
 	}
+	w.WriteHeader(http.StatusOK)
 
 	clientCtx, cancel := context.WithCancel(ctx)
 	clientID := uuid.New().String()
@@ -131,15 +186,22 @@ func (s *SSEService) RegisterClient(ctx context.Context, w http.ResponseWriter, 
 	}
 
 	s.clients[clientID] = client
+	s.mutex.Unlock()
+	log.Printf("[SSE] client registered id=%s user=%s campaign=%v origin=%s total=%d", clientID, userID.String(), campaignID, allowedOrigin, len(s.clients))
 
-	// Send initial connection event asynchronously to avoid blocking registration on slow readers
-	go s.sendEventToClient(client, SSEEvent{
-		ID:        uuid.New().String(),
-		Event:     SSEEventKeepAlive,
-		Data:      map[string]interface{}{"message": "SSE connection established"},
-		Timestamp: time.Now(),
-		UserID:    &userID,
-	})
+	initialEvent := SSEEvent{
+		ID:         uuid.New().String(),
+		Event:      SSEEventKeepAlive,
+		Data:       map[string]interface{}{"message": "SSE connection established"},
+		Timestamp:  time.Now(),
+		CampaignID: campaignID,
+		UserID:     &userID,
+	}
+	if err := s.emitEventToClient(client, initialEvent); err != nil {
+		log.Printf("[SSE] initial send failed id=%s err=%v", clientID, err)
+		s.UnregisterClient(clientID)
+		return nil, err
+	}
 
 	// Start keep-alive routine for this client
 	go s.clientKeepAlive(client)
@@ -167,6 +229,7 @@ func (s *SSEService) UnregisterClient(clientID string) {
 	if client, exists := s.clients[clientID]; exists {
 		client.Cancel()
 		delete(s.clients, clientID)
+		log.Printf("[SSE] client unregistered id=%s user=%s campaign=%v total=%d", clientID, client.UserID.String(), client.CampaignID, len(s.clients))
 	}
 }
 
@@ -200,10 +263,24 @@ func (s *SSEService) BroadcastToCampaign(campaignID uuid.UUID, event SSEEvent) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
+	targetIDs := make([]string, 0, len(s.clients))
 	for _, client := range s.clients {
 		if client.CampaignID != nil && *client.CampaignID == campaignID {
+			targetIDs = append(targetIDs, client.ID)
 			go s.sendEventToClient(client, event)
 		}
+	}
+
+	if event.Event == SSEEventCampaignProgress {
+		sample := sampleClientIDs(targetIDs, 5)
+		log.Printf(
+			"[SSE] broadcast campaign=%s event=%s clients=%d sample=%v summary=%s",
+			campaignID.String(),
+			string(event.Event),
+			len(targetIDs),
+			sample,
+			summarizeProgressEventData(event.Data),
+		)
 	}
 }
 
@@ -225,15 +302,19 @@ func (s *SSEService) shouldSendEventToClient(client *SSEClient, event SSEEvent) 
 
 // sendEventToClient sends an SSE event to a specific client
 func (s *SSEService) sendEventToClient(client *SSEClient, event SSEEvent) {
+	if err := s.emitEventToClient(client, event); err != nil {
+		log.Printf("[SSE] send failed id=%s event=%s err=%v", client.ID, event.Event, err)
+		s.UnregisterClient(client.ID)
+	}
+}
+
+func (s *SSEService) emitEventToClient(client *SSEClient, event SSEEvent) error {
 	select {
 	case <-client.Context.Done():
-		// Client disconnected, remove from service
-		s.UnregisterClient(client.ID)
-		return
+		return fmt.Errorf("client context done")
 	default:
 	}
 
-	// Ensure event has an ID and timestamp
 	if event.ID == "" {
 		event.ID = uuid.New().String()
 	}
@@ -241,40 +322,35 @@ func (s *SSEService) sendEventToClient(client *SSEClient, event SSEEvent) {
 		event.Timestamp = time.Now()
 	}
 
-	// Serialize event data
 	data, err := json.Marshal(event)
 	if err != nil {
-		fmt.Printf("Error marshaling SSE event: %v\n", err)
-		return
+		return fmt.Errorf("marshal event: %w", err)
 	}
 
-	// Send SSE formatted message
-	_, err = fmt.Fprintf(client.ResponseWriter, "id: %s\n", event.ID)
-	if err != nil {
-		s.UnregisterClient(client.ID)
-		return
-	}
+	client.writeMu.Lock()
+	defer client.writeMu.Unlock()
 
-	_, err = fmt.Fprintf(client.ResponseWriter, "event: %s\n", event.Event)
-	if err != nil {
-		s.UnregisterClient(client.ID)
-		return
+	if _, err := fmt.Fprintf(client.ResponseWriter, "id: %s\n", event.ID); err != nil {
+		return err
 	}
-
-	_, err = fmt.Fprintf(client.ResponseWriter, "data: %s\n\n", string(data))
-	if err != nil {
-		s.UnregisterClient(client.ID)
-		return
+	if _, err := fmt.Fprintf(client.ResponseWriter, "event: %s\n", event.Event); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(client.ResponseWriter, "data: %s\n\n", string(data)); err != nil {
+		return err
 	}
 
 	client.Flusher.Flush()
 	client.LastSeen = time.Now()
-	// increment global counter after successful flush
 	atomic.AddUint64(&s.totalEvents, 1)
+	return nil
 }
 
 // clientKeepAlive maintains the connection with periodic keep-alive messages
 func (s *SSEService) clientKeepAlive(client *SSEClient) {
+	if s.keepAlive <= 0 {
+		return
+	}
 	ticker := time.NewTicker(s.keepAlive)
 	defer ticker.Stop()
 
@@ -284,10 +360,11 @@ func (s *SSEService) clientKeepAlive(client *SSEClient) {
 			return
 		case <-ticker.C:
 			keepAliveEvent := SSEEvent{
-				Event:     SSEEventKeepAlive,
-				Data:      map[string]interface{}{"timestamp": time.Now().Unix()},
-				Timestamp: time.Now(),
-				UserID:    &client.UserID,
+				Event:      SSEEventKeepAlive,
+				Data:       map[string]interface{}{"timestamp": time.Now().Unix()},
+				Timestamp:  time.Now(),
+				CampaignID: client.CampaignID,
+				UserID:     &client.UserID,
 			}
 			s.sendEventToClient(client, keepAliveEvent)
 		}
@@ -331,13 +408,51 @@ func (s *SSEService) Cleanup() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	cutoff := time.Now().Add(-2 * s.keepAlive)
+	cutoff := time.Now().Add(-s.staleClientTTL)
 	for clientID, client := range s.clients {
 		if client.LastSeen.Before(cutoff) {
 			client.Cancel()
 			delete(s.clients, clientID)
 		}
 	}
+}
+
+func sampleClientIDs(ids []string, max int) []string {
+	if len(ids) == 0 || max <= 0 {
+		return nil
+	}
+	if len(ids) <= max {
+		return append([]string(nil), ids...)
+	}
+	out := make([]string, max)
+	copy(out, ids[:max])
+	return out
+}
+
+func summarizeProgressEventData(data map[string]interface{}) string {
+	if len(data) == 0 {
+		return "data=empty"
+	}
+	keys := []string{"progress_pct", "items_processed", "items_total", "phase", "status"}
+	parts := make([]string, 0, len(keys))
+	for _, key := range keys {
+		if value, ok := data[key]; ok {
+			parts = append(parts, fmt.Sprintf("%s=%v", key, value))
+		}
+	}
+	if len(parts) == 0 {
+		return fmt.Sprintf("keys=%v", collectMapKeys(data))
+	}
+	return strings.Join(parts, " ")
+}
+
+func collectMapKeys(data map[string]interface{}) []string {
+	keys := make([]string, 0, len(data))
+	for key := range data {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // Helper functions for creating specific event types

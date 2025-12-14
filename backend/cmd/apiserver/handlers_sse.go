@@ -2,59 +2,43 @@ package main
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"net/http"
 	"time"
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
+	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/google/uuid"
 )
 
-type ssePipeResponse struct {
-	body    io.Reader
-	headers http.Header
+type sseLiveResponse struct {
+	sse           *services.SSEService
+	ctx           context.Context
+	userID        uuid.UUID
+	campaignID    *uuid.UUID
+	allowedOrigin string
 }
 
-func (resp ssePipeResponse) VisitSseEventsCampaignResponse(w http.ResponseWriter) error {
-	return resp.write(w)
+func (resp sseLiveResponse) VisitSseEventsCampaignResponse(w http.ResponseWriter) error {
+	return resp.stream(w)
 }
 
-func (resp ssePipeResponse) VisitSseEventsAllResponse(w http.ResponseWriter) error {
-	return resp.write(w)
+func (resp sseLiveResponse) VisitSseEventsAllResponse(w http.ResponseWriter) error {
+	return resp.stream(w)
 }
 
-func (resp ssePipeResponse) write(w http.ResponseWriter) error {
-	copyHeaders(w.Header(), resp.headers)
-	if _, ok := w.Header()["Content-Type"]; !ok {
-		w.Header().Set("Content-Type", "text/event-stream")
+// stream registers the client against the real ResponseWriter so CORS/auth headers and flushing work as expected.
+func (resp sseLiveResponse) stream(w http.ResponseWriter) error {
+	if resp.sse == nil {
+		return fmt.Errorf("sse service not initialized")
 	}
-	if _, ok := w.Header()["Cache-Control"]; !ok {
-		w.Header().Set("Cache-Control", "no-cache")
+	client, err := resp.sse.RegisterClient(resp.ctx, w, resp.userID, resp.campaignID, resp.allowedOrigin)
+	if err != nil {
+		return err
 	}
-	if _, ok := w.Header()["Connection"]; !ok {
-		w.Header().Set("Connection", "keep-alive")
-	}
-	w.WriteHeader(http.StatusOK)
-	if flusher, ok := w.(http.Flusher); ok {
-		flusher.Flush()
-	}
-	if closer, ok := resp.body.(io.ReadCloser); ok {
-		defer closer.Close()
-	}
-	_, err := io.Copy(w, resp.body)
-	return err
-}
-
-func copyHeaders(dst http.Header, src http.Header) {
-	if src == nil {
-		return
-	}
-	for key, values := range src {
-		dst.Del(key)
-		for _, value := range values {
-			dst.Add(key, value)
-		}
-	}
+	<-client.Context.Done()
+	resp.sse.UnregisterClient(client.ID)
+	return nil
 }
 
 func allowedOriginFromContext(ctx context.Context) string {
@@ -82,61 +66,35 @@ func extractUserID(ctx context.Context) uuid.UUID {
 	return uuid.New()
 }
 
-// pipeResponseWriter adapts an io.Writer into an http.ResponseWriter with Flush for SSEService
-type pipeResponseWriter struct {
-	w io.Writer
-	h http.Header
-}
-
-func newPipeResponseWriter(w io.Writer) *pipeResponseWriter {
-	return &pipeResponseWriter{w: w, h: make(http.Header)}
-}
-func (p *pipeResponseWriter) Header() http.Header         { return p.h }
-func (p *pipeResponseWriter) Write(b []byte) (int, error) { return p.w.Write(b) }
-func (p *pipeResponseWriter) WriteHeader(statusCode int)  {}
-func (p *pipeResponseWriter) Flush()                      {}
-
 func (h *strictHandlers) SseEventsCampaign(ctx context.Context, r gen.SseEventsCampaignRequestObject) (gen.SseEventsCampaignResponseObject, error) {
 	if h.deps == nil || h.deps.SSE == nil {
 		return gen.SseEventsCampaign500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	pr, pw := io.Pipe()
 	userID := extractUserID(ctx)
 	campID := uuid.UUID(r.CampaignId)
 	origin := allowedOriginFromContext(ctx)
-	w := newPipeResponseWriter(pw)
-	client, err := h.deps.SSE.RegisterClient(ctx, w, userID, &campID, origin)
-	if err != nil {
-		_ = pw.CloseWithError(err)
-		return gen.SseEventsCampaign500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-	}
-	go func() {
-		<-client.Context.Done()
-		h.deps.SSE.UnregisterClient(client.ID)
-		_ = pw.Close()
-	}()
-	return ssePipeResponse{body: pr, headers: w.Header().Clone()}, nil
+	return sseLiveResponse{
+		sse:           h.deps.SSE,
+		ctx:           ctx,
+		userID:        userID,
+		campaignID:    &campID,
+		allowedOrigin: origin,
+	}, nil
 }
 
 func (h *strictHandlers) SseEventsAll(ctx context.Context, r gen.SseEventsAllRequestObject) (gen.SseEventsAllResponseObject, error) {
 	if h.deps == nil || h.deps.SSE == nil {
 		return gen.SseEventsAll500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	pr, pw := io.Pipe()
 	userID := extractUserID(ctx)
 	origin := allowedOriginFromContext(ctx)
-	w := newPipeResponseWriter(pw)
-	client, err := h.deps.SSE.RegisterClient(ctx, w, userID, nil, origin)
-	if err != nil {
-		_ = pw.CloseWithError(err)
-		return gen.SseEventsAll500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-	}
-	go func() {
-		<-client.Context.Done()
-		h.deps.SSE.UnregisterClient(client.ID)
-		_ = pw.Close()
-	}()
-	return ssePipeResponse{body: pr, headers: w.Header().Clone()}, nil
+	return sseLiveResponse{
+		sse:           h.deps.SSE,
+		ctx:           ctx,
+		userID:        userID,
+		campaignID:    nil,
+		allowedOrigin: origin,
+	}, nil
 }
 
 func (h *strictHandlers) SseEventsStats(ctx context.Context, r gen.SseEventsStatsRequestObject) (gen.SseEventsStatsResponseObject, error) {

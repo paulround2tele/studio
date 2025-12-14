@@ -46,6 +46,9 @@ interface CacheEntry {
 
 const hasClearMethod = (value: CacheStore): value is { clear: () => void } =>
   typeof (value as { clear?: unknown }).clear === 'function';
+// Ignore memory warnings until at least 1 GB is actually in use; small heaps frequently hit
+// the percentage-based thresholds even when the absolute usage is tiny.
+const MIN_ALERT_MB = 1024;
 
 class MemoryPressureService {
   private config: MemoryPressureConfig;
@@ -171,6 +174,9 @@ class MemoryPressureService {
    * Handle memory pressure
    */
   handleMemoryPressure(stats: MemoryStats): void {
+    if (stats.usedMB < MIN_ALERT_MB) {
+      return;
+    }
     if (stats.isCritical) {
       // Critical: Clear all caches
       this.clearCaches();

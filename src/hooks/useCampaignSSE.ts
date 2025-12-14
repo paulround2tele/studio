@@ -29,7 +29,47 @@ const joinUrl = (base: string, path: string): string => {
   return `${trimmedBase}/${trimmedPath}`;
 };
 
+const tryParseOrigin = (raw?: string | null): string | null => {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (!/^https?:\/\//i.test(trimmed)) {
+    return null;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return trimmed.replace(/\/$/, '');
+  }
+};
+
+const getExplicitBackendOrigin = (): string | null => {
+  const directOriginCandidates = [process.env.NEXT_PUBLIC_SSE_ORIGIN];
+  for (const candidate of directOriginCandidates) {
+    const parsed = tryParseOrigin(candidate);
+    if (parsed) {
+      return parsed;
+    }
+  }
+
+  const urlCandidates = [process.env.NEXT_PUBLIC_SSE_URL, process.env.NEXT_PUBLIC_API_URL];
+  for (const candidate of urlCandidates) {
+    const parsed = tryParseOrigin(candidate);
+    if (parsed) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
 const inferBackendOrigin = (): string | null => {
+  const explicit = getExplicitBackendOrigin();
+  if (explicit) {
+    return explicit;
+  }
+
   if (typeof window === 'undefined') {
     return null;
   }
@@ -56,30 +96,40 @@ const inferBackendOrigin = (): string | null => {
 };
 
 const resolveSseBasePath = (): string => {
-  let base = '/api/v2';
-  try {
-    const resolved = getApiBasePath();
-    if (resolved) {
-      base = resolved;
+  let base = process.env.NEXT_PUBLIC_SSE_URL?.trim();
+  let hasExplicitOverride = Boolean(base);
+
+  if (!base) {
+    base = '/api/v2';
+    try {
+      const resolved = getApiBasePath();
+      if (resolved) {
+        base = resolved;
+      }
+    } catch (error) {
+      console.warn('Failed to resolve API base path for SSE, defaulting to /api/v2', error);
     }
-  } catch (error) {
-    console.warn('Failed to resolve API base path for SSE, defaulting to /api/v2', error);
   }
 
   const trimmed = base.replace(/\/$/, '');
   const isAbsolute = /^https?:\/\//i.test(trimmed);
 
   if (typeof window === 'undefined') {
-    return trimmed;
+    if (isAbsolute) {
+      return trimmed;
+    }
+    const explicitOrigin = getExplicitBackendOrigin();
+    if (explicitOrigin) {
+      const normalizedPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+      return joinUrl(explicitOrigin, normalizedPath).replace(/\/$/, '');
+    }
+    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   }
 
   if (isAbsolute) {
     try {
       const parsed = new URL(trimmed);
-      const windowOrigin = `${window.location.protocol}//${window.location.host}`;
       const isMixedContent = window.location.protocol === 'https:' && parsed.protocol === 'http:';
-      const sameOrigin = parsed.origin === windowOrigin;
-      const isLocalDevHost = ['localhost', '127.0.0.1'].includes(window.location.hostname) || window.location.hostname.endsWith('.app.github.dev');
 
       if (isMixedContent) {
         const backendOrigin = inferBackendOrigin();
@@ -90,9 +140,9 @@ const resolveSseBasePath = (): string => {
         return joinUrl(secureOrigin, parsed.pathname).replace(/\/$/, '');
       }
 
-      // In local dev we prefer same-origin SSE to avoid CORS/credential headaches.
-      if (!sameOrigin && isLocalDevHost) {
-        return joinUrl(windowOrigin, parsed.pathname).replace(/\/$/, '');
+      // Respect explicit overrides even in local dev; otherwise Chi will handle CORS for us.
+      if (hasExplicitOverride) {
+        return trimmed;
       }
     } catch (error) {
       console.warn('Failed to normalize SSE base path, falling back to resolved value', error);
@@ -101,6 +151,10 @@ const resolveSseBasePath = (): string => {
   }
 
   const normalized = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  const backendOrigin = inferBackendOrigin();
+  if (backendOrigin) {
+    return joinUrl(backendOrigin, normalized).replace(/\/$/, '');
+  }
   return normalized.replace(/\/$/, '');
 };
 
@@ -284,6 +338,21 @@ export interface UseCampaignSSEReturn {
    * Current connection state
    */
   isConnected: boolean;
+
+  /**
+   * Whether we have ever opened a connection in this lifecycle
+   */
+  hasEverConnected: boolean;
+
+  /**
+   * Underlying EventSource readyState
+   */
+  readyState: number;
+
+  /**
+   * Timestamp of the last successful connection
+   */
+  connectedAt: string | null;
   
   /**
    * Connection error if any
@@ -330,6 +399,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
   // Track phases we've already marked completed to avoid double updates when both progress & phase_completed arrive.
   const completedRef = React.useRef<Set<string>>(new Set());
   const eventsRef = useRef<CampaignSSEEvents>({ ...events });
+  const [fallbackApplied, setFallbackApplied] = useState(false);
 
   useEffect(() => {
     eventsRef.current = { ...events };
@@ -370,7 +440,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
       ? (dataObj!.data as Record<string, unknown>)
       : dataObj;
 
-    const campaignIdFromEvent =
+    const payloadCampaignId =
       typeof event.campaign_id === 'string'
         ? event.campaign_id
         : typeof payload?.campaign_id === 'string'
@@ -379,7 +449,9 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
             ? dataObj.campaign_id
             : '';
 
-    if (!campaignIdFromEvent) {
+    const resolvedCampaignId = payloadCampaignId || campaignId || '';
+
+    if (!resolvedCampaignId) {
       console.warn('⚠️ Received SSE event without campaign_id:', event);
       return;
     }
@@ -398,7 +470,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
             : undefined);
         if (progressData) {
           setLastProgress(progressData);
-          handlers.onProgress?.(campaignIdFromEvent, progressData);
+          handlers.onProgress?.(resolvedCampaignId, progressData);
           // If backend provides current_phase & 100% progress but no explicit phase_completed yet, synthesize completion.
           const rawPhase =
             progressData.current_phase ||
@@ -406,15 +478,15 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           const pct = progressData.progress_pct;
           if (rawPhase && typeof pct === 'number' && pct >= 100) {
             const phase = mapPhase(rawPhase);
-            if (!completedRef.current.has(`${campaignIdFromEvent}:${phase}`)) {
-              completedRef.current.add(`${campaignIdFromEvent}:${phase}`);
+            if (!completedRef.current.has(`${resolvedCampaignId}:${phase}`)) {
+              completedRef.current.add(`${resolvedCampaignId}:${phase}`);
                             const pipelinePhase = toPipelinePhase(phase);
                             if (pipelinePhase) {
-                              dispatch(phaseCompleted({ campaignId: campaignIdFromEvent, phase: pipelinePhase }));
+                              dispatch(phaseCompleted({ campaignId: resolvedCampaignId, phase: pipelinePhase }));
                             }
                             dispatch(campaignApi.util.updateQueryData(
                               'getPhaseStatusStandalone',
-                              { campaignId: campaignIdFromEvent, phase },
+                              { campaignId: resolvedCampaignId, phase },
                               (draft) => {
                                 const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PipelinePhase, 'completed');
                                 if (!ps.progress) {
@@ -435,12 +507,12 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
         const phase = mapPhase(backendPhase);
                 const pipelinePhase = toPipelinePhase(phase);
                 if (pipelinePhase) {
-                  dispatch(phaseStarted({ campaignId: campaignIdFromEvent, phase: pipelinePhase }));
+                  dispatch(phaseStarted({ campaignId: resolvedCampaignId, phase: pipelinePhase }));
                 }
         // Update RTK Query cache: mark status running under internal key
                 dispatch(campaignApi.util.updateQueryData(
                   'getPhaseStatusStandalone',
-                  { campaignId: campaignIdFromEvent, phase },
+                  { campaignId: resolvedCampaignId, phase },
                   (draft) => {
                     const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PipelinePhase, 'running');
                     if (!ps.progress) {
@@ -449,8 +521,8 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
                     return ps;
                   }
                 ));
-        handlers.onPhaseStarted?.(campaignIdFromEvent, {
-          campaign_id: campaignIdFromEvent,
+        handlers.onPhaseStarted?.(resolvedCampaignId, {
+          campaign_id: resolvedCampaignId,
           phase: phase as string,
           message: (payload?.message as string) || (dataObj?.message as string) || 'Phase started',
           results: (payload?.results as Record<string, unknown> | undefined) || (dataObj?.results as Record<string, unknown> | undefined)
@@ -460,15 +532,15 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
       case 'phase_completed': {
         const backendPhase = (payload?.phase as string | undefined) || (dataObj?.phase as string | undefined);
         const phase = mapPhase(backendPhase);
-        if (!completedRef.current.has(`${campaignIdFromEvent}:${phase}`)) {
-          completedRef.current.add(`${campaignIdFromEvent}:${phase}`);
+        if (!completedRef.current.has(`${resolvedCampaignId}:${phase}`)) {
+          completedRef.current.add(`${resolvedCampaignId}:${phase}`);
                     const pipelinePhase = toPipelinePhase(phase);
                     if (pipelinePhase) {
-                      dispatch(phaseCompleted({ campaignId: campaignIdFromEvent, phase: pipelinePhase }));
+                      dispatch(phaseCompleted({ campaignId: resolvedCampaignId, phase: pipelinePhase }));
                     }
                     dispatch(campaignApi.util.updateQueryData(
                       'getPhaseStatusStandalone',
-                      { campaignId: campaignIdFromEvent, phase },
+                      { campaignId: resolvedCampaignId, phase },
                       (draft) => {
                         const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PipelinePhase, 'completed');
                         if (!ps.progress) {
@@ -480,8 +552,8 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
                       }
                     ));
         }
-        handlers.onPhaseCompleted?.(campaignIdFromEvent, {
-          campaign_id: campaignIdFromEvent,
+        handlers.onPhaseCompleted?.(resolvedCampaignId, {
+          campaign_id: resolvedCampaignId,
           phase: phase as string,
           message: (payload?.message as string) || (dataObj?.message as string) || 'Phase completed',
           results: (payload?.results as Record<string, unknown> | undefined) || (dataObj?.results as Record<string, unknown> | undefined)
@@ -497,11 +569,11 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           'Phase failed';
                 const pipelinePhase = toPipelinePhase(phase);
                 if (pipelinePhase) {
-                  dispatch(phaseFailed({ campaignId: campaignIdFromEvent, phase: pipelinePhase, error }));
+                  dispatch(phaseFailed({ campaignId: resolvedCampaignId, phase: pipelinePhase, error }));
                 }
                 dispatch(campaignApi.util.updateQueryData(
                   'getPhaseStatusStandalone',
-                  { campaignId: campaignIdFromEvent, phase },
+                  { campaignId: resolvedCampaignId, phase },
                   (draft) => {
                     const ps = ensurePhaseStatus(draft as PhaseStatusWithError | undefined, phase as PipelinePhase, 'failed') as PhaseStatusWithError;
                     ps.error = error;
@@ -511,8 +583,8 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
                     return ps;
                   }
                 ));
-        handlers.onPhaseFailed?.(campaignIdFromEvent, {
-          campaign_id: campaignIdFromEvent,
+        handlers.onPhaseFailed?.(resolvedCampaignId, {
+          campaign_id: resolvedCampaignId,
           phase: phase as string,
           message: (payload?.message as string) || (dataObj?.message as string) || 'Phase failed',
           error,
@@ -522,21 +594,21 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
       case 'domain_generated':
         handlers.onDomainGenerated?.(
-          campaignIdFromEvent,
+          resolvedCampaignId,
           (payload || dataObj || {}) as Record<string, unknown>
         );
         break;
 
       case 'domain_validated':
         handlers.onDomainValidated?.(
-          campaignIdFromEvent,
+          resolvedCampaignId,
           (payload || dataObj || {}) as Record<string, unknown>
         );
         break;
 
       case 'analysis_completed':
         handlers.onAnalysisCompleted?.(
-          campaignIdFromEvent,
+          resolvedCampaignId,
           (payload || dataObj || {}) as Record<string, unknown>
         );
         break;
@@ -547,7 +619,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           (payload?.feature_vector_count as number | undefined) ||
           (dataObj?.featureVectorCount as number | undefined) ||
           (dataObj?.feature_vector_count as number | undefined);
-        handlers.onAnalysisReuseEnrichment?.(campaignIdFromEvent, {
+        handlers.onAnalysisReuseEnrichment?.(resolvedCampaignId, {
           featureVectorCount,
           raw: (payload || dataObj || {}) as Record<string, unknown>,
         });
@@ -563,8 +635,8 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           (payload?.errorCode as string | undefined) ||
           (dataObj?.errorCode as string | undefined);
         // Dispatch phaseFailed for analysis to integrate with existing runtime slice (phase field may be absent on backend custom event)
-        dispatch(phaseFailed({ campaignId: campaignIdFromEvent, phase: 'analysis', error }));
-        handlers.onAnalysisFailed?.(campaignIdFromEvent, {
+        dispatch(phaseFailed({ campaignId: resolvedCampaignId, phase: 'analysis', error }));
+        handlers.onAnalysisFailed?.(resolvedCampaignId, {
           error,
           errorCode,
           raw: (payload || dataObj || {}) as Record<string, unknown>,
@@ -574,7 +646,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
       case 'counters_reconciled':
         // Provide callback, plus optionally consumer could choose to invalidate queries externally.
         handlers.onCountersReconciled?.(
-          campaignIdFromEvent,
+          resolvedCampaignId,
           (payload || dataObj || {}) as Record<string, unknown>
         );
         break;
@@ -584,7 +656,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           (payload?.mode as string | undefined) ||
           (dataObj?.mode as string | undefined);
         if (mode === 'full_sequence' || mode === 'step_by_step') {
-          handlers.onModeChanged?.(campaignIdFromEvent, mode);
+          handlers.onModeChanged?.(resolvedCampaignId, mode);
         } else {
           console.warn('⚠️ mode_changed event with invalid mode value', dataObj);
         }
@@ -599,7 +671,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           (dataObj?.error as string | undefined) ||
           (dataObj?.message as string | undefined) ||
           'Unknown error';
-        handlers.onError?.(campaignIdFromEvent, errorMessage);
+        handlers.onError?.(resolvedCampaignId, errorMessage);
         break;
 
       case 'keep_alive':
@@ -609,7 +681,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
       default:
         console.log('📡 Received unknown SSE event type:', event.event, event.data);
     }
-  }, [dispatch]);
+  }, [dispatch, campaignId]);
 
   // Use the generic SSE hook
   const sseConnection = useSSE(sseUrl, handleSSEEvent, {
@@ -619,6 +691,59 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
     withCredentials: true,
   });
 
+  if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+    const win = window as typeof window & { __campaignSSESnapshots?: Array<Record<string, unknown>> };
+    const history = Array.isArray(win.__campaignSSESnapshots) ? win.__campaignSSESnapshots : [];
+    history.push({
+      timestamp: new Date().toISOString(),
+      campaignId,
+      autoConnect,
+      sseBasePath,
+      sseUrl,
+      fallbackApplied,
+      readyState: sseConnection.readyState,
+      isConnected: sseConnection.isConnected,
+      hasEverConnected: sseConnection.hasEverConnected,
+      error: sseConnection.error,
+    });
+    win.__campaignSSESnapshots = history.slice(-25);
+  }
+
+  useEffect(() => {
+    if (fallbackApplied) return;
+    if (!autoConnect) return;
+    if (sseConnection.hasEverConnected) return;
+    const backendOrigin = inferBackendOrigin();
+    if (!backendOrigin) return;
+
+    const isRelativeBase = !sseBasePath || !/^https?:\/\//i.test(sseBasePath);
+    if (!isRelativeBase) return;
+
+    const timer = setTimeout(() => {
+      if (sseConnection.isConnected) return;
+      if (sseConnection.readyState === 1) return;
+      const fallbackBase = joinUrl(backendOrigin, sseBasePath || '/api/v2').replace(/\/$/, '');
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[useCampaignSSE] falling back to backend origin for SSE', {
+          previous: sseBasePath,
+          fallbackBase,
+        });
+      }
+      setSseBasePath(fallbackBase);
+      setFallbackApplied(true);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [autoConnect, fallbackApplied, sseBasePath, sseConnection.hasEverConnected, sseConnection.isConnected, sseConnection.readyState]);
+
+  const reconnectAfterFallback = sseConnection.reconnect;
+  useEffect(() => {
+    if (!fallbackApplied) return;
+    if (!autoConnect) return;
+    if (!sseUrl) return;
+    reconnectAfterFallback();
+  }, [fallbackApplied, autoConnect, sseUrl, reconnectAfterFallback]);
+
   // Reset progress when campaign ID changes
   useEffect(() => {
     setLastProgress(null);
@@ -626,6 +751,9 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
   return {
     isConnected: sseConnection.isConnected,
+    hasEverConnected: sseConnection.hasEverConnected,
+    readyState: sseConnection.readyState,
+    connectedAt: sseConnection.connectedAt,
     error: sseConnection.error,
     lastProgress,
     lastEvent: sseConnection.lastEvent,

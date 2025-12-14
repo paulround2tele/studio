@@ -7,6 +7,7 @@
  */
 
 import React from 'react';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { useParams } from 'next/navigation';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
@@ -35,6 +36,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useCampaignPhaseStream } from '@/hooks/useCampaignPhaseStream';
+import type { PhaseUpdateEvent } from '@/hooks/useCampaignPhaseStream';
 import { 
   useGetCampaignMetricsQuery,
   useGetCampaignFunnelQuery,
@@ -99,6 +101,7 @@ function extractErrorMessage(error?: FetchBaseQueryError | SerializedError | und
 const LEAD_DOMAIN_DEFAULT_LIMIT = 200;
 const LEAD_DOMAIN_INCREMENT = 200;
 const LEAD_DOMAIN_MAX = 1000;
+const REALTIME_REFRESH_INTERVAL_MS = 10_000;
 
 function formatPhaseLabelFromSnapshot(phase?: string): string {
   const normalizedInput = typeof phase === 'string' ? phase.toLowerCase() : '';
@@ -202,8 +205,35 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   }, [campaignId]);
 
   // Fetch campaign data with caching optimizations
-  const { data: metricsData, isLoading: metricsLoading, error: metricsError } = useGetCampaignMetricsQuery(campaignId);
-  const { data: funnelData, isLoading: funnelLoading, error: funnelError } = useGetCampaignFunnelQuery(campaignId);
+  const { data: metricsData, isLoading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useGetCampaignMetricsQuery(campaignId);
+  const { data: funnelData, isLoading: funnelLoading, error: funnelError, refetch: refetchFunnel } = useGetCampaignFunnelQuery(campaignId);
+  const realtimeRefreshTimestampsRef = React.useRef({ funnel: 0, metrics: 0 });
+
+  React.useEffect(() => {
+    realtimeRefreshTimestampsRef.current = { funnel: 0, metrics: 0 };
+  }, [campaignId]);
+
+  const refreshRealtimeData = React.useCallback((options?: { force?: boolean }) => {
+    const now = Date.now();
+    const force = options?.force ?? false;
+
+    if (force || now - realtimeRefreshTimestampsRef.current.funnel >= REALTIME_REFRESH_INTERVAL_MS) {
+      realtimeRefreshTimestampsRef.current.funnel = now;
+      refetchFunnel();
+    }
+
+    if (force || now - realtimeRefreshTimestampsRef.current.metrics >= REALTIME_REFRESH_INTERVAL_MS) {
+      realtimeRefreshTimestampsRef.current.metrics = now;
+      refetchMetrics();
+    }
+  }, [refetchFunnel, refetchMetrics]);
+
+  const handlePhaseUpdate = React.useCallback((event: PhaseUpdateEvent) => {
+    console.log('Phase update:', event);
+    const terminalStatus = event.status === 'completed' || event.status === 'failed';
+    const force = terminalStatus || (event.progressPercentage ?? 0) >= 100;
+    refreshRealtimeData({ force });
+  }, [refreshRealtimeData]);
   const { data: recommendationsData, isLoading: recsLoading } = useGetCampaignRecommendationsQuery(campaignId);
   const { data: enrichedData } = useGetCampaignEnrichedQuery(campaignId);
   const { data: domainsList, isLoading: domainsLoading, isFetching: domainsFetching, error: domainsError } = useGetCampaignDomainsQuery(
@@ -213,16 +243,26 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   const { data: _classificationsData } = useGetCampaignClassificationsQuery({ campaignId });
   const { data: momentumData } = useGetCampaignMomentumQuery(campaignId);
 
+  const { isAuthenticated } = useAuth();
+
   // Real-time phase updates
-  const { phases, isConnected, error: sseError, lastUpdate } = useCampaignPhaseStream(campaignId, {
-    enabled: true,
-    onPhaseUpdate: (event) => {
-      console.log('Phase update:', event);
-    },
+  // Only gate on authentication; `isInitialized` has proven unreliable and can prevent the SSE URL from being set.
+  const sseEnabled = Boolean(campaignId && isAuthenticated);
+
+  const { phases, isConnected, hasEverConnected, error: sseError, lastUpdate } = useCampaignPhaseStream(campaignId, {
+    enabled: sseEnabled,
+    onPhaseUpdate: handlePhaseUpdate,
     onError: (error) => {
       console.error('SSE error:', error);
     }
   });
+
+  React.useEffect(() => {
+    if (!hasEverConnected) {
+      return;
+    }
+    refreshRealtimeData({ force: true });
+  }, [hasEverConnected, refreshRealtimeData]);
 
   const { data: statusSnapshot } = useGetCampaignStatusQuery(campaignId);
   const domainItems = React.useMemo(() => domainsList?.items ?? [], [domainsList]);
@@ -707,11 +747,15 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
 
   const isLoading = metricsLoading || funnelLoading;
   const hasError = metricsError || funnelError;
-  const sseStatusLabel = sseError
-    ? `Disconnected (${sseError})`
-    : isConnected
-      ? 'Live'
-      : 'Connecting…';
+  const sseStatusLabel = (() => {
+    if (!sseEnabled) {
+      return isAuthenticated ? 'Disconnected' : 'Login required';
+    }
+    if (sseError) return `Disconnected (${sseError})`;
+    if (isConnected) return 'Live';
+    if (hasEverConnected) return 'Reconnecting…';
+    return 'Connecting…';
+  })();
 
   if (hasError) {
     return (
@@ -741,10 +785,15 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         <div className="flex items-center gap-2 text-sm">
           <div
             className={`w-2 h-2 rounded-full ${
+              !sseEnabled
+                ? 'bg-gray-400'
+                :
               isConnected && !sseError
                 ? 'bg-green-500'
                 : sseError
                 ? 'bg-red-500'
+                : hasEverConnected
+                ? 'bg-yellow-400'
                 : 'bg-yellow-400'
             }`}
             aria-hidden="true"

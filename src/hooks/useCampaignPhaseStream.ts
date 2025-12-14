@@ -38,6 +38,9 @@ interface UseCampaignPhaseStreamOptions {
 interface UseCampaignPhaseStreamReturn {
   phases: PipelinePhase[];
   isConnected: boolean;
+  hasEverConnected: boolean;
+  readyState: number;
+  connectedAt: string | null;
   error: string | null;
   lastUpdate: number | null;
 }
@@ -210,6 +213,30 @@ export function useCampaignPhaseStream(
 
   const shouldConnect = Boolean(_enabled && campaignId);
 
+  const logRawEvent = useCallback(
+    (eventType: string, payload: unknown) => {
+      if (typeof window === 'undefined' || process.env.NODE_ENV === 'production') {
+        return;
+      }
+
+      const entry = {
+        timestamp: new Date().toISOString(),
+        campaignId,
+        eventType,
+        payload,
+      };
+
+      const win = window as Record<string, unknown>;
+      const historyKey = '__phaseStreamRawEvents';
+      const history = Array.isArray(win[historyKey]) ? (win[historyKey] as unknown[]) : [];
+      const nextHistory = [...history, entry].slice(-100);
+      win[historyKey] = nextHistory;
+
+      console.debug('[useCampaignPhaseStream] raw event', entry);
+    },
+    [campaignId]
+  );
+
   const updatePhaseState = useCallback(
     (phaseKey: ApiPhase, updates: Partial<PipelinePhase>): PipelinePhase | null => {
       let updatedPhase: PipelinePhase | null = null;
@@ -330,6 +357,7 @@ export function useCampaignPhaseStream(
 
   const handleProgress = useCallback(
     (_id: string, progress: CampaignProgress) => {
+      logRawEvent('campaign_progress', { eventId: _id, payload: progress });
       const normalizedPhase = normalizeToApiPhase(String(progress.current_phase || '').toLowerCase());
       if (!normalizedPhase) {
         return;
@@ -357,11 +385,12 @@ export function useCampaignPhaseStream(
         timestamp: (progress as { timestamp?: string }).timestamp,
       });
     },
-    [emitPhaseUpdate]
+    [emitPhaseUpdate, logRawEvent]
   );
 
   const handlePhaseStarted = useCallback(
     (_id: string, event: PhaseEvent) => {
+      logRawEvent('phase_started', { eventId: _id, payload: event });
       const normalizedPhase = normalizeToApiPhase(String(event.phase || '').toLowerCase());
       if (!normalizedPhase) {
         return;
@@ -383,11 +412,12 @@ export function useCampaignPhaseStream(
         }
       );
     },
-    [emitPhaseUpdate]
+    [emitPhaseUpdate, logRawEvent]
   );
 
   const handlePhaseCompleted = useCallback(
     (_id: string, event: PhaseEvent) => {
+      logRawEvent('phase_completed', { eventId: _id, payload: event });
       const normalizedPhase = normalizeToApiPhase(String(event.phase || '').toLowerCase());
       if (!normalizedPhase) {
         return;
@@ -411,11 +441,12 @@ export function useCampaignPhaseStream(
         }
       );
     },
-    [emitPhaseUpdate]
+    [emitPhaseUpdate, logRawEvent]
   );
 
   const handlePhaseFailed = useCallback(
     (_id: string, event: PhaseEvent) => {
+      logRawEvent('phase_failed', { eventId: _id, payload: event });
       const normalizedPhase = normalizeToApiPhase(String(event.phase || '').toLowerCase());
       if (!normalizedPhase) {
         return;
@@ -444,14 +475,15 @@ export function useCampaignPhaseStream(
         onError(String(errorPayload));
       }
     },
-    [emitPhaseUpdate, onError]
+    [emitPhaseUpdate, logRawEvent, onError]
   );
 
   const handleEventError = useCallback(
     (_id: string, errorMessage: string) => {
+      logRawEvent('stream_error', { eventId: _id, errorMessage });
       onError?.(errorMessage);
     },
-    [onError]
+    [logRawEvent, onError]
   );
 
   const sseHandlers = useMemo<CampaignSSEEvents | undefined>(() => {
@@ -468,11 +500,19 @@ export function useCampaignPhaseStream(
     };
   }, [shouldConnect, handleProgress, handlePhaseStarted, handlePhaseCompleted, handlePhaseFailed, handleEventError]);
 
-  const { isConnected, error: sseError } = useCampaignSSE({
+  const {
+    isConnected,
+    hasEverConnected,
+    readyState,
+    connectedAt,
+    error: sseError,
+  } = useCampaignSSE({
     campaignId: shouldConnect ? campaignId ?? undefined : undefined,
     autoConnect: shouldConnect,
     events: sseHandlers,
   });
+
+  const isLive = isConnected || hasEverConnected;
 
   useEffect(() => {
     setLastUpdate(null);
@@ -491,9 +531,32 @@ export function useCampaignPhaseStream(
     }
   }, [sseError, onError]);
 
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || typeof window === 'undefined') {
+      return;
+    }
+    const snapshot = {
+      campaignId,
+      isConnected: isLive,
+      hasEverConnected,
+      readyState,
+      error: sseError,
+      lastUpdate,
+    };
+    const win = window as Record<string, unknown>;
+    win.__phaseStreamState = snapshot;
+    const history = Array.isArray(win.__phaseStreamHistory) ? (win.__phaseStreamHistory as unknown[]) : [];
+    history.push(snapshot);
+    win.__phaseStreamHistory = history.slice(-20);
+    console.log('[useCampaignPhaseStream] connection state', snapshot);
+  }, [campaignId, isLive, hasEverConnected, readyState, sseError, lastUpdate]);
+
   return {
     phases,
-    isConnected,
+    isConnected: isLive,
+    hasEverConnected,
+    readyState,
+    connectedAt,
     error: sseError,
     lastUpdate,
   };

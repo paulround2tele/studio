@@ -1,0 +1,101 @@
+nohup: ignoring input
+
+> domainflow-frontend@1.0.0 dev
+> node scripts/start-next-dev.mjs --hostname 0.0.0.0 --port 3000
+
+[next-dev] writing log output to /home/studio/studio/logs/next-dev.log
+ ⚠ Port 3000 is in use, using available port 3001 instead.
+   ▲ Next.js 15.3.3
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.1.9:3001
+ ○ Compiling /login ...
+ ✓ Compiled /login in 8.8s (1400 [?25h
+)
+ GET /login 200 in 10344ms
+ ✓ Compiled in 1673ms (577 modules)
+ ○ Compiling /dashboard ...
+ ✓ Compiled /campaigns in 7.7s (1985 modules)
+ GET /dashboard 200 in 8661ms
+ GET /campaigns 200 in 7275ms
+ ○ Compiling /campaigns/[id] ...
+ ✓ Compiled /campaigns/[id] in 2.4s (2151 modules)
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 3700ms
+ ✓ Compiled in 1682ms (1863 modules)
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 268ms
+ ✓ Compiled in 1117ms (1863 modules)
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 223ms
+ ✓ Compiled in 1001ms (1863 modules)
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 169ms
+ ✓ Compiled /login in 306ms (925 modules)
+ GET /login 200 in 568ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 2.6s (1211 modules)
+ GET /dashboard 200 in 3462ms
+ GET /campaigns 200 in 1985ms
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 115ms
+ ✓ Compiled in 1508ms (1863 modules)
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 242ms
+ ✓ Compiled in 835ms (1863 modules)
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 167ms
+ ✓ Compiled /login in 298ms (925 modules)
+ GET /login 200 in 542ms
+ ✓ Compiled /dashboard in 412ms (1211 modules)
+ GET /dashboard 200 in 619ms
+ GET /campaigns 200 in 170ms
+ ✓ Compiled in 1123ms (2165 modules)
+ GET /campaigns 200 in 180ms
+ ✓ Compiled in 868ms (2165 modules)
+ GET /campaigns 200 in 113ms
+ GET /login 200 in 163ms
+ GET /campaigns 200 in 94ms
+ GET /login 200 in 59ms
+ HEAD /login 200 in 58ms
+ GET /login 200 in 52ms
+ GET /campaigns 200 in 83ms
+ GET /login 200 in 66ms
+ GET /dashboard 200 in 100ms
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 258ms
+ ✓ Compiled in 1630ms (1879 modules)
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 251ms
+ GET /login 200 in 200ms
+ ✓ Compiled /dashboard in 438ms (1211 modules)
+ GET /dashboard 200 in 663ms
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 259ms
+ GET /campaigns 200 in 108ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1673ms (2152 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 1940ms
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 966ms (1228 modules)
+ GET /favicon.ico 200 in 1123ms
+ GET /favicon.ico 200 in 18ms
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 164ms
+ ✓ Compiled in 1885ms (1879 modules)
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 283ms
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 286ms
+ ✓ Compiled in 2.5s (1879 modules)
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 240ms
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 237ms
+ ✓ Compiled in 1052ms (1879 modules)
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 209ms
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 52ms
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 280ms
+ ✓ Compiled /_not-found in 426ms (926 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 576ms
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 969ms (942 modules)
+ GET /favicon.ico 200 in 1085ms
+ GET /favicon.ico 200 in 14ms
+ GET /login 200 in 295ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 2.8s (1228 modules)
+ GET /dashboard 200 in 4285ms
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 2814ms
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 133ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 170ms
+ GET /favicon.ico 200 in 85ms
+ GET /favicon.ico 200 in 22ms
+ GET /login 200 in 197ms
+ GET /dashboard 200 in 36ms
+ GET /campaigns/5a3f6fb3-db6c-4b97-9653-677bcbc0e214 200 in 92ms
+[?25h

@@ -2,13 +2,17 @@ package main
 
 import (
 	"context"
-	"io"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 	"github.com/fntelecomllc/studio/backend/internal/services"
 )
+
+type flushRecorder struct{ *httptest.ResponseRecorder }
+
+func (f *flushRecorder) Flush() {}
 
 // newSSEHandlersForTest wires only the SSE dependency for handler tests.
 func newSSEHandlersForTest() *strictHandlers {
@@ -43,41 +47,43 @@ func TestSSEAllStreamSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SseEventsAll error: %v", err)
 	}
-	r200, ok := resp.(ssePipeResponse)
+	r200, ok := resp.(sseLiveResponse)
 	if !ok {
-		t.Fatalf("expected SSE pipe response, got %T", resp)
+		t.Fatalf("expected SSE live response, got %T", resp)
 	}
-	reader := r200.body
-	// Attempt to close if it's a ReadCloser
-	if rc, ok := reader.(io.ReadCloser); ok {
-		defer func() { _ = rc.Close() }()
-	}
+	fr := &flushRecorder{ResponseRecorder: httptest.NewRecorder()}
 
-	// Read a bit from the stream; the SSE service sends a keep-alive event immediately.
-	buf := make([]byte, 1024)
-	type result struct {
-		n   int
-		err error
-	}
-	ch := make(chan result, 1)
+	ch := make(chan error, 1)
 	go func() {
-		n, err := reader.Read(buf)
-		ch <- result{n: n, err: err}
+		ch <- r200.VisitSseEventsAllResponse(fr)
 	}()
-	select {
-	case res := <-ch:
-		if res.err != nil && res.err != io.EOF {
-			t.Fatalf("failed reading SSE pipe: %v", res.err)
+
+	deadline := time.After(1500 * time.Millisecond)
+	for {
+		select {
+		case err := <-ch:
+			if err != nil {
+				t.Fatalf("visit failed: %v", err)
+			}
+			return
+		case <-deadline:
+			if fr.Body.Len() == 0 {
+				t.Fatalf("expected some SSE data, got none")
+			}
+			got := fr.Body.String()
+			if !(contains(got, "event:") || contains(got, "data:") || contains(got, "keep_alive")) {
+				t.Fatalf("unexpected SSE payload: %q", got)
+			}
+			return
+		case <-time.After(50 * time.Millisecond):
+			if fr.Body.Len() > 0 {
+				got := fr.Body.String()
+				if !(contains(got, "event:") || contains(got, "data:") || contains(got, "keep_alive")) {
+					t.Fatalf("unexpected SSE payload: %q", got)
+				}
+				return
+			}
 		}
-		if res.n == 0 {
-			t.Fatalf("expected some SSE data, got 0 bytes")
-		}
-		got := string(buf[:res.n])
-		if !(contains(got, "id:") || contains(got, "event:") || contains(got, "data:") || contains(got, "keep_alive")) {
-			t.Fatalf("unexpected SSE payload: %q", got)
-		}
-	case <-time.After(1500 * time.Millisecond):
-		t.Fatalf("timed out waiting for SSE data")
 	}
 }
 

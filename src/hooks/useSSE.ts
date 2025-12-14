@@ -9,6 +9,7 @@ export type SSEEvent = {
   event: string;
   data: unknown;
   timestamp: string;
+  raw?: unknown;
 } & Record<string, unknown>;
 
 export interface SSEOptions {
@@ -47,6 +48,16 @@ export interface UseSSEReturn {
    * Current connection state
    */
   readyState: number;
+
+  /**
+   * Whether the connection has ever successfully opened
+   */
+  hasEverConnected: boolean;
+
+  /**
+   * Timestamp of the last successful connection
+   */
+  connectedAt: string | null;
   
   /**
    * Last received event
@@ -99,6 +110,10 @@ export function useSSE(
     withCredentials = true,
   } = options;
 
+  // Keep a small timeout so we fail fast locally; actual liveness is confirmed by messages below.
+  const STALE_TIMEOUT_MS = 45000; // Reconnect if no activity past keep-alive window
+  const MAX_JITTER_MS = 500; // Jitter reconnections to avoid thundering herd
+
   // Runtime-safe EventSource access (SSR-friendly)
   interface SSEMessageEvent {
     data: string;
@@ -124,12 +139,17 @@ export function useSSE(
 
   const eventSourceRef = useRef<EventSourceLike | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const staleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const mountedRef = useRef(true);
+  const lastActivityRef = useRef<number>(Date.now());
+  const connectRef = useRef<() => void>(() => {});
   
   const [readyState, setReadyState] = useState<number>(ES_CONNECTING);
   const [lastEvent, setLastEvent] = useState<SSEEvent | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasEverConnected, setHasEverConnected] = useState(false);
+  const [connectedAt, setConnectedAt] = useState<string | null>(null);
 
   const cleanup = useCallback(() => {
     if (eventSourceRef.current) {
@@ -140,10 +160,41 @@ export function useSSE(
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
+    if (staleIntervalRef.current) {
+      clearInterval(staleIntervalRef.current);
+      staleIntervalRef.current = null;
+    }
     setReadyState(ES_CLOSED);
   }, []);
 
+  const scheduleReconnect = useCallback(
+    (reason: string) => {
+      if (!autoReconnect || !mountedRef.current) {
+        return;
+      }
+      const attempts = reconnectAttemptsRef.current + 1;
+      if (attempts > maxReconnectAttempts) {
+        console.warn(`[useSSE] reconnection aborted after ${maxReconnectAttempts} attempts (${reason})`);
+        return;
+      }
+      reconnectAttemptsRef.current = attempts;
+      const backoff = reconnectDelay * Math.pow(2, attempts - 1);
+      const jitter = Math.floor(Math.random() * MAX_JITTER_MS);
+      const delay = Math.min(backoff + jitter, 30000);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[useSSE] reconnecting in ${delay}ms (attempt ${attempts}, reason: ${reason})`);
+      }
+      reconnectTimeoutRef.current = setTimeout(() => {
+        if (mountedRef.current) {
+          connectRef.current();
+        }
+      }, delay);
+    },
+    [autoReconnect, maxReconnectAttempts, reconnectDelay]
+  );
+
   const connect = useCallback(() => {
+    connectRef.current = connect;
     if (!url || !mountedRef.current) {
       if (!url && process.env.NODE_ENV !== 'production') {
         console.warn('[useSSE] connect skipped - no URL');
@@ -163,10 +214,30 @@ export function useSSE(
     cleanup();
     setError(null);
     setReadyState(ES_CONNECTING);
+    lastActivityRef.current = Date.now();
 
     try {
       if (process.env.NODE_ENV !== 'production') {
         console.log('[useSSE] opening connection', url);
+        // Optional dev-only probe to surface HTTP status if EventSource never fires.
+        // Disabled by default because it can interfere with the real EventSource connection.
+        const enableProbe = process.env.NEXT_PUBLIC_SSE_PROBE === '1';
+        if (enableProbe) {
+          const probe = new AbortController();
+          setTimeout(() => probe.abort(), 1500);
+          fetch(url, {
+            method: 'GET',
+            headers: { Accept: 'text/event-stream' },
+            credentials: withCredentials ? 'include' : 'same-origin',
+            signal: probe.signal,
+          })
+            .then((res) => {
+              console.log('[useSSE] probe status', res.status, res.statusText);
+            })
+            .catch((err) => {
+              console.error('[useSSE] probe failed', err?.message || err);
+            });
+        }
       }
       // Modern browsers support headers via EventSource constructor
       const eventSource = new ES(url, {
@@ -179,51 +250,85 @@ export function useSSE(
         if (!mountedRef.current) return;
         setReadyState(ES_OPEN);
         setError(null);
+        setHasEverConnected(true);
+        setConnectedAt(new Date().toISOString());
         reconnectAttemptsRef.current = 0;
+        lastActivityRef.current = Date.now();
+        if (staleIntervalRef.current) {
+          clearInterval(staleIntervalRef.current);
+        }
+        staleIntervalRef.current = setInterval(() => {
+          const now = Date.now();
+          if (now - lastActivityRef.current > STALE_TIMEOUT_MS) {
+            if (process.env.NODE_ENV !== 'production') {
+              console.warn('[useSSE] stale connection detected; reconnecting');
+            }
+            eventSourceRef.current?.close();
+            scheduleReconnect('stale-connection');
+          }
+        }, Math.floor(STALE_TIMEOUT_MS / 2));
         console.log(`✅ SSE Connected to ${url}`);
       };
 
-      eventSource.onerror = (_event: Event) => {
+      eventSource.onerror = (event: Event) => {
         if (!mountedRef.current) return;
-        
-        console.error('❌ SSE Connection error');
-        setReadyState(ES_CLOSED);
-        
-        const errorMessage = 'SSE connection failed';
-        setError(errorMessage);
 
-        // Auto-reconnect logic
-        if (
-          autoReconnect &&
-          reconnectAttemptsRef.current < maxReconnectAttempts &&
-          mountedRef.current
-        ) {
-          reconnectAttemptsRef.current += 1;
-          console.log(
-            `🔄 SSE Reconnecting... Attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts}`
-          );
-          
-          reconnectTimeoutRef.current = setTimeout(() => {
-            if (mountedRef.current) {
-              connect();
-            }
-          }, reconnectDelay);
-        } else {
-          console.log('🛑 SSE Max reconnection attempts reached or auto-reconnect disabled');
+        const targetReadyState = (event?.target as { readyState?: number } | null)?.readyState;
+        const nextReadyState = typeof targetReadyState === 'number' ? targetReadyState : ES_CLOSED;
+        const message = `SSE connection error (readyState=${nextReadyState})`;
+
+        console.error('❌ SSE Connection error', {
+          readyState: nextReadyState,
+          url,
+          lastActivityMsAgo: Date.now() - lastActivityRef.current,
+        });
+
+        setReadyState(nextReadyState);
+        if (staleIntervalRef.current) {
+          clearInterval(staleIntervalRef.current);
+          staleIntervalRef.current = null;
         }
+
+        setError(message);
+
+        scheduleReconnect('onerror');
       };
 
   // Generic event listener for all SSE events
-  eventSource.onmessage = (event: SSEMessageEvent) => {
+      const unwrapPayload = (payload: unknown): { data: unknown; raw: unknown } => {
+        if (payload && typeof payload === 'object' && !Array.isArray(payload) && 'data' in (payload as Record<string, unknown>)) {
+          const rawContainer = payload as Record<string, unknown>;
+          const inner = rawContainer.data;
+          return { data: inner ?? payload, raw: payload };
+        }
+        return { data: payload, raw: payload };
+      };
+
+      eventSource.onmessage = (event: SSEMessageEvent) => {
         if (!mountedRef.current) return;
-        
+
+        // Any message proves the connection is alive; clear the ready timeout.
+
+        // Treat any message as connected even if readyState lags.
+        setReadyState(ES_OPEN);
+        setError(null);
+
+        if (eventSource.readyState === ES_CONNECTING) {
+          setReadyState(ES_OPEN);
+          setError(null);
+        }
+        setHasEverConnected(true);
+        lastActivityRef.current = Date.now();
+
         try {
           const parsedData: unknown = JSON.parse(event.data);
+          const { data: payload, raw } = unwrapPayload(parsedData);
           const sseEvent: SSEEvent = {
             id: event.lastEventId || undefined,
             event: event.type || 'message',
-            data: parsedData,
+            data: payload,
             timestamp: new Date().toISOString(),
+            raw,
           };
           
           setLastEvent(sseEvent);
@@ -248,20 +353,27 @@ export function useSSE(
   'keyword_set_updated',
   'keyword_set_deleted',
         'keep_alive',
-        'error',
       ];
 
       eventTypes.forEach((eventType) => {
         eventSource.addEventListener(eventType, (event: SSEMessageEvent) => {
           if (!mountedRef.current) return;
           
+
+          // Treat typed events as connected even if readyState lags.
+          setReadyState(ES_OPEN);
+          setError(null);
+          lastActivityRef.current = Date.now();
+
           try {
             const parsedData: unknown = JSON.parse(event.data);
+            const { data: payload, raw } = unwrapPayload(parsedData);
             const sseEvent: SSEEvent = {
               id: event.lastEventId || undefined,
               event: eventType,
-              data: parsedData,
+              data: payload,
               timestamp: new Date().toISOString(),
+              raw,
             };
             
             setLastEvent(sseEvent);
@@ -289,22 +401,21 @@ export function useSSE(
     cleanup();
   }, [cleanup]);
 
-  // Connect when URL changes or component mounts
+  // Connect when URL changes or component mounts. React Strict Mode double-invokes
+  // effects in development, so ensure we re-mark the ref as mounted before connecting.
   useEffect(() => {
+    mountedRef.current = true;
     connect();
-    return cleanup;
-  }, [connect, cleanup]);
-
-  // Cleanup on unmount
-  useEffect(() => {
     return () => {
       mountedRef.current = false;
       cleanup();
     };
-  }, [cleanup]);
+  }, [connect, cleanup]);
 
   return {
     readyState,
+    hasEverConnected,
+    connectedAt,
     lastEvent,
     error,
     reconnect,

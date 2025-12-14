@@ -206,6 +206,18 @@ func buildAllowedOrigins() map[string]struct{} {
 		"http://127.0.0.1:3000",
 		"https://localhost:3000",
 		"https://127.0.0.1:3000",
+		"http://localhost:3001",
+		"http://127.0.0.1:3001",
+		"https://localhost:3001",
+		"https://127.0.0.1:3001",
+		"http://localhost:3002",
+		"http://127.0.0.1:3002",
+		"https://localhost:3002",
+		"https://127.0.0.1:3002",
+		"http://localhost:3003",
+		"http://127.0.0.1:3003",
+		"https://localhost:3003",
+		"https://127.0.0.1:3003",
 	}
 
 	origins := make(map[string]struct{})
@@ -242,8 +254,10 @@ func originAllowed(origin string, allowed map[string]struct{}) bool {
 	if _, ok := allowed[origin]; ok {
 		return true
 	}
-	if strings.HasSuffix(origin, ".app.github.dev") && strings.Contains(origin, "-3000.") {
-		return true
+	if strings.HasSuffix(origin, ".app.github.dev") {
+		if strings.Contains(origin, "-3000.") || strings.Contains(origin, "-3001.") || strings.Contains(origin, "-3002.") || strings.Contains(origin, "-3003.") {
+			return true
+		}
 	}
 	return false
 }
