@@ -436,6 +436,13 @@ func initAppDependencies() (*AppDeps, error) {
 
 		// Register post-completion hooks
 		deps.Orchestrator.RegisterPostCompletionHook(&application_hooks.SummaryReportHook{Store: deps.Stores.Campaign, Deps: domainDeps})
+
+		go func() {
+			ctx := context.Background()
+			if err := deps.Orchestrator.RestoreInFlightPhases(ctx); err != nil && deps.Logger != nil {
+				deps.Logger.Warn(ctx, "orchestrator.rehydrate.failed", map[string]interface{}{"error": err.Error()})
+			}
+		}()
 	}
 
 	// Monitoring and cleanup services

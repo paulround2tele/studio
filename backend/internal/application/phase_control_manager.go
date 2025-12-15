@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -16,6 +17,13 @@ type PhaseControlManager interface {
 	Broadcast(_ context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, signal domainservices.ControlSignal, ack chan<- error) error
 	Close(campaignID uuid.UUID, phase models.PhaseTypeEnum)
 }
+
+var (
+	// ErrControlChannelMissing indicates no control subscription exists for the requested phase.
+	ErrControlChannelMissing = errors.New("phase control channel missing")
+	// ErrControlChannelFull indicates the subscription channel exists but cannot accept new commands.
+	ErrControlChannelFull = errors.New("phase control channel full")
+)
 
 const defaultPhaseControlBuffer = 8
 
@@ -63,7 +71,7 @@ func (m *inMemoryPhaseControlManager) Broadcast(_ context.Context, campaignID uu
 	ch, exists := m.channels[key]
 	m.mu.RUnlock()
 	if !exists {
-		err := fmt.Errorf("control channel missing for campaign=%s phase=%s", campaignID, phase)
+		err := fmt.Errorf("%w for campaign=%s phase=%s", ErrControlChannelMissing, campaignID, phase)
 		if ack != nil {
 			select {
 			case ack <- err:
@@ -78,7 +86,7 @@ func (m *inMemoryPhaseControlManager) Broadcast(_ context.Context, campaignID uu
 	case ch <- cmd:
 		return nil
 	default:
-		err := fmt.Errorf("control channel full for campaign=%s phase=%s", campaignID, phase)
+		err := fmt.Errorf("%w for campaign=%s phase=%s", ErrControlChannelFull, campaignID, phase)
 		if ack != nil {
 			select {
 			case ack <- err:

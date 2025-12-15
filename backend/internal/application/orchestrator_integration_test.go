@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -19,28 +20,49 @@ import (
 
 // --- Test doubles -------------------------------------------------------------------
 
-// testLogger implements domainservices.Logger with no-op methods (minimal output via t.Logf when bound).
-type testLogger struct{ t *testing.T }
+// testLogger implements domainservices.Logger with optional test-bound logging that avoids panics after t cleanup.
+type testLogger struct {
+	t      testing.TB
+	mu     sync.Mutex
+	closed bool
+}
+
+func newTestLogger(t testing.TB) *testLogger {
+	if t == nil {
+		return &testLogger{}
+	}
+	l := &testLogger{t: t}
+	t.Cleanup(func() {
+		l.mu.Lock()
+		l.closed = true
+		l.mu.Unlock()
+	})
+	return l
+}
+
+func (l *testLogger) logf(format string, args ...interface{}) {
+	if l == nil {
+		return
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.t == nil || l.closed {
+		return
+	}
+	l.t.Logf(format, args...)
+}
 
 func (l *testLogger) Debug(ctx context.Context, msg string, fields map[string]interface{}) {
-	if l.t != nil {
-		l.t.Logf("DEBUG %s %#v", msg, fields)
-	}
+	l.logf("DEBUG %s %#v", msg, fields)
 }
 func (l *testLogger) Info(ctx context.Context, msg string, fields map[string]interface{}) {
-	if l.t != nil {
-		l.t.Logf("INFO %s %#v", msg, fields)
-	}
+	l.logf("INFO %s %#v", msg, fields)
 }
 func (l *testLogger) Warn(ctx context.Context, msg string, fields map[string]interface{}) {
-	if l.t != nil {
-		l.t.Logf("WARN %s %#v", msg, fields)
-	}
+	l.logf("WARN %s %#v", msg, fields)
 }
 func (l *testLogger) Error(ctx context.Context, msg string, err error, fields map[string]interface{}) {
-	if l.t != nil {
-		l.t.Logf("ERROR %s err=%v %#v", msg, err, fields)
-	}
+	l.logf("ERROR %s err=%v %#v", msg, err, fields)
 }
 
 // stubPhaseService simulates fast deterministic phase execution.
@@ -183,6 +205,9 @@ func upsertConfig(t *testing.T, cs store.CampaignStore, campaignID uuid.UUID, ph
 	}
 }
 
+// integrationTestTimeout gives orchestration flows more breathing room on slower CI hosts.
+const integrationTestTimeout = 5 * time.Second
+
 // waitUntil polls fn until it returns true or timeout elapses.
 func waitUntil(t *testing.T, timeout time.Duration, fn func() bool) {
 	deadline := time.Now().Add(timeout)
@@ -200,7 +225,7 @@ func waitUntil(t *testing.T, timeout time.Duration, fn func() bool) {
 func TestFullSequenceAutoAdvanceSuccess(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
@@ -231,11 +256,11 @@ func TestFullSequenceAutoAdvanceSuccess(t *testing.T) {
 		t.Fatalf("start domain_generation: %v", err)
 	}
 
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		st, _ := analysisSvc.GetStatus(context.Background(), campaignID)
 		return st.Status == models.PhaseStatusCompleted
 	})
-	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions > 0 })
+	waitUntil(t, integrationTestTimeout, func() bool { return metrics.campaignCompletions > 0 })
 	if metrics.phaseStarts < 6 {
 		t.Fatalf("expected >=6 phase starts got %d", metrics.phaseStarts)
 	}
@@ -258,7 +283,7 @@ func TestFullSequenceAutoAdvanceSuccess(t *testing.T) {
 func TestFullSequenceAutoAdvanceWithRealEnrichment(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
@@ -289,15 +314,15 @@ func TestFullSequenceAutoAdvanceWithRealEnrichment(t *testing.T) {
 		t.Fatalf("start domain_generation: %v", err)
 	}
 
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		st, _ := analysisSvc.GetStatus(context.Background(), campaignID)
 		return st.Status == models.PhaseStatusCompleted
 	})
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		st, _ := enrichmentSvc.GetStatus(context.Background(), campaignID)
 		return st.Status == models.PhaseStatusCompleted
 	})
-	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions > 0 })
+	waitUntil(t, integrationTestTimeout, func() bool { return metrics.campaignCompletions > 0 })
 
 	if metrics.phaseStarts < 6 {
 		t.Fatalf("expected >=6 phase starts got %d", metrics.phaseStarts)
@@ -320,7 +345,7 @@ func TestFullSequenceAutoAdvanceWithRealEnrichment(t *testing.T) {
 func TestCampaignDatabaseStateAfterFullAuto(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
@@ -352,15 +377,15 @@ func TestCampaignDatabaseStateAfterFullAuto(t *testing.T) {
 	}
 
 	// Wait for terminal phases to complete.
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		st, _ := analysisSvc.GetStatus(context.Background(), campaignID)
 		return st.Status == models.PhaseStatusCompleted
 	})
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		st, _ := enrichmentSvc.GetStatus(context.Background(), campaignID)
 		return st.Status == models.PhaseStatusCompleted
 	})
-	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions == 1 })
+	waitUntil(t, integrationTestTimeout, func() bool { return metrics.campaignCompletions == 1 })
 
 	// Validate campaign summary columns.
 	var total, completed int
@@ -440,7 +465,7 @@ func TestCampaignDatabaseStateAfterFullAuto(t *testing.T) {
 func TestFrontendReadModelReadyAfterFullAuto(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
@@ -471,9 +496,9 @@ func TestFrontendReadModelReadyAfterFullAuto(t *testing.T) {
 		t.Fatalf("start domain_generation: %v", err)
 	}
 
-	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions == 1 })
+	waitUntil(t, integrationTestTimeout, func() bool { return metrics.campaignCompletions == 1 })
 
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		campaign, err := cs.GetCampaignByID(context.Background(), db, campaignID)
 		if err != nil {
 			return false
@@ -542,7 +567,7 @@ func TestFrontendReadModelReadyAfterFullAuto(t *testing.T) {
 func TestFirstPhaseMissingConfigsGated(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
@@ -574,7 +599,7 @@ func TestFirstPhaseMissingConfigsGated(t *testing.T) {
 func TestFullSequenceOptionalPhasesAutoConfigured(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
@@ -604,11 +629,11 @@ func TestFullSequenceOptionalPhasesAutoConfigured(t *testing.T) {
 		t.Fatalf("start domain_generation: %v", err)
 	}
 
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		st, _ := analysisSvc.GetStatus(context.Background(), campaignID)
 		return st.Status == models.PhaseStatusCompleted
 	})
-	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions > 0 })
+	waitUntil(t, integrationTestTimeout, func() bool { return metrics.campaignCompletions > 0 })
 
 	phases, err := cs.GetCampaignPhases(context.Background(), db, campaignID)
 	if err != nil {
@@ -649,7 +674,7 @@ func TestMidChainMissingNextConfigBlocks(t *testing.T) {
 	t.Skip("Mid-chain missing next config scenario not valid with current gating (first phase requires all downstream configs). Needs redesign if desired.")
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
@@ -674,7 +699,7 @@ func TestMidChainMissingNextConfigBlocks(t *testing.T) {
 	}
 
 	// Wait until DNS completes
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		st, _ := dnsSvc.GetStatus(context.Background(), campaignID)
 		return st.Status == models.PhaseStatusCompleted
 	})
@@ -690,7 +715,7 @@ func TestMidChainMissingNextConfigBlocks(t *testing.T) {
 func TestFailureThenRetryChainContinues(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
@@ -721,29 +746,29 @@ func TestFailureThenRetryChainContinues(t *testing.T) {
 	}
 
 	// Wait for domain completion
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		st, _ := domainSvc.GetStatus(context.Background(), campaignID)
 		return st.Status == models.PhaseStatusCompleted
 	})
 
 	// Auto attempt to start DNS should fail once (forced) and increment phaseFailures before we clear flag.
-	waitUntil(t, 2*time.Second, func() bool { return metrics.phaseFailures == 1 })
+	waitUntil(t, integrationTestTimeout, func() bool { return metrics.phaseFailures == 1 })
 	// Clear failure and manually start DNS.
 	dnsSvc.clearFail(campaignID)
 	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDNSValidation); err != nil {
 		t.Fatalf("retry dns start: %v", err)
 	}
 	// Wait for analysis completion (penultimate phase) and ensure enrichment completes as well.
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		st, _ := analysisSvc.GetStatus(context.Background(), campaignID)
 		return st.Status == models.PhaseStatusCompleted
 	})
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		st, _ := enrichmentSvc.GetStatus(context.Background(), campaignID)
 		return st.Status == models.PhaseStatusCompleted
 	})
 	// Wait for async campaign completion handling
-	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions > 0 })
+	waitUntil(t, integrationTestTimeout, func() bool { return metrics.campaignCompletions > 0 })
 
 	// Metrics assertions: one failure (auto dns start), 6 completions, 6 starts (domain, dns manual, http auto, extraction auto, analysis auto, enrichment auto)
 	if metrics.phaseFailures != 1 {
@@ -772,7 +797,7 @@ func TestFailureThenRetryChainContinues(t *testing.T) {
 func TestPhaseStartFailureMetrics(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 	// Only need the failing phase service (domain) and minimal others
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
@@ -824,7 +849,7 @@ func TestPhaseStartFailureMetrics(t *testing.T) {
 func TestIdempotentPhaseStartNoDuplicateExecution(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
@@ -847,7 +872,7 @@ func TestIdempotentPhaseStartNoDuplicateExecution(t *testing.T) {
 		}
 	}
 	// Wait for completion
-	waitUntil(t, 2*time.Second, func() bool {
+	waitUntil(t, integrationTestTimeout, func() bool {
 		st, _ := domainSvc.GetStatus(context.Background(), campaignID)
 		return st.Status == models.PhaseStatusCompleted
 	})

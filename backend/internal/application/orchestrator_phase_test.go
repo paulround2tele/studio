@@ -31,7 +31,7 @@ func waitPoll(t *testing.T, timeout time.Duration, cond func() bool) {
 func TestStartPhaseFromConfigured(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	// Create campaign
@@ -90,7 +90,7 @@ func TestStartPhaseFromConfigured(t *testing.T) {
 func TestHTTPConfigureBlockedUntilDNSCompleted(t *testing.T) {
 	db, campaignStore, _, personaStore, _, keywordStore, proxyStore, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	// Create campaign (DNS phase not run/completed)
@@ -144,7 +144,7 @@ func containsAll(s string, subs []string) bool {
 func TestStartPhaseAnalysisRequiresExtractionCompletion(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	campID := createTestCampaign(t, cs)
@@ -182,7 +182,7 @@ func TestStartPhaseAnalysisRequiresExtractionCompletion(t *testing.T) {
 func TestStartPhaseExtractionRequiresHTTPCompletion(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	campID := createTestCampaign(t, cs)
@@ -220,7 +220,7 @@ func TestStartPhaseExtractionRequiresHTTPCompletion(t *testing.T) {
 func TestStartPhaseHTTPRequiresDNSCompletion(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	campID := createTestCampaign(t, cs)
@@ -258,7 +258,7 @@ func TestStartPhaseHTTPRequiresDNSCompletion(t *testing.T) {
 func TestRestartCampaignFullSequenceRespectsMode(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
+	logger := newTestLogger(t)
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	campID := createTestCampaign(t, cs)

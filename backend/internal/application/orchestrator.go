@@ -32,6 +32,7 @@ var (
 
 const (
 	controlAckTimeout   = 30 * time.Second
+	controlRetryBackoff = 250 * time.Millisecond
 	campaignStopMessage = "Campaign stop requested by user"
 )
 
@@ -464,6 +465,157 @@ func (o *CampaignOrchestrator) StartPhase(ctx context.Context, campaignID uuid.U
 	return o.StartPhaseByString(ctx, campaignID, phaseType)
 }
 
+// RestoreInFlightPhases rebuilds execution state for campaigns that were mid-flight before a restart.
+// It ensures runtime control channels are reattached by replaying the active phase.
+func (o *CampaignOrchestrator) RestoreInFlightPhases(ctx context.Context) error {
+	if o == nil || o.store == nil || o.deps.DB == nil {
+		return nil
+	}
+	querier, ok := o.deps.DB.(store.Querier)
+	if !ok {
+		return fmt.Errorf("invalid database interface in dependencies")
+	}
+	targetStatuses := []models.PhaseStatusEnum{
+		models.PhaseStatusInProgress,
+		models.PhaseStatusPaused,
+	}
+	candidates := make(map[uuid.UUID]*models.LeadGenerationCampaign)
+	for _, status := range targetStatuses {
+		filter := store.ListCampaignsFilter{PhaseStatus: &status}
+		campaigns, err := o.store.ListCampaigns(ctx, querier, filter)
+		if err != nil {
+			if o.deps.Logger != nil {
+				o.deps.Logger.Warn(ctx, "campaign.rehydrate.list_failed", map[string]interface{}{
+					"status": status,
+					"error":  err.Error(),
+				})
+			}
+			continue
+		}
+		for _, campaign := range campaigns {
+			if campaign == nil || campaign.ID == uuid.Nil {
+				continue
+			}
+			candidates[campaign.ID] = campaign
+		}
+	}
+	rehydrated := 0
+	for _, campaign := range candidates {
+		if err := o.rehydrateCampaignPhase(ctx, querier, campaign); err != nil {
+			if o.deps.Logger != nil {
+				o.deps.Logger.Error(ctx, "campaign.rehydrate.phase_failed", err, map[string]interface{}{
+					"campaign_id": campaign.ID,
+				})
+			}
+			continue
+		}
+		rehydrated++
+	}
+	if o.deps.Logger != nil {
+		o.deps.Logger.Info(ctx, "campaign.rehydrate.completed", map[string]interface{}{
+			"campaigns": rehydrated,
+		})
+	}
+	return nil
+}
+
+func (o *CampaignOrchestrator) rehydrateCampaignPhase(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign) error {
+	if o == nil || campaign == nil || campaign.ID == uuid.Nil {
+		return nil
+	}
+	if campaign.PhaseStatus == nil || !isPhaseActiveStatus(*campaign.PhaseStatus) {
+		return nil
+	}
+	phase := models.PhaseTypeEnum("")
+	if campaign.CurrentPhase != nil {
+		phase = *campaign.CurrentPhase
+	}
+	if phase == "" && exec != nil {
+		if active, err := o.findActivePhase(ctx, exec, campaign.ID); err == nil && active != nil {
+			phase = active.PhaseType
+		} else if err != nil && !errors.Is(err, ErrNoActivePhase) {
+			return err
+		}
+	}
+	if phase == "" {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "campaign.rehydrate.skip_no_phase", map[string]interface{}{
+				"campaign_id": campaign.ID,
+			})
+		}
+		return nil
+	}
+	// Guard against duplicate executions when RestoreInFlightPhases runs multiple times.
+	o.mu.RLock()
+	if execState, ok := o.campaignExecutions[campaign.ID]; ok {
+		if execState != nil && execState.CurrentPhase == phase {
+			switch execState.OverallStatus {
+			case models.PhaseStatusInProgress, models.PhaseStatusPaused:
+				o.mu.RUnlock()
+				if o.deps.Logger != nil {
+					o.deps.Logger.Debug(ctx, "campaign.rehydrate.skip_duplicate", map[string]interface{}{
+						"campaign_id": campaign.ID,
+						"phase":       phase,
+					})
+				}
+				return nil
+			}
+		}
+	}
+	o.mu.RUnlock()
+	service, err := o.getPhaseService(phase)
+	if err != nil {
+		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
+	}
+	if o.deps.Logger != nil {
+		o.deps.Logger.Info(ctx, "campaign.rehydrate.phase.start", map[string]interface{}{
+			"campaign_id": campaign.ID,
+			"phase":       phase,
+			"status":      *campaign.PhaseStatus,
+		})
+	}
+	if err := o.StartPhaseInternal(ctx, campaign.ID, phase); err != nil {
+		return fmt.Errorf("failed to restart phase %s: %w", phase, err)
+	}
+	if o.deps.Logger != nil {
+		o.deps.Logger.Debug(ctx, "phase.restore.attach.complete", map[string]interface{}{
+			"campaign_id": campaign.ID,
+			"phase":       phase,
+		})
+	}
+	if *campaign.PhaseStatus != models.PhaseStatusPaused {
+		return nil
+	}
+	if _, ok := service.(domainservices.ControlAwarePhase); !ok {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Debug(ctx, "campaign.rehydrate.pause.skip", map[string]interface{}{
+				"campaign_id": campaign.ID,
+				"phase":       phase,
+				"reason":      "phase_not_control_aware",
+			})
+		}
+		return nil
+	}
+	pauseCtx, cancel := context.WithTimeout(ctx, controlAckTimeout)
+	defer cancel()
+	if err := o.PausePhase(pauseCtx, campaign.ID, phase); err != nil {
+		return fmt.Errorf("failed to reapply pause for %s: %w", phase, err)
+	}
+	if o.deps.Logger != nil {
+		o.deps.Logger.Info(ctx, "phase.restore.pause.reapplied", map[string]interface{}{
+			"campaign_id": campaign.ID,
+			"phase":       phase,
+		})
+	}
+	if o.deps.Logger != nil {
+		o.deps.Logger.Info(ctx, "campaign.rehydrate.pause.applied", map[string]interface{}{
+			"campaign_id": campaign.ID,
+			"phase":       phase,
+		})
+	}
+	return nil
+}
+
 // parsePhaseType converts string phase type to enum
 func parsePhaseType(phaseType string) (models.PhaseTypeEnum, error) {
 	switch phaseType {
@@ -540,13 +692,6 @@ func (o *CampaignOrchestrator) GetCampaignStatus(ctx context.Context, campaignID
 
 // CancelPhase stops execution of a specific phase
 func (o *CampaignOrchestrator) CancelPhase(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
-	if err := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalStop, nil); err != nil && o.deps.Logger != nil {
-		o.deps.Logger.Debug(ctx, "phase.control.stop.broadcast_failed", map[string]interface{}{
-			"campaign_id": campaignID,
-			"phase":       phase,
-			"error":       err.Error(),
-		})
-	}
 	o.deps.Logger.Info(ctx, "Cancelling campaign phase", map[string]interface{}{
 		"campaign_id": campaignID,
 		"phase":       phase,
@@ -556,6 +701,16 @@ func (o *CampaignOrchestrator) CancelPhase(ctx context.Context, campaignID uuid.
 	service, err := o.getPhaseService(phase)
 	if err != nil {
 		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
+	}
+	// Ensure a control subscription exists before signaling stop so backend restarts don't drop the command.
+	o.attachControlChannel(ctx, campaignID, phase, service)
+
+	if err := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalStop, nil); err != nil && o.deps.Logger != nil {
+		o.deps.Logger.Debug(ctx, "phase.control.stop.broadcast_failed", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+			"error":       err.Error(),
+		})
 	}
 
 	// Cancel the phase
@@ -584,6 +739,13 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 		"campaign_id": campaignID,
 		"phase":       phase,
 	})
+
+	service, err := o.getPhaseService(phase)
+	if err != nil {
+		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
+	}
+	// Re-attach in case the prior control subscription was closed (e.g., orchestrator restart).
+	o.attachControlChannel(ctx, campaignID, phase, service)
 
 	ack := make(chan error, 1)
 	if err := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalPause, ack); err != nil {
@@ -1097,18 +1259,53 @@ func (o *CampaignOrchestrator) attachControlChannel(ctx context.Context, campaig
 	}
 }
 
-func (o *CampaignOrchestrator) broadcastControlSignal(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, signal domainservices.ControlSignal, ack chan<- error) error {
+func (o *CampaignOrchestrator) broadcastControlSignal(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, signal domainservices.ControlSignal, ack chan error) error {
 	if o == nil || o.control == nil {
 		err := fmt.Errorf("phase control manager unavailable")
-		if ack != nil {
-			select {
-			case ack <- err:
-			default:
-			}
-		}
+		notifyControlAck(ack, err)
 		return err
 	}
 	if err := o.control.Broadcast(ctx, campaignID, phase, signal, ack); err != nil {
+		if errors.Is(err, ErrControlChannelMissing) {
+			// Control channel likely dropped after a restart; attempt to reattach once.
+			drainControlAck(ack)
+			if service, svcErr := o.getPhaseService(phase); svcErr == nil {
+				if o.deps.Logger != nil {
+					o.deps.Logger.Info(ctx, "phase.control.channel.retry", map[string]interface{}{
+						"campaign_id": campaignID,
+						"phase":       phase,
+						"signal":      signal,
+					})
+				}
+				time.Sleep(controlRetryBackoff)
+				o.attachControlChannel(ctx, campaignID, phase, service)
+				retryErr := o.control.Broadcast(ctx, campaignID, phase, signal, ack)
+				if retryErr == nil {
+					if o.deps.Logger != nil {
+						o.deps.Logger.Debug(ctx, "phase.control.signal.retry_success", map[string]interface{}{
+							"campaign_id": campaignID,
+							"phase":       phase,
+							"signal":      signal,
+						})
+					}
+					return nil
+				}
+				if errors.Is(retryErr, ErrControlChannelMissing) {
+					if o.deps.Logger != nil {
+						o.deps.Logger.Warn(ctx, "phase.control.signal.drop", map[string]interface{}{
+							"campaign_id": campaignID,
+							"phase":       phase,
+							"signal":      signal,
+							"error":       retryErr.Error(),
+							"reason":      "channel_missing_after_retry",
+						})
+					}
+					notifyControlAck(ack, domainservices.ErrPhaseNotRunning)
+					return domainservices.ErrPhaseNotRunning
+				}
+				return retryErr
+			}
+		}
 		if o.deps.Logger != nil {
 			o.deps.Logger.Warn(ctx, "phase.control.signal.drop", map[string]interface{}{
 				"campaign_id": campaignID,
@@ -1133,6 +1330,29 @@ func awaitControlAck(ctx context.Context, ack <-chan error, timeoutErr error) er
 		return err
 	case <-time.After(controlAckTimeout):
 		return timeoutErr
+	}
+}
+
+func drainControlAck(ack chan error) {
+	if ack == nil {
+		return
+	}
+	for {
+		select {
+		case <-ack:
+		default:
+			return
+		}
+	}
+}
+
+func notifyControlAck(ack chan error, err error) {
+	if ack == nil || err == nil {
+		return
+	}
+	select {
+	case ack <- err:
+	default:
 	}
 }
 

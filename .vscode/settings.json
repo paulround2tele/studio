@@ -100,4 +100,7 @@
         "runCommands": true,
         "edit": true
     }
+    {
+  "mcp.nodeExecutable": "/home/studio/.nvm/versions/node/v20.19.0/bin/node"
+}
 }

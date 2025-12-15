@@ -140,7 +140,7 @@ func TestSSEEventEmissionFullSequence(t *testing.T) {
 	extraction := newSSEStub(models.PhaseTypeExtraction)
 	enrichment := newSSEStub(models.PhaseTypeEnrichment)
 	analysis := newSSEStub(models.PhaseTypeAnalysis)
-	orch := NewCampaignOrchestrator(cs, domainservices.Dependencies{DB: db, Logger: &testLogger{t}}, dom, dns, http, extraction, enrichment, analysis, cap, nil)
+	orch := NewCampaignOrchestrator(cs, domainservices.Dependencies{DB: db, Logger: newTestLogger(t)}, dom, dns, http, extraction, enrichment, analysis, cap, nil)
 
 	campID := createCampaignWithUser(t, db, cs)
 	if err := cs.UpdateCampaignMode(context.Background(), nil, campID, "full_sequence"); err != nil {
@@ -200,7 +200,7 @@ func TestSSEEventEmissionFailureThenRetry(t *testing.T) {
 	extraction := newSSEStub(models.PhaseTypeExtraction)
 	enrichment := newSSEStub(models.PhaseTypeEnrichment)
 	analysis := newSSEStub(models.PhaseTypeAnalysis)
-	orch := NewCampaignOrchestrator(cs, domainservices.Dependencies{DB: db, Logger: &testLogger{t}}, dom, dns, http, extraction, enrichment, analysis, cap, nil)
+	orch := NewCampaignOrchestrator(cs, domainservices.Dependencies{DB: db, Logger: newTestLogger(t)}, dom, dns, http, extraction, enrichment, analysis, cap, nil)
 
 	campID := createCampaignWithUser(t, db, cs)
 	if err := cs.UpdateCampaignMode(context.Background(), nil, campID, "full_sequence"); err != nil {
