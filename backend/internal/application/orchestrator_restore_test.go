@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"sync"
 	"testing"
@@ -211,7 +212,7 @@ func TestRestoreInFlightPhases_PausedDoesNotEmitProgress(t *testing.T) {
 	}
 }
 
-func TestRestoreInFlightPhases_InProgressResumesWork(t *testing.T) {
+func TestRestoreInFlightPhases_AutoPauseRequiresResume(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
 	logger := newTestLogger(t)
@@ -236,7 +237,73 @@ func TestRestoreInFlightPhases_InProgressResumesWork(t *testing.T) {
 	if err := orch2.RestoreInFlightPhases(context.Background()); err != nil {
 		t.Fatalf("restore: %v", err)
 	}
-	waitUntil(t, 2*time.Second, func() bool { return domainSvc2.progressEventCount(campaignID) > 0 })
+	waitUntil(t, 2*time.Second, func() bool { return domainSvc2.pauseEventCount(campaignID) >= 1 })
+	baseline := domainSvc2.progressEventCount(campaignID)
+	time.Sleep(150 * time.Millisecond)
+	if domainSvc2.progressEventCount(campaignID) != baseline {
+		t.Fatalf("expected autopause to prevent progress, delta=%d", domainSvc2.progressEventCount(campaignID)-baseline)
+	}
+	if !domainSvc2.isPaused(campaignID) {
+		t.Fatalf("expected autopause to leave phase paused")
+	}
+	if err := orch2.ResumePhase(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("resume after autopause: %v", err)
+	}
+	waitUntil(t, 2*time.Second, func() bool { return domainSvc2.progressEventCount(campaignID) > baseline })
+	waitUntil(t, 2*time.Second, func() bool { return !domainSvc2.isPaused(campaignID) })
+}
+
+func TestHydratePhaseConfigurationDomainGeneration(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := newTestLogger(t)
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	campaignID := createTestCampaign(t, cs)
+	cfg := domainservices.DomainGenerationConfig{
+		PatternType:          string(models.PatternTypePrefixVariable),
+		VariableLength:       3,
+		PrefixVariableLength: 2,
+		SuffixVariableLength: 1,
+		CharacterSet:         "abc",
+		ConstantString:       "seed",
+		TLD:                  "com",
+		NumDomains:           25,
+		BatchSize:            5,
+		OffsetStart:          7,
+	}
+	payload, err := json.Marshal(cfg)
+	if err != nil {
+		t.Fatalf("marshal domain config: %v", err)
+	}
+	if err := cs.UpsertPhaseConfig(context.Background(), nil, campaignID, models.PhaseTypeDomainGeneration, json.RawMessage(payload)); err != nil {
+		t.Fatalf("upsert domain generation config: %v", err)
+	}
+	if _, err := db.Exec(`INSERT INTO campaign_phases (campaign_id, phase_type, phase_order, status, progress_percentage, configuration, created_at, updated_at)
+		VALUES ($1,'domain_generation',1,'configured',0,$2,NOW(),NOW())
+		ON CONFLICT (campaign_id, phase_type) DO UPDATE SET configuration = EXCLUDED.configuration, updated_at = NOW()`, campaignID, json.RawMessage(payload)); err != nil {
+		t.Fatalf("seed campaign phase configuration: %v", err)
+	}
+
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	extractionSvc := newStubPhaseService(models.PhaseTypeExtraction, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, nil)
+
+	if err := orch.hydratePhaseConfiguration(context.Background(), db, campaignID, models.PhaseTypeDomainGeneration, domainSvc); err != nil {
+		t.Fatalf("hydrate domain generation config: %v", err)
+	}
+
+	stored, ok := domainSvc.configs[campaignID].(domainservices.DomainGenerationConfig)
+	if !ok {
+		t.Fatalf("expected domain generation config, got %T", domainSvc.configs[campaignID])
+	}
+	if stored != cfg {
+		t.Fatalf("unexpected domain generation config rehydrated: %#v", stored)
+	}
 }
 
 // --- test doubles ---
@@ -447,6 +514,13 @@ func (s *controlAwarePhaseService) handleStop(campaignID uuid.UUID) {
 	s.mu.Unlock()
 	if cancel != nil {
 		cancel()
+	}
+	if s.store != nil {
+		failed := models.PhaseStatusFailed
+		phase := s.phaseType
+		// Mirror production behavior so restored campaigns do not linger as active.
+		_ = s.store.UpdatePhaseStatus(context.Background(), s.db, campaignID, s.phaseType, failed)
+		_ = s.store.UpdateCampaignPhaseFields(context.Background(), s.db, campaignID, &phase, &failed)
 	}
 }
 

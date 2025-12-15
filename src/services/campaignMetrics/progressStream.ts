@@ -4,7 +4,7 @@
  */
 
 import { ProgressUpdate } from '@/types/campaignMetrics';
-import type { CampaignSseEventPayload as _CampaignSseEventPayload, CampaignSseProgressEvent } from '@/lib/api-client/models';
+import type { CampaignProgressResponse } from '@/lib/api-client/models';
 import { subscribeStreamPool, isStreamPoolingAvailable } from './streamPool';
 import { telemetryService } from './telemetryService';
 
@@ -36,6 +36,7 @@ export class ProgressStream {
   private missedHeartbeats = 0;
   private lastHeartbeat = Date.now();
   private heartbeatCheckInterval: NodeJS.Timeout | null = null;
+  private static readonly CANONICAL_VERSION = 1;
 
   constructor(
     private options: ProgressStreamOptions,
@@ -151,36 +152,25 @@ export class ProgressStream {
         this.missedHeartbeats = 0;
         return;
       }
-      // Attempt to treat as wrapped progress event first
-      if (this.isCampaignSseProgressEvent(data)) {
-        const payload = (data as CampaignSseProgressEvent).payload;
-        const overall = payload?.overall as Record<string, unknown> | undefined;
-        const phase = typeof overall?.status === 'string' ? (overall.status as string) : 'unknown';
-        const update: ProgressUpdate = {
-          phase,
-          analyzedDomains: typeof overall?.processedDomains === 'number' ? (overall.processedDomains as number) : 0,
-          totalDomains: typeof overall?.totalDomains === 'number' ? (overall.totalDomains as number) : 0,
-          status: phase,
-          updatedAt: new Date().toISOString(),
-        };
-        this.callbacks.onUpdate(update);
-        if (this.isTerminalPhase(update.phase)) {
-          this.callbacks.onComplete();
-          this.stop();
-        }
-        return;
-      }
 
-      // Fallback: if it loosely matches ProgressUpdate shape
-      if (this.isLooseProgressUpdate(data)) {
-        const update: ProgressUpdate = data as ProgressUpdate;
-        this.callbacks.onUpdate(update);
-        if (this.isTerminalPhase(update.phase)) {
-          this.callbacks.onComplete();
-          this.stop();
-        }
-        return;
-      }
+    if (!this.isCanonicalEnvelope(data)) {
+    this.callbacks.onError(new Error('Unexpected SSE payload format'));
+    return;
+    }
+
+    const envelope = data as CanonicalEnvelope;
+    if (envelope.version !== ProgressStream.CANONICAL_VERSION) {
+    console.warn('[ProgressStream] Unsupported SSE version', envelope.version);
+    return;
+    }
+
+    if (envelope.type === 'campaign_progress') {
+    if (!this.isCanonicalProgressEnvelope(envelope)) {
+      this.callbacks.onError(new Error('Malformed campaign_progress payload'));
+      return;
+    }
+    this.processCampaignProgress(envelope as CanonicalCampaignProgressEvent);
+    }
     } catch (_error) {
       this.callbacks.onError(new Error(`Failed to parse SSE data: ${String(_error)}`));
     }
@@ -332,18 +322,74 @@ export class ProgressStream {
     }
   }
 
-  private isCampaignSseProgressEvent(value: unknown): value is CampaignSseProgressEvent {
-    if (typeof value !== 'object' || value === null) return false;
-    const v = value as Partial<CampaignSseProgressEvent>;
-    return v.type === 'campaign_progress' && !!v.payload && typeof v.payload === 'object' && 'overall' in v.payload!;
+  private processCampaignProgress(event: CanonicalCampaignProgressEvent): void {
+    const overall = event.payload?.overall;
+    if (!overall) {
+      this.callbacks.onError(new Error('Missing overall progress payload'));
+      return;
+    }
+
+    const phase = (event.payload?.currentPhase as string) || overall.status || 'unknown';
+    const analyzed = typeof overall.processedDomains === 'number' ? overall.processedDomains : 0;
+    const total = typeof overall.totalDomains === 'number' ? overall.totalDomains : 0;
+    const status = overall.status || 'unknown';
+    const updatedAt = typeof event.payload?.timestamp === 'string' ? event.payload?.timestamp : new Date().toISOString();
+
+    const update: ProgressUpdate = {
+      phase,
+      analyzedDomains: analyzed,
+      totalDomains: total,
+      status,
+      updatedAt,
+    };
+
+    this.callbacks.onUpdate(update);
+    if (this.isTerminalPhase(update.phase)) {
+      this.callbacks.onComplete();
+      this.stop();
+    }
   }
 
-  private isLooseProgressUpdate(value: unknown): value is ProgressUpdate {
-    if (typeof value !== 'object' || value === null) return false;
-    const v = value as Partial<ProgressUpdate>;
-    return typeof v.phase === 'string' && typeof v.status === 'string';
+  private isCanonicalEnvelope(value: unknown): value is CanonicalEnvelope {
+    if (typeof value !== 'object' || value === null) {
+      return false;
+    }
+    const candidate = value as Partial<CanonicalEnvelope>;
+    const payload = candidate.payload;
+    return (
+      typeof candidate.version === 'number' &&
+      typeof candidate.type === 'string' &&
+      typeof payload === 'object' &&
+      payload !== null
+    );
+  }
+
+  private isCanonicalProgressEnvelope(value: CanonicalEnvelope): value is CanonicalCampaignProgressEvent {
+    if (value.type !== 'campaign_progress') {
+      return false;
+    }
+    const payload = (value as CanonicalCampaignProgressEvent).payload;
+    return Boolean(payload && typeof payload === 'object' && payload.overall);
   }
 }
+
+interface CanonicalEnvelope {
+  version: number;
+  type: string;
+  payload: Record<string, unknown>;
+}
+
+type CanonicalCampaignProgressPayload = CampaignProgressResponse & {
+  currentPhase?: string;
+  message?: string;
+  timestamp?: string;
+  [key: string]: unknown;
+};
+
+type CanonicalCampaignProgressEvent = CanonicalEnvelope & {
+  type: 'campaign_progress';
+  payload: CanonicalCampaignProgressPayload;
+};
 
 /**
  * Create and start a progress stream

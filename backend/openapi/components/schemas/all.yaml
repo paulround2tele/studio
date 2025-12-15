@@ -1188,71 +1188,99 @@ CampaignSseEventPayload:
     - $ref: '#/PhaseFailedEvent'
     - $ref: '#/CampaignCompletedEvent'
 
+CampaignSseEnvelope:
+  type: object
+  description: Canonical SSE envelope applied to all campaign SSE events.
+  properties:
+    version:
+      type: integer
+      minimum: 1
+      description: Envelope version emitted by the server (currently 1).
+  required: [version]
+
 # Wrapper objects with discriminator for strongly typed generation. At the wire level the server still emits only the payload JSON
 # with an SSE 'event:' line; the client adapter can wrap it to conform to these shapes for type-safe handling.
 CampaignSseAnalysisReuseEnrichmentEvent:
-  type: object
-  properties:
-    type: { type: string, enum: [analysis_reuse_enrichment] }
-    timestamp: { type: string, format: date-time }
-    payload: { $ref: '#/AnalysisReuseEnrichmentEvent' }
-  required: [type]
+  allOf:
+    - $ref: '#/CampaignSseEnvelope'
+    - type: object
+      properties:
+        type: { type: string, enum: [analysis_reuse_enrichment] }
+        timestamp: { type: string, format: date-time }
+        payload: { $ref: '#/AnalysisReuseEnrichmentEvent' }
+      required: [type, payload]
 CampaignSseAnalysisFailedEvent:
-  type: object
-  properties:
-    type: { type: string, enum: [analysis_failed] }
-    timestamp: { type: string, format: date-time }
-    payload: { $ref: '#/AnalysisFailedEvent' }
-  required: [type, payload]
+  allOf:
+    - $ref: '#/CampaignSseEnvelope'
+    - type: object
+      properties:
+        type: { type: string, enum: [analysis_failed] }
+        timestamp: { type: string, format: date-time }
+        payload: { $ref: '#/AnalysisFailedEvent' }
+      required: [type, payload]
 CampaignSseProgressEvent:
-  type: object
-  properties:
-    type: { type: string, enum: [campaign_progress] }
-    timestamp: { type: string, format: date-time }
-    payload: { $ref: '#/CampaignProgressResponse' }
-  required: [type]
+  allOf:
+    - $ref: '#/CampaignSseEnvelope'
+    - type: object
+      properties:
+        type: { type: string, enum: [campaign_progress] }
+        timestamp: { type: string, format: date-time }
+        payload: { $ref: '#/CampaignProgressResponse' }
+      required: [type, payload]
 CampaignSseDomainGeneratedEvent:
-  type: object
-  properties:
-    type: { type: string, enum: [domain_generated] }
-    timestamp: { type: string, format: date-time }
-    payload: { $ref: '#/DomainStatusEvent' }
-  required: [type]
+  allOf:
+    - $ref: '#/CampaignSseEnvelope'
+    - type: object
+      properties:
+        type: { type: string, enum: [domain_generated] }
+        timestamp: { type: string, format: date-time }
+        payload: { $ref: '#/DomainStatusEvent' }
+      required: [type, payload]
 CampaignSseDomainValidatedEvent:
-  type: object
-  properties:
-    type: { type: string, enum: [domain_validated] }
-    timestamp: { type: string, format: date-time }
-    payload: { $ref: '#/DomainStatusEvent' }
-  required: [type]
+  allOf:
+    - $ref: '#/CampaignSseEnvelope'
+    - type: object
+      properties:
+        type: { type: string, enum: [domain_validated] }
+        timestamp: { type: string, format: date-time }
+        payload: { $ref: '#/DomainStatusEvent' }
+      required: [type, payload]
 CampaignSsePhaseStartedEvent:
-  type: object
-  properties:
-    type: { type: string, enum: [phase_started] }
-    timestamp: { type: string, format: date-time }
-    payload: { $ref: '#/PhaseTransitionEvent' }
-  required: [type]
+  allOf:
+    - $ref: '#/CampaignSseEnvelope'
+    - type: object
+      properties:
+        type: { type: string, enum: [phase_started] }
+        timestamp: { type: string, format: date-time }
+        payload: { $ref: '#/PhaseTransitionEvent' }
+      required: [type, payload]
 CampaignSsePhaseCompletedEvent:
-  type: object
-  properties:
-    type: { type: string, enum: [phase_completed] }
-    timestamp: { type: string, format: date-time }
-    payload: { $ref: '#/PhaseTransitionEvent' }
-  required: [type]
+  allOf:
+    - $ref: '#/CampaignSseEnvelope'
+    - type: object
+      properties:
+        type: { type: string, enum: [phase_completed] }
+        timestamp: { type: string, format: date-time }
+        payload: { $ref: '#/PhaseTransitionEvent' }
+      required: [type, payload]
 CampaignSsePhaseFailedEvent:
-  type: object
-  properties:
-    type: { type: string, enum: [phase_failed] }
-    timestamp: { type: string, format: date-time }
-    payload: { $ref: '#/PhaseFailedEvent' }
-  required: [type]
+  allOf:
+    - $ref: '#/CampaignSseEnvelope'
+    - type: object
+      properties:
+        type: { type: string, enum: [phase_failed] }
+        timestamp: { type: string, format: date-time }
+        payload: { $ref: '#/PhaseFailedEvent' }
+      required: [type, payload]
 CampaignSseCompletedEvent:
-  type: object
-  properties:
-    type: { type: string, enum: [campaign_completed] }
-    timestamp: { type: string, format: date-time }
-    payload: { $ref: '#/CampaignCompletedEvent' }
-  required: [type]
+  allOf:
+    - $ref: '#/CampaignSseEnvelope'
+    - type: object
+      properties:
+        type: { type: string, enum: [campaign_completed] }
+        timestamp: { type: string, format: date-time }
+        payload: { $ref: '#/CampaignCompletedEvent' }
+      required: [type, payload]
 CampaignSseEvent:
   description: Discriminated union of all campaign SSE event wrapper objects.
   oneOf:

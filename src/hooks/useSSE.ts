@@ -125,12 +125,37 @@ const safeParseEventData = (raw: string): { data: unknown; error?: Error } => {
   }
 };
 
+interface CanonicalEnvelope {
+  version: number;
+  type: string;
+  payload?: unknown;
+}
+
+const isCanonicalEnvelope = (value: unknown): value is CanonicalEnvelope => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.version === 'number' &&
+    typeof candidate.type === 'string' &&
+    Object.prototype.hasOwnProperty.call(candidate, 'payload')
+  );
+};
+
 const unwrapPayload = (payload: unknown): { data: unknown; raw: unknown } => {
+  if (isCanonicalEnvelope(payload)) {
+    const envelope = payload as CanonicalEnvelope;
+    const inner = typeof envelope.payload === 'undefined' ? payload : envelope.payload;
+    return { data: inner, raw: payload };
+  }
+
   if (payload && typeof payload === 'object' && !Array.isArray(payload) && 'data' in (payload as Record<string, unknown>)) {
     const rawContainer = payload as Record<string, unknown>;
     const inner = rawContainer.data;
     return { data: inner ?? payload, raw: payload };
   }
+
   return { data: payload, raw: payload };
 };
 

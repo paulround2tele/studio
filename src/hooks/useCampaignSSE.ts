@@ -198,7 +198,7 @@ const toPipelinePhase = (phase: string | PipelinePhase): PipelinePhaseKey | unde
   }
 };
 
-const CAMPAIGN_SSE_DEBUG_KEY = '__campaignSSEEvents';
+export const CAMPAIGN_SSE_DEBUG_KEY = '__campaignSSEEvents';
 const CAMPAIGN_SSE_DEBUG_LIMIT = 200;
 
 const sanitizeDebugPayload = (value: unknown): unknown => {

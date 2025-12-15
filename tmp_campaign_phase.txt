@@ -1,0 +1,10 @@
+       phase_type        | config_is_null |                                                                          config_preview                                                                          
+-------------------------+----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ extraction              | t              | 
+ analysis                | f              | {"name": "Analysis Phase", "personaIds": ["6c261f67-a41c-46b2-b611-5f80033682c6"], "keywordRules": [{"id": "24c1164c-6ec1-4c4e-a995-8cac9502e245", "pattern": "s
+ enrichment              | f              | {"minContentBytes": 1024, "matchScoreThreshold": 0.27, "parkedConfidenceFloor": 0.45, "lowScoreGraceThreshold": 0.24, "requireStructuralSignals": true}
+ dns_validation          | f              | {"batch_size": 100, "max_retries": 2, "persona_ids": ["9bf21356-e15c-4cdc-afbf-922c7a9c1000"], "timeout_seconds": 30, "validation_types": ["A", "AAAA"]}
+ domain_generation       | f              | {"tld": ".com", "batch_size": 60, "num_domains": 60, "offset_start": 0, "pattern_type": "prefix_variable", "character_set": "abcdefghijklmnopqrstuvwxyz012345678
+ http_keyword_validation | f              | {"keywords": ["sse", "overlay", "realtime"], "personaIds": ["6c261f67-a41c-46b2-b611-5f80033682c6"], "keywordSetIds": ["82e51bcd-8250-4589-be40-5563d3f2946f"]}
+(6 rows)
+

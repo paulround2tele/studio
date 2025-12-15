@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
-	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -41,10 +41,31 @@ const (
 	SSEEventError             SSEEventType = "error"
 )
 
+var knownSSEEventTypes = map[SSEEventType]struct{}{
+	SSEEventCampaignProgress:   {},
+	SSEEventCampaignCompleted:  {},
+	SSEEventPhaseStarted:       {},
+	SSEEventPhaseCompleted:     {},
+	SSEEventPhaseFailed:        {},
+	SSEEventPhaseAutoStarted:   {},
+	SSEEventDomainGenerated:    {},
+	SSEEventDomainValidated:    {},
+	SSEEventDomainStatusDelta:  {},
+	SSEEventCountersReconciled: {},
+	SSEEventAnalysisCompleted:  {},
+	SSEEventModeChanged:        {},
+	SSEEventKeywordSetCreated:  {},
+	SSEEventKeywordSetUpdated:  {},
+	SSEEventKeywordSetDeleted:  {},
+	SSEEventKeepAlive:          {},
+	SSEEventError:              {},
+}
+
 const (
 	defaultKeepAliveInterval = 12 * time.Second
 	defaultStaleClientTTL    = 45 * time.Second
 	defaultCleanupInterval   = 30 * time.Second
+	canonicalEnvelopeVersion = 1
 )
 
 type SSEConfig struct {
@@ -61,6 +82,12 @@ type SSEEvent struct {
 	Timestamp  time.Time              `json:"timestamp"`
 	CampaignID *uuid.UUID             `json:"campaign_id,omitempty"`
 	UserID     *uuid.UUID             `json:"user_id,omitempty"`
+}
+
+type canonicalEnvelope struct {
+	Version int                    `json:"version"`
+	Type    string                 `json:"type"`
+	Payload map[string]interface{} `json:"payload"`
 }
 
 // SSEClient represents a connected SSE client
@@ -273,13 +300,19 @@ func (s *SSEService) BroadcastToCampaign(campaignID uuid.UUID, event SSEEvent) {
 
 	if event.Event == SSEEventCampaignProgress {
 		sample := sampleClientIDs(targetIDs, 5)
+		summary := ""
+		if envelope, err := s.buildCanonicalEnvelope(event); err == nil {
+			summary = summarizeCanonicalEvent(envelope)
+		} else {
+			summary = fmt.Sprintf("canonicalization_error=%v", err)
+		}
 		log.Printf(
 			"[SSE] broadcast campaign=%s event=%s clients=%d sample=%v summary=%s",
 			campaignID.String(),
 			string(event.Event),
 			len(targetIDs),
 			sample,
-			summarizeProgressEventData(event.Data),
+			summary,
 		)
 	}
 }
@@ -322,9 +355,14 @@ func (s *SSEService) emitEventToClient(client *SSEClient, event SSEEvent) error 
 		event.Timestamp = time.Now()
 	}
 
-	data, err := json.Marshal(event)
+	envelope, err := s.buildCanonicalEnvelope(event)
 	if err != nil {
-		return fmt.Errorf("marshal event: %w", err)
+		return fmt.Errorf("canonicalize event: %w", err)
+	}
+
+	data, err := json.Marshal(envelope)
+	if err != nil {
+		return fmt.Errorf("marshal canonical event: %w", err)
 	}
 
 	client.writeMu.Lock()
@@ -429,30 +467,186 @@ func sampleClientIDs(ids []string, max int) []string {
 	return out
 }
 
-func summarizeProgressEventData(data map[string]interface{}) string {
-	if len(data) == 0 {
-		return "data=empty"
+func summarizeCanonicalEvent(envelope canonicalEnvelope) string {
+	parts := []string{
+		fmt.Sprintf("version=%d", envelope.Version),
+		fmt.Sprintf("type=%s", envelope.Type),
 	}
-	keys := []string{"progress_pct", "items_processed", "items_total", "phase", "status"}
-	parts := make([]string, 0, len(keys))
-	for _, key := range keys {
-		if value, ok := data[key]; ok {
-			parts = append(parts, fmt.Sprintf("%s=%v", key, value))
+
+	if overall, ok := envelope.Payload["overall"].(map[string]interface{}); ok {
+		if pct, ok := overall["percentComplete"]; ok {
+			parts = append(parts, fmt.Sprintf("percentComplete=%v", pct))
+		}
+		if processed, ok := overall["processedDomains"]; ok {
+			parts = append(parts, fmt.Sprintf("processedDomains=%v", processed))
+		}
+		if total, ok := overall["totalDomains"]; ok {
+			parts = append(parts, fmt.Sprintf("totalDomains=%v", total))
+		}
+		if status, ok := overall["status"]; ok {
+			parts = append(parts, fmt.Sprintf("status=%v", status))
 		}
 	}
-	if len(parts) == 0 {
-		return fmt.Sprintf("keys=%v", collectMapKeys(data))
-	}
+
 	return strings.Join(parts, " ")
 }
 
-func collectMapKeys(data map[string]interface{}) []string {
-	keys := make([]string, 0, len(data))
-	for key := range data {
-		keys = append(keys, key)
+func (s *SSEService) buildCanonicalEnvelope(event SSEEvent) (canonicalEnvelope, error) {
+	var payload map[string]interface{}
+	switch event.Event {
+	case SSEEventCampaignProgress:
+		var err error
+		payload, err = s.normalizeCampaignProgressEvent(event)
+		if err != nil {
+			return canonicalEnvelope{}, err
+		}
+	default:
+		payload = s.normalizeGenericEvent(event)
+		if _, known := knownSSEEventTypes[event.Event]; !known {
+			log.Printf("[SSE] canonicalizer received unknown event type=%s", event.Event)
+		}
 	}
-	sort.Strings(keys)
-	return keys
+
+	return canonicalEnvelope{
+		Version: canonicalEnvelopeVersion,
+		Type:    string(event.Event),
+		Payload: payload,
+	}, nil
+}
+
+func (s *SSEService) normalizeCampaignProgressEvent(event SSEEvent) (map[string]interface{}, error) {
+	progressRaw, ok := event.Data["progress"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("campaign_progress event missing progress payload")
+	}
+
+	payload := s.basePayload(event)
+	overall := make(map[string]interface{})
+
+	if status, ok := toString(progressRaw["status"]); ok {
+		overall["status"] = status
+	}
+	if pct, ok := toFloat(progressRaw["progress_pct"]); ok {
+		overall["percentComplete"] = pct
+	}
+	if processed, ok := toNumber(progressRaw["items_processed"]); ok {
+		overall["processedDomains"] = processed
+	}
+	if total, ok := toNumber(progressRaw["items_total"]); ok {
+		overall["totalDomains"] = total
+	}
+	if success, ok := toNumber(progressRaw["items_success"]); ok {
+		overall["successfulDomains"] = success
+	}
+	if failed, ok := toNumber(progressRaw["items_failed"]); ok {
+		overall["failedDomains"] = failed
+	}
+
+	payload["overall"] = overall
+
+	if phase, ok := toString(progressRaw["current_phase"]); ok {
+		payload["currentPhase"] = phase
+	}
+	if msg, ok := toString(progressRaw["message"]); ok {
+		payload["message"] = msg
+	}
+	if ts, ok := toString(progressRaw["timestamp"]); ok {
+		payload["timestamp"] = ts
+	}
+
+	return payload, nil
+}
+
+func (s *SSEService) normalizeGenericEvent(event SSEEvent) map[string]interface{} {
+	result := s.basePayload(event)
+	if result == nil {
+		result = make(map[string]interface{})
+	}
+	for key, value := range event.Data {
+		result[key] = value
+	}
+	return result
+}
+
+func (s *SSEService) basePayload(event SSEEvent) map[string]interface{} {
+	payload := make(map[string]interface{})
+	if event.CampaignID != nil {
+		payload["campaignId"] = event.CampaignID.String()
+	}
+	if event.UserID != nil {
+		payload["userId"] = event.UserID.String()
+	}
+	if !event.Timestamp.IsZero() {
+		payload["timestamp"] = event.Timestamp.Format(time.RFC3339Nano)
+	}
+	return payload
+}
+
+func toString(value interface{}) (string, bool) {
+	switch v := value.(type) {
+	case string:
+		return v, true
+	case fmt.Stringer:
+		return v.String(), true
+	case []byte:
+		return string(v), true
+	default:
+		return "", false
+	}
+}
+
+func toFloat(value interface{}) (float64, bool) {
+	switch v := value.(type) {
+	case float64:
+		return v, true
+	case float32:
+		return float64(v), true
+	case int:
+		return float64(v), true
+	case int32:
+		return float64(v), true
+	case int64:
+		return float64(v), true
+	case uint:
+		return float64(v), true
+	case uint32:
+		return float64(v), true
+	case uint64:
+		return float64(v), true
+	case json.Number:
+		if f, err := v.Float64(); err == nil {
+			return f, true
+		}
+	}
+	return 0, false
+}
+
+func toNumber(value interface{}) (int64, bool) {
+	switch v := value.(type) {
+	case int:
+		return int64(v), true
+	case int32:
+		return int64(v), true
+	case int64:
+		return v, true
+	case uint:
+		return int64(v), true
+	case uint32:
+		return int64(v), true
+	case uint64:
+		if v <= math.MaxInt64 {
+			return int64(v), true
+		}
+	case float32:
+		return int64(v), true
+	case float64:
+		return int64(v), true
+	case json.Number:
+		if i, err := v.Int64(); err == nil {
+			return i, true
+		}
+	}
+	return 0, false
 }
 
 // Helper functions for creating specific event types

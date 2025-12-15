@@ -12,6 +12,7 @@ import { useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
 import PageHeader from '@/components/shared/PageHeader';
 // UX Refactor - Unified Campaign Experience
 import { CampaignExperiencePage } from '@/components/refactor/campaign/CampaignExperiencePage';
+import CampaignSseOverlay from '@/components/debug/CampaignSseOverlay';
 
 interface _CampaignPageParams {
   id: string;
@@ -94,6 +95,7 @@ export default function CampaignPage() {
         aria-label="Campaign experience interface"
         role="region"
       />
+      <CampaignSseOverlay campaignId={campaignId} />
     </div>
   );
 }

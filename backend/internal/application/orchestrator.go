@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -468,6 +469,10 @@ func (o *CampaignOrchestrator) StartPhase(ctx context.Context, campaignID uuid.U
 // RestoreInFlightPhases rebuilds execution state for campaigns that were mid-flight before a restart.
 // It ensures runtime control channels are reattached by replaying the active phase.
 func (o *CampaignOrchestrator) RestoreInFlightPhases(ctx context.Context) error {
+	return o.restoreInFlightPhases(ctx, 0)
+}
+
+func (o *CampaignOrchestrator) restoreInFlightPhases(ctx context.Context, sleepBetween time.Duration) error {
 	if o == nil || o.store == nil || o.deps.DB == nil {
 		return nil
 	}
@@ -479,7 +484,8 @@ func (o *CampaignOrchestrator) RestoreInFlightPhases(ctx context.Context) error 
 		models.PhaseStatusInProgress,
 		models.PhaseStatusPaused,
 	}
-	candidates := make(map[uuid.UUID]*models.LeadGenerationCampaign)
+	candidates := make([]*models.LeadGenerationCampaign, 0)
+	seen := make(map[uuid.UUID]struct{})
 	for _, status := range targetStatuses {
 		filter := store.ListCampaignsFilter{PhaseStatus: &status}
 		campaigns, err := o.store.ListCampaigns(ctx, querier, filter)
@@ -496,8 +502,20 @@ func (o *CampaignOrchestrator) RestoreInFlightPhases(ctx context.Context) error 
 			if campaign == nil || campaign.ID == uuid.Nil {
 				continue
 			}
-			candidates[campaign.ID] = campaign
+			if _, exists := seen[campaign.ID]; exists {
+				continue
+			}
+			seen[campaign.ID] = struct{}{}
+			candidates = append(candidates, campaign)
 		}
+	}
+	if len(candidates) > 1 {
+		sort.SliceStable(candidates, func(i, j int) bool {
+			if candidates[i] == nil || candidates[j] == nil {
+				return false
+			}
+			return candidates[i].UpdatedAt.After(candidates[j].UpdatedAt)
+		})
 	}
 	rehydrated := 0
 	for _, campaign := range candidates {
@@ -510,6 +528,11 @@ func (o *CampaignOrchestrator) RestoreInFlightPhases(ctx context.Context) error 
 			continue
 		}
 		rehydrated++
+		if sleepBetween > 0 {
+			if err := waitForDuration(ctx, sleepBetween); err != nil {
+				return err
+			}
+		}
 	}
 	if o.deps.Logger != nil {
 		o.deps.Logger.Info(ctx, "campaign.rehydrate.completed", map[string]interface{}{
@@ -517,6 +540,20 @@ func (o *CampaignOrchestrator) RestoreInFlightPhases(ctx context.Context) error 
 		})
 	}
 	return nil
+}
+
+func waitForDuration(ctx context.Context, d time.Duration) error {
+	if d <= 0 {
+		return nil
+	}
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }
 
 func (o *CampaignOrchestrator) rehydrateCampaignPhase(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign) error {
@@ -574,6 +611,10 @@ func (o *CampaignOrchestrator) rehydrateCampaignPhase(ctx context.Context, exec 
 			"status":      *campaign.PhaseStatus,
 		})
 	}
+	controlAware := false
+	if _, ok := service.(domainservices.ControlAwarePhase); ok {
+		controlAware = true
+	}
 	if err := o.StartPhaseInternal(ctx, campaign.ID, phase); err != nil {
 		return fmt.Errorf("failed to restart phase %s: %w", phase, err)
 	}
@@ -583,12 +624,9 @@ func (o *CampaignOrchestrator) rehydrateCampaignPhase(ctx context.Context, exec 
 			"phase":       phase,
 		})
 	}
-	if *campaign.PhaseStatus != models.PhaseStatusPaused {
-		return nil
-	}
-	if _, ok := service.(domainservices.ControlAwarePhase); !ok {
+	if !controlAware {
 		if o.deps.Logger != nil {
-			o.deps.Logger.Debug(ctx, "campaign.rehydrate.pause.skip", map[string]interface{}{
+			o.deps.Logger.Warn(ctx, "campaign.rehydrate.autopause.unsupported", map[string]interface{}{
 				"campaign_id": campaign.ID,
 				"phase":       phase,
 				"reason":      "phase_not_control_aware",
@@ -596,21 +634,27 @@ func (o *CampaignOrchestrator) rehydrateCampaignPhase(ctx context.Context, exec 
 		}
 		return nil
 	}
+	reason := "phase_status_unknown"
+	if campaign.PhaseStatus != nil {
+		switch *campaign.PhaseStatus {
+		case models.PhaseStatusPaused:
+			reason = "phase_was_already_paused"
+		case models.PhaseStatusInProgress:
+			reason = "phase_was_running"
+		default:
+			reason = fmt.Sprintf("phase_status_%s", *campaign.PhaseStatus)
+		}
+	}
 	pauseCtx, cancel := context.WithTimeout(ctx, controlAckTimeout)
 	defer cancel()
 	if err := o.PausePhase(pauseCtx, campaign.ID, phase); err != nil {
-		return fmt.Errorf("failed to reapply pause for %s: %w", phase, err)
+		return fmt.Errorf("failed to autopause %s after restore: %w", phase, err)
 	}
 	if o.deps.Logger != nil {
-		o.deps.Logger.Info(ctx, "phase.restore.pause.reapplied", map[string]interface{}{
+		o.deps.Logger.Info(ctx, "campaign.rehydrate.autopause.applied", map[string]interface{}{
 			"campaign_id": campaign.ID,
 			"phase":       phase,
-		})
-	}
-	if o.deps.Logger != nil {
-		o.deps.Logger.Info(ctx, "campaign.rehydrate.pause.applied", map[string]interface{}{
-			"campaign_id": campaign.ID,
-			"phase":       phase,
+			"reason":      reason,
 		})
 	}
 	return nil
@@ -1168,9 +1212,23 @@ func (o *CampaignOrchestrator) hydratePhaseConfiguration(ctx context.Context, ex
 
 	config, err := decodePhaseConfiguration(phase, payload)
 	if err != nil {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "campaign.phase.config.decode_failed", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"error":       err.Error(),
+			})
+		}
 		return fmt.Errorf("failed to decode stored configuration for %s: %w", phase, err)
 	}
 	if config == nil {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "campaign.phase.config.decode_skipped", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"reason":      "decoder_returned_nil",
+			})
+		}
 		return nil
 	}
 
@@ -1392,6 +1450,12 @@ func decodePhaseConfiguration(phase models.PhaseTypeEnum, payload []byte) (inter
 			return nil, err
 		}
 		return &cfg, nil
+	case models.PhaseTypeDomainGeneration:
+		var cfg domainservices.DomainGenerationConfig
+		if err := json.Unmarshal(payload, &cfg); err != nil {
+			return nil, err
+		}
+		return cfg, nil
 	case models.PhaseTypeEnrichment:
 		copyBuf := make([]byte, len(payload))
 		copy(copyBuf, payload)

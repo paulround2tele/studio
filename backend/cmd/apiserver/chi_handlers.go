@@ -139,7 +139,8 @@ func startChiServer() {
 			networkLogger.ServeHTTP(w, r)
 			return
 		}
-		baseHandler.ServeHTTP(w, r)
+		rewritten := rewriteLegacyCampaignSSEPath(r)
+		baseHandler.ServeHTTP(w, rewritten)
 	})
 	wrappedHandler := corsWrapper(finalHandler)
 	r := requestLoggingMiddleware(deps.Logger)(wrappedHandler)
@@ -293,6 +294,41 @@ func sameSiteFromString(s string) http.SameSite {
 	default:
 		return http.SameSiteLaxMode
 	}
+}
+
+// rewriteLegacyCampaignSSEPath transparently upgrades legacy SSE URLs
+// (/api/v2/sse/campaigns/{id}) to the canonical streaming endpoint
+// (/api/v2/sse/campaigns/{id}/events) so older clients keep working.
+func rewriteLegacyCampaignSSEPath(r *http.Request) *http.Request {
+	if r == nil || r.URL == nil {
+		return r
+	}
+	if r.Method != http.MethodGet {
+		return r
+	}
+	path := r.URL.Path
+	if !strings.HasPrefix(path, "/api/v2/sse/campaigns/") {
+		return r
+	}
+	if strings.HasSuffix(path, "/events") {
+		return r
+	}
+	remainder := strings.Trim(path[len("/api/v2/sse/campaigns/"):], "/")
+	if remainder == "" || strings.Contains(remainder, "/") {
+		return r
+	}
+	canonicalPath := "/api/v2/sse/campaigns/" + remainder + "/events"
+	clone := r.Clone(r.Context())
+	newURL := *clone.URL
+	newURL.Path = canonicalPath
+	newURL.RawPath = canonicalPath
+	clone.URL = &newURL
+	requestURI := canonicalPath
+	if newURL.RawQuery != "" {
+		requestURI = requestURI + "?" + newURL.RawQuery
+	}
+	clone.RequestURI = requestURI
+	return clone
 }
 func NewStrictTestRouter(deps *AppDeps) chi.Router {
 	r := chi.NewRouter()

@@ -44,10 +44,11 @@ type AppDeps struct {
 		AuditLog    store.AuditLogStore
 		CampaignJob store.CampaignJobStore
 	}
-	ProxyMgr     *proxymanager.ProxyManager
-	SSE          *services.SSEService
-	Orchestrator *application.CampaignOrchestrator
-	BulkOps      *BulkOpsTracker
+	ProxyMgr          *proxymanager.ProxyManager
+	SSE               *services.SSEService
+	Orchestrator      *application.CampaignOrchestrator
+	RehydrationWorker *application.RehydrationWorker
+	BulkOps           *BulkOpsTracker
 	// Internal lightweight metrics (in-memory counters) until Prom/OTel integration
 	Metrics *RuntimeMetrics
 	// Monitoring suite
@@ -437,12 +438,9 @@ func initAppDependencies() (*AppDeps, error) {
 		// Register post-completion hooks
 		deps.Orchestrator.RegisterPostCompletionHook(&application_hooks.SummaryReportHook{Store: deps.Stores.Campaign, Deps: domainDeps})
 
-		go func() {
-			ctx := context.Background()
-			if err := deps.Orchestrator.RestoreInFlightPhases(ctx); err != nil && deps.Logger != nil {
-				deps.Logger.Warn(ctx, "orchestrator.rehydrate.failed", map[string]interface{}{"error": err.Error()})
-			}
-		}()
+		cfg := application.DefaultRehydrationWorkerConfig()
+		deps.RehydrationWorker = application.NewRehydrationWorker(deps.Orchestrator, domainDeps.Logger, cfg)
+		deps.RehydrationWorker.Start(context.Background())
 	}
 
 	// Monitoring and cleanup services
