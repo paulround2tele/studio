@@ -3,7 +3,7 @@
  * Real-time phase updates via SSE for UX refactor components
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   useCampaignSSE,
   type CampaignProgress,
@@ -57,6 +57,32 @@ export const DEFAULT_PHASES: PipelinePhase[] = API_PHASE_ORDER.map(buildDefaultP
 
 const SAFE_PROGRESS_MAX = 100;
 const PHASE_META_STORAGE_PREFIX = 'campaignPhaseMeta:';
+const PHASE_DEBUG_HISTORY_LIMIT = 200;
+const PHASE_DEBUG_UPDATES_KEY = '__phaseStreamUpdates';
+
+const sanitizeDebugPayload = (value: unknown): unknown => {
+  if (value === undefined || value === null) {
+    return value;
+  }
+  const primitive = typeof value;
+  if (primitive === 'string' || primitive === 'number' || primitive === 'boolean') {
+    return value;
+  }
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch {
+    return { __debug: 'unserializable' };
+  }
+};
+
+const pushPhaseDebugEntry = (key: string, entry: unknown, limit: number): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  const win = window as unknown as Record<string, unknown>;
+  const history = Array.isArray(win[key]) ? (win[key] as unknown[]) : [];
+  win[key] = [...history, entry].slice(-limit);
+};
 
 type PersistedPhaseMeta = Pick<PipelinePhase, 'lastMessage' | 'errorMessage' | 'lastEventAt' | 'failedAt'> & {
   errorDetails?: Record<string, unknown>;
@@ -209,7 +235,12 @@ export function useCampaignPhaseStream(
   const { enabled: _enabled = true, onPhaseUpdate, onError } = options;
 
   const [phases, setPhases] = useState<PipelinePhase[]>(cloneDefaultPhases());
+  const phasesRef = useRef<PipelinePhase[]>(phases);
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
+
+  useEffect(() => {
+    phasesRef.current = phases;
+  }, [phases]);
 
   const shouldConnect = Boolean(_enabled && campaignId);
 
@@ -226,7 +257,7 @@ export function useCampaignPhaseStream(
         payload,
       };
 
-      const win = window as Record<string, unknown>;
+      const win = window as unknown as Record<string, unknown>;
       const historyKey = '__phaseStreamRawEvents';
       const history = Array.isArray(win[historyKey]) ? (win[historyKey] as unknown[]) : [];
       const nextHistory = [...history, entry].slice(-100);
@@ -237,47 +268,35 @@ export function useCampaignPhaseStream(
     [campaignId]
   );
 
+  const recordPhaseUpdateDebug = useCallback(
+    (label: string, detail: Record<string, unknown>) => {
+      if (process.env.NODE_ENV === 'production' || typeof window === 'undefined') {
+        return;
+      }
+      const entry = {
+        timestamp: new Date().toISOString(),
+        campaignId,
+        label,
+        detail: sanitizeDebugPayload(detail),
+      };
+      pushPhaseDebugEntry(PHASE_DEBUG_UPDATES_KEY, entry, PHASE_DEBUG_HISTORY_LIMIT);
+      (window as typeof window & { __phaseStreamLastEntry?: typeof entry }).__phaseStreamLastEntry = entry;
+      if (process.env.NEXT_PUBLIC_SSE_DEBUG === 'verbose') {
+        console.debug('[useCampaignPhaseStream] phase update', entry);
+      }
+    },
+    [campaignId]
+  );
+
   const updatePhaseState = useCallback(
     (phaseKey: ApiPhase, updates: Partial<PipelinePhase>): PipelinePhase | null => {
-      let updatedPhase: PipelinePhase | null = null;
-      setPhases(prevPhases => {
-        const phaseMap = new Map<string, PipelinePhase>();
-
-        DEFAULT_PHASES.forEach(defaultPhase => {
-          phaseMap.set(defaultPhase.key, { ...defaultPhase });
-        });
-
-        prevPhases.forEach(existing => {
-          const current = phaseMap.get(existing.key);
-          if (current) {
-            phaseMap.set(existing.key, { ...current, ...existing });
-          } else {
-            phaseMap.set(existing.key, { ...existing });
-          }
-        });
-
-        const baseline = phaseMap.get(phaseKey) ?? buildDefaultPhase(phaseKey);
-        const nextPhase = { ...baseline, ...updates, key: phaseKey };
-        phaseMap.set(phaseKey, nextPhase);
-        updatedPhase = nextPhase;
-
-        const ordered = API_PHASE_ORDER
-          .map(key => phaseMap.get(key))
-          .filter((phase): phase is PipelinePhase => Boolean(phase))
-          .map(phase => ({ ...phase }));
-
-        const extras = Array.from(phaseMap.entries())
-          .filter(([key]) => !API_PHASE_ORDER.includes(key as ApiPhase))
-          .map(([, value]) => ({ ...value }));
-
-        const nextPhases = [...ordered, ...extras];
-        if (campaignId) {
-          persistPhaseMeta(campaignId, nextPhases);
-        }
-        return nextPhases;
-      });
-
-      return updatedPhase;
+      const { nextPhases, updatedPhase } = reconcilePhaseUpdate(phasesRef.current, phaseKey, updates);
+      phasesRef.current = nextPhases;
+      setPhases(nextPhases);
+      if (campaignId) {
+        persistPhaseMeta(campaignId, nextPhases);
+      }
+      return updatedPhase ?? null;
     },
     [campaignId]
   );
@@ -333,7 +352,18 @@ export function useCampaignPhaseStream(
       }
 
       const next = updatePhaseState(phase, patchWithMeta);
+      recordPhaseUpdateDebug('phase_patch', {
+        phase,
+        patch: patchWithMeta,
+        meta: meta ? sanitizeDebugPayload(meta) : undefined,
+        nextSnapshot: next ? sanitizeDebugPayload(next) : null,
+      });
       if (!campaignId || !next) {
+        recordPhaseUpdateDebug('phase_patch_skipped', {
+          phase,
+          reason: 'missing_campaign_or_phase',
+          hasCampaignId: Boolean(campaignId),
+        });
         return;
       }
       setLastUpdate(Date.now());
@@ -351,8 +381,15 @@ export function useCampaignPhaseStream(
         lastEventAt: next.lastEventAt,
         failedAt: next.failedAt,
       });
+      recordPhaseUpdateDebug('phase_patch_committed', {
+        phase,
+        status: next.status,
+        progressPercentage: next.progressPercentage,
+        lastMessage: next.lastMessage,
+        errorMessage: next.errorMessage,
+      });
     },
-    [campaignId, onPhaseUpdate, updatePhaseState]
+    [campaignId, onPhaseUpdate, recordPhaseUpdateDebug, updatePhaseState]
   );
 
   const handleProgress = useCallback(
@@ -362,6 +399,14 @@ export function useCampaignPhaseStream(
       if (!normalizedPhase) {
         return;
       }
+
+      recordPhaseUpdateDebug('progress_event', {
+        campaignId,
+        phase: normalizedPhase,
+        status: progress.status,
+        percent: progress.progress_pct,
+        message: progress.message,
+      });
 
       const updates: Partial<PipelinePhase> = {};
       const mappedStatus = mapBackendStatus(progress.status);
@@ -385,7 +430,7 @@ export function useCampaignPhaseStream(
         timestamp: (progress as { timestamp?: string }).timestamp,
       });
     },
-    [emitPhaseUpdate, logRawEvent]
+    [campaignId, emitPhaseUpdate, logRawEvent, recordPhaseUpdateDebug]
   );
 
   const handlePhaseStarted = useCallback(
@@ -395,6 +440,13 @@ export function useCampaignPhaseStream(
       if (!normalizedPhase) {
         return;
       }
+
+      recordPhaseUpdateDebug('phase_started_event', {
+        campaignId,
+        phase: normalizedPhase,
+        status: event.status,
+        message: event.message,
+      });
 
       const startedAt = extractTimestamp(event.results, ['started_at', 'startedAt']);
       const backendStatus = mapBackendStatus(event.status);
@@ -412,7 +464,7 @@ export function useCampaignPhaseStream(
         }
       );
     },
-    [emitPhaseUpdate, logRawEvent]
+    [campaignId, emitPhaseUpdate, logRawEvent, recordPhaseUpdateDebug]
   );
 
   const handlePhaseCompleted = useCallback(
@@ -422,6 +474,12 @@ export function useCampaignPhaseStream(
       if (!normalizedPhase) {
         return;
       }
+
+      recordPhaseUpdateDebug('phase_completed_event', {
+        campaignId,
+        phase: normalizedPhase,
+        message: event.message,
+      });
 
       const progressValue = extractProgressPercentage(event.results ?? {});
       const startedAt = extractTimestamp(event.results, ['started_at', 'startedAt']);
@@ -441,7 +499,7 @@ export function useCampaignPhaseStream(
         }
       );
     },
-    [emitPhaseUpdate, logRawEvent]
+    [campaignId, emitPhaseUpdate, logRawEvent, recordPhaseUpdateDebug]
   );
 
   const handlePhaseFailed = useCallback(
@@ -451,6 +509,13 @@ export function useCampaignPhaseStream(
       if (!normalizedPhase) {
         return;
       }
+
+      recordPhaseUpdateDebug('phase_failed_event', {
+        campaignId,
+        phase: normalizedPhase,
+        message: event.message,
+        error: event.error,
+      });
 
       const failedAt =
         extractTimestamp(event.results, ['failed_at', 'failedAt']) ||
@@ -475,7 +540,7 @@ export function useCampaignPhaseStream(
         onError(String(errorPayload));
       }
     },
-    [emitPhaseUpdate, logRawEvent, onError]
+    [campaignId, emitPhaseUpdate, logRawEvent, onError, recordPhaseUpdateDebug]
   );
 
   const handleEventError = useCallback(
@@ -516,13 +581,10 @@ export function useCampaignPhaseStream(
 
   useEffect(() => {
     setLastUpdate(null);
-    setPhases(() => {
-      const base = cloneDefaultPhases();
-      if (!campaignId) {
-        return base;
-      }
-      return applyPersistedPhaseMeta(base, loadPersistedPhaseMeta(campaignId));
-    });
+    const base = cloneDefaultPhases();
+    const next = campaignId ? applyPersistedPhaseMeta(base, loadPersistedPhaseMeta(campaignId)) : base;
+    phasesRef.current = next;
+    setPhases(next);
   }, [campaignId, shouldConnect]);
 
   useEffect(() => {
@@ -543,13 +605,25 @@ export function useCampaignPhaseStream(
       error: sseError,
       lastUpdate,
     };
-    const win = window as Record<string, unknown>;
+    const win = window as unknown as Record<string, unknown>;
     win.__phaseStreamState = snapshot;
     const history = Array.isArray(win.__phaseStreamHistory) ? (win.__phaseStreamHistory as unknown[]) : [];
     history.push(snapshot);
     win.__phaseStreamHistory = history.slice(-20);
     console.log('[useCampaignPhaseStream] connection state', snapshot);
   }, [campaignId, isLive, hasEverConnected, readyState, sseError, lastUpdate]);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || typeof window === 'undefined') {
+      return;
+    }
+    const win = window as typeof window & {
+      __phaseStreamPhases?: PipelinePhase[];
+      __phaseStreamLastUpdateTs?: number | null;
+    };
+    win.__phaseStreamPhases = phases.map(phase => ({ ...phase }));
+    win.__phaseStreamLastUpdateTs = lastUpdate;
+  }, [phases, lastUpdate]);
 
   return {
     phases,
@@ -582,6 +656,43 @@ export function useCurrentPhase(phases: PipelinePhase[]): PipelinePhase | null {
 
 function cloneDefaultPhases(): PipelinePhase[] {
   return DEFAULT_PHASES.map(phase => ({ ...phase }));
+}
+
+function reconcilePhaseUpdate(
+  currentPhases: PipelinePhase[],
+  phaseKey: ApiPhase,
+  updates: Partial<PipelinePhase>
+): { nextPhases: PipelinePhase[]; updatedPhase: PipelinePhase } {
+  const phaseMap = new Map<string, PipelinePhase>();
+
+  DEFAULT_PHASES.forEach(defaultPhase => {
+    phaseMap.set(defaultPhase.key, { ...defaultPhase });
+  });
+
+  currentPhases.forEach(existing => {
+    const current = phaseMap.get(existing.key);
+    if (current) {
+      phaseMap.set(existing.key, { ...current, ...existing });
+    } else {
+      phaseMap.set(existing.key, { ...existing });
+    }
+  });
+
+  const baseline = phaseMap.get(phaseKey) ?? buildDefaultPhase(phaseKey);
+  const nextPhase = { ...baseline, ...updates, key: phaseKey };
+  phaseMap.set(phaseKey, nextPhase);
+
+  const ordered = API_PHASE_ORDER
+    .map(key => phaseMap.get(key))
+    .filter((phase): phase is PipelinePhase => Boolean(phase))
+    .map(phase => ({ ...phase }));
+
+  const extras = Array.from(phaseMap.entries())
+    .filter(([key]) => !API_PHASE_ORDER.includes(key as ApiPhase))
+    .map(([, value]) => ({ ...value }));
+
+  const nextPhases = [...ordered, ...extras];
+  return { nextPhases, updatedPhase: nextPhase };
 }
 
 function isNonEmptyRecord(value: unknown): value is Record<string, unknown> {

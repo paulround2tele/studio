@@ -77,17 +77,20 @@ The consolidated pipeline follows this sequence:
 ### Core Components
 
 #### Feature Extraction & Materialization
-- `domain_extraction_features`: Primary feature storage (one row per campaign+domain)
-- `domain_extracted_keywords`: Detailed keyword extraction results
-- Processing states: `pending` → `running` → `completed`/`error`/`fatal`
-- Automatic retry logic with configurable limits
+
+### Frontend SSE Client
+
+Campaign dashboards consume the stream through `src/hooks/useSSE.ts`. The hook now:
+
+- Selects the appropriate EventSource implementation at runtime (native, browser polyfill, or custom factory) so authenticated headers and local dev proxies keep working.
+- Shares a single default registry of campaign event names with consumers while still allowing overrides via the hook options.
+- Parses payloads defensively with JSON-shape detection and retries the connection automatically whenever three malformed events are received in a row.
+- Tracks liveness via stale timers and reconnects with exponential backoff and jitter, resetting counters once messages resume.
+
+Downstream hooks (`useCampaignSSE`, `useCampaignPhaseStream`) lean on this shared client, so any future hardening should land in `useSSE` first.
 
 #### Reconciliation System
 The extraction reconciler (`ExtractionReconciler`) handles:
-- **Stuck Running Tasks**: Tasks in `running` state beyond `PIPELINE_STUCK_RUNNING_MAX_AGE`
-- **Stuck Pending Tasks**: Tasks in `pending` state beyond `PIPELINE_STUCK_PENDING_MAX_AGE`  
-- **Retryable Errors**: Tasks in `error` state within retry limit (`PIPELINE_MAX_RETRIES`)
-- **Missing Features**: Completed tasks without materialized features after grace period
 
 #### Stale Score Detection
 The stale score detector (`StaleScoreDetector`) identifies:

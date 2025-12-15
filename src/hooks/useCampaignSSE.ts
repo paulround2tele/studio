@@ -198,6 +198,33 @@ const toPipelinePhase = (phase: string | PipelinePhase): PipelinePhaseKey | unde
   }
 };
 
+const CAMPAIGN_SSE_DEBUG_KEY = '__campaignSSEEvents';
+const CAMPAIGN_SSE_DEBUG_LIMIT = 200;
+
+const sanitizeDebugPayload = (value: unknown): unknown => {
+  if (value === undefined || value === null) {
+    return value;
+  }
+  const primitive = typeof value;
+  if (primitive === 'string' || primitive === 'number' || primitive === 'boolean') {
+    return value;
+  }
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch {
+    return { __debug: 'unserializable' };
+  }
+};
+
+const pushDebugEntry = (key: string, entry: unknown, limit: number): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  const win = window as unknown as Record<string, unknown>;
+  const history = Array.isArray(win[key]) ? (win[key] as unknown[]) : [];
+  win[key] = [...history, entry].slice(-limit);
+};
+
 // Narrow a value to CampaignProgress (runtime shape heuristic)
 type ProgressDraft = {
   current_phase?: CampaignPhase | string;
@@ -405,6 +432,26 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
     eventsRef.current = { ...events };
   }, [events]);
 
+  const captureDebugEvent = useCallback(
+    (label: string, detail: Record<string, unknown>) => {
+      if (process.env.NODE_ENV === 'production' || typeof window === 'undefined') {
+        return;
+      }
+      const entry = {
+        timestamp: new Date().toISOString(),
+        campaignId: (detail.campaignId as string) || campaignId || null,
+        label,
+        detail: sanitizeDebugPayload(detail),
+      };
+      pushDebugEntry(CAMPAIGN_SSE_DEBUG_KEY, entry, CAMPAIGN_SSE_DEBUG_LIMIT);
+      (window as typeof window & { __campaignSSELastEvent?: typeof entry }).__campaignSSELastEvent = entry;
+      if (process.env.NEXT_PUBLIC_SSE_DEBUG === 'verbose') {
+        console.debug('[useCampaignSSE] event trace', entry);
+      }
+    },
+    [campaignId]
+  );
+
   const [sseBasePath, setSseBasePath] = useState<string | null>(() => (typeof window === 'undefined' ? null : resolveSseBasePath()));
 
   useEffect(() => {
@@ -451,8 +498,17 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
     const resolvedCampaignId = payloadCampaignId || campaignId || '';
 
+    captureDebugEvent('incoming_event', {
+      campaignId: resolvedCampaignId,
+      eventType: event.event,
+      payloadCampaignId,
+    });
+
     if (!resolvedCampaignId) {
       console.warn('⚠️ Received SSE event without campaign_id:', event);
+      captureDebugEvent('missing_campaign_id', {
+        eventType: event.event,
+      });
       return;
     }
 
@@ -460,6 +516,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
     switch (event.event) {
       case 'campaign_progress': {
+        let synthesizedCompletion = false;
         const progressCandidate = isPlainObject(payload?.progress) ? (payload?.progress as object) : null;
         const progressData =
           (progressCandidate && isCampaignProgress(progressCandidate)
@@ -497,9 +554,18 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
                                 return ps;
                               }
                             ));
+              synthesizedCompletion = true;
             }
           }
         }
+        captureDebugEvent('campaign_progress', {
+          campaignId: resolvedCampaignId,
+          hasPayload: Boolean(progressData),
+          phase: (progressData?.current_phase as string) || (payload?.current_phase as string) || undefined,
+          percent: progressData?.progress_pct,
+          status: progressData?.status,
+          synthesizedCompletion,
+        });
         break; }
 
       case 'phase_started': {
@@ -526,6 +592,11 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           phase: phase as string,
           message: (payload?.message as string) || (dataObj?.message as string) || 'Phase started',
           results: (payload?.results as Record<string, unknown> | undefined) || (dataObj?.results as Record<string, unknown> | undefined)
+        });
+        captureDebugEvent('phase_started', {
+          campaignId: resolvedCampaignId,
+          phase,
+          message: payload?.message ?? dataObj?.message,
         });
         break; }
 
@@ -557,6 +628,11 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           phase: phase as string,
           message: (payload?.message as string) || (dataObj?.message as string) || 'Phase completed',
           results: (payload?.results as Record<string, unknown> | undefined) || (dataObj?.results as Record<string, unknown> | undefined)
+        });
+        captureDebugEvent('phase_completed', {
+          campaignId: resolvedCampaignId,
+          phase,
+          message: payload?.message ?? dataObj?.message,
         });
         break; }
 
@@ -590,6 +666,11 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           error,
           results: (payload?.results as Record<string, unknown> | undefined) || (dataObj?.results as Record<string, unknown> | undefined)
         });
+        captureDebugEvent('phase_failed', {
+          campaignId: resolvedCampaignId,
+          phase,
+          error,
+        });
         break; }
 
       case 'domain_generated':
@@ -611,6 +692,9 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           resolvedCampaignId,
           (payload || dataObj || {}) as Record<string, unknown>
         );
+        captureDebugEvent('analysis_completed', {
+          campaignId: resolvedCampaignId,
+        });
         break;
       case 'analysis_reuse_enrichment': {
         // Provide normalized shape
@@ -622,6 +706,10 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
         handlers.onAnalysisReuseEnrichment?.(resolvedCampaignId, {
           featureVectorCount,
           raw: (payload || dataObj || {}) as Record<string, unknown>,
+        });
+        captureDebugEvent('analysis_reuse_enrichment', {
+          campaignId: resolvedCampaignId,
+          featureVectorCount,
         });
         break;
       }
@@ -641,6 +729,11 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           errorCode,
           raw: (payload || dataObj || {}) as Record<string, unknown>,
         });
+        captureDebugEvent('analysis_failed', {
+          campaignId: resolvedCampaignId,
+          error,
+          errorCode,
+        });
         break;
       }
       case 'counters_reconciled':
@@ -649,6 +742,9 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           resolvedCampaignId,
           (payload || dataObj || {}) as Record<string, unknown>
         );
+        captureDebugEvent('counters_reconciled', {
+          campaignId: resolvedCampaignId,
+        });
         break;
 
       case 'mode_changed': {
@@ -657,8 +753,15 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           (dataObj?.mode as string | undefined);
         if (mode === 'full_sequence' || mode === 'step_by_step') {
           handlers.onModeChanged?.(resolvedCampaignId, mode);
+          captureDebugEvent('mode_changed', {
+            campaignId: resolvedCampaignId,
+            mode,
+          });
         } else {
           console.warn('⚠️ mode_changed event with invalid mode value', dataObj);
+          captureDebugEvent('mode_changed_invalid', {
+            campaignId: resolvedCampaignId,
+          });
         }
         break;
       }
@@ -672,6 +775,10 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           (dataObj?.message as string | undefined) ||
           'Unknown error';
         handlers.onError?.(resolvedCampaignId, errorMessage);
+        captureDebugEvent('stream_error_event', {
+          campaignId: resolvedCampaignId,
+          error: errorMessage,
+        });
         break;
 
       case 'keep_alive':
@@ -680,8 +787,12 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
       default:
         console.log('📡 Received unknown SSE event type:', event.event, event.data);
+        captureDebugEvent('unknown_event', {
+          campaignId: resolvedCampaignId,
+          eventType: event.event,
+        });
     }
-  }, [dispatch, campaignId]);
+  }, [dispatch, campaignId, captureDebugEvent]);
 
   // Use the generic SSE hook
   const sseConnection = useSSE(sseUrl, handleSSEEvent, {
@@ -708,6 +819,18 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
     });
     win.__campaignSSESnapshots = history.slice(-25);
   }
+
+  useEffect(() => {
+    if (!sseConnection.error) {
+      return;
+    }
+    captureDebugEvent('connection_error', {
+      campaignId,
+      error: sseConnection.error,
+      readyState: sseConnection.readyState,
+      reconnectAttempts: sseConnection.reconnectAttempts,
+    });
+  }, [campaignId, captureDebugEvent, sseConnection.error, sseConnection.readyState, sseConnection.reconnectAttempts]);
 
   useEffect(() => {
     if (fallbackApplied) return;

@@ -1203,13 +1203,41 @@ func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaig
 	defer o.closeControlChannel(campaignID, phase)
 
 	// Get campaign user ID for SSE broadcasting (cache it to avoid repeated DB calls)
-	var userID *uuid.UUID
+	var (
+		userID              *uuid.UUID
+		userLookupErr       error
+		userLookupAttempted bool
+	)
 	if o.sseService != nil {
-		querier, ok := o.deps.DB.(store.Querier)
-		if ok {
+		if querier, ok := o.deps.DB.(store.Querier); ok {
+			userLookupAttempted = true
 			if campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID); err == nil && campaign.UserID != nil {
 				userID = campaign.UserID
+			} else if err != nil {
+				userLookupErr = err
 			}
+		}
+	}
+	if o.deps.Logger != nil {
+		switch {
+		case o.sseService == nil:
+			o.deps.Logger.Warn(ctx, "Phase progress SSE broadcast disabled", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"reason":      "sse_service_unavailable",
+			})
+		case userID == nil:
+			reason := "campaign_user_missing"
+			if !userLookupAttempted {
+				reason = "querier_unavailable"
+			} else if userLookupErr != nil {
+				reason = fmt.Sprintf("user_lookup_failed:%v", userLookupErr)
+			}
+			o.deps.Logger.Warn(ctx, "Phase progress SSE broadcast disabled", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"reason":      reason,
+			})
 		}
 	}
 
@@ -1231,6 +1259,7 @@ func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaig
 			o.updateCampaignProgress(campaignID, phase, progress)
 
 			// Broadcast progress update via SSE
+			broadcasted := false
 			if o.sseService != nil && userID != nil {
 				progressData := map[string]interface{}{
 					"current_phase":   string(phase),
@@ -1243,6 +1272,19 @@ func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaig
 				}
 				progressEvent := services.CreateCampaignProgressEvent(campaignID, *userID, progressData)
 				o.sseService.BroadcastToCampaign(campaignID, progressEvent)
+				broadcasted = true
+			}
+			if broadcasted && o.deps.Logger != nil {
+				uidStr := ""
+				if userID != nil {
+					uidStr = userID.String()
+				}
+				o.deps.Logger.Debug(ctx, "Phase progress SSE broadcast enqueued", map[string]interface{}{
+					"campaign_id":  campaignID,
+					"phase":        phase,
+					"progress_pct": progress.ProgressPct,
+					"user_id":      uidStr,
+				})
 			}
 
 			// Log progress

@@ -1,6 +1,5 @@
 // File: src/hooks/useSSE.ts
-import { useEffect, useRef, useCallback, useState } from 'react';
-import type { CampaignSseEvent as _CampaignSseEvent } from '@/lib/api-client/models';
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 
 // Narrowed runtime event shape used by consumers. `data` will be strongly typed when
 // the event name matches a known CampaignSseEvent discriminator; otherwise unknown.
@@ -41,7 +40,99 @@ export interface SSEOptions {
    * @default true
    */
   withCredentials?: boolean;
+  
+  /**
+   * Custom event types to register listeners for. Defaults to campaign events list.
+   */
+  eventTypes?: string[];
+  
+  /**
+   * Optional constructor override (e.g. EventSource polyfill)
+   */
+  eventSourceFactory?: EventSourceCtor;
 }
+
+const DEFAULT_EVENT_TYPES = [
+  'campaign_progress',
+  'phase_started',
+  'phase_completed',
+  'phase_failed',
+  'domain_generated',
+  'domain_validated',
+  'analysis_completed',
+  'analysis_reuse_enrichment',
+  'analysis_failed',
+  'counters_reconciled',
+  'mode_changed',
+  'keyword_set_created',
+  'keyword_set_updated',
+  'keyword_set_deleted',
+  'keep_alive',
+  'error',
+];
+
+interface SSEMessageEvent {
+  data: string;
+  lastEventId?: string;
+  type?: string;
+}
+
+interface EventSourceLike {
+  onopen: ((ev: Event) => void) | null;
+  onerror: ((ev: Event) => void) | null;
+  onmessage: ((ev: SSEMessageEvent) => void) | null;
+  addEventListener: (type: string, listener: (ev: SSEMessageEvent) => void) => void;
+  close: () => void;
+  readyState: number;
+}
+
+type EventSourceCtorOptions = {
+  withCredentials?: boolean;
+  headers?: Record<string, string>;
+};
+
+type EventSourceCtor = new (url: string, options?: EventSourceCtorOptions) => EventSourceLike;
+
+declare global {
+  interface Window {
+    EventSourcePolyfill?: EventSourceCtor;
+  }
+}
+
+const ES_CONNECTING = 0;
+const ES_OPEN = 1;
+const ES_CLOSED = 2;
+
+const shouldAttemptJsonParse = (raw: string): boolean => {
+  const trimmed = raw?.trim();
+  if (!trimmed) {
+    return false;
+  }
+  return trimmed.startsWith('{') || trimmed.startsWith('[');
+};
+
+const safeParseEventData = (raw: string): { data: unknown; error?: Error } => {
+  try {
+    if (!shouldAttemptJsonParse(raw)) {
+      return { data: raw };
+    }
+    return { data: JSON.parse(raw) };
+  } catch (error) {
+    return {
+      data: raw,
+      error: error instanceof Error ? error : new Error('Failed to parse SSE payload'),
+    };
+  }
+};
+
+const unwrapPayload = (payload: unknown): { data: unknown; raw: unknown } => {
+  if (payload && typeof payload === 'object' && !Array.isArray(payload) && 'data' in (payload as Record<string, unknown>)) {
+    const rawContainer = payload as Record<string, unknown>;
+    const inner = rawContainer.data;
+    return { data: inner ?? payload, raw: payload };
+  }
+  return { data: payload, raw: payload };
+};
 
 export interface UseSSEReturn {
   /**
@@ -108,34 +199,14 @@ export function useSSE(
     maxReconnectAttempts = 5,
     reconnectDelay = 3000,
     withCredentials = true,
+    headers,
+    eventTypes: customEventTypes,
+    eventSourceFactory,
   } = options;
 
   // Keep a small timeout so we fail fast locally; actual liveness is confirmed by messages below.
   const STALE_TIMEOUT_MS = 45000; // Reconnect if no activity past keep-alive window
   const MAX_JITTER_MS = 500; // Jitter reconnections to avoid thundering herd
-
-  // Runtime-safe EventSource access (SSR-friendly)
-  interface SSEMessageEvent {
-    data: string;
-    lastEventId?: string;
-    type?: string;
-  }
-  interface EventSourceLike {
-    onopen: ((ev: Event) => void) | null;
-    onerror: ((ev: Event) => void) | null;
-    onmessage: ((ev: SSEMessageEvent) => void) | null;
-    addEventListener: (type: string, listener: (ev: SSEMessageEvent) => void) => void;
-    close: () => void;
-    readyState: number;
-  }
-  type EventSourceCtor = new (url: string, options?: { withCredentials?: boolean }) => EventSourceLike;
-  const ES: EventSourceCtor | null =
-    typeof window !== 'undefined' && 'EventSource' in window
-      ? (window as unknown as { EventSource: EventSourceCtor }).EventSource
-      : null;
-  const ES_CONNECTING = 0;
-  const ES_OPEN = 1;
-  const ES_CLOSED = 2;
 
   const eventSourceRef = useRef<EventSourceLike | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -144,12 +215,42 @@ export function useSSE(
   const mountedRef = useRef(true);
   const lastActivityRef = useRef<number>(Date.now());
   const connectRef = useRef<() => void>(() => {});
+  const parseErrorStreakRef = useRef(0);
   
   const [readyState, setReadyState] = useState<number>(ES_CONNECTING);
   const [lastEvent, setLastEvent] = useState<SSEEvent | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hasEverConnected, setHasEverConnected] = useState(false);
   const [connectedAt, setConnectedAt] = useState<string | null>(null);
+
+  const eventTypeRegistry = useMemo(() => {
+    const base = customEventTypes?.length ? customEventTypes : DEFAULT_EVENT_TYPES;
+    return Array.from(new Set(base));
+  }, [customEventTypes]);
+
+  const resolveEventSourceCtor = useCallback((): { ctor: EventSourceCtor | null; isNative: boolean } => {
+    if (eventSourceFactory) {
+      return { ctor: eventSourceFactory, isNative: false };
+    }
+    if (typeof window === 'undefined') {
+      return { ctor: null, isNative: false };
+    }
+    const win = window as typeof window & { EventSourcePolyfill?: EventSourceCtor };
+    const nativeCtor = typeof win.EventSource === 'function' ? (win.EventSource as EventSourceCtor) : null;
+    const polyfillCtor = win.EventSourcePolyfill ?? null;
+    const forcePolyfill = process.env.NEXT_PUBLIC_SSE_FORCE_POLYFILL === '1';
+    const preferPolyfill = forcePolyfill || Boolean(headers && Object.keys(headers).length > 0);
+    if (preferPolyfill && polyfillCtor) {
+      return { ctor: polyfillCtor, isNative: false };
+    }
+    if (nativeCtor) {
+      return { ctor: nativeCtor, isNative: true };
+    }
+    if (polyfillCtor) {
+      return { ctor: polyfillCtor, isNative: false };
+    }
+    return { ctor: null, isNative: false };
+  }, [eventSourceFactory, headers]);
 
   const cleanup = useCallback(() => {
     if (eventSourceRef.current) {
@@ -201,8 +302,8 @@ export function useSSE(
       }
       return;
     }
-    // Ensure we're in a browser with EventSource support
-    if (!ES) {
+    const { ctor: EventSourceCtorImpl, isNative } = resolveEventSourceCtor();
+    if (!EventSourceCtorImpl) {
       if (process.env.NODE_ENV !== 'production') {
         console.error('[useSSE] EventSource not available in this environment');
       }
@@ -240,11 +341,49 @@ export function useSSE(
         }
       }
       // Modern browsers support headers via EventSource constructor
-      const eventSource = new ES(url, {
-        withCredentials,
-      });
+      const ctorOptions: EventSourceCtorOptions = { withCredentials };
+      if (!isNative && headers && Object.keys(headers).length > 0) {
+        ctorOptions.headers = headers;
+      }
+      const eventSource = new EventSourceCtorImpl(url, ctorOptions);
 
       eventSourceRef.current = eventSource;
+
+      const emitIncomingEvent = (event: SSEMessageEvent, forcedType?: string) => {
+        if (!mountedRef.current) return;
+
+        setReadyState(ES_OPEN);
+        setError(null);
+        setHasEverConnected(true);
+        lastActivityRef.current = Date.now();
+
+        const { data: parsedPayload, error: parseError } = safeParseEventData(event.data ?? '');
+        if (parseError) {
+          parseErrorStreakRef.current += 1;
+          const message = `Failed to parse ${forcedType || event.type || 'message'} event data`;
+          console.error(`❌ ${message}:`, parseError);
+          setError(message);
+          if (parseErrorStreakRef.current >= 3) {
+            console.warn('[useSSE] too many parse failures; reconnecting');
+            eventSourceRef.current?.close();
+            scheduleReconnect('parse-error');
+          }
+          return;
+        }
+
+        parseErrorStreakRef.current = 0;
+        const { data: payload, raw } = unwrapPayload(parsedPayload);
+        const sseEvent: SSEEvent = {
+          id: event.lastEventId || undefined,
+          event: forcedType || event.type || 'message',
+          data: payload,
+          timestamp: new Date().toISOString(),
+          raw,
+        };
+
+        setLastEvent(sseEvent);
+        onEvent?.(sseEvent);
+      };
 
       eventSource.onopen = () => {
         if (!mountedRef.current) return;
@@ -252,6 +391,7 @@ export function useSSE(
         setError(null);
         setHasEverConnected(true);
         setConnectedAt(new Date().toISOString());
+        parseErrorStreakRef.current = 0;
         reconnectAttemptsRef.current = 0;
         lastActivityRef.current = Date.now();
         if (staleIntervalRef.current) {
@@ -294,103 +434,21 @@ export function useSSE(
         scheduleReconnect('onerror');
       };
 
-  // Generic event listener for all SSE events
-      const unwrapPayload = (payload: unknown): { data: unknown; raw: unknown } => {
-        if (payload && typeof payload === 'object' && !Array.isArray(payload) && 'data' in (payload as Record<string, unknown>)) {
-          const rawContainer = payload as Record<string, unknown>;
-          const inner = rawContainer.data;
-          return { data: inner ?? payload, raw: payload };
-        }
-        return { data: payload, raw: payload };
-      };
-
       eventSource.onmessage = (event: SSEMessageEvent) => {
-        if (!mountedRef.current) return;
-
-        // Any message proves the connection is alive; clear the ready timeout.
-
-        // Treat any message as connected even if readyState lags.
-        setReadyState(ES_OPEN);
-        setError(null);
-
-        if (eventSource.readyState === ES_CONNECTING) {
-          setReadyState(ES_OPEN);
-          setError(null);
-        }
-        setHasEverConnected(true);
-        lastActivityRef.current = Date.now();
-
-        try {
-          const parsedData: unknown = JSON.parse(event.data);
-          const { data: payload, raw } = unwrapPayload(parsedData);
-          const sseEvent: SSEEvent = {
-            id: event.lastEventId || undefined,
-            event: event.type || 'message',
-            data: payload,
-            timestamp: new Date().toISOString(),
-            raw,
-          };
-          
-          setLastEvent(sseEvent);
-          onEvent?.(sseEvent);
-        } catch (parseError) {
-          console.error('❌ Failed to parse SSE event data:', parseError);
-          setError('Failed to parse event data');
-        }
+        emitIncomingEvent(event, event.type);
       };
 
-      // Specific event listeners for custom event types
-      const eventTypes = [
-        'campaign_progress',
-        'phase_started',
-        'phase_completed',
-        'phase_failed',
-        'domain_generated',
-        'domain_validated',
-        'analysis_completed',
-  // Keyword set lifecycle events
-  'keyword_set_created',
-  'keyword_set_updated',
-  'keyword_set_deleted',
-        'keep_alive',
-      ];
-
-      eventTypes.forEach((eventType) => {
+      eventTypeRegistry.forEach((eventType) => {
         eventSource.addEventListener(eventType, (event: SSEMessageEvent) => {
-          if (!mountedRef.current) return;
-          
-
-          // Treat typed events as connected even if readyState lags.
-          setReadyState(ES_OPEN);
-          setError(null);
-          lastActivityRef.current = Date.now();
-
-          try {
-            const parsedData: unknown = JSON.parse(event.data);
-            const { data: payload, raw } = unwrapPayload(parsedData);
-            const sseEvent: SSEEvent = {
-              id: event.lastEventId || undefined,
-              event: eventType,
-              data: payload,
-              timestamp: new Date().toISOString(),
-              raw,
-            };
-            
-            setLastEvent(sseEvent);
-            onEvent?.(sseEvent);
-          } catch (parseError) {
-            console.error(`❌ Failed to parse ${eventType} event data:`, parseError);
-            setError(`Failed to parse ${eventType} event data`);
-          }
+          emitIncomingEvent(event, eventType);
         });
       });
-
     } catch (connectionError) {
       console.error('❌ Failed to create SSE connection:', connectionError);
       setError('Failed to create SSE connection');
       setReadyState(ES_CLOSED);
     }
-  }, [url, onEvent, autoReconnect, maxReconnectAttempts, reconnectDelay, withCredentials, ES, cleanup]);
+  }, [url, onEvent, headers, resolveEventSourceCtor, withCredentials, cleanup, scheduleReconnect, eventTypeRegistry]);
 
   const reconnect = useCallback(() => {
     reconnectAttemptsRef.current = 0;
@@ -420,7 +478,7 @@ export function useSSE(
     error,
     reconnect,
     close,
-  isConnected: readyState === ES_OPEN,
+    isConnected: readyState === ES_OPEN,
     reconnectAttempts: reconnectAttemptsRef.current,
   };
 }
