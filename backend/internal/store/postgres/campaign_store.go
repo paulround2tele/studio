@@ -457,7 +457,7 @@ func (s *campaignStorePostgres) UpdateCampaignProgress(ctx context.Context, exec
 			total_items = $2, 
 			progress_percentage = $3,
 			phase_status = CASE
-				WHEN phase_status NOT IN ('completed', 'failed') THEN 'in_progress'
+				WHEN phase_status NOT IN ('completed', 'failed', 'paused') THEN 'in_progress'
 				ELSE phase_status
 			END,
 			updated_at = NOW() 

@@ -53,6 +53,7 @@ func TestRestoreInFlightPhases_ReappliesPause(t *testing.T) {
 	enrichmentSvc2 := newStubPhaseService(models.PhaseTypeEnrichment, logger)
 	analysisSvc2 := newStubPhaseService(models.PhaseTypeAnalysis, logger)
 	orch2 := NewCampaignOrchestrator(cs, deps, domainSvc2, dnsSvc2, httpSvc2, extractionSvc2, enrichmentSvc2, analysisSvc2, nil, nil)
+	orch2.SetAutoResumeOnRestart(true)
 	registerPhaseCleanup(t, orch2, domainSvc2, campaignID, models.PhaseTypeDomainGeneration)
 
 	if err := orch2.RestoreInFlightPhases(context.Background()); err != nil {
@@ -66,6 +67,87 @@ func TestRestoreInFlightPhases_ReappliesPause(t *testing.T) {
 	}
 	if domainSvc2.attachEventCount(campaignID) == 0 {
 		t.Fatalf("expected control channel attach during restore")
+	}
+}
+
+func TestRestoreInFlightPhases_DefaultSkipsAutoResume(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := newTestLogger(t)
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	domainSvc := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	extractionSvc := newStubPhaseService(models.PhaseTypeExtraction, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, nil)
+
+	campaignID := createTestCampaign(t, cs)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
+	registerPhaseCleanup(t, orch, domainSvc, campaignID, models.PhaseTypeDomainGeneration)
+
+	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("start phase: %v", err)
+	}
+	waitUntil(t, time.Second, func() bool { return domainSvc.executions(campaignID) == 1 })
+
+	domainSvc2 := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
+	dnsSvc2 := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc2 := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	extractionSvc2 := newStubPhaseService(models.PhaseTypeExtraction, logger)
+	enrichmentSvc2 := newStubPhaseService(models.PhaseTypeEnrichment, logger)
+	analysisSvc2 := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	orch2 := NewCampaignOrchestrator(cs, deps, domainSvc2, dnsSvc2, httpSvc2, extractionSvc2, enrichmentSvc2, analysisSvc2, nil, nil)
+	registerPhaseCleanup(t, orch2, domainSvc2, campaignID, models.PhaseTypeDomainGeneration)
+
+	if err := orch2.RestoreInFlightPhases(context.Background()); err != nil {
+		t.Fatalf("restore: %v", err)
+	}
+	if got := domainSvc2.executions(campaignID); got != 0 {
+		t.Fatalf("expected no auto-resume executions, got %d", got)
+	}
+	campaign, err := cs.GetCampaignByID(context.Background(), db, campaignID)
+	if err != nil {
+		t.Fatalf("get campaign: %v", err)
+	}
+	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.PhaseStatusPaused {
+		t.Fatalf("expected campaign status paused after restore, got %v", campaign.PhaseStatus)
+	}
+}
+
+func TestRestoreInFlightPhases_CancelsLegacyExecutions(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := newTestLogger(t)
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	domainSvc := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, newStubPhaseService(models.PhaseTypeDNSValidation, logger), newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger), newStubPhaseService(models.PhaseTypeExtraction, logger), newStubPhaseService(models.PhaseTypeEnrichment, logger), newStubPhaseService(models.PhaseTypeAnalysis, logger), nil, nil)
+
+	campaignID := createTestCampaign(t, cs)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
+	registerPhaseCleanup(t, orch, domainSvc, campaignID, models.PhaseTypeDomainGeneration)
+
+	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("start phase: %v", err)
+	}
+	waitUntil(t, time.Second, func() bool { return domainSvc.executions(campaignID) == 1 })
+	waitUntil(t, time.Second, func() bool { return domainSvc.progressEventCount(campaignID) > 5 })
+
+	domainSvc2 := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
+	orch2 := NewCampaignOrchestrator(cs, deps, domainSvc2, newStubPhaseService(models.PhaseTypeDNSValidation, logger), newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger), newStubPhaseService(models.PhaseTypeExtraction, logger), newStubPhaseService(models.PhaseTypeEnrichment, logger), newStubPhaseService(models.PhaseTypeAnalysis, logger), nil, nil)
+	registerPhaseCleanup(t, orch2, domainSvc2, campaignID, models.PhaseTypeDomainGeneration)
+
+	if err := orch2.RestoreInFlightPhases(context.Background()); err != nil {
+		t.Fatalf("restore: %v", err)
+	}
+	waitUntil(t, time.Second, func() bool { return domainSvc.isTerminated(campaignID) })
+	baseline := domainSvc.progressEventCount(campaignID)
+	time.Sleep(50 * time.Millisecond)
+	if domainSvc.progressEventCount(campaignID) != baseline {
+		t.Fatalf("expected legacy execution to stop emitting progress after cancellation")
 	}
 }
 
@@ -90,6 +172,7 @@ func TestRestoreInFlightPhases_StopAfterRestore(t *testing.T) {
 	// Restart
 	domainSvc2 := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
 	orch2 := NewCampaignOrchestrator(cs, deps, domainSvc2, newStubPhaseService(models.PhaseTypeDNSValidation, logger), newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger), newStubPhaseService(models.PhaseTypeExtraction, logger), newStubPhaseService(models.PhaseTypeEnrichment, logger), newStubPhaseService(models.PhaseTypeAnalysis, logger), nil, nil)
+	orch2.SetAutoResumeOnRestart(true)
 	registerPhaseCleanup(t, orch2, domainSvc2, campaignID, models.PhaseTypeDomainGeneration)
 	if err := orch2.RestoreInFlightPhases(context.Background()); err != nil {
 		t.Fatalf("restore: %v", err)
@@ -123,6 +206,7 @@ func TestRestoreInFlightPhases_Idempotent(t *testing.T) {
 	// Restart orchestrator for restore tests
 	domainSvc2 := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
 	orch2 := NewCampaignOrchestrator(cs, deps, domainSvc2, newStubPhaseService(models.PhaseTypeDNSValidation, logger), newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger), newStubPhaseService(models.PhaseTypeExtraction, logger), newStubPhaseService(models.PhaseTypeEnrichment, logger), newStubPhaseService(models.PhaseTypeAnalysis, logger), nil, nil)
+	orch2.SetAutoResumeOnRestart(true)
 	registerPhaseCleanup(t, orch2, domainSvc2, campaignID, models.PhaseTypeDomainGeneration)
 
 	if err := orch2.RestoreInFlightPhases(context.Background()); err != nil {
@@ -198,6 +282,7 @@ func TestRestoreInFlightPhases_PausedDoesNotEmitProgress(t *testing.T) {
 
 	domainSvc2 := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
 	orch2 := NewCampaignOrchestrator(cs, deps, domainSvc2, newStubPhaseService(models.PhaseTypeDNSValidation, logger), newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger), newStubPhaseService(models.PhaseTypeExtraction, logger), newStubPhaseService(models.PhaseTypeEnrichment, logger), newStubPhaseService(models.PhaseTypeAnalysis, logger), nil, nil)
+	orch2.SetAutoResumeOnRestart(true)
 	registerPhaseCleanup(t, orch2, domainSvc2, campaignID, models.PhaseTypeDomainGeneration)
 
 	if err := orch2.RestoreInFlightPhases(context.Background()); err != nil {
@@ -232,6 +317,7 @@ func TestRestoreInFlightPhases_AutoPauseRequiresResume(t *testing.T) {
 
 	domainSvc2 := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
 	orch2 := NewCampaignOrchestrator(cs, deps, domainSvc2, newStubPhaseService(models.PhaseTypeDNSValidation, logger), newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger), newStubPhaseService(models.PhaseTypeExtraction, logger), newStubPhaseService(models.PhaseTypeEnrichment, logger), newStubPhaseService(models.PhaseTypeAnalysis, logger), nil, nil)
+	orch2.SetAutoResumeOnRestart(true)
 	registerPhaseCleanup(t, orch2, domainSvc2, campaignID, models.PhaseTypeDomainGeneration)
 
 	if err := orch2.RestoreInFlightPhases(context.Background()); err != nil {
@@ -251,6 +337,52 @@ func TestRestoreInFlightPhases_AutoPauseRequiresResume(t *testing.T) {
 	}
 	waitUntil(t, 2*time.Second, func() bool { return domainSvc2.progressEventCount(campaignID) > baseline })
 	waitUntil(t, 2*time.Second, func() bool { return !domainSvc2.isPaused(campaignID) })
+}
+
+func TestRestoreInFlightPhases_SkipsWhenConfigMissing(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := newTestLogger(t)
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	domainSvc := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, newStubPhaseService(models.PhaseTypeDNSValidation, logger), newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger), newStubPhaseService(models.PhaseTypeExtraction, logger), newStubPhaseService(models.PhaseTypeEnrichment, logger), newStubPhaseService(models.PhaseTypeAnalysis, logger), nil, nil)
+
+	campaignID := createTestCampaign(t, cs)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
+	registerPhaseCleanup(t, orch, domainSvc, campaignID, models.PhaseTypeDomainGeneration)
+
+	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("start phase: %v", err)
+	}
+	waitUntil(t, time.Second, func() bool { return domainSvc.executions(campaignID) == 1 })
+
+	if err := orch.PausePhase(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("pause phase: %v", err)
+	}
+	waitUntil(t, time.Second, func() bool { return domainSvc.isPaused(campaignID) })
+
+	if _, err := db.Exec(`UPDATE campaign_phases SET configuration = NULL WHERE campaign_id = $1 AND phase_type = 'domain_generation'`, campaignID); err != nil {
+		t.Fatalf("null legacy config: %v", err)
+	}
+	if _, err := db.Exec(`UPDATE phase_executions SET configuration = NULL WHERE campaign_id = $1 AND phase_type = 'domain_generation'`, campaignID); err != nil {
+		t.Fatalf("null execution config: %v", err)
+	}
+	if _, err := db.Exec(`DELETE FROM phase_configurations WHERE campaign_id = $1 AND phase = 'domain_generation'`, campaignID); err != nil {
+		t.Fatalf("delete stored config: %v", err)
+	}
+
+	domainSvc2 := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
+	orch2 := NewCampaignOrchestrator(cs, deps, domainSvc2, newStubPhaseService(models.PhaseTypeDNSValidation, logger), newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger), newStubPhaseService(models.PhaseTypeExtraction, logger), newStubPhaseService(models.PhaseTypeEnrichment, logger), newStubPhaseService(models.PhaseTypeAnalysis, logger), nil, nil)
+	orch2.SetAutoResumeOnRestart(true)
+	registerPhaseCleanup(t, orch2, domainSvc2, campaignID, models.PhaseTypeDomainGeneration)
+
+	if err := orch2.RestoreInFlightPhases(context.Background()); err != nil {
+		t.Fatalf("restore: %v", err)
+	}
+	if got := domainSvc2.executions(campaignID); got != 0 {
+		t.Fatalf("expected no restart when configuration missing, got %d", got)
+	}
 }
 
 func TestHydratePhaseConfigurationDomainGeneration(t *testing.T) {
@@ -380,6 +512,7 @@ func (s *controlAwarePhaseService) runExecution(ctx context.Context, campaignID 
 					status.Status = models.PhaseStatusFailed
 				}
 			}
+			s.terminated[campaignID] = true
 			s.mu.Unlock()
 			return
 		case <-ticker.C:

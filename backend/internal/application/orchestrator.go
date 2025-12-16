@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
@@ -69,6 +70,8 @@ type CampaignOrchestrator struct {
 	metrics OrchestratorMetrics
 	control PhaseControlManager
 
+	autoResumeOnRestart atomic.Bool
+
 	// Domain services that orchestrate engines
 	domainGenerationSvc domainservices.DomainGenerationService
 	dnsValidationSvc    domainservices.DNSValidationService
@@ -100,6 +103,7 @@ type CampaignExecution struct {
 	CompletedAt   *time.Time                                           `json:"completed_at,omitempty"`
 	OverallStatus models.PhaseStatusEnum                               `json:"overall_status"`
 	LastError     string                                               `json:"last_error,omitempty"`
+	PhaseRunID    uuid.UUID                                            `json:"phase_run_id"`
 }
 
 // CampaignRestartResult summarizes which phases were re-queued during a restart attempt.
@@ -120,6 +124,72 @@ var restartablePhaseOrder = []models.PhaseTypeEnum{
 	models.PhaseTypeExtraction,
 	models.PhaseTypeAnalysis,
 	models.PhaseTypeEnrichment,
+}
+
+var errRehydratePhaseConfigMissing = errors.New("rehydration skipped: persisted phase configuration not found")
+
+// phaseExecutionHandles tracks live phase executions across orchestrator instances so we can
+// cancel stale workers (and drop their progress) when ownership changes after a restart.
+var phaseExecutionHandles sync.Map // map[uuid.UUID]*phaseExecutionHandle
+
+type phaseExecutionHandle struct {
+	campaignID uuid.UUID
+	phase      models.PhaseTypeEnum
+	runID      uuid.UUID
+	cancel     context.CancelFunc
+}
+
+func registerPhaseExecutionHandle(campaignID uuid.UUID, phase models.PhaseTypeEnum, cancel context.CancelFunc) uuid.UUID {
+	runID := uuid.New()
+	phaseExecutionHandles.Store(campaignID, &phaseExecutionHandle{
+		campaignID: campaignID,
+		phase:      phase,
+		runID:      runID,
+		cancel:     cancel,
+	})
+	return runID
+}
+
+func cancelPhaseExecutionHandle(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, reason string, logger domainservices.Logger) bool {
+	if value, ok := phaseExecutionHandles.LoadAndDelete(campaignID); ok {
+		handle, _ := value.(*phaseExecutionHandle)
+		if logger != nil {
+			logger.Info(ctx, "phase.execution.cancelled", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"reason":      reason,
+			})
+		}
+		if handle != nil && handle.cancel != nil {
+			handle.cancel()
+		}
+		return true
+	}
+	return false
+}
+
+func clearPhaseExecutionHandle(campaignID uuid.UUID, runID uuid.UUID) {
+	if value, ok := phaseExecutionHandles.Load(campaignID); ok {
+		handle, _ := value.(*phaseExecutionHandle)
+		if handle == nil {
+			phaseExecutionHandles.Delete(campaignID)
+			return
+		}
+		if runID == uuid.Nil || handle.runID == runID {
+			phaseExecutionHandles.Delete(campaignID)
+		}
+	}
+}
+
+func isPhaseRunActive(campaignID uuid.UUID, runID uuid.UUID) bool {
+	if runID == uuid.Nil {
+		return true
+	}
+	if value, ok := phaseExecutionHandles.Load(campaignID); ok {
+		handle, _ := value.(*phaseExecutionHandle)
+		return handle != nil && handle.runID == runID
+	}
+	return false
 }
 
 // NewCampaignOrchestrator creates a new campaign orchestrator
@@ -199,6 +269,14 @@ func NewCampaignOrchestrator(
 		autoStartInProgress: make(map[string]struct{}),
 		hooks:               make([]PostCompletionHook, 0),
 	}
+}
+
+// SetAutoResumeOnRestart toggles whether RestoreInFlightPhases should restart active phases automatically.
+func (o *CampaignOrchestrator) SetAutoResumeOnRestart(enabled bool) {
+	if o == nil {
+		return
+	}
+	o.autoResumeOnRestart.Store(enabled)
 }
 
 // SetControlManager overrides the orchestrator's control manager; nil restores the default implementation.
@@ -368,14 +446,10 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		return err
 	}
 
-	// IMPORTANT: Decouple long-running phase execution from the request context.
-	// The incoming ctx is tied to the HTTP request and will be cancelled when the
-	// handler returns or the client disconnects, which previously caused premature
-	// phase failures (status=failed, "Execution cancelled").
-	// Use a background-derived context for execution and monitoring.
+	// IMPORTANT: Decouple long-running phase execution from the request context
+	// and keep a cancel handle so we can terminate stale workers during a restart.
 	execCtx, cancelFn := context.WithCancel(context.Background())
-	// Non-blocking cleanup when execution finishes
-	go func() { <-execCtx.Done(); cancelFn() }()
+	runID := registerPhaseExecutionHandle(campaignID, phase, cancelFn)
 
 	// Wire runtime control channel before kick-off when supported
 	o.attachControlChannel(ctx, campaignID, phase, service)
@@ -383,6 +457,7 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	// Start phase execution with background-derived context
 	progressCh, err := service.Execute(execCtx, campaignID)
 	if err != nil {
+		cancelPhaseExecutionHandle(ctx, campaignID, phase, "execute_failed", o.deps.Logger)
 		// Broadcast phase failed event
 		if o.sseService != nil && cachedUserID != nil {
 			phaseFailedEvent := services.CreatePhaseFailedEvent(campaignID, *cachedUserID, phase, err.Error())
@@ -422,6 +497,7 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 			PhaseStatuses: make(map[models.PhaseTypeEnum]*domainservices.PhaseStatus),
 			StartedAt:     time.Now(),
 			OverallStatus: models.PhaseStatusInProgress,
+			PhaseRunID:    runID,
 		}
 	}
 	o.mu.Unlock()
@@ -438,11 +514,12 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	if execution, exists := o.campaignExecutions[campaignID]; exists {
 		execution.CurrentPhase = phase
 		execution.OverallStatus = models.PhaseStatusInProgress
+		execution.PhaseRunID = runID
 	}
 	o.mu.Unlock()
 
 	// Monitor phase progress in a separate goroutine using the same background context
-	go o.monitorPhaseProgress(execCtx, campaignID, phase, progressCh)
+	go o.monitorPhaseProgress(execCtx, campaignID, phase, progressCh, runID)
 
 	o.deps.Logger.Info(ctx, "Phase started successfully", map[string]interface{}{
 		"campaign_id": campaignID,
@@ -520,6 +597,9 @@ func (o *CampaignOrchestrator) restoreInFlightPhases(ctx context.Context, sleepB
 	rehydrated := 0
 	for _, campaign := range candidates {
 		if err := o.rehydrateCampaignPhase(ctx, querier, campaign); err != nil {
+			if errors.Is(err, errRehydratePhaseConfigMissing) {
+				continue
+			}
 			if o.deps.Logger != nil {
 				o.deps.Logger.Error(ctx, "campaign.rehydrate.phase_failed", err, map[string]interface{}{
 					"campaign_id": campaign.ID,
@@ -600,6 +680,26 @@ func (o *CampaignOrchestrator) rehydrateCampaignPhase(ctx context.Context, exec 
 		}
 	}
 	o.mu.RUnlock()
+	// Reclaim ownership by cancelling any previously registered execution handle so stale goroutines stop emitting progress.
+	cancelPhaseExecutionHandle(ctx, campaign.ID, phase, "restore_reclaim_execution", o.deps.Logger)
+	if !o.autoResumeOnRestart.Load() {
+		return o.deferPhaseRestart(ctx, exec, campaign, phase)
+	}
+	if phaseRequiresPersistedConfig(phase) {
+		hasConfig, err := o.hasPersistedPhaseConfig(ctx, exec, campaign.ID, phase)
+		if err != nil {
+			return fmt.Errorf("failed to verify stored configuration for %s: %w", phase, err)
+		}
+		if !hasConfig {
+			if o.deps.Logger != nil {
+				o.deps.Logger.Warn(ctx, "campaign.rehydrate.phase.skip_config_missing", map[string]interface{}{
+					"campaign_id": campaign.ID,
+					"phase":       phase,
+				})
+			}
+			return errRehydratePhaseConfigMissing
+		}
+	}
 	service, err := o.getPhaseService(phase)
 	if err != nil {
 		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
@@ -658,6 +758,83 @@ func (o *CampaignOrchestrator) rehydrateCampaignPhase(ctx context.Context, exec 
 		})
 	}
 	return nil
+}
+
+func (o *CampaignOrchestrator) deferPhaseRestart(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign, phase models.PhaseTypeEnum) error {
+	if o == nil || campaign == nil {
+		return nil
+	}
+	status := "unknown"
+	if campaign.PhaseStatus != nil {
+		status = string(*campaign.PhaseStatus)
+	}
+	if o.deps.Logger != nil {
+		o.deps.Logger.Info(ctx, "campaign.rehydrate.phase.defer_resume", map[string]interface{}{
+			"campaign_id": campaign.ID,
+			"phase":       phase,
+			"status":      status,
+			"reason":      "auto_resume_disabled",
+		})
+	}
+	paused := models.PhaseStatusPaused
+	if o.store != nil && exec != nil {
+		if err := o.store.UpdateCampaignPhaseFields(ctx, exec, campaign.ID, &phase, &paused); err != nil {
+			return fmt.Errorf("failed to pause %s after restart: %w", phase, err)
+		}
+		if err := o.store.UpdateCampaignStatus(ctx, exec, campaign.ID, paused, sql.NullString{}); err != nil {
+			return fmt.Errorf("failed to update campaign %s status after restart: %w", campaign.ID, err)
+		}
+		if err := o.persistCampaignState(ctx, exec, campaign.ID, models.CampaignStatePaused); err != nil && o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "campaign.rehydrate.phase.defer.persist_state_failed", map[string]interface{}{
+				"campaign_id": campaign.ID,
+				"phase":       phase,
+				"error":       err.Error(),
+			})
+		}
+	}
+	campaign.PhaseStatus = &paused
+	pausedStatus := models.PhaseStatusPaused
+	o.mu.Lock()
+	execState, exists := o.campaignExecutions[campaign.ID]
+	if !exists {
+		execState = &CampaignExecution{
+			CampaignID:    campaign.ID,
+			CurrentPhase:  phase,
+			PhaseStatuses: make(map[models.PhaseTypeEnum]*domainservices.PhaseStatus),
+			OverallStatus: pausedStatus,
+		}
+		o.campaignExecutions[campaign.ID] = execState
+	} else {
+		execState.CurrentPhase = phase
+		execState.OverallStatus = pausedStatus
+	}
+	if execState.PhaseStatuses == nil {
+		execState.PhaseStatuses = make(map[models.PhaseTypeEnum]*domainservices.PhaseStatus)
+	}
+	execState.PhaseStatuses[phase] = &domainservices.PhaseStatus{Status: pausedStatus}
+	execState.LastError = ""
+	o.mu.Unlock()
+	return nil
+}
+
+func phaseRequiresPersistedConfig(phase models.PhaseTypeEnum) bool {
+	switch phase {
+	case models.PhaseTypeDomainGeneration:
+		return true
+	default:
+		return false
+	}
+}
+
+func (o *CampaignOrchestrator) hasPersistedPhaseConfig(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phase models.PhaseTypeEnum) (bool, error) {
+	payload, err := o.loadPhaseConfigurationPayload(ctx, exec, campaignID, phase)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) || errors.Is(err, errPhaseConfigMissing) {
+			return false, nil
+		}
+		return false, err
+	}
+	return len(payload) > 0, nil
 }
 
 // parsePhaseType converts string phase type to enum
@@ -1472,9 +1649,15 @@ func decodePhaseConfiguration(phase models.PhaseTypeEnum, payload []byte) (inter
 }
 
 // monitorPhaseProgress monitors the progress of a phase execution
-func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, progressCh <-chan domainservices.PhaseProgress) {
+func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, progressCh <-chan domainservices.PhaseProgress, runID uuid.UUID) {
 	exitReason := "unknown"
 	defer func() {
+		clearPhaseExecutionHandle(campaignID, runID)
+		o.mu.Lock()
+		if exec, ok := o.campaignExecutions[campaignID]; ok && exec.PhaseRunID == runID {
+			exec.PhaseRunID = uuid.Nil
+		}
+		o.mu.Unlock()
 		if o.deps.Logger != nil {
 			o.deps.Logger.Debug(ctx, "Phase progress monitoring ended", map[string]interface{}{
 				"campaign_id": campaignID,
@@ -1526,6 +1709,10 @@ func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaig
 	}
 
 	for {
+		if !isPhaseRunActive(campaignID, runID) {
+			exitReason = "execution_run_ended"
+			return
+		}
 		select {
 		case <-ctx.Done():
 			exitReason = fmt.Sprintf("context_done:%v", ctx.Err())
@@ -1538,9 +1725,14 @@ func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaig
 				return
 			}
 
+			if !isPhaseRunActive(campaignID, runID) {
+				exitReason = "execution_run_ended"
+				return
+			}
+
 			exitReason = "running"
 			// Update campaign execution with progress
-			o.updateCampaignProgress(campaignID, phase, progress)
+			o.updateCampaignProgress(campaignID, phase, progress, runID)
 
 			// Broadcast progress update via SSE
 			broadcasted := false
@@ -1585,12 +1777,41 @@ func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaig
 }
 
 // updateCampaignProgress updates the campaign execution with phase progress
-func (o *CampaignOrchestrator) updateCampaignProgress(campaignID uuid.UUID, phase models.PhaseTypeEnum, progress domainservices.PhaseProgress) {
+func (o *CampaignOrchestrator) updateCampaignProgress(campaignID uuid.UUID, phase models.PhaseTypeEnum, progress domainservices.PhaseProgress, runID uuid.UUID) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
 	execution, exists := o.campaignExecutions[campaignID]
 	if !exists {
+		return
+	}
+
+	if runID != uuid.Nil {
+		if execution.PhaseRunID == uuid.Nil || execution.PhaseRunID != runID {
+			return
+		}
+	}
+
+	isPaused := execution.OverallStatus == models.PhaseStatusPaused
+	if !isPaused && execution.PhaseStatuses != nil {
+		if st, ok := execution.PhaseStatuses[phase]; ok && st != nil && st.Status == models.PhaseStatusPaused {
+			isPaused = true
+		}
+	}
+	if !isPaused && o.store != nil && o.deps.DB != nil {
+		if querier, ok := o.deps.DB.(store.Querier); ok {
+			if campaign, err := o.store.GetCampaignByID(context.Background(), querier, campaignID); err == nil && campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusPaused {
+				isPaused = true
+				if execution.PhaseStatuses == nil {
+					execution.PhaseStatuses = make(map[models.PhaseTypeEnum]*domainservices.PhaseStatus)
+				}
+				execution.OverallStatus = models.PhaseStatusPaused
+				execution.PhaseStatuses[phase] = &domainservices.PhaseStatus{Status: models.PhaseStatusPaused}
+			}
+		}
+	}
+	if isPaused {
+		// Once a campaign is marked paused, no further progress from older executions should mutate state.
 		return
 	}
 
@@ -1621,10 +1842,12 @@ func (o *CampaignOrchestrator) updateCampaignProgress(campaignID uuid.UUID, phas
 			}
 			_ = o.store.UpdateCampaignProgress(context.Background(), querier, campaignID, progress.ItemsProcessed, progress.ItemsTotal, pct)
 		}
-		// Also sync current phase and status
-		curPhase := phase
-		curStatus := progress.Status
-		_ = o.store.UpdateCampaignPhaseFields(context.Background(), querier, campaignID, &curPhase, &curStatus)
+		// Also sync current phase and status unless we intentionally hold a paused marker
+		if !isPaused {
+			curPhase := phase
+			curStatus := progress.Status
+			_ = o.store.UpdateCampaignPhaseFields(context.Background(), querier, campaignID, &curPhase, &curStatus)
+		}
 	}
 }
 
