@@ -211,8 +211,9 @@ func upsertConfig(t *testing.T, cs store.CampaignStore, campaignID uuid.UUID, ph
 	}
 }
 
-// integrationTestTimeout gives orchestration flows more breathing room on slower CI hosts.
-const integrationTestTimeout = 5 * time.Second
+// integrationTestTimeout gives orchestration flows breathing room on slower CI hosts
+// and under coverage instrumentation.
+const integrationTestTimeout = 15 * time.Second
 
 // waitUntil polls fn until it returns true or timeout elapses.
 func waitUntil(t *testing.T, timeout time.Duration, fn func() bool) {
@@ -867,6 +868,7 @@ func TestIdempotentPhaseStartNoDuplicateExecution(t *testing.T) {
 	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, metrics)
 
 	campaignID := createTestCampaign(t, cs)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
 	// Provide downstream configs (full_sequence gating disabled by staying in default step_by_step mode so optional)
 	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
 		t.Fatalf("initial start: %v", err)

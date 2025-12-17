@@ -412,8 +412,16 @@ func TestHydratePhaseConfigurationDomainGeneration(t *testing.T) {
 		t.Fatalf("hydrate domain generation config: %v", err)
 	}
 
-	stored, ok := domainSvc.configs[campaignID].(domainservices.DomainGenerationConfig)
-	if !ok {
+	var stored domainservices.DomainGenerationConfig
+	switch v := domainSvc.configs[campaignID].(type) {
+	case domainservices.DomainGenerationConfig:
+		stored = v
+	case *domainservices.DomainGenerationConfig:
+		if v == nil {
+			t.Fatalf("expected domain generation config, got nil")
+		}
+		stored = *v
+	default:
 		t.Fatalf("expected domain generation config, got %T", domainSvc.configs[campaignID])
 	}
 	if stored != cfg {
@@ -458,6 +466,29 @@ func newControlAwarePhaseService(phase models.PhaseTypeEnum, logger *testLogger,
 }
 
 func (s *controlAwarePhaseService) Configure(ctx context.Context, campaignID uuid.UUID, config interface{}) error {
+	var (
+		payload []byte
+		err     error
+	)
+	switch cfg := config.(type) {
+	case nil:
+		payload = []byte(`{}`)
+	case json.RawMessage:
+		payload = cfg
+	case []byte:
+		payload = cfg
+	default:
+		payload, err = json.Marshal(cfg)
+		if err != nil {
+			return err
+		}
+	}
+	if len(payload) == 0 {
+		payload = []byte(`{}`)
+	}
+	if err := s.store.UpsertPhaseConfig(ctx, nil, campaignID, s.phaseType, payload); err != nil {
+		return err
+	}
 	return nil
 }
 

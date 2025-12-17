@@ -42,6 +42,8 @@ func TestStartPhaseFromConfigured(t *testing.T) {
 		t.Fatalf("create campaign: %v", err)
 	}
 
+	upsertConfig(t, cs, campID, models.PhaseTypeDomainGeneration)
+
 	// Manually insert a campaign_phases row with status 'configured' for domain_generation
 	_, err := db.Exec(`INSERT INTO campaign_phases (campaign_id, phase_type, phase_order, status, progress_percentage, created_at, updated_at)
 					   VALUES ($1,'domain_generation',1,'configured',0,NOW(),NOW())`, campID)
@@ -186,6 +188,7 @@ func TestStartPhaseExtractionRequiresHTTPCompletion(t *testing.T) {
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	campID := createTestCampaign(t, cs)
+	upsertConfig(t, cs, campID, models.PhaseTypeHTTPKeywordValidation)
 
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
@@ -224,6 +227,7 @@ func TestStartPhaseHTTPRequiresDNSCompletion(t *testing.T) {
 	deps := domainservices.Dependencies{Logger: logger, DB: db}
 
 	campID := createTestCampaign(t, cs)
+	upsertConfig(t, cs, campID, models.PhaseTypeHTTPKeywordValidation)
 
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
 	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
@@ -264,6 +268,13 @@ func TestRestartCampaignFullSequenceRespectsMode(t *testing.T) {
 	campID := createTestCampaign(t, cs)
 	if err := cs.UpdateCampaignMode(context.Background(), nil, campID, "full_sequence"); err != nil {
 		t.Fatalf("set mode: %v", err)
+	}
+	for _, ph := range []models.PhaseTypeEnum{
+		models.PhaseTypeDomainGeneration,
+		models.PhaseTypeDNSValidation,
+		models.PhaseTypeHTTPKeywordValidation,
+	} {
+		upsertConfig(t, cs, campID, ph)
 	}
 
 	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)

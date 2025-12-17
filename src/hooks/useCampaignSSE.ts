@@ -180,6 +180,98 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+const unwrapEventPayload = (
+  data: unknown
+): {
+  envelope?: Record<string, unknown>;
+  payload?: Record<string, unknown>;
+} => {
+  if (!isPlainObject(data)) {
+    return {};
+  }
+  const envelope = data as Record<string, unknown>;
+  const canonical = isPlainObject(envelope.payload) ? (envelope.payload as Record<string, unknown>) : undefined;
+  const legacyData = isPlainObject(envelope.data) ? (envelope.data as Record<string, unknown>) : undefined;
+  const payload = canonical ?? legacyData ?? envelope;
+  return { envelope, payload };
+};
+
+const coerceNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && !Number.isNaN(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+  return undefined;
+};
+
+const coerceString = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+};
+
+const deriveCanonicalProgress = (
+  payload: Record<string, unknown> | undefined,
+  fallbackTimestamp?: string
+): CampaignProgress | undefined => {
+  if (!payload) {
+    return undefined;
+  }
+  const overall = isPlainObject(payload.overall) ? (payload.overall as Record<string, unknown>) : undefined;
+  if (!overall) {
+    return undefined;
+  }
+
+  const timestamp = coerceString(payload.timestamp) || fallbackTimestamp || new Date().toISOString();
+  const currentPhase =
+    (payload.current_phase as CampaignPhase | string | undefined) ||
+    (payload.currentPhase as CampaignPhase | string | undefined) ||
+    (payload.phase as CampaignPhase | string | undefined) ||
+    (overall.current_phase as CampaignPhase | string | undefined) ||
+    (overall.currentPhase as CampaignPhase | string | undefined) ||
+    'unknown';
+
+  return {
+    current_phase: (currentPhase as CampaignPhase) || ('unknown' as CampaignPhase),
+    progress_pct: coerceNumber(overall.percentComplete) ?? coerceNumber(payload.progress_pct) ?? 0,
+    items_processed: coerceNumber(overall.processedDomains) ?? coerceNumber(payload.items_processed) ?? 0,
+    items_total: coerceNumber(overall.totalDomains) ?? coerceNumber(payload.items_total) ?? 0,
+    status: coerceString(overall.status) ?? coerceString(payload.status) ?? 'unknown',
+    message: coerceString(payload.message) ?? coerceString(overall.message),
+    timestamp,
+  };
+};
+
+const resolveCampaignId = (
+  eventCampaignId: string | undefined,
+  payload?: Record<string, unknown>,
+  envelope?: Record<string, unknown>,
+  fallback?: string
+): string => {
+  const candidates = [
+    eventCampaignId,
+    payload?.campaign_id,
+    payload?.campaignId,
+    payload?.campaignID,
+    envelope?.campaign_id,
+    envelope?.campaignId,
+    fallback,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate;
+    }
+  }
+  return '';
+};
+
 // Coerce backend mapped phase to internal pipeline phase union when possible.
 const toPipelinePhase = (phase: string | PipelinePhase): PipelinePhaseKey | undefined => {
   switch (phase) {
@@ -482,21 +574,16 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
   // Event handler for all SSE events
   const handleSSEEvent = useCallback((event: SSEEvent) => {
-    const dataObj = isPlainObject(event.data) ? (event.data as Record<string, unknown>) : undefined;
-    const payload = isPlainObject(dataObj?.data)
-      ? (dataObj!.data as Record<string, unknown>)
-      : dataObj;
+    const { envelope: dataObj, payload } = unwrapEventPayload(event.data);
 
-    const payloadCampaignId =
-      typeof event.campaign_id === 'string'
-        ? event.campaign_id
-        : typeof payload?.campaign_id === 'string'
-          ? payload.campaign_id
-          : typeof dataObj?.campaign_id === 'string'
-            ? dataObj.campaign_id
-            : '';
+    const payloadCampaignId = resolveCampaignId(
+      typeof event.campaign_id === 'string' ? event.campaign_id : undefined,
+      payload,
+      dataObj,
+      campaignId
+    );
 
-    const resolvedCampaignId = payloadCampaignId || campaignId || '';
+    const resolvedCampaignId = payloadCampaignId || '';
 
     captureDebugEvent('incoming_event', {
       campaignId: resolvedCampaignId,
@@ -524,7 +611,8 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
             : undefined) ||
           (payload && isCampaignProgress(payload as object)
             ? (payload as unknown as CampaignProgress)
-            : undefined);
+            : undefined) ||
+          deriveCanonicalProgress(payload, typeof event.timestamp === 'string' ? event.timestamp : undefined);
         if (progressData) {
           setLastProgress(progressData);
           handlers.onProgress?.(resolvedCampaignId, progressData);

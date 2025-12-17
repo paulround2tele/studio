@@ -79,25 +79,31 @@ func (a *eventBusAdapter) PublishProgress(ctx context.Context, progress domainse
 		return nil
 	}
 	campaignID := progress.CampaignID
-	evt := services.SSEEvent{
-		Event: services.SSEEventCampaignProgress,
-		Data: map[string]interface{}{
-			"phase":           string(progress.Phase),
-			"status":          string(progress.Status),
-			"progressPct":     progress.ProgressPct,
-			"progress_pct":    progress.ProgressPct,
-			"itemsTotal":      progress.ItemsTotal,
-			"items_total":     progress.ItemsTotal,
-			"itemsProcessed":  progress.ItemsProcessed,
-			"items_processed": progress.ItemsProcessed,
-			"message":         progress.Message,
-			"error":           progress.Error,
-			"timestamp":       progress.Timestamp,
-			"currentPhase":    string(progress.Phase),
-			"current_phase":   string(progress.Phase),
-		},
-		Timestamp: time.Now(),
+	progressPayload := map[string]interface{}{
+		"current_phase":   string(progress.Phase),
+		"progress_pct":    progress.ProgressPct,
+		"items_total":     progress.ItemsTotal,
+		"items_processed": progress.ItemsProcessed,
+		"status":          string(progress.Status),
+		"message":         progress.Message,
+		"timestamp":       progress.Timestamp,
 	}
+	if progress.Error != "" {
+		progressPayload["error"] = progress.Error
+	}
+	evt := services.CreateCampaignProgressEvent(campaignID, uuid.Nil, progressPayload)
+	if evt.Data == nil {
+		evt.Data = make(map[string]interface{})
+	}
+	// Maintain legacy camelCase duplicates until all consumers shift to canonical payloads
+	evt.Data["phase"] = string(progress.Phase)
+	evt.Data["status"] = string(progress.Status)
+	evt.Data["progressPct"] = progress.ProgressPct
+	evt.Data["itemsTotal"] = progress.ItemsTotal
+	evt.Data["itemsProcessed"] = progress.ItemsProcessed
+	evt.Data["currentPhase"] = string(progress.Phase)
+	evt.Data["error"] = progress.Error
+	evt.Timestamp = time.Now()
 	a.enrichSSEIdentifiers(ctx, &evt, campaignID)
 	a.sse.BroadcastEvent(evt)
 	return nil

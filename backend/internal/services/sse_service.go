@@ -517,7 +517,84 @@ func (s *SSEService) buildCanonicalEnvelope(event SSEEvent) (canonicalEnvelope, 
 func (s *SSEService) normalizeCampaignProgressEvent(event SSEEvent) (map[string]interface{}, error) {
 	progressRaw, ok := event.Data["progress"].(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("campaign_progress event missing progress payload")
+		// Some emitters may still publish legacy payloads where campaign progress fields are
+		// attached at the root of Data. Rather than disconnecting the client, synthesize a
+		// minimal progress payload from those legacy fields.
+		progressRaw = nil
+		if event.Data != nil {
+			// Try to decode JSON payloads if a non-map progress payload was provided.
+			switch v := event.Data["progress"].(type) {
+			case []byte:
+				var decoded map[string]interface{}
+				if err := json.Unmarshal(v, &decoded); err == nil {
+					progressRaw = decoded
+				}
+			case json.RawMessage:
+				var decoded map[string]interface{}
+				if err := json.Unmarshal([]byte(v), &decoded); err == nil {
+					progressRaw = decoded
+				}
+			case string:
+				trimmed := strings.TrimSpace(v)
+				if strings.HasPrefix(trimmed, "{") {
+					var decoded map[string]interface{}
+					if err := json.Unmarshal([]byte(trimmed), &decoded); err == nil {
+						progressRaw = decoded
+					}
+				}
+			}
+		}
+		if progressRaw == nil {
+			progressRaw = make(map[string]interface{})
+			if event.Data != nil {
+				// Prefer explicit legacy keys if present.
+				if v, ok := event.Data["current_phase"]; ok {
+					progressRaw["current_phase"] = v
+				}
+				if v, ok := event.Data["currentPhase"]; ok {
+					progressRaw["current_phase"] = v
+				}
+				if v, ok := event.Data["phase"]; ok {
+					progressRaw["current_phase"] = v
+				}
+				if v, ok := event.Data["status"]; ok {
+					progressRaw["status"] = v
+				}
+				if v, ok := event.Data["progress_pct"]; ok {
+					progressRaw["progress_pct"] = v
+				}
+				if v, ok := event.Data["progressPct"]; ok {
+					progressRaw["progressPct"] = v
+				}
+				if v, ok := event.Data["items_processed"]; ok {
+					progressRaw["items_processed"] = v
+				}
+				if v, ok := event.Data["itemsProcessed"]; ok {
+					progressRaw["itemsProcessed"] = v
+				}
+				if v, ok := event.Data["items_total"]; ok {
+					progressRaw["items_total"] = v
+				}
+				if v, ok := event.Data["itemsTotal"]; ok {
+					progressRaw["itemsTotal"] = v
+				}
+				if v, ok := event.Data["items_success"]; ok {
+					progressRaw["items_success"] = v
+				}
+				if v, ok := event.Data["items_failed"]; ok {
+					progressRaw["items_failed"] = v
+				}
+				if v, ok := event.Data["message"]; ok {
+					progressRaw["message"] = v
+				}
+				if v, ok := event.Data["timestamp"]; ok {
+					progressRaw["timestamp"] = v
+				}
+			}
+		}
+
+		// Ensure required fields exist so downstream consumers have a stable schema.
+		progressRaw = normalizeProgressPayload(progressRaw)
 	}
 
 	payload := s.basePayload(event)
@@ -653,15 +730,55 @@ func toNumber(value interface{}) (int64, bool) {
 
 // CreateCampaignProgressEvent creates a campaign progress SSE event
 func CreateCampaignProgressEvent(campaignID uuid.UUID, userID uuid.UUID, progress map[string]interface{}) SSEEvent {
+	normalizedProgress := normalizeProgressPayload(progress)
 	return SSEEvent{
 		Event:      SSEEventCampaignProgress,
 		CampaignID: &campaignID,
 		UserID:     &userID,
 		Data: map[string]interface{}{
 			"campaign_id": campaignID.String(),
-			"progress":    progress,
+			"progress":    normalizedProgress,
 		},
 		Timestamp: time.Now(),
+	}
+}
+
+func normalizeProgressPayload(progress map[string]interface{}) map[string]interface{} {
+	normalized := make(map[string]interface{}, len(progress)+4)
+	if progress != nil {
+		for k, v := range progress {
+			normalized[k] = v
+		}
+	}
+
+	ensureProgressField(normalized, "status", "unknown")
+	mirrorProgressField(normalized, "progress_pct", "progressPct", float64(0))
+	mirrorProgressField(normalized, "items_processed", "itemsProcessed", int64(0))
+	mirrorProgressField(normalized, "items_total", "itemsTotal", int64(0))
+
+	return normalized
+}
+
+func ensureProgressField(m map[string]interface{}, key string, defaultValue interface{}) {
+	if _, ok := m[key]; !ok {
+		m[key] = defaultValue
+	}
+}
+
+func mirrorProgressField(m map[string]interface{}, snakeKey, camelKey string, defaultValue interface{}) {
+	snakeVal, snakeOk := m[snakeKey]
+	camelVal, camelOk := m[camelKey]
+
+	switch {
+	case snakeOk && !camelOk:
+		m[camelKey] = snakeVal
+	case camelOk && !snakeOk:
+		m[snakeKey] = camelVal
+	case !snakeOk && !camelOk:
+		m[snakeKey] = defaultValue
+		if snakeKey != camelKey {
+			m[camelKey] = defaultValue
+		}
 	}
 }
 
