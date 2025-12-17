@@ -31,10 +31,16 @@ type DNSValidationConfig struct {
 
 // dnsValidationService implements DNSValidationService
 // Orchestrates the existing dnsvalidator.DNSValidator engine
+type dnsBulkValidator interface {
+	ValidateDomainsBulk(domains []string, ctx context.Context, batchSize int) []dnsvalidator.ValidationResult
+}
+
+var _ dnsBulkValidator = (*dnsvalidator.DNSValidator)(nil)
+
 type dnsValidationService struct {
-	dnsValidator *dnsvalidator.DNSValidator
-	store        store.CampaignStore
-	deps         Dependencies
+	validator dnsBulkValidator
+	store     store.CampaignStore
+	deps      Dependencies
 
 	// Infrastructure Adapters
 	auditLogger   AuditLogger
@@ -63,6 +69,7 @@ var _ ControlAwarePhase = (*dnsValidationService)(nil)
 type dnsExecution struct {
 	campaignID        uuid.UUID
 	config            DNSValidationConfig
+	runID             uuid.UUID
 	status            models.PhaseStatusEnum
 	startedAt         time.Time
 	completedAt       *time.Time
@@ -88,10 +95,10 @@ func NewDNSValidationService(
 	deps Dependencies,
 ) DNSValidationService {
 	svc := &dnsValidationService{
-		dnsValidator: dnsValidator,
-		store:        store,
-		deps:         deps,
-		executions:   make(map[uuid.UUID]*dnsExecution),
+		validator:  dnsValidator,
+		store:      store,
+		deps:       deps,
+		executions: make(map[uuid.UUID]*dnsExecution),
 	}
 	// Prefer injected deps, fall back to minimal adapters
 	if deps.AuditLogger != nil {
@@ -290,6 +297,8 @@ func (s *dnsValidationService) Configure(ctx context.Context, campaignID uuid.UU
 
 // Execute runs the DNS validation phase
 func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID) (<-chan PhaseProgress, error) {
+	runCtx, hasRunCtx := PhaseRunFromContext(ctx)
+
 	s.mu.Lock()
 	execution, exists := s.executions[campaignID]
 	if !exists {
@@ -392,6 +401,16 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 		execution.controlCh = watcher.commands
 	}
 	execution.cancelCtx, execution.cancelFunc = context.WithCancel(ctx)
+	if hasRunCtx {
+		execution.runID = runCtx.RunID
+	} else {
+		execution.runID = uuid.Nil
+		if s.deps.Logger != nil {
+			s.deps.Logger.Warn(ctx, "dns.run_context.missing", map[string]interface{}{
+				"campaign_id": campaignID,
+			})
+		}
+	}
 	execution.progressCh = make(chan PhaseProgress, 100)
 	execution.status = models.PhaseStatusInProgress
 	if execution.startedAt.IsZero() {
@@ -442,6 +461,15 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 	if batchSize <= 0 {
 		batchSize = 50
 	}
+	if !s.runContextMatches(ctx, execution) {
+		if s.deps.Logger != nil {
+			s.deps.Logger.Warn(ctx, "dns.run_context.stale", map[string]interface{}{
+				"campaign_id": campaignID,
+			})
+		}
+		s.handleFailure(execution, "stale execution context")
+		return
+	}
 
 	jitterMin, jitterMax := 0, 0
 	if order, jMin, jMax, ok := s.loadStealthForDNS(execution.cancelCtx, execution.campaignID); ok {
@@ -452,6 +480,10 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 	}
 
 	for {
+		if !s.runContextMatches(ctx, execution) {
+			s.handleFailure(execution, "stale execution context")
+			return
+		}
 		if s.processPendingControlSignals(ctx, execution) {
 			return
 		}
@@ -584,8 +616,23 @@ type dnsResultOutcome struct {
 func (s *dnsValidationService) validateDomainBatch(ctx context.Context, domains []string, config DNSValidationConfig) (map[string]dnsResultOutcome, error) {
 	results := make(map[string]dnsResultOutcome)
 
-	// Use existing dnsvalidator engine for bulk validation
-	validationResults := s.dnsValidator.ValidateDomainsBulk(domains, ctx, config.BatchSize)
+	if ctx == nil {
+		return nil, fmt.Errorf("execution context missing")
+	}
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	if s.validator == nil {
+		return nil, fmt.Errorf("dns validator unavailable")
+	}
+
+	validationResults := s.validator.ValidateDomainsBulk(domains, ctx, config.BatchSize)
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 
 	for _, vr := range validationResults {
 		var status = "error"
@@ -1005,6 +1052,20 @@ func calcJitterMillis(min, max int) int {
 		return max
 	}
 	return min + int(n.Int64())
+}
+
+func (s *dnsValidationService) runContextMatches(ctx context.Context, execution *dnsExecution) bool {
+	if execution == nil {
+		return true
+	}
+	runCtx, ok := PhaseRunFromContext(ctx)
+	if !ok {
+		return true
+	}
+	if runCtx.RunID == uuid.Nil || execution.runID == uuid.Nil {
+		return true
+	}
+	return runCtx.RunID == execution.runID
 }
 
 func (s *dnsValidationService) closeProgressChannel(execution *dnsExecution) {

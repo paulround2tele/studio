@@ -41,6 +41,7 @@ type BatchExtractionService struct {
 	ctrlMu            sync.Mutex
 	controlWatchers   map[uuid.UUID]extractionControlWatcher
 	controlWatcherSeq uint64
+	processBatchFunc  func(ctx context.Context, execution *batchExtractionExecution, batch []DomainBatchItem) ([]BatchItemError, error)
 }
 
 // BatchProcessingConfig contains configuration for batch processing operations
@@ -96,10 +97,14 @@ type DomainBatchItem struct {
 	FailureReason string    `json:"failure_reason,omitempty"`
 }
 
-const extractionControlBuffer = 8
+const (
+	extractionControlBuffer = 8
+	staleExecutionMessage   = "stale execution context"
+)
 
 type batchExtractionExecution struct {
 	campaignID     uuid.UUID
+	runID          uuid.UUID
 	Status         models.PhaseStatusEnum
 	StartedAt      time.Time
 	CompletedAt    *time.Time
@@ -146,7 +151,7 @@ func NewBatchExtractionService(
 		config.RetryDelay = 30 * time.Second
 	}
 
-	return &BatchExtractionService{
+	svc := &BatchExtractionService{
 		db:                   db,
 		logger:               logger,
 		featureExtractionSvc: featureExtractionSvc,
@@ -164,6 +169,8 @@ func NewBatchExtractionService(
 		executions:           make(map[uuid.UUID]*batchExtractionExecution),
 		controlWatchers:      make(map[uuid.UUID]extractionControlWatcher),
 	}
+	svc.processBatchFunc = svc.processBatch
+	return svc
 }
 
 // Capabilities exposes supported runtime controls for the batch extraction phase.
@@ -267,6 +274,9 @@ func (s *BatchExtractionService) ProcessCampaignBatch(ctx context.Context, campa
 
 // processBatch processes a single batch of domains using worker pool
 func (s *BatchExtractionService) processBatch(ctx context.Context, execution *batchExtractionExecution, batch []DomainBatchItem) ([]BatchItemError, error) {
+	if !s.runContextMatches(ctx, execution) {
+		return nil, fmt.Errorf(staleExecutionMessage)
+	}
 	resultsChan := make(chan BatchItemError, len(batch))
 	var wg sync.WaitGroup
 
@@ -690,11 +700,22 @@ func (s *BatchExtractionService) processBatchDomains(ctx context.Context, campai
 }
 
 func (s *BatchExtractionService) executeDomainBatches(ctx context.Context, execution *batchExtractionExecution, domains []DomainBatchItem, result *BatchResult) (int, int, error) {
+	processBatchFn := s.processBatchFunc
+	if processBatchFn == nil {
+		processBatchFn = s.processBatch
+	}
 	successful := 0
 	failed := 0
 	var processingErr error
+	if !s.runContextMatches(ctx, execution) {
+		return successful, failed, fmt.Errorf(staleExecutionMessage)
+	}
 
 	for i := 0; i < len(domains); i += s.batchSize {
+		if !s.runContextMatches(ctx, execution) {
+			processingErr = fmt.Errorf(staleExecutionMessage)
+			break
+		}
 		if s.processPendingControlSignals(ctx, execution) {
 			break
 		}
@@ -715,7 +736,7 @@ func (s *BatchExtractionService) executeDomainBatches(ctx context.Context, execu
 		}
 
 		batch := domains[i:end]
-		batchResults, err := s.processBatch(ctx, execution, batch)
+		batchResults, err := processBatchFn(ctx, execution, batch)
 		if err != nil {
 			processingErr = err
 			if s.logger != nil {
@@ -770,6 +791,14 @@ func (s *BatchExtractionService) startExecution(ctx context.Context, execution *
 	execCtx, cancel := context.WithCancel(ctx)
 	execution.cancelCtx = execCtx
 	execution.cancel = cancel
+	execution.runID = uuid.Nil
+	if runCtx, ok := PhaseRunFromContext(ctx); ok {
+		execution.runID = runCtx.RunID
+	} else if s.logger != nil {
+		s.logger.Warn(ctx, "batch_extraction.run_context.missing", map[string]interface{}{
+			"campaign_id": execution.campaignID,
+		})
+	}
 	execution.StartedAt = started
 	execution.CompletedAt = nil
 	execution.ItemsTotal = totalItems
@@ -830,6 +859,20 @@ func (s *BatchExtractionService) updateExecutionStatus(campaignID uuid.UUID, sta
 	if status == models.PhaseStatusFailed {
 		exec.LastError = message
 	}
+}
+
+func (s *BatchExtractionService) runContextMatches(ctx context.Context, execution *batchExtractionExecution) bool {
+	if execution == nil {
+		return true
+	}
+	runCtx, ok := PhaseRunFromContext(ctx)
+	if !ok {
+		return true
+	}
+	if runCtx.RunID == uuid.Nil || execution.runID == uuid.Nil {
+		return true
+	}
+	return runCtx.RunID == execution.runID
 }
 
 func (s *BatchExtractionService) ensurePauseControl(execution *batchExtractionExecution) {

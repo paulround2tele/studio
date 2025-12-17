@@ -322,9 +322,12 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
 
   const selectedPhaseStatus = selectedPhaseMeta?.status ?? 'not_started';
   const isSelectedPhasePaused = selectedPhaseStatus === 'paused';
-  const isSelectedPhaseRunning = selectedPhaseStatus === 'in_progress';
 
-  const { data: selectedPhaseStatusData, isFetching: isPhaseStatusFetching } = useGetPhaseStatusStandaloneQuery(
+  const {
+    data: selectedPhaseStatusData,
+    isFetching: isPhaseStatusFetching,
+    isLoading: isPhaseStatusLoading,
+  } = useGetPhaseStatusStandaloneQuery(
     { campaignId, phase: selectedPhaseKey as CampaignPhaseEnum },
     { skip: !campaignId || !selectedPhaseKey }
   );
@@ -332,24 +335,22 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   const selectedPhaseRuntimeControls = selectedPhaseStatusData?.runtimeControls;
 
   const resolvedControlSupport = React.useMemo(() => {
-    const fallback = {
-      canPause: isSelectedPhaseRunning,
-      canResume: isSelectedPhasePaused,
-      canStop: isSelectedPhaseRunning,
-      canRestart: !isSelectedPhaseRunning,
-    };
-
     if (!selectedPhaseRuntimeControls) {
-      return fallback;
+      return {
+        canPause: false,
+        canResume: false,
+        canStop: false,
+        canRestart: false,
+      } as const;
     }
 
     return {
-      canPause: selectedPhaseRuntimeControls.canPause,
-      canResume: selectedPhaseRuntimeControls.canResume,
-      canStop: selectedPhaseRuntimeControls.canStop,
-      canRestart: selectedPhaseRuntimeControls.canRestart,
-    };
-  }, [isSelectedPhasePaused, isSelectedPhaseRunning, selectedPhaseRuntimeControls]);
+      canPause: Boolean(selectedPhaseRuntimeControls.canPause),
+      canResume: Boolean(selectedPhaseRuntimeControls.canResume),
+      canStop: Boolean(selectedPhaseRuntimeControls.canStop),
+      canRestart: Boolean(selectedPhaseRuntimeControls.canRestart),
+    } as const;
+  }, [selectedPhaseRuntimeControls]);
 
   const canPauseSelectedPhase = resolvedControlSupport.canPause;
   const canStopCampaign = resolvedControlSupport.canStop;
@@ -435,7 +436,24 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   const isBulkActionRunning = bulkAction !== 'idle';
   const isRetryingFailed = bulkAction === 'retryFailed';
   const isRestartingCampaign = bulkAction === 'restartCampaign';
-  const isControlStatusLoading = Boolean(selectedPhaseKey && isPhaseStatusFetching);
+  const isControlStatusLoading = Boolean(
+    selectedPhaseKey && (isPhaseStatusLoading || isPhaseStatusFetching)
+  );
+  const runtimeControlsUnavailable = Boolean(
+    selectedPhaseKey && !selectedPhaseRuntimeControls && !isControlStatusLoading
+  );
+  const runtimeControlStatusMessage = React.useMemo(() => {
+    if (!selectedPhaseKey) {
+      return null;
+    }
+    if (isControlStatusLoading) {
+      return 'Syncing runtime controls from backend…';
+    }
+    if (runtimeControlsUnavailable) {
+      return 'Runtime controls unavailable—actions remain disabled until the backend exposes updated capabilities.';
+    }
+    return null;
+  }, [isControlStatusLoading, runtimeControlsUnavailable, selectedPhaseKey]);
   const isActionDisabled = isStartPhaseLoading || isPausePhaseLoading || isResumePhaseLoading || isStopCampaignLoading || isBulkActionRunning || isControlStatusLoading;
 
   const startPhaseInternal = React.useCallback(
@@ -913,6 +931,11 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
                 Restart Campaign
               </Button>
             </div>
+            {runtimeControlStatusMessage && (
+              <p className="text-xs text-muted-foreground max-w-md" role="status">
+                {runtimeControlStatusMessage}
+              </p>
+            )}
           </div>
         </div>
       </div>

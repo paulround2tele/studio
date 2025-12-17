@@ -147,21 +147,27 @@ type testMetrics struct {
 	autoStartFailures        int
 	manualModeCreations      int
 	autoModeCreations        int
+	phaseResumeAttempts      int
+	phaseResumeSuccesses     int
+	phaseResumeFailures      int
 	durations                map[string]time.Duration
 	autoStartLatency         time.Duration
 	firstPhaseRunningLatency time.Duration
 }
 
-func (m *testMetrics) IncPhaseStarts()         { m.phaseStarts++ }
-func (m *testMetrics) IncPhaseCompletions()    { m.phaseCompletions++ }
-func (m *testMetrics) IncPhaseFailures()       { m.phaseFailures++ }
-func (m *testMetrics) IncPhaseAutoStarts()     { m.phaseAutoStarts++ }
-func (m *testMetrics) IncCampaignCompletions() { m.campaignCompletions++ }
-func (m *testMetrics) IncAutoStartAttempts()   { m.autoStartAttempts++ }
-func (m *testMetrics) IncAutoStartSuccesses()  { m.autoStartSuccesses++ }
-func (m *testMetrics) IncAutoStartFailures()   { m.autoStartFailures++ }
-func (m *testMetrics) IncManualModeCreations() { m.manualModeCreations++ }
-func (m *testMetrics) IncAutoModeCreations()   { m.autoModeCreations++ }
+func (m *testMetrics) IncPhaseStarts()          { m.phaseStarts++ }
+func (m *testMetrics) IncPhaseCompletions()     { m.phaseCompletions++ }
+func (m *testMetrics) IncPhaseFailures()        { m.phaseFailures++ }
+func (m *testMetrics) IncPhaseAutoStarts()      { m.phaseAutoStarts++ }
+func (m *testMetrics) IncCampaignCompletions()  { m.campaignCompletions++ }
+func (m *testMetrics) IncPhaseResumeAttempts()  { m.phaseResumeAttempts++ }
+func (m *testMetrics) IncPhaseResumeSuccesses() { m.phaseResumeSuccesses++ }
+func (m *testMetrics) IncPhaseResumeFailures()  { m.phaseResumeFailures++ }
+func (m *testMetrics) IncAutoStartAttempts()    { m.autoStartAttempts++ }
+func (m *testMetrics) IncAutoStartSuccesses()   { m.autoStartSuccesses++ }
+func (m *testMetrics) IncAutoStartFailures()    { m.autoStartFailures++ }
+func (m *testMetrics) IncManualModeCreations()  { m.manualModeCreations++ }
+func (m *testMetrics) IncAutoModeCreations()    { m.autoModeCreations++ }
 func (m *testMetrics) RecordAutoStartLatency(d time.Duration) {
 	m.autoStartLatency += d
 }
@@ -883,5 +889,57 @@ func TestIdempotentPhaseStartNoDuplicateExecution(t *testing.T) {
 	// Metrics: phaseStarts should count only the successful first start.
 	if metrics.phaseStarts != 1 {
 		t.Fatalf("expected metrics.phaseStarts=1 got %d", metrics.phaseStarts)
+	}
+}
+
+func TestRestoreInFlightPhases_DormantWithoutAutoResume(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := newTestLogger(t)
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	domainSvc := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	extractionSvc := newStubPhaseService(models.PhaseTypeExtraction, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, nil)
+
+	campaignID := createTestCampaign(t, cs)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
+	registerPhaseCleanup(t, orch, domainSvc, campaignID, models.PhaseTypeDomainGeneration)
+
+	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("start domain_generation: %v", err)
+	}
+	waitUntil(t, integrationTestTimeout, func() bool { return domainSvc.executions(campaignID) == 1 })
+	waitUntil(t, integrationTestTimeout, func() bool { return domainSvc.progressEventCount(campaignID) > 10 })
+
+	if err := orch.PausePhase(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("pause phase: %v", err)
+	}
+	waitUntil(t, integrationTestTimeout, func() bool { return domainSvc.isPaused(campaignID) })
+
+	domainSvc2 := newControlAwarePhaseService(models.PhaseTypeDomainGeneration, logger, cs, db)
+	orch2 := NewCampaignOrchestrator(cs, deps, domainSvc2, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, nil)
+	registerPhaseCleanup(t, orch2, domainSvc2, campaignID, models.PhaseTypeDomainGeneration)
+
+	if err := orch2.RestoreInFlightPhases(context.Background()); err != nil {
+		t.Fatalf("restore in-flight phases: %v", err)
+	}
+
+	if got := domainSvc2.executions(campaignID); got != 0 {
+		t.Fatalf("expected no executions during restore, got %d", got)
+	}
+	if attaches := domainSvc2.attachEventCount(campaignID); attaches == 0 {
+		t.Fatalf("expected control channel to reattach during restore")
+	}
+	campaign, err := cs.GetCampaignByID(context.Background(), db, campaignID)
+	if err != nil {
+		t.Fatalf("get campaign: %v", err)
+	}
+	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.PhaseStatusPaused {
+		t.Fatalf("expected campaign status paused after restore, got %v", campaign.PhaseStatus)
 	}
 }

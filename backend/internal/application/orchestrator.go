@@ -202,6 +202,9 @@ type OrchestratorMetrics interface {
 	IncPhaseAutoStarts()
 	IncCampaignCompletions()
 	RecordPhaseDuration(phase string, d time.Duration)
+	IncPhaseResumeAttempts()
+	IncPhaseResumeSuccesses()
+	IncPhaseResumeFailures()
 
 	// Auto-start specific metrics
 	IncAutoStartAttempts()
@@ -224,6 +227,9 @@ func (n *noopMetrics) IncPhaseFailures()                            {}
 func (n *noopMetrics) IncPhaseAutoStarts()                          {}
 func (n *noopMetrics) IncCampaignCompletions()                      {}
 func (n *noopMetrics) RecordPhaseDuration(string, time.Duration)    {}
+func (n *noopMetrics) IncPhaseResumeAttempts()                      {}
+func (n *noopMetrics) IncPhaseResumeSuccesses()                     {}
+func (n *noopMetrics) IncPhaseResumeFailures()                      {}
 func (n *noopMetrics) IncAutoStartAttempts()                        {}
 func (n *noopMetrics) IncAutoStartSuccesses()                       {}
 func (n *noopMetrics) IncAutoStartFailures()                        {}
@@ -450,6 +456,11 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	// and keep a cancel handle so we can terminate stale workers during a restart.
 	execCtx, cancelFn := context.WithCancel(context.Background())
 	runID := registerPhaseExecutionHandle(campaignID, phase, cancelFn)
+	execCtx = domainservices.WithPhaseRun(execCtx, domainservices.PhaseRunContext{
+		CampaignID: campaignID,
+		Phase:      phase,
+		RunID:      runID,
+	})
 
 	// Wire runtime control channel before kick-off when supported
 	o.attachControlChannel(ctx, campaignID, phase, service)
@@ -682,85 +693,43 @@ func (o *CampaignOrchestrator) rehydrateCampaignPhase(ctx context.Context, exec 
 	o.mu.RUnlock()
 	// Reclaim ownership by cancelling any previously registered execution handle so stale goroutines stop emitting progress.
 	cancelPhaseExecutionHandle(ctx, campaign.ID, phase, "restore_reclaim_execution", o.deps.Logger)
-	if !o.autoResumeOnRestart.Load() {
-		return o.deferPhaseRestart(ctx, exec, campaign, phase)
+	originalStatus := models.PhaseStatusEnum("")
+	if campaign.PhaseStatus != nil {
+		originalStatus = *campaign.PhaseStatus
 	}
-	if phaseRequiresPersistedConfig(phase) {
-		hasConfig, err := o.hasPersistedPhaseConfig(ctx, exec, campaign.ID, phase)
-		if err != nil {
-			return fmt.Errorf("failed to verify stored configuration for %s: %w", phase, err)
-		}
-		if !hasConfig {
-			if o.deps.Logger != nil {
-				o.deps.Logger.Warn(ctx, "campaign.rehydrate.phase.skip_config_missing", map[string]interface{}{
-					"campaign_id": campaign.ID,
-					"phase":       phase,
-				})
-			}
-			return errRehydratePhaseConfigMissing
-		}
+	reason := "restore_state"
+	if !o.autoResumeOnRestart.Load() {
+		reason = "auto_resume_disabled"
+	}
+	if err := o.deferPhaseRestart(ctx, exec, campaign, phase, reason); err != nil {
+		return err
 	}
 	service, err := o.getPhaseService(phase)
 	if err != nil {
-		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
+		return fmt.Errorf("failed to get service for phase %s during restore: %w", phase, err)
 	}
-	if o.deps.Logger != nil {
-		o.deps.Logger.Info(ctx, "campaign.rehydrate.phase.start", map[string]interface{}{
-			"campaign_id": campaign.ID,
-			"phase":       phase,
-			"status":      *campaign.PhaseStatus,
-		})
+	if err := o.hydratePhaseConfiguration(ctx, exec, campaign.ID, phase, service); err != nil {
+		return fmt.Errorf("failed to hydrate configuration for %s during restore: %w", phase, err)
 	}
-	controlAware := false
-	if _, ok := service.(domainservices.ControlAwarePhase); ok {
-		controlAware = true
+	o.attachControlChannel(ctx, campaign.ID, phase, service)
+	if !o.autoResumeOnRestart.Load() {
+		return nil
 	}
-	if err := o.StartPhaseInternal(ctx, campaign.ID, phase); err != nil {
-		return fmt.Errorf("failed to restart phase %s: %w", phase, err)
-	}
-	if o.deps.Logger != nil {
-		o.deps.Logger.Debug(ctx, "phase.restore.attach.complete", map[string]interface{}{
-			"campaign_id": campaign.ID,
-			"phase":       phase,
-		})
-	}
-	if !controlAware {
+	if originalStatus != models.PhaseStatusInProgress {
 		if o.deps.Logger != nil {
-			o.deps.Logger.Warn(ctx, "campaign.rehydrate.autopause.unsupported", map[string]interface{}{
+			o.deps.Logger.Info(ctx, "campaign.rehydrate.autoresume.skip", map[string]interface{}{
 				"campaign_id": campaign.ID,
 				"phase":       phase,
-				"reason":      "phase_not_control_aware",
+				"reason":      "phase_not_in_progress",
+				"status":      originalStatus,
 			})
 		}
 		return nil
 	}
-	reason := "phase_status_unknown"
-	if campaign.PhaseStatus != nil {
-		switch *campaign.PhaseStatus {
-		case models.PhaseStatusPaused:
-			reason = "phase_was_already_paused"
-		case models.PhaseStatusInProgress:
-			reason = "phase_was_running"
-		default:
-			reason = fmt.Sprintf("phase_status_%s", *campaign.PhaseStatus)
-		}
-	}
-	pauseCtx, cancel := context.WithTimeout(ctx, controlAckTimeout)
-	defer cancel()
-	if err := o.PausePhase(pauseCtx, campaign.ID, phase); err != nil {
-		return fmt.Errorf("failed to autopause %s after restore: %w", phase, err)
-	}
-	if o.deps.Logger != nil {
-		o.deps.Logger.Info(ctx, "campaign.rehydrate.autopause.applied", map[string]interface{}{
-			"campaign_id": campaign.ID,
-			"phase":       phase,
-			"reason":      reason,
-		})
-	}
-	return nil
+	return o.resumePhaseAfterRestore(ctx, exec, campaign, phase)
 }
 
-func (o *CampaignOrchestrator) deferPhaseRestart(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign, phase models.PhaseTypeEnum) error {
+func (o *CampaignOrchestrator) deferPhaseRestart(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign, phase models.PhaseTypeEnum, reason string) error {
 	if o == nil || campaign == nil {
 		return nil
 	}
@@ -768,12 +737,15 @@ func (o *CampaignOrchestrator) deferPhaseRestart(ctx context.Context, exec store
 	if campaign.PhaseStatus != nil {
 		status = string(*campaign.PhaseStatus)
 	}
+	if reason == "" {
+		reason = "auto_resume_disabled"
+	}
 	if o.deps.Logger != nil {
 		o.deps.Logger.Info(ctx, "campaign.rehydrate.phase.defer_resume", map[string]interface{}{
 			"campaign_id": campaign.ID,
 			"phase":       phase,
 			"status":      status,
-			"reason":      "auto_resume_disabled",
+			"reason":      reason,
 		})
 	}
 	paused := models.PhaseStatusPaused
@@ -817,9 +789,52 @@ func (o *CampaignOrchestrator) deferPhaseRestart(ctx context.Context, exec store
 	return nil
 }
 
+func (o *CampaignOrchestrator) resumePhaseAfterRestore(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign, phase models.PhaseTypeEnum) error {
+	if o.metrics != nil {
+		o.metrics.IncPhaseResumeAttempts()
+	}
+	if phaseRequiresPersistedConfig(phase) {
+		hasConfig, err := o.hasPersistedPhaseConfig(ctx, exec, campaign.ID, phase)
+		if err != nil {
+			if o.metrics != nil {
+				o.metrics.IncPhaseResumeFailures()
+			}
+			return fmt.Errorf("failed to verify stored configuration for %s: %w", phase, err)
+		}
+		if !hasConfig {
+			if o.deps.Logger != nil {
+				o.deps.Logger.Warn(ctx, "campaign.rehydrate.phase.skip_config_missing", map[string]interface{}{
+					"campaign_id": campaign.ID,
+					"phase":       phase,
+				})
+			}
+			if o.metrics != nil {
+				o.metrics.IncPhaseResumeFailures()
+			}
+			return errRehydratePhaseConfigMissing
+		}
+	}
+	if o.deps.Logger != nil {
+		o.deps.Logger.Info(ctx, "campaign.rehydrate.autoresume.start", map[string]interface{}{
+			"campaign_id": campaign.ID,
+			"phase":       phase,
+		})
+	}
+	if err := o.StartPhaseInternal(ctx, campaign.ID, phase); err != nil {
+		if o.metrics != nil {
+			o.metrics.IncPhaseResumeFailures()
+		}
+		return fmt.Errorf("failed to restart phase %s: %w", phase, err)
+	}
+	if o.metrics != nil {
+		o.metrics.IncPhaseResumeSuccesses()
+	}
+	return nil
+}
+
 func phaseRequiresPersistedConfig(phase models.PhaseTypeEnum) bool {
 	switch phase {
-	case models.PhaseTypeDomainGeneration:
+	case models.PhaseTypeDomainGeneration, models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation:
 		return true
 	default:
 		return false
@@ -985,7 +1000,16 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 
 // ResumePhase transitions a paused phase back to in-progress execution when supported.
 func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	if o.metrics != nil {
+		o.metrics.IncPhaseResumeAttempts()
+	}
+	recordFailure := func() {
+		if o.metrics != nil {
+			o.metrics.IncPhaseResumeFailures()
+		}
+	}
 	if o.store == nil {
+		recordFailure()
 		return fmt.Errorf("campaign store not initialized")
 	}
 	o.deps.Logger.Info(ctx, "Resuming campaign phase", map[string]interface{}{
@@ -996,16 +1020,22 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 	// Re-attach control channel in case backend restarted or channel was closed
 	service, err := o.getPhaseService(phase)
 	if err != nil {
+		recordFailure()
 		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
 	}
 	o.attachControlChannel(ctx, campaignID, phase, service)
 
 	ack := make(chan error, 1)
 	if err := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalResume, ack); err != nil {
+		recordFailure()
 		return err
 	}
 	if err := awaitControlAck(ctx, ack, domainservices.ErrPhaseResumeTimeout); err != nil {
+		recordFailure()
 		return err
+	}
+	if o.metrics != nil {
+		o.metrics.IncPhaseResumeSuccesses()
 	}
 
 	o.deps.Logger.Info(ctx, "Phase resumed successfully", map[string]interface{}{
@@ -1428,23 +1458,49 @@ func (o *CampaignOrchestrator) loadPhaseConfigurationPayload(ctx context.Context
 	if o == nil || o.store == nil || exec == nil {
 		return nil, store.ErrNotFound
 	}
-	phaseRow, err := o.store.GetCampaignPhase(ctx, exec, campaignID, phase)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, store.ErrNotFound) || strings.Contains(err.Error(), "not found") {
-			return nil, store.ErrNotFound
+
+	trimConfig := func(raw []byte) ([]byte, error) {
+		trimmed := bytes.TrimSpace(raw)
+		if len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")) {
+			return nil, errPhaseConfigMissing
 		}
+		copyBuf := make([]byte, len(trimmed))
+		copy(copyBuf, trimmed)
+		return copyBuf, nil
+	}
+
+	var payload []byte
+	phaseRow, err := o.store.GetCampaignPhase(ctx, exec, campaignID, phase)
+	switch {
+	case err == nil && phaseRow != nil && phaseRow.Configuration != nil:
+		if data, err := trimConfig([]byte(*phaseRow.Configuration)); err == nil {
+			payload = data
+		} else if !errors.Is(err, errPhaseConfigMissing) {
+			return nil, err
+		}
+	case err != nil && !errors.Is(err, sql.ErrNoRows) && !errors.Is(err, store.ErrNotFound) && !strings.Contains(err.Error(), "not found"):
 		return nil, err
 	}
-	if phaseRow == nil || phaseRow.Configuration == nil {
-		return nil, errPhaseConfigMissing
+
+	if len(payload) == 0 {
+		raw, cfgErr := o.store.GetPhaseConfig(ctx, exec, campaignID, phase)
+		if cfgErr != nil {
+			if errors.Is(cfgErr, store.ErrNotFound) {
+				return nil, errPhaseConfigMissing
+			}
+			return nil, cfgErr
+		}
+		if raw == nil {
+			return nil, errPhaseConfigMissing
+		}
+		data, err := trimConfig([]byte(*raw))
+		if err != nil {
+			return nil, err
+		}
+		payload = data
 	}
-	trimmed := bytes.TrimSpace([]byte(*phaseRow.Configuration))
-	if len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")) {
-		return nil, errPhaseConfigMissing
-	}
-	copyBuf := make([]byte, len(trimmed))
-	copy(copyBuf, trimmed)
-	return copyBuf, nil
+
+	return payload, nil
 }
 
 func (o *CampaignOrchestrator) attachControlChannel(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, service domainservices.PhaseService) {

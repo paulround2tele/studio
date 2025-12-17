@@ -251,7 +251,8 @@ func (s *analysisService) FetchAnalysisReadyFeaturesTyped(ctx context.Context, c
 
 // analysisExecution tracks analysis execution state
 type analysisExecution struct {
-	CampaignID     uuid.UUID                                             `json:"campaign_id"`
+	CampaignID     uuid.UUID `json:"campaign_id"`
+	runID          uuid.UUID
 	Status         models.PhaseStatusEnum                                `json:"status"`
 	StartedAt      time.Time                                             `json:"started_at"`
 	CompletedAt    *time.Time                                            `json:"completed_at,omitempty"`
@@ -539,6 +540,14 @@ func (s *analysisService) Execute(ctx context.Context, campaignID uuid.UUID) (<-
 	s.deps.Logger.Info(ctx, "Starting analysis execution", map[string]interface{}{
 		"campaign_id": campaignID,
 	})
+	runID := uuid.Nil
+	if runCtx, ok := PhaseRunFromContext(ctx); ok {
+		runID = runCtx.RunID
+	} else if s.deps.Logger != nil {
+		s.deps.Logger.Warn(ctx, "analysis.run_context.missing", map[string]interface{}{
+			"campaign_id": campaignID,
+		})
+	}
 
 	// Handle existing execution state similar to HTTP validation: allow transition from Configured, restart after terminal
 	reuseExisting := false
@@ -593,6 +602,7 @@ func (s *analysisService) Execute(ctx context.Context, campaignID uuid.UUID) (<-
 		}
 		s.executions[campaignID] = execution
 	}
+	execution.runID = runID
 	s.mu.Unlock()
 
 	// Mark phase started in store
@@ -898,6 +908,30 @@ func (s *analysisService) requestStop(execution *analysisExecution) {
 	})
 }
 
+func (s *analysisService) runContextMatches(ctx context.Context, execution *analysisExecution) bool {
+	if execution == nil {
+		return true
+	}
+	runCtx, ok := PhaseRunFromContext(ctx)
+	if !ok {
+		return true
+	}
+	if runCtx.RunID == uuid.Nil || execution.runID == uuid.Nil {
+		return true
+	}
+	return runCtx.RunID == execution.runID
+}
+
+func (s *analysisService) failStaleRun(ctx context.Context, campaignID uuid.UUID, execution *analysisExecution) {
+	if s.deps.Logger != nil {
+		s.deps.Logger.Warn(ctx, "analysis.run_context.stale", map[string]interface{}{
+			"campaign_id": campaignID,
+		})
+	}
+	s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, staleExecutionMessage)
+	s.requestStop(execution)
+}
+
 // Cancel stops analysis for a campaign
 func (s *analysisService) Cancel(ctx context.Context, campaignID uuid.UUID) error {
 	s.deps.Logger.Info(ctx, "Cancelling analysis", map[string]interface{}{
@@ -944,6 +978,11 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 		"campaign_id":  campaignID,
 		"domain_count": len(domains),
 	})
+	execution := s.getExecution(campaignID)
+	if !s.runContextMatches(ctx, execution) {
+		s.failStaleRun(ctx, campaignID, execution)
+		return
+	}
 
 	// Get analysis configuration (still needed for personas/future weighting, though extraction removed)
 	// Retrieve configuration (may be used later for persona-based weighting or future scoring extensions)
@@ -1015,6 +1054,10 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 	if s.processPendingControlSignals(ctx, s.getExecution(campaignID)) {
 		return
 	}
+	if exec := s.getExecution(campaignID); !s.runContextMatches(ctx, exec) {
+		s.failStaleRun(ctx, campaignID, exec)
+		return
+	}
 
 	// Directly proceed to scoring; repurpose majority of remaining progress window.
 	s.sendProgress(campaignID, 85.0, "Starting scoring computation (reused HTTP enrichment)")
@@ -1083,6 +1126,10 @@ func (s *analysisService) fetchContent(ctx context.Context, campaignID uuid.UUID
 		"campaign_id":  campaignID,
 		"domain_count": len(domains),
 	})
+	if exec := s.getExecution(campaignID); exec != nil && !s.runContextMatches(ctx, exec) {
+		s.failStaleRun(ctx, campaignID, exec)
+		return nil, fmt.Errorf(staleExecutionMessage)
+	}
 
 	contentResults := make(map[string][]byte)
 
@@ -1092,6 +1139,10 @@ func (s *analysisService) fetchContent(ctx context.Context, campaignID uuid.UUID
 	// Fetch content for each domain using the contentfetcher engine
 	for i, domain := range domains {
 		execution := s.getExecution(campaignID)
+		if !s.runContextMatches(ctx, execution) {
+			s.failStaleRun(ctx, campaignID, execution)
+			return nil, fmt.Errorf(staleExecutionMessage)
+		}
 		if s.processPendingControlSignals(ctx, execution) {
 			return nil, fmt.Errorf("content fetching interrupted")
 		}
@@ -1149,6 +1200,10 @@ func (s *analysisService) extractKeywords(ctx context.Context, campaignID uuid.U
 		"campaign_id":     campaignID,
 		"content_results": len(contentResults),
 	})
+	if exec := s.getExecution(campaignID); exec != nil && !s.runContextMatches(ctx, exec) {
+		s.failStaleRun(ctx, campaignID, exec)
+		return nil, fmt.Errorf(staleExecutionMessage)
+	}
 
 	keywordResults := make(map[string][]keywordextractor.KeywordExtractionResult)
 
@@ -1167,6 +1222,10 @@ func (s *analysisService) extractKeywords(ctx context.Context, campaignID uuid.U
 	i := 0
 	for domain, content := range contentResults {
 		execution := s.getExecution(campaignID)
+		if !s.runContextMatches(ctx, execution) {
+			s.failStaleRun(ctx, campaignID, execution)
+			return nil, fmt.Errorf(staleExecutionMessage)
+		}
 		if s.processPendingControlSignals(ctx, execution) {
 			return nil, fmt.Errorf("keyword extraction interrupted")
 		}
@@ -1460,6 +1519,10 @@ func (s *analysisService) initReadSwitchMetrics() {
 }
 
 func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID) (string, error) {
+	if exec := s.getExecution(campaignID); exec != nil && !s.runContextMatches(ctx, exec) {
+		s.failStaleRun(ctx, campaignID, exec)
+		return "", fmt.Errorf(staleExecutionMessage)
+	}
 	globalScoringMetricsOnce.Do(func() {
 		s.mtx.scoreHistogram = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "domain_relevance_score", Help: "Distribution of computed relevance scores", Buckets: []float64{0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}})
 		s.mtx.rescoreRuns = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "rescore_runs_total", Help: "Number of rescore runs"}, []string{"profile"})
@@ -1544,6 +1607,10 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 	now := time.Now()
 	for rows.Next() {
 		execution := s.getExecution(campaignID)
+		if !s.runContextMatches(ctx, execution) {
+			s.failStaleRun(ctx, campaignID, execution)
+			return correlationId, fmt.Errorf(staleExecutionMessage)
+		}
 		if s.processPendingControlSignals(ctx, execution) {
 			return correlationId, fmt.Errorf("analysis scoring interrupted")
 		}

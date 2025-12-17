@@ -30,6 +30,7 @@ type enrichmentService struct {
 
 type enrichmentExecution struct {
 	campaignID    uuid.UUID
+	runID         uuid.UUID
 	cancel        context.CancelFunc
 	controlCh     <-chan ControlCommand
 	paused        bool
@@ -176,6 +177,12 @@ func (s *enrichmentService) Execute(ctx context.Context, campaignID uuid.UUID) (
 	if s.deps.Logger != nil {
 		s.deps.Logger.Info(ctx, "Starting enrichment execution", map[string]interface{}{"campaign_id": campaignID})
 	}
+	runID := uuid.Nil
+	if runCtx, ok := PhaseRunFromContext(ctx); ok {
+		runID = runCtx.RunID
+	} else if s.deps.Logger != nil {
+		s.deps.Logger.Warn(ctx, "enrichment.run_context.missing", map[string]interface{}{"campaign_id": campaignID})
+	}
 
 	exec := s.getQuerier()
 	if exec == nil {
@@ -202,7 +209,7 @@ func (s *enrichmentService) Execute(ctx context.Context, campaignID uuid.UUID) (
 
 	progressCh := make(chan PhaseProgress, 4)
 	runCtx, cancel := context.WithCancel(ctx)
-	execution := &enrichmentExecution{campaignID: campaignID, cancel: cancel}
+	execution := &enrichmentExecution{campaignID: campaignID, runID: runID, cancel: cancel}
 	s.mu.Lock()
 	if s.executions == nil {
 		s.executions = make(map[uuid.UUID]*enrichmentExecution)
@@ -348,6 +355,10 @@ func (s *enrichmentService) consumeControlSignals(ctx context.Context, campaignI
 func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.UUID, exec store.Querier, cfg enrichmentConfig, total int, progressCh chan<- PhaseProgress, execution *enrichmentExecution) {
 	defer close(progressCh)
 	defer s.clearExecution(campaignID)
+	if !s.runContextMatches(ctx, execution) {
+		s.failStaleRun(ctx, execution, 0, total, progressCh)
+		return
+	}
 
 	examined := 0
 	updated := 0
@@ -379,6 +390,10 @@ func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.U
 
 	stopMsg := "Enrichment stopped by user"
 	for offset := 0; offset < total && runErr == nil; offset += enrichmentBatchSize {
+		if !s.runContextMatches(ctx, execution) {
+			s.failStaleRun(ctx, execution, examined, total, progressCh)
+			return
+		}
 		if s.processPendingControlSignals(ctx, execution) {
 			s.failWithError(campaignID, fmt.Errorf(stopMsg))
 			s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, stopMsg, progressCh)
@@ -405,6 +420,10 @@ func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.U
 		}
 
 		for _, candidate := range batch {
+			if !s.runContextMatches(ctx, execution) {
+				s.failStaleRun(ctx, execution, examined, total, progressCh)
+				return
+			}
 			if s.processPendingControlSignals(ctx, execution) {
 				s.failWithError(campaignID, fmt.Errorf(stopMsg))
 				s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, stopMsg, progressCh)
@@ -453,6 +472,10 @@ func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.U
 		}
 	}
 
+	if !s.runContextMatches(ctx, execution) {
+		s.failStaleRun(ctx, execution, examined, total, progressCh)
+		return
+	}
 	if runErr != nil {
 		s.failWithError(campaignID, runErr)
 		s.emitProgress(ctx, campaignID, models.PhaseStatusFailed, examined, total, runErr.Error(), progressCh)
@@ -1071,4 +1094,30 @@ func (s *enrichmentService) requestStop(execution *enrichmentExecution) {
 			execution.cancel()
 		}
 	})
+}
+
+func (s *enrichmentService) runContextMatches(ctx context.Context, execution *enrichmentExecution) bool {
+	if execution == nil {
+		return true
+	}
+	runCtx, ok := PhaseRunFromContext(ctx)
+	if !ok {
+		return true
+	}
+	if runCtx.RunID == uuid.Nil || execution.runID == uuid.Nil {
+		return true
+	}
+	return runCtx.RunID == execution.runID
+}
+
+func (s *enrichmentService) failStaleRun(ctx context.Context, execution *enrichmentExecution, processed, total int, progressCh chan<- PhaseProgress) {
+	if execution == nil {
+		return
+	}
+	if s.deps.Logger != nil {
+		s.deps.Logger.Warn(ctx, "enrichment.run_context.stale", map[string]interface{}{"campaign_id": execution.campaignID})
+	}
+	s.failWithError(execution.campaignID, fmt.Errorf(staleExecutionMessage))
+	s.emitProgress(ctx, execution.campaignID, models.PhaseStatusFailed, processed, total, staleExecutionMessage, progressCh)
+	s.requestStop(execution)
 }

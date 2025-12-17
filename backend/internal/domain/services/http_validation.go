@@ -50,6 +50,12 @@ func computeDiminishingReturns(baseline, added, pagesExamined int) bool {
 	return ratio < diminishingReturnsThreshold
 }
 
+type httpBulkValidator interface {
+	ValidateDomainsBulk(ctx context.Context, domains []*models.GeneratedDomain, batchSize int, persona *models.Persona, proxy *models.Proxy) []*httpvalidator.ValidationResult
+}
+
+var _ httpBulkValidator = (*httpvalidator.HTTPValidator)(nil)
+
 // httpValidationService orchestrates the HTTP validation engine
 // It wraps httpvalidator.HTTPValidator without replacing its core functionality
 type httpValidationService struct {
@@ -57,12 +63,13 @@ type httpValidationService struct {
 	personaStore  store.PersonaStore
 	proxyStore    store.ProxyStore
 	deps          Dependencies
-	httpValidator *httpvalidator.HTTPValidator
+	validator     httpBulkValidator
 	// keyword scanner (lazy init)
 	kwScanner *keywordscanner.Service
 
 	// metrics (registered once globally)
 	metricsOnce sync.Once
+	disableMetrics bool
 	mtx         struct {
 		fetchOutcome      *prometheus.CounterVec
 		fetchAlias        *prometheus.CounterVec
@@ -139,6 +146,9 @@ func topKeywordsFromCounts(counts map[string]int, limit int) []string {
 // ensureMetricsRegistered wraps metricsOnce.Do for testability (allows unit tests to trigger registration
 // without executing a full validation run). Safe to call multiple times.
 func (s *httpValidationService) ensureMetricsRegistered() {
+	if s.disableMetrics {
+		return
+	}
 	s.metricsOnce.Do(func() {
 		s.mtx.fetchOutcome = prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "http_validation_fetch_outcomes_total",
@@ -538,6 +548,7 @@ func microcrawlResultFromVector(fv map[string]interface{}) *extraction.Microcraw
 // httpValidationExecution tracks HTTP validation execution state
 type httpValidationExecution struct {
 	CampaignID     uuid.UUID                         `json:"campaign_id"`
+	runID          uuid.UUID
 	Status         models.PhaseStatusEnum            `json:"status"`
 	StartedAt      time.Time                         `json:"started_at"`
 	CompletedAt    *time.Time                        `json:"completed_at,omitempty"`
@@ -562,7 +573,7 @@ func NewHTTPValidationService(store store.CampaignStore, deps Dependencies, http
 		personaStore:    personaStore,
 		proxyStore:      proxyStore,
 		deps:            deps,
-		httpValidator:   httpValidator,
+		validator:       httpValidator,
 		executions:      make(map[uuid.UUID]*httpValidationExecution),
 		controlWatchers: make(map[uuid.UUID]httpControlWatcher),
 		status:          models.PhaseStatusNotStarted,
@@ -797,6 +808,8 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 		"campaign_id": campaignID,
 	})
 
+	runCtx, hasRunCtx := PhaseRunFromContext(ctx)
+
 	if err := s.ensureDNSCompleted(ctx, campaignID); err != nil {
 		return nil, fmt.Errorf("cannot start HTTP validation before DNS validation completes: %w", err)
 	}
@@ -836,6 +849,16 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 		execution.cancelFunc()
 	}
 	execution.cancelCtx, execution.cancelFunc = context.WithCancel(ctx)
+	if hasRunCtx {
+		execution.runID = runCtx.RunID
+	} else {
+		execution.runID = uuid.Nil
+		if s.deps.Logger != nil {
+			s.deps.Logger.Warn(ctx, "http.run_context.missing", map[string]interface{}{
+				"campaign_id": campaignID,
+			})
+		}
+	}
 	execution.Status = models.PhaseStatusInProgress
 	progressCh := execution.ProgressChan
 	s.mu.Unlock()
@@ -1009,6 +1032,10 @@ func (s *httpValidationService) executeHTTPValidation(execution *httpValidationE
 	}
 	campaignID := execution.CampaignID
 	domains := execution.Domains
+	if !s.runContextMatches(ctx, execution) {
+		s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, "stale execution context")
+		return
+	}
 
 	s.deps.Logger.Info(ctx, "Starting HTTP validation engine execution", map[string]interface{}{
 		"campaign_id":  campaignID,
@@ -1093,6 +1120,10 @@ func (s *httpValidationService) executeHTTPValidation(execution *httpValidationE
 	parkedHeuristic := realParkedHeuristic
 
 	for i := processed; i < total; i += batchSize {
+		if !s.runContextMatches(ctx, execution) {
+			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, "stale execution context")
+			return
+		}
 		if s.processPendingControlSignals(ctx, execution) {
 			return
 		}
@@ -1122,7 +1153,11 @@ func (s *httpValidationService) executeHTTPValidation(execution *httpValidationE
 		// Prepare batch for engine
 		genBatch := s.prepareGeneratedDomains(batch)
 		batchStart := time.Now()
-		results := s.httpValidator.ValidateDomainsBulk(ctx, genBatch, 25, persona, proxy)
+		if s.validator == nil {
+			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, "http validator unavailable")
+			return
+		}
+		results := s.validator.ValidateDomainsBulk(ctx, genBatch, 25, persona, proxy)
 		if s.mtx.validationBatchSeconds != nil {
 			s.mtx.validationBatchSeconds.Observe(time.Since(batchStart).Seconds())
 		}
@@ -2760,6 +2795,20 @@ func (s *httpValidationService) closeProgressChannel(execution *httpValidationEx
 	}
 }
 
+func (s *httpValidationService) runContextMatches(ctx context.Context, execution *httpValidationExecution) bool {
+	if execution == nil {
+		return false
+	}
+	runCtx, ok := PhaseRunFromContext(ctx)
+	if !ok {
+		return false
+	}
+	if runCtx.RunID == uuid.Nil || execution.runID == uuid.Nil {
+		return false
+	}
+	return runCtx.RunID == execution.runID
+}
+
 func (s *httpValidationService) isStopRequested(execution *httpValidationExecution) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -2834,6 +2883,7 @@ func (s *httpValidationService) handleControlCommand(ctx context.Context, execut
 		s.ackControl(cmd, err)
 		return false
 	}
+	return false
 }
 
 func (s *httpValidationService) awaitResume(ctx context.Context, execution *httpValidationExecution) bool {

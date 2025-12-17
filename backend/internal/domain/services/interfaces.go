@@ -34,6 +34,38 @@ type PhaseService interface {
 	GetPhaseType() models.PhaseTypeEnum
 }
 
+// phaseRunContextKey is the private context key used to stash execution metadata.
+type phaseRunContextKey struct{}
+
+// PhaseRunContext captures orchestrator-owned execution metadata for a single phase run.
+type PhaseRunContext struct {
+	CampaignID uuid.UUID
+	Phase      models.PhaseTypeEnum
+	RunID      uuid.UUID
+}
+
+// WithPhaseRun decorates the provided context with run metadata so downstream services can
+// associate work with the orchestrator-owned execution handle.
+func WithPhaseRun(ctx context.Context, runCtx PhaseRunContext) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return context.WithValue(ctx, phaseRunContextKey{}, runCtx)
+}
+
+// PhaseRunFromContext extracts run metadata previously stored via WithPhaseRun.
+func PhaseRunFromContext(ctx context.Context) (PhaseRunContext, bool) {
+	if ctx == nil {
+		return PhaseRunContext{}, false
+	}
+	if v := ctx.Value(phaseRunContextKey{}); v != nil {
+		if runCtx, ok := v.(PhaseRunContext); ok {
+			return runCtx, true
+		}
+	}
+	return PhaseRunContext{}, false
+}
+
 // PhaseControlCapabilities describes which runtime controls a phase service supports.
 type PhaseControlCapabilities struct {
 	CanPause   bool `json:"can_pause"`

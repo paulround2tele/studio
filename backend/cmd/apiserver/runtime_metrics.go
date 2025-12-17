@@ -9,44 +9,50 @@ import (
 // This is a lightweight stop-gap before integrating a full observability stack.
 type RuntimeMetrics struct {
 	// Counters
-	modeChanges         atomic.Int64
-	phaseStarts         atomic.Int64
-	phaseAutoStarts     atomic.Int64
-	phaseCompletions    atomic.Int64
-	phaseFailures       atomic.Int64
-	campaignCompletions atomic.Int64
-	phaseConfigUpdates  atomic.Int64
-	
+	modeChanges          atomic.Int64
+	phaseStarts          atomic.Int64
+	phaseAutoStarts      atomic.Int64
+	phaseCompletions     atomic.Int64
+	phaseFailures        atomic.Int64
+	phaseResumeAttempts  atomic.Int64
+	phaseResumeSuccesses atomic.Int64
+	phaseResumeFailures  atomic.Int64
+	campaignCompletions  atomic.Int64
+	phaseConfigUpdates   atomic.Int64
+
 	// Auto-start specific counters
-	autoStartAttempts atomic.Int64
+	autoStartAttempts  atomic.Int64
 	autoStartSuccesses atomic.Int64
 	autoStartFailures  atomic.Int64
-	
+
 	// Campaign mode distribution
 	manualModeCreations atomic.Int64
 	autoModeCreations   atomic.Int64
-	
+
 	// Simple duration aggregations (nanoseconds accumulated)
 	domainPhaseDurationNs   atomic.Int64
 	dnsPhaseDurationNs      atomic.Int64
 	httpPhaseDurationNs     atomic.Int64
 	analysisPhaseDurationNs atomic.Int64
-	
+
 	// Auto-start timing metrics (nanoseconds)
-	autoStartLatencyNs         atomic.Int64  // creation → startPhase request
-	firstPhaseRunningLatencyNs atomic.Int64  // creation → first phase RUNNING
+	autoStartLatencyNs         atomic.Int64 // creation → startPhase request
+	firstPhaseRunningLatencyNs atomic.Int64 // creation → first phase RUNNING
 }
 
 func NewRuntimeMetrics() *RuntimeMetrics { return &RuntimeMetrics{} }
 
 // Increment helpers
-func (m *RuntimeMetrics) IncModeChanges()         { m.modeChanges.Add(1) }
-func (m *RuntimeMetrics) IncPhaseStarts()         { m.phaseStarts.Add(1) }
-func (m *RuntimeMetrics) IncPhaseAutoStarts()     { m.phaseAutoStarts.Add(1) }
-func (m *RuntimeMetrics) IncPhaseCompletions()    { m.phaseCompletions.Add(1) }
-func (m *RuntimeMetrics) IncPhaseFailures()       { m.phaseFailures.Add(1) }
-func (m *RuntimeMetrics) IncCampaignCompletions() { m.campaignCompletions.Add(1) }
-func (m *RuntimeMetrics) IncPhaseConfigUpdates()  { m.phaseConfigUpdates.Add(1) }
+func (m *RuntimeMetrics) IncModeChanges()          { m.modeChanges.Add(1) }
+func (m *RuntimeMetrics) IncPhaseStarts()          { m.phaseStarts.Add(1) }
+func (m *RuntimeMetrics) IncPhaseAutoStarts()      { m.phaseAutoStarts.Add(1) }
+func (m *RuntimeMetrics) IncPhaseCompletions()     { m.phaseCompletions.Add(1) }
+func (m *RuntimeMetrics) IncPhaseFailures()        { m.phaseFailures.Add(1) }
+func (m *RuntimeMetrics) IncPhaseResumeAttempts()  { m.phaseResumeAttempts.Add(1) }
+func (m *RuntimeMetrics) IncPhaseResumeSuccesses() { m.phaseResumeSuccesses.Add(1) }
+func (m *RuntimeMetrics) IncPhaseResumeFailures()  { m.phaseResumeFailures.Add(1) }
+func (m *RuntimeMetrics) IncCampaignCompletions()  { m.campaignCompletions.Add(1) }
+func (m *RuntimeMetrics) IncPhaseConfigUpdates()   { m.phaseConfigUpdates.Add(1) }
 
 // Auto-start specific metrics
 func (m *RuntimeMetrics) IncAutoStartAttempts()  { m.autoStartAttempts.Add(1) }
@@ -82,25 +88,28 @@ func (m *RuntimeMetrics) RecordPhaseDuration(phase string, d time.Duration) {
 // Snapshot returns a read-only copy of current counters (for future handler exposure/tests).
 func (m *RuntimeMetrics) Snapshot() map[string]int64 {
 	return map[string]int64{
-		"mode_changes_total":               m.modeChanges.Load(),
-		"phase_starts_total":               m.phaseStarts.Load(),
-		"phase_auto_starts_total":          m.phaseAutoStarts.Load(),
-		"phase_completions_total":          m.phaseCompletions.Load(),
-		"phase_failures_total":             m.phaseFailures.Load(),
-		"campaign_completions_total":       m.campaignCompletions.Load(),
-		"phase_config_updates_total":       m.phaseConfigUpdates.Load(),
-		"domain_phase_duration_ns_sum":     m.domainPhaseDurationNs.Load(),
-		"dns_phase_duration_ns_sum":        m.dnsPhaseDurationNs.Load(),
-		"http_phase_duration_ns_sum":       m.httpPhaseDurationNs.Load(),
-		"analysis_phase_duration_ns_sum":   m.analysisPhaseDurationNs.Load(),
-		
+		"mode_changes_total":             m.modeChanges.Load(),
+		"phase_starts_total":             m.phaseStarts.Load(),
+		"phase_auto_starts_total":        m.phaseAutoStarts.Load(),
+		"phase_completions_total":        m.phaseCompletions.Load(),
+		"phase_failures_total":           m.phaseFailures.Load(),
+		"phase_resume_attempts_total":    m.phaseResumeAttempts.Load(),
+		"phase_resume_successes_total":   m.phaseResumeSuccesses.Load(),
+		"phase_resume_failures_total":    m.phaseResumeFailures.Load(),
+		"campaign_completions_total":     m.campaignCompletions.Load(),
+		"phase_config_updates_total":     m.phaseConfigUpdates.Load(),
+		"domain_phase_duration_ns_sum":   m.domainPhaseDurationNs.Load(),
+		"dns_phase_duration_ns_sum":      m.dnsPhaseDurationNs.Load(),
+		"http_phase_duration_ns_sum":     m.httpPhaseDurationNs.Load(),
+		"analysis_phase_duration_ns_sum": m.analysisPhaseDurationNs.Load(),
+
 		// Auto-start metrics
-		"campaign_auto_start_attempts_total":   m.autoStartAttempts.Load(),
-		"campaign_auto_start_successes_total":  m.autoStartSuccesses.Load(),
-		"campaign_auto_start_failures_total":   m.autoStartFailures.Load(),
-		"campaign_auto_start_latency_ns_sum":   m.autoStartLatencyNs.Load(),
-		"campaign_first_phase_running_ns_sum":  m.firstPhaseRunningLatencyNs.Load(),
-		
+		"campaign_auto_start_attempts_total":  m.autoStartAttempts.Load(),
+		"campaign_auto_start_successes_total": m.autoStartSuccesses.Load(),
+		"campaign_auto_start_failures_total":  m.autoStartFailures.Load(),
+		"campaign_auto_start_latency_ns_sum":  m.autoStartLatencyNs.Load(),
+		"campaign_first_phase_running_ns_sum": m.firstPhaseRunningLatencyNs.Load(),
+
 		// Campaign mode distribution
 		"campaign_manual_mode_creations_total": m.manualModeCreations.Load(),
 		"campaign_auto_mode_creations_total":   m.autoModeCreations.Load(),
