@@ -200,6 +200,10 @@ func (f *fakeCampaignStoreForDomains) StartPhase(ctx context.Context, exec store
 func (f *fakeCampaignStoreForDomains) PausePhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
 	return nil
 }
+
+func (f *fakeCampaignStoreForDomains) ResumePhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
+	return nil
+}
 func (f *fakeCampaignStoreForDomains) FailPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string, errorDetails map[string]interface{}) error {
 	return nil
 }

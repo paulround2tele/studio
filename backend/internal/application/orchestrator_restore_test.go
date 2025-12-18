@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -328,6 +329,50 @@ func TestRestoreInFlightPhases_SkipsWhenConfigMissing(t *testing.T) {
 	}
 }
 
+func TestRestoreInFlightPhases_SkipsWhenConfigInvalid(t *testing.T) {
+	phase := models.PhaseTypeDomainGeneration
+
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := newTestLogger(t)
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	bundle := buildPhaseServiceBundle(phase, logger, cs, db)
+	orch := NewCampaignOrchestrator(cs, deps, bundle.domain, bundle.dns, bundle.http, bundle.extraction, bundle.enrichment, bundle.analysis, nil, nil)
+
+	campaignID := createTestCampaign(t, cs)
+	upsertConfig(t, cs, campaignID, phase)
+	registerPhaseCleanup(t, orch, bundle.target, campaignID, phase)
+
+	ctx := context.Background()
+	if err := orch.StartPhaseInternal(ctx, campaignID, phase); err != nil {
+		t.Fatalf("start %s: %v", phase, err)
+	}
+	waitUntil(t, time.Second, func() bool { return bundle.target.executions(campaignID) == 1 })
+	waitForPhaseStatus(t, cs, db, campaignID, phase, models.PhaseStatusInProgress)
+
+	// Clear any derived configuration state and then re-seed an invalid persisted config.
+	wipeStoredPhaseConfig(t, db, campaignID, phase)
+	if err := cs.UpsertPhaseConfig(ctx, nil, campaignID, phase, json.RawMessage(`{"dummy":true}`)); err != nil {
+		t.Fatalf("upsert invalid config %s: %v", phase, err)
+	}
+
+	// For restore, use a domain service that rejects legacy/map configs the same way production
+	// services do (so restore can classify + skip invalid persisted configs).
+	base2 := newControlAwarePhaseService(phase, logger, cs, db)
+	domainSvc2 := &rejectLegacyDomainGenService{controlAwarePhaseService: base2}
+	orch2 := NewCampaignOrchestrator(cs, deps, domainSvc2, newStubPhaseService(models.PhaseTypeDNSValidation, logger), newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger), newStubPhaseService(models.PhaseTypeExtraction, logger), newStubPhaseService(models.PhaseTypeEnrichment, logger), newStubPhaseService(models.PhaseTypeAnalysis, logger), nil, nil)
+	orch2.SetAutoResumeOnRestart(true)
+	registerPhaseCleanup(t, orch2, base2, campaignID, phase)
+
+	if err := orch2.RestoreInFlightPhases(ctx); err != nil {
+		t.Fatalf("restore %s: %v", phase, err)
+	}
+	if got := base2.executions(campaignID); got != 0 {
+		t.Fatalf("expected no restart when configuration invalid for %s, got %d", phase, got)
+	}
+}
+
 func TestRestoreInFlightPhases_AutoResumeRecordsMetrics(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
 	cs := pg_store.NewCampaignStorePostgres(db)
@@ -463,6 +508,17 @@ func newControlAwarePhaseService(phase models.PhaseTypeEnum, logger *testLogger,
 		attachEvents:   make(map[uuid.UUID]int),
 		progressEvents: make(map[uuid.UUID]int),
 	}
+}
+
+type rejectLegacyDomainGenService struct {
+	*controlAwarePhaseService
+}
+
+func (s *rejectLegacyDomainGenService) Configure(ctx context.Context, campaignID uuid.UUID, config interface{}) error {
+	if _, ok := config.(map[string]interface{}); ok {
+		return fmt.Errorf("invalid configuration type")
+	}
+	return s.controlAwarePhaseService.Configure(ctx, campaignID, config)
 }
 
 func (s *controlAwarePhaseService) Configure(ctx context.Context, campaignID uuid.UUID, config interface{}) error {

@@ -130,6 +130,10 @@ func (s *stubCampaignStore) StartPhase(ctx context.Context, exec store.Querier, 
 func (s *stubCampaignStore) PausePhase(ctx context.Context, exec store.Querier, id uuid.UUID, pt models.PhaseTypeEnum) error {
 	return nil
 }
+
+func (s *stubCampaignStore) ResumePhase(ctx context.Context, exec store.Querier, id uuid.UUID, pt models.PhaseTypeEnum) error {
+	return nil
+}
 func (s *stubCampaignStore) CreateGeneratedDomains(ctx context.Context, exec store.Querier, d []*models.GeneratedDomain) error {
 	return nil
 }

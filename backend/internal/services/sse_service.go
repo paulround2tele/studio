@@ -24,6 +24,8 @@ const (
 	SSEEventCampaignProgress   SSEEventType = "campaign_progress"
 	SSEEventCampaignCompleted  SSEEventType = "campaign_completed"
 	SSEEventPhaseStarted       SSEEventType = "phase_started"
+	SSEEventPhasePaused        SSEEventType = "phase_paused"
+	SSEEventPhaseResumed       SSEEventType = "phase_resumed"
 	SSEEventPhaseCompleted     SSEEventType = "phase_completed"
 	SSEEventPhaseFailed        SSEEventType = "phase_failed"
 	SSEEventPhaseAutoStarted   SSEEventType = "phase_auto_started"
@@ -45,6 +47,8 @@ var knownSSEEventTypes = map[SSEEventType]struct{}{
 	SSEEventCampaignProgress:   {},
 	SSEEventCampaignCompleted:  {},
 	SSEEventPhaseStarted:       {},
+	SSEEventPhasePaused:        {},
+	SSEEventPhaseResumed:       {},
 	SSEEventPhaseCompleted:     {},
 	SSEEventPhaseFailed:        {},
 	SSEEventPhaseAutoStarted:   {},
@@ -745,10 +749,8 @@ func CreateCampaignProgressEvent(campaignID uuid.UUID, userID uuid.UUID, progres
 
 func normalizeProgressPayload(progress map[string]interface{}) map[string]interface{} {
 	normalized := make(map[string]interface{}, len(progress)+4)
-	if progress != nil {
-		for k, v := range progress {
-			normalized[k] = v
-		}
+	for k, v := range progress {
+		normalized[k] = v
 	}
 
 	ensureProgressField(normalized, "status", "unknown")
@@ -824,6 +826,36 @@ func CreatePhaseFailedEvent(campaignID uuid.UUID, userID uuid.UUID, phase models
 			"phase":       string(phase),
 			"error":       error,
 			"message":     fmt.Sprintf("Phase %s failed", phase),
+		},
+		Timestamp: time.Now(),
+	}
+}
+
+// CreatePhasePausedEvent creates a phase paused SSE event
+func CreatePhasePausedEvent(campaignID uuid.UUID, userID uuid.UUID, phase models.PhaseTypeEnum) SSEEvent {
+	return SSEEvent{
+		Event:      SSEEventPhasePaused,
+		CampaignID: &campaignID,
+		UserID:     &userID,
+		Data: map[string]interface{}{
+			"campaign_id": campaignID.String(),
+			"phase":       string(phase),
+			"message":     fmt.Sprintf("Phase %s paused", phase),
+		},
+		Timestamp: time.Now(),
+	}
+}
+
+// CreatePhaseResumedEvent creates a phase resumed SSE event
+func CreatePhaseResumedEvent(campaignID uuid.UUID, userID uuid.UUID, phase models.PhaseTypeEnum) SSEEvent {
+	return SSEEvent{
+		Event:      SSEEventPhaseResumed,
+		CampaignID: &campaignID,
+		UserID:     &userID,
+		Data: map[string]interface{}{
+			"campaign_id": campaignID.String(),
+			"phase":       string(phase),
+			"message":     fmt.Sprintf("Phase %s resumed", phase),
 		},
 		Timestamp: time.Now(),
 	}

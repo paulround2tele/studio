@@ -11,11 +11,12 @@ import AnalysisConfigForm from '@/components/campaigns/workspace/forms/AnalysisC
 import EnrichmentConfigForm from '@/components/campaigns/workspace/forms/EnrichmentConfigForm';
 import { Button } from '@/components/ui/button';
 import { PhaseStepper, PhasePanelShell, StatusBadge, CampaignOverviewCard, AlertStack } from '@/components/campaigns/workspace';
-import { useStartPhaseStandaloneMutation, useGetPhaseStatusStandaloneQuery } from '@/store/api/campaignApi';
+import { useStartPhaseStandaloneMutation, useGetCampaignStatusQuery } from '@/store/api/campaignApi';
 import computeAutoStartPhase from '@/store/selectors/autoAdvanceLogic';
 import type { PhaseStatusResponse } from '@/lib/api-client/models/phase-status-response';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
+import { useCampaignSSE } from '@/hooks/useCampaignSSE';
 
 type CampaignPhase = PhaseStatusResponse['phase'];
 
@@ -29,12 +30,9 @@ const friendlyPhaseLabel = (phaseKey: string): string => {
 };
 
 export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId }) => {
-  // Actively subscribe to per-phase status so selectors receive data+invalidations
-  useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'discovery' });
-  useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'validation' });
-  useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'enrichment' });
-  useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'extraction' });
-  useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'analysis' });
+  // Snapshot-centric: keep campaign status in cache and let SSE patch it.
+  useGetCampaignStatusQuery(campaignId, { skip: !campaignId });
+  useCampaignSSE({ campaignId, autoConnect: Boolean(campaignId) });
   const selectOverview = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
   const ov = useAppSelector(selectOverview);
   const { phases, mode, guidance, failures, nextAction } = ov;
@@ -117,7 +115,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
           statusBadges={panelPhase && (
             <>
               <StatusBadge variant={isConfigured ? 'configured' : 'missing'} compact>{phaseMeta?.configState}</StatusBadge>
-              {phaseMeta?.execState && <StatusBadge variant={phaseMeta.execState === 'failed' ? 'failed' : phaseMeta.execState === 'completed' ? 'completed' : phaseMeta.execState === 'running' ? 'running' : 'idle'} compact>{phaseMeta.execState}</StatusBadge>}
+              {phaseMeta?.execState && <StatusBadge variant={phaseMeta.execState === 'failed' ? 'failed' : phaseMeta.execState === 'completed' ? 'completed' : phaseMeta.execState === 'running' ? 'running' : phaseMeta.execState === 'paused' ? 'paused' : 'idle'} compact>{phaseMeta.execState}</StatusBadge>}
             </>
           )}
           actions={panelPhase && (

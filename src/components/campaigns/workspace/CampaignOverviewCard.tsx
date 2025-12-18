@@ -110,6 +110,7 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const globalExecState = (() => {
     if (exec.progress.completed === exec.progress.total && exec.progress.total > 0) return 'completed';
     if (phases.some(p => p.execState === 'failed')) return 'failed';
+    if (phases.some(p => p.execState === 'paused')) return 'paused';
     if (phases.some(p => p.execState === 'running')) return 'running';
     if (phases.some(p => p.configState === 'valid')) return 'configured';
     return 'idle';

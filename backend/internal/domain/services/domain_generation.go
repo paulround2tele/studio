@@ -219,6 +219,11 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 	switch v := config.(type) {
 	case DomainGenerationConfig:
 		domainConfig = v
+	case *DomainGenerationConfig:
+		if v == nil {
+			return fmt.Errorf("invalid domain generation configuration: nil")
+		}
+		domainConfig = *v
 	case map[string]interface{}:
 		// Convert common keys (camelCase and snake_case)
 		getString := func(key string) string {

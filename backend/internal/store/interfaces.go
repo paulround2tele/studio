@@ -68,6 +68,7 @@ type CampaignStore interface {
 	SkipPhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, reason string) error
 	StartPhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error
 	PausePhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error
+	ResumePhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error
 	FailPhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string, errorDetails map[string]interface{}) error
 
 	CreateGeneratedDomains(ctx context.Context, exec Querier, domains []*models.GeneratedDomain) error

@@ -269,7 +269,8 @@ paths:
                 sample:
                   summary: Two wrapped events
                   value:
-                    - type: campaign_progress
+                    - version: 1
+                      type: campaign_progress
                       timestamp: '2025-01-01T00:00:00Z'
                       payload:
                         campaignId: 00000000-0000-0000-0000-000000000000
@@ -302,7 +303,8 @@ paths:
                             itemsProcessed: 0
                             itemsTotal: 0
                         timeline: []
-                    - type: phase_started
+                    - version: 1
+                      type: phase_started
                       timestamp: '2025-01-01T00:01:00Z'
                       payload:
                         phase: discovery
@@ -337,6 +339,7 @@ paths:
                 progress:
                   summary: Progress event
                   value:
+                    version: 1
                     type: campaign_progress
                     timestamp: '2025-01-01T00:00:05Z'
                     payload:
@@ -373,6 +376,7 @@ paths:
                 phaseStarted:
                   summary: Phase started event
                   value:
+                    version: 1
                     type: phase_started
                     timestamp: '2025-01-01T00:00:10Z'
                     payload:
@@ -3493,6 +3497,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/mode:
@@ -4663,6 +4669,16 @@ components:
           type: string
       required:
         - message
+    CampaignSseEnvelope:
+      type: object
+      description: Canonical SSE envelope applied to all campaign SSE events.
+      properties:
+        version:
+          type: integer
+          minimum: 1
+          description: Envelope version emitted by the server (currently 1).
+      required:
+        - version
     AnalysisReuseEnrichmentEvent:
       type: object
       description: Analysis phase reused existing feature vectors.
@@ -4672,19 +4688,22 @@ components:
           nullable: true
           description: Number of feature vectors reused from prior HTTP phase enrichment.
     CampaignSseAnalysisReuseEnrichmentEvent:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - analysis_reuse_enrichment
-        timestamp:
-          type: string
-          format: date-time
-        payload:
-          $ref: '#/components/schemas/AnalysisReuseEnrichmentEvent'
-      required:
-        - type
+      allOf:
+        - $ref: '#/components/schemas/CampaignSseEnvelope'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - analysis_reuse_enrichment
+            timestamp:
+              type: string
+              format: date-time
+            payload:
+              $ref: '#/components/schemas/AnalysisReuseEnrichmentEvent'
+          required:
+            - type
+            - payload
     AnalysisFailedEvent:
       type: object
       description: Analysis phase preflight or execution failed.
@@ -4697,20 +4716,22 @@ components:
       required:
         - error
     CampaignSseAnalysisFailedEvent:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - analysis_failed
-        timestamp:
-          type: string
-          format: date-time
-        payload:
-          $ref: '#/components/schemas/AnalysisFailedEvent'
-      required:
-        - type
-        - payload
+      allOf:
+        - $ref: '#/components/schemas/CampaignSseEnvelope'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - analysis_failed
+            timestamp:
+              type: string
+              format: date-time
+            payload:
+              $ref: '#/components/schemas/AnalysisFailedEvent'
+          required:
+            - type
+            - payload
     PhaseProgressSummary:
       type: object
       properties:
@@ -4839,19 +4860,22 @@ components:
         - phases
         - timeline
     CampaignSseProgressEvent:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - campaign_progress
-        timestamp:
-          type: string
-          format: date-time
-        payload:
-          $ref: '#/components/schemas/CampaignProgressResponse'
-      required:
-        - type
+      allOf:
+        - $ref: '#/components/schemas/CampaignSseEnvelope'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - campaign_progress
+            timestamp:
+              type: string
+              format: date-time
+            payload:
+              $ref: '#/components/schemas/CampaignProgressResponse'
+          required:
+            - type
+            - payload
     DomainAnalysisFeatures:
       type: object
       description: Canonical nested analysis feature vector for a discovered domain.
@@ -4958,33 +4982,39 @@ components:
         features:
           $ref: '#/components/schemas/DomainAnalysisFeatures'
     CampaignSseDomainGeneratedEvent:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - domain_generated
-        timestamp:
-          type: string
-          format: date-time
-        payload:
-          $ref: '#/components/schemas/DomainStatusEvent'
-      required:
-        - type
+      allOf:
+        - $ref: '#/components/schemas/CampaignSseEnvelope'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - domain_generated
+            timestamp:
+              type: string
+              format: date-time
+            payload:
+              $ref: '#/components/schemas/DomainStatusEvent'
+          required:
+            - type
+            - payload
     CampaignSseDomainValidatedEvent:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - domain_validated
-        timestamp:
-          type: string
-          format: date-time
-        payload:
-          $ref: '#/components/schemas/DomainStatusEvent'
-      required:
-        - type
+      allOf:
+        - $ref: '#/components/schemas/CampaignSseEnvelope'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - domain_validated
+            timestamp:
+              type: string
+              format: date-time
+            payload:
+              $ref: '#/components/schemas/DomainStatusEvent'
+          required:
+            - type
+            - payload
     PhaseTransitionEvent:
       type: object
       description: Phase lifecycle transition (started or completed).
@@ -4994,33 +5024,39 @@ components:
       required:
         - phase
     CampaignSsePhaseStartedEvent:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - phase_started
-        timestamp:
-          type: string
-          format: date-time
-        payload:
-          $ref: '#/components/schemas/PhaseTransitionEvent'
-      required:
-        - type
+      allOf:
+        - $ref: '#/components/schemas/CampaignSseEnvelope'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - phase_started
+            timestamp:
+              type: string
+              format: date-time
+            payload:
+              $ref: '#/components/schemas/PhaseTransitionEvent'
+          required:
+            - type
+            - payload
     CampaignSsePhaseCompletedEvent:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - phase_completed
-        timestamp:
-          type: string
-          format: date-time
-        payload:
-          $ref: '#/components/schemas/PhaseTransitionEvent'
-      required:
-        - type
+      allOf:
+        - $ref: '#/components/schemas/CampaignSseEnvelope'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - phase_completed
+            timestamp:
+              type: string
+              format: date-time
+            payload:
+              $ref: '#/components/schemas/PhaseTransitionEvent'
+          required:
+            - type
+            - payload
     PhaseFailedEvent:
       type: object
       description: Phase failure event.
@@ -5033,19 +5069,22 @@ components:
         - phase
         - error
     CampaignSsePhaseFailedEvent:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - phase_failed
-        timestamp:
-          type: string
-          format: date-time
-        payload:
-          $ref: '#/components/schemas/PhaseFailedEvent'
-      required:
-        - type
+      allOf:
+        - $ref: '#/components/schemas/CampaignSseEnvelope'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - phase_failed
+            timestamp:
+              type: string
+              format: date-time
+            payload:
+              $ref: '#/components/schemas/PhaseFailedEvent'
+          required:
+            - type
+            - payload
     CampaignCompletedEvent:
       type: object
       description: Campaign has fully completed successfully.
@@ -5056,19 +5095,22 @@ components:
       required:
         - campaignId
     CampaignSseCompletedEvent:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - campaign_completed
-        timestamp:
-          type: string
-          format: date-time
-        payload:
-          $ref: '#/components/schemas/CampaignCompletedEvent'
-      required:
-        - type
+      allOf:
+        - $ref: '#/components/schemas/CampaignSseEnvelope'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - campaign_completed
+            timestamp:
+              type: string
+              format: date-time
+            payload:
+              $ref: '#/components/schemas/CampaignCompletedEvent'
+          required:
+            - type
+            - payload
     CampaignSseEvent:
       description: Discriminated union of all campaign SSE event wrapper objects.
       oneOf:

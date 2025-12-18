@@ -1265,6 +1265,9 @@ type CampaignSseAnalysisFailedEvent struct {
 	Payload   AnalysisFailedEvent                `json:"payload"`
 	Timestamp *time.Time                         `json:"timestamp,omitempty"`
 	Type      CampaignSseAnalysisFailedEventType `json:"type"`
+
+	// Version Envelope version emitted by the server (currently 1).
+	Version int `json:"version"`
 }
 
 // CampaignSseAnalysisFailedEventType defines model for CampaignSseAnalysisFailedEvent.Type.
@@ -1273,9 +1276,12 @@ type CampaignSseAnalysisFailedEventType string
 // CampaignSseAnalysisReuseEnrichmentEvent defines model for CampaignSseAnalysisReuseEnrichmentEvent.
 type CampaignSseAnalysisReuseEnrichmentEvent struct {
 	// Payload Analysis phase reused existing feature vectors.
-	Payload   *AnalysisReuseEnrichmentEvent               `json:"payload,omitempty"`
+	Payload   AnalysisReuseEnrichmentEvent                `json:"payload"`
 	Timestamp *time.Time                                  `json:"timestamp,omitempty"`
 	Type      CampaignSseAnalysisReuseEnrichmentEventType `json:"type"`
+
+	// Version Envelope version emitted by the server (currently 1).
+	Version int `json:"version"`
 }
 
 // CampaignSseAnalysisReuseEnrichmentEventType defines model for CampaignSseAnalysisReuseEnrichmentEvent.Type.
@@ -1284,9 +1290,12 @@ type CampaignSseAnalysisReuseEnrichmentEventType string
 // CampaignSseCompletedEvent defines model for CampaignSseCompletedEvent.
 type CampaignSseCompletedEvent struct {
 	// Payload Campaign has fully completed successfully.
-	Payload   *CampaignCompletedEvent       `json:"payload,omitempty"`
+	Payload   CampaignCompletedEvent        `json:"payload"`
 	Timestamp *time.Time                    `json:"timestamp,omitempty"`
 	Type      CampaignSseCompletedEventType `json:"type"`
+
+	// Version Envelope version emitted by the server (currently 1).
+	Version int `json:"version"`
 }
 
 // CampaignSseCompletedEventType defines model for CampaignSseCompletedEvent.Type.
@@ -1295,9 +1304,12 @@ type CampaignSseCompletedEventType string
 // CampaignSseDomainGeneratedEvent defines model for CampaignSseDomainGeneratedEvent.
 type CampaignSseDomainGeneratedEvent struct {
 	// Payload Domain generation/validation status update (subset / partial DomainListItem fields may be present).
-	Payload   *DomainStatusEvent                  `json:"payload,omitempty"`
+	Payload   DomainStatusEvent                   `json:"payload"`
 	Timestamp *time.Time                          `json:"timestamp,omitempty"`
 	Type      CampaignSseDomainGeneratedEventType `json:"type"`
+
+	// Version Envelope version emitted by the server (currently 1).
+	Version int `json:"version"`
 }
 
 // CampaignSseDomainGeneratedEventType defines model for CampaignSseDomainGeneratedEvent.Type.
@@ -1306,13 +1318,22 @@ type CampaignSseDomainGeneratedEventType string
 // CampaignSseDomainValidatedEvent defines model for CampaignSseDomainValidatedEvent.
 type CampaignSseDomainValidatedEvent struct {
 	// Payload Domain generation/validation status update (subset / partial DomainListItem fields may be present).
-	Payload   *DomainStatusEvent                  `json:"payload,omitempty"`
+	Payload   DomainStatusEvent                   `json:"payload"`
 	Timestamp *time.Time                          `json:"timestamp,omitempty"`
 	Type      CampaignSseDomainValidatedEventType `json:"type"`
+
+	// Version Envelope version emitted by the server (currently 1).
+	Version int `json:"version"`
 }
 
 // CampaignSseDomainValidatedEventType defines model for CampaignSseDomainValidatedEvent.Type.
 type CampaignSseDomainValidatedEventType string
+
+// CampaignSseEnvelope Canonical SSE envelope applied to all campaign SSE events.
+type CampaignSseEnvelope struct {
+	// Version Envelope version emitted by the server (currently 1).
+	Version int `json:"version"`
+}
 
 // CampaignSseEvent Discriminated union of all campaign SSE event wrapper objects.
 type CampaignSseEvent struct {
@@ -1322,9 +1343,12 @@ type CampaignSseEvent struct {
 // CampaignSsePhaseCompletedEvent defines model for CampaignSsePhaseCompletedEvent.
 type CampaignSsePhaseCompletedEvent struct {
 	// Payload Phase lifecycle transition (started or completed).
-	Payload   *PhaseTransitionEvent              `json:"payload,omitempty"`
+	Payload   PhaseTransitionEvent               `json:"payload"`
 	Timestamp *time.Time                         `json:"timestamp,omitempty"`
 	Type      CampaignSsePhaseCompletedEventType `json:"type"`
+
+	// Version Envelope version emitted by the server (currently 1).
+	Version int `json:"version"`
 }
 
 // CampaignSsePhaseCompletedEventType defines model for CampaignSsePhaseCompletedEvent.Type.
@@ -1333,9 +1357,12 @@ type CampaignSsePhaseCompletedEventType string
 // CampaignSsePhaseFailedEvent defines model for CampaignSsePhaseFailedEvent.
 type CampaignSsePhaseFailedEvent struct {
 	// Payload Phase failure event.
-	Payload   *PhaseFailedEvent               `json:"payload,omitempty"`
+	Payload   PhaseFailedEvent                `json:"payload"`
 	Timestamp *time.Time                      `json:"timestamp,omitempty"`
 	Type      CampaignSsePhaseFailedEventType `json:"type"`
+
+	// Version Envelope version emitted by the server (currently 1).
+	Version int `json:"version"`
 }
 
 // CampaignSsePhaseFailedEventType defines model for CampaignSsePhaseFailedEvent.Type.
@@ -1344,9 +1371,12 @@ type CampaignSsePhaseFailedEventType string
 // CampaignSsePhaseStartedEvent defines model for CampaignSsePhaseStartedEvent.
 type CampaignSsePhaseStartedEvent struct {
 	// Payload Phase lifecycle transition (started or completed).
-	Payload   *PhaseTransitionEvent            `json:"payload,omitempty"`
+	Payload   PhaseTransitionEvent             `json:"payload"`
 	Timestamp *time.Time                       `json:"timestamp,omitempty"`
 	Type      CampaignSsePhaseStartedEventType `json:"type"`
+
+	// Version Envelope version emitted by the server (currently 1).
+	Version int `json:"version"`
 }
 
 // CampaignSsePhaseStartedEventType defines model for CampaignSsePhaseStartedEvent.Type.
@@ -1354,9 +1384,12 @@ type CampaignSsePhaseStartedEventType string
 
 // CampaignSseProgressEvent defines model for CampaignSseProgressEvent.
 type CampaignSseProgressEvent struct {
-	Payload   *CampaignProgressResponse    `json:"payload,omitempty"`
+	Payload   CampaignProgressResponse     `json:"payload"`
 	Timestamp *time.Time                   `json:"timestamp,omitempty"`
 	Type      CampaignSseProgressEventType `json:"type"`
+
+	// Version Envelope version emitted by the server (currently 1).
+	Version int `json:"version"`
 }
 
 // CampaignSseProgressEventType defines model for CampaignSseProgressEvent.Type.
@@ -11261,6 +11294,15 @@ type CampaignsPhaseResume404JSONResponse struct{ NotFoundJSONResponse }
 func (response CampaignsPhaseResume404JSONResponse) VisitCampaignsPhaseResumeResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseResume409JSONResponse struct{ ConflictJSONResponse }
+
+func (response CampaignsPhaseResume409JSONResponse) VisitCampaignsPhaseResumeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
 
 	return json.NewEncoder(w).Encode(response)
 }

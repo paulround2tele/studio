@@ -4,8 +4,8 @@ import { useSSE, type SSEEvent } from './useSSE';
 import { useAppDispatch } from '@/store/hooks';
 import { phaseStarted, phaseCompleted, phaseFailed } from '@/store/slices/pipelineExecSlice';
 import { campaignApi } from '@/store/api/campaignApi';
-import type { PhaseStatusResponse } from '@/lib/api-client/models';
-import { ensurePhaseStatus, PipelinePhase, PhaseRunStatus as _PhaseRunStatus } from '@/utils/phaseStatus';
+import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campaign-phases-status-response';
+import { PipelinePhase, PhaseRunStatus as _PhaseRunStatus } from '@/utils/phaseStatus';
 import type { PipelinePhaseKey } from '@/store/selectors/pipelineSelectors';
 import type { 
   CampaignSSEEventHandlers as _CampaignSSEEventHandlers, 
@@ -22,6 +22,7 @@ import type {
 } from '@/types/sse';
 import type { CampaignPhase } from '@/types/domain';
 import { getApiBasePath } from '@/lib/api/config';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 const joinUrl = (base: string, path: string): string => {
   const trimmedBase = base.replace(/\/+$/, '');
@@ -174,6 +175,45 @@ const BACKEND_TO_INTERNAL_PHASE: Record<string, PipelinePhase> = {
 const mapPhase = (raw: string | undefined): PipelinePhase | string => {
   if (!raw || typeof raw !== 'string') return raw || 'unknown';
   return BACKEND_TO_INTERNAL_PHASE[raw] || raw;
+};
+
+const normalizeSnapshotStatus = (status: string | undefined): string | undefined => {
+  if (!status) return status;
+  // Snapshot uses in_progress; SSE/phase-status may emit running.
+  if (status === 'running') return 'in_progress';
+  return status;
+};
+
+const patchCampaignStatusPhase = (
+  draft: CampaignPhasesStatusResponse | undefined,
+  phase: string,
+  patch: { status?: string; progressPercentage?: number; errorMessage?: string }
+): void => {
+  if (!draft?.phases || !Array.isArray(draft.phases)) {
+    return;
+  }
+
+  const normalizedTarget = normalizeToApiPhase(String(phase).toLowerCase());
+  if (!normalizedTarget) {
+    return;
+  }
+
+  for (const entry of draft.phases) {
+    const normalizedEntry = normalizeToApiPhase(String((entry as unknown as { phase?: unknown })?.phase ?? '').toLowerCase());
+    if (!normalizedEntry || normalizedEntry !== normalizedTarget) {
+      continue;
+    }
+    if (typeof patch.status === 'string') {
+      (entry as unknown as { status?: unknown }).status = patch.status;
+    }
+    if (typeof patch.progressPercentage === 'number' && Number.isFinite(patch.progressPercentage)) {
+      (entry as unknown as { progressPercentage?: unknown }).progressPercentage = patch.progressPercentage;
+    }
+    if (typeof patch.errorMessage === 'string') {
+      (entry as unknown as { errorMessage?: unknown }).errorMessage = patch.errorMessage;
+    }
+    break;
+  }
 };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -334,9 +374,6 @@ const isCampaignProgress = (val: object | null): val is CampaignProgress => {
 // Use types from the SSE module
 export type CampaignProgress = ImportedCampaignProgress;
 export type PhaseEvent = ImportedPhaseEvent;
-
-// Local extension for phase status to include optional error (frontend convenience)
-interface PhaseStatusWithError extends PhaseStatusResponse { error?: string }
 
 // Convert raw SSEEvent into discriminated union CampaignSSEEvent (no raw any)
 function _mapRawToCampaignSSE(event: SSEEvent): CampaignSSEEvent | undefined {
@@ -625,25 +662,36 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
             const phase = mapPhase(rawPhase);
             if (!completedRef.current.has(`${resolvedCampaignId}:${phase}`)) {
               completedRef.current.add(`${resolvedCampaignId}:${phase}`);
-                            const pipelinePhase = toPipelinePhase(phase);
-                            if (pipelinePhase) {
-                              dispatch(phaseCompleted({ campaignId: resolvedCampaignId, phase: pipelinePhase }));
-                            }
-                            dispatch(campaignApi.util.updateQueryData(
-                              'getPhaseStatusStandalone',
-                              { campaignId: resolvedCampaignId, phase },
-                              (draft) => {
-                                const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PipelinePhase, 'completed');
-                                if (!ps.progress) {
-                                  ps.progress = { totalItems: 0, processedItems: 0, successfulItems: 0, failedItems: 0, percentComplete: 100 };
-                                } else {
-                                  ps.progress.percentComplete = 100;
-                                }
-                                return ps;
-                              }
-                            ));
+              const pipelinePhase = toPipelinePhase(phase);
+              if (pipelinePhase) {
+                dispatch(phaseCompleted({ campaignId: resolvedCampaignId, phase: pipelinePhase }));
+              }
+              dispatch(
+                campaignApi.util.updateQueryData('getCampaignStatus', resolvedCampaignId, (draft) => {
+                  patchCampaignStatusPhase(draft, phase, { status: 'completed', progressPercentage: 100 });
+                })
+              );
               synthesizedCompletion = true;
             }
+          }
+
+          // Snapshot-centric updates: patch overall + current phase progress.
+          if (typeof progressData.progress_pct === 'number' && Number.isFinite(progressData.progress_pct)) {
+            dispatch(
+              campaignApi.util.updateQueryData('getCampaignStatus', resolvedCampaignId, (draft) => {
+                if (!draft) return;
+                draft.overallProgressPercentage = progressData.progress_pct;
+                const current =
+                  progressData.current_phase ||
+                  (typeof payload?.current_phase === 'string' ? (payload.current_phase as string) : undefined);
+                if (current) {
+                  const phase = mapPhase(current);
+                  patchCampaignStatusPhase(draft, phase, {
+                    progressPercentage: progressData.progress_pct,
+                  });
+                }
+              })
+            );
           }
         }
         captureDebugEvent('campaign_progress', {
@@ -659,22 +707,17 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
       case 'phase_started': {
         const backendPhase = (payload?.phase as string | undefined) || (dataObj?.phase as string | undefined);
         const phase = mapPhase(backendPhase);
-                const pipelinePhase = toPipelinePhase(phase);
-                if (pipelinePhase) {
-                  dispatch(phaseStarted({ campaignId: resolvedCampaignId, phase: pipelinePhase }));
-                }
-        // Update RTK Query cache: mark status running under internal key
-                dispatch(campaignApi.util.updateQueryData(
-                  'getPhaseStatusStandalone',
-                  { campaignId: resolvedCampaignId, phase },
-                  (draft) => {
-                    const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PipelinePhase, 'running');
-                    if (!ps.progress) {
-                      ps.progress = { totalItems: 0, processedItems: 0, successfulItems: 0, failedItems: 0, percentComplete: 0 };
-                    }
-                    return ps;
-                  }
-                ));
+        const pipelinePhase = toPipelinePhase(phase);
+        if (pipelinePhase) {
+          dispatch(phaseStarted({ campaignId: resolvedCampaignId, phase: pipelinePhase }));
+        }
+
+        // Snapshot-centric: mark phase in progress.
+        dispatch(
+          campaignApi.util.updateQueryData('getCampaignStatus', resolvedCampaignId, (draft) => {
+            patchCampaignStatusPhase(draft, phase, { status: 'in_progress' });
+          })
+        );
         handlers.onPhaseStarted?.(resolvedCampaignId, {
           campaign_id: resolvedCampaignId,
           phase: phase as string,
@@ -693,23 +736,15 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
         const phase = mapPhase(backendPhase);
         if (!completedRef.current.has(`${resolvedCampaignId}:${phase}`)) {
           completedRef.current.add(`${resolvedCampaignId}:${phase}`);
-                    const pipelinePhase = toPipelinePhase(phase);
-                    if (pipelinePhase) {
-                      dispatch(phaseCompleted({ campaignId: resolvedCampaignId, phase: pipelinePhase }));
-                    }
-                    dispatch(campaignApi.util.updateQueryData(
-                      'getPhaseStatusStandalone',
-                      { campaignId: resolvedCampaignId, phase },
-                      (draft) => {
-                        const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PipelinePhase, 'completed');
-                        if (!ps.progress) {
-                          ps.progress = { totalItems: 0, processedItems: 0, successfulItems: 0, failedItems: 0, percentComplete: 100 };
-                        } else {
-                          ps.progress.percentComplete = 100;
-                        }
-                        return ps;
-                      }
-                    ));
+          const pipelinePhase = toPipelinePhase(phase);
+          if (pipelinePhase) {
+            dispatch(phaseCompleted({ campaignId: resolvedCampaignId, phase: pipelinePhase }));
+          }
+          dispatch(
+            campaignApi.util.updateQueryData('getCampaignStatus', resolvedCampaignId, (draft) => {
+              patchCampaignStatusPhase(draft, phase, { status: 'completed', progressPercentage: 100 });
+            })
+          );
         }
         handlers.onPhaseCompleted?.(resolvedCampaignId, {
           campaign_id: resolvedCampaignId,
@@ -731,22 +766,16 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           (payload?.error as string | undefined) ||
           (dataObj?.error as string | undefined) ||
           'Phase failed';
-                const pipelinePhase = toPipelinePhase(phase);
-                if (pipelinePhase) {
-                  dispatch(phaseFailed({ campaignId: resolvedCampaignId, phase: pipelinePhase, error }));
-                }
-                dispatch(campaignApi.util.updateQueryData(
-                  'getPhaseStatusStandalone',
-                  { campaignId: resolvedCampaignId, phase },
-                  (draft) => {
-                    const ps = ensurePhaseStatus(draft as PhaseStatusWithError | undefined, phase as PipelinePhase, 'failed') as PhaseStatusWithError;
-                    ps.error = error;
-                    if (!ps.progress) {
-                      ps.progress = { totalItems: 0, processedItems: 0, successfulItems: 0, failedItems: 0, percentComplete: 0 };
-                    }
-                    return ps;
-                  }
-                ));
+        const pipelinePhase = toPipelinePhase(phase);
+        if (pipelinePhase) {
+          dispatch(phaseFailed({ campaignId: resolvedCampaignId, phase: pipelinePhase, error }));
+        }
+
+        dispatch(
+          campaignApi.util.updateQueryData('getCampaignStatus', resolvedCampaignId, (draft) => {
+            patchCampaignStatusPhase(draft, phase, { status: 'failed', errorMessage: error });
+          })
+        );
         handlers.onPhaseFailed?.(resolvedCampaignId, {
           campaign_id: resolvedCampaignId,
           phase: phase as string,
@@ -760,6 +789,36 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           error,
         });
         break; }
+
+      case 'phase_paused': {
+        const backendPhase = (payload?.phase as string | undefined) || (dataObj?.phase as string | undefined);
+        const phase = mapPhase(backendPhase);
+        dispatch(
+          campaignApi.util.updateQueryData('getCampaignStatus', resolvedCampaignId, (draft) => {
+            patchCampaignStatusPhase(draft, phase, { status: 'paused' });
+          })
+        );
+        captureDebugEvent('phase_paused', {
+          campaignId: resolvedCampaignId,
+          phase,
+        });
+        break;
+      }
+
+      case 'phase_resumed': {
+        const backendPhase = (payload?.phase as string | undefined) || (dataObj?.phase as string | undefined);
+        const phase = mapPhase(backendPhase);
+        dispatch(
+          campaignApi.util.updateQueryData('getCampaignStatus', resolvedCampaignId, (draft) => {
+            patchCampaignStatusPhase(draft, phase, { status: 'in_progress' });
+          })
+        );
+        captureDebugEvent('phase_resumed', {
+          campaignId: resolvedCampaignId,
+          phase,
+        });
+        break;
+      }
 
       case 'domain_generated':
         handlers.onDomainGenerated?.(

@@ -25,8 +25,8 @@ function deriveVariant(p: StepPhaseInfo): StatusVariant {
   if (p.execState === 'failed') return 'failed';
   if (p.execState === 'running') return 'running';
   if (p.execState === 'completed') return 'completed';
-  if (p.configState === 'valid') return 'configured';
   if (p.execState === 'paused') return 'paused';
+  if (p.configState === 'valid') return 'configured';
   if (p.configState === 'missing') return 'missing';
   return 'idle';
 }

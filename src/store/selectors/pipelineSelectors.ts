@@ -1,6 +1,8 @@
 import { createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '@/store';
 import { campaignApi } from '@/store/api/campaignApi';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campaign-phases-status-response';
 
 // ---------------------------------------------
 // Phase & Model Types
@@ -16,9 +18,56 @@ type BackendStatus = 'not_started' | 'configured' | 'running' | 'in_progress' | 
 export interface UIPipelinePhase {
   key: PipelinePhaseKey;
   configState: 'missing' | 'valid';
-  execState: 'idle' | 'running' | 'completed' | 'failed';
+  execState: 'idle' | 'running' | 'paused' | 'completed' | 'failed';
   statusRaw?: BackendStatus;
   lastError?: string;
+}
+
+export interface UIPipelinePhaseEnriched extends UIPipelinePhase {
+  startedAt?: number;
+  completedAt?: number;
+  durationMs?: number;
+}
+
+export type PipelineNextAction =
+  | { type: 'configure'; phase: PipelinePhaseKey; reason?: string }
+  | { type: 'start'; phase: PipelinePhaseKey; reason?: string }
+  | { type: 'watch'; phase: PipelinePhaseKey; reason?: string }
+  | { type: 'wait'; phase: PipelinePhaseKey; reason?: string };
+
+export interface PipelineOverview {
+  phases: UIPipelinePhase[];
+  phasesEnriched: UIPipelinePhaseEnriched[];
+  config: {
+    allConfigured: boolean;
+    firstMissing?: PipelinePhaseKey;
+    missing: PipelinePhaseKey[];
+    progress: { configured: number; total: number; percent: number };
+  };
+  exec: {
+    summary: Record<string, number>;
+    active?: UIPipelinePhase;
+    progress: { completed: number; total: number; percent: number };
+  };
+  mode: {
+    autoAdvance: boolean;
+    state: AutoAdvanceState;
+    hint?: string;
+  };
+  failures: {
+    lastFailed?: PipelinePhaseKey;
+    failedList: PipelinePhaseKey[];
+  };
+  guidance: {
+    queue: Array<{ id: string; message: string; phase?: PipelinePhaseKey; severity?: string }>;
+    latest?: { id: string; message: string; phase?: PipelinePhaseKey; severity?: string };
+    count: number;
+  };
+  start: {
+    canStart: boolean;
+    reasons: string[];
+  };
+  nextAction: PipelineNextAction;
 }
 
 const isPhaseConfiguredOrOptional = (phase: UIPipelinePhase) => phase.configState === 'valid' || isOptionalConfigPhase(phase.key);
@@ -47,6 +96,42 @@ interface MinimalQuerySubstate {
 interface MinimalCampaignApiState {
   queries?: Record<string, MinimalQuerySubstate>;
 }
+
+const _campaignStatusSelectorCache = new WeakMap<object, Map<string, (state: RootState) => CampaignPhasesStatusResponse | undefined>>();
+
+const selectCampaignStatusQuery = (campaignId: string) => {
+  let campaignCache = _campaignStatusSelectorCache.get(campaignApi);
+  if (!campaignCache) {
+    campaignCache = new Map();
+    _campaignStatusSelectorCache.set(campaignApi, campaignCache);
+  }
+  const cacheKey = String(campaignId);
+  if (campaignCache.has(cacheKey)) {
+    return campaignCache.get(cacheKey)!;
+  }
+
+  const base = campaignApi.endpoints.getCampaignStatus?.select(campaignId);
+  const selector = (state: RootState): CampaignPhasesStatusResponse | undefined => {
+    if (base) {
+      const sub = base(state);
+      const data = (sub as unknown as { data?: CampaignPhasesStatusResponse }).data;
+      if (data) return data;
+    }
+
+    const apiState = selectCampaignApiState(state) as MinimalCampaignApiState | undefined;
+    const queryMap = apiState?.queries;
+    if (!queryMap) return undefined;
+    const match = Object.values(queryMap).find((entry) => {
+      if (!entry) return false;
+      if (entry.endpointName !== 'getCampaignStatus') return false;
+      return entry.originalArgs === campaignId;
+    });
+    return match?.data as unknown as CampaignPhasesStatusResponse | undefined;
+  };
+
+  campaignCache.set(cacheKey, selector);
+  return selector;
+};
 
 // Direct RTK Query data selectors per phase to avoid O(N) scans over query cache.
 // Each call to campaignApi.endpoints.getPhaseStatusStandalone.select(arg) returns a selector (RootState)=>QuerySubstate.
@@ -93,22 +178,72 @@ const selectPhaseStatusQuery = (campaignId: string, phase: PipelinePhaseKey) => 
 // Core Phase List
 // ---------------------------------------------
 export const makeSelectPipelinePhases = (campaignId: string) => {
-  const perPhaseSelectors = PIPELINE_PHASE_ORDER.map(phase => selectPhaseStatusQuery(campaignId, phase));
-  // We build a selector whose inputs are the per-phase data objects.
+  const statusSnapshotSelector = selectCampaignStatusQuery(campaignId);
+  const perPhaseSelectors = PIPELINE_PHASE_ORDER.map((phase) => selectPhaseStatusQuery(campaignId, phase));
   return createSelector(
-    perPhaseSelectors,
-    (...statuses: ({ status?: BackendStatus } | undefined)[]): UIPipelinePhase[] => {
+    [statusSnapshotSelector, ...perPhaseSelectors],
+    (snapshot, ...perPhase): UIPipelinePhase[] => {
+      const snapshotStatusByPhase = new Map<PipelinePhaseKey, { status?: BackendStatus; errorMessage?: string }>();
+
+      const statusRank = (status?: BackendStatus): number => {
+        switch (status) {
+          case 'failed':
+            return 60;
+          case 'paused':
+            return 50;
+          case 'in_progress':
+          case 'running':
+            return 40;
+          case 'completed':
+            return 30;
+          case 'configured':
+          case 'ready':
+            return 20;
+          case 'not_started':
+            return 10;
+          default:
+            return 0;
+        }
+      };
+
+      if (snapshot?.phases && Array.isArray(snapshot.phases)) {
+        snapshot.phases.forEach((p) => {
+          const mapped = normalizeToApiPhase(String((p as unknown as { phase?: unknown })?.phase ?? '').toLowerCase());
+          if (!mapped) return;
+          const key = mapped as PipelinePhaseKey;
+          const incoming = {
+            status: (p as unknown as { status?: BackendStatus }).status,
+            errorMessage: (p as unknown as { errorMessage?: string }).errorMessage,
+          };
+          const existing = snapshotStatusByPhase.get(key);
+
+          // Avoid overwriting a more informative status (e.g. 'in_progress') with a lower-signal one
+          // when multiple backend/internal phases normalize into the same UI phase key.
+          if (!existing || statusRank(incoming.status) > statusRank(existing.status)) {
+            snapshotStatusByPhase.set(key, incoming);
+          }
+        });
+      }
+
       return PIPELINE_PHASE_ORDER.map((key, idx) => {
-        const status = statuses[idx]?.status;
+        const snapshotEntry = snapshotStatusByPhase.get(key);
+        const status: BackendStatus = snapshotEntry?.status ?? perPhase[idx]?.status;
         const configured = !!status && status !== 'not_started';
         let execState: UIPipelinePhase['execState'] = 'idle';
-        if (status === 'running' || status === 'in_progress' || status === 'paused') execState = 'running';
+        if (status === 'running' || status === 'in_progress') execState = 'running';
+        else if (status === 'paused') execState = 'paused';
         else if (status === 'completed') execState = 'completed';
         else if (status === 'failed') execState = 'failed';
-        return { key, configState: configured ? 'valid' : 'missing', execState, statusRaw: status };
+        return {
+          key,
+          configState: configured ? 'valid' : 'missing',
+          execState,
+          statusRaw: status,
+          lastError: snapshotEntry?.errorMessage,
+        };
       });
     }
-  );
+  ) as unknown as (state: RootState) => UIPipelinePhase[];
 };
 
 export const makeSelectPhase = (campaignId: string, phase: PipelinePhaseKey) => createSelector(
@@ -181,7 +316,7 @@ const makeSelectStartBlockingReasons = (campaignId: string) => createSelector(
     if (first && first.execState !== 'idle' && !autoAdvance) {
       // If first phase already started and we're manual, we might still allow starting next later phase
       // but only if it is configured and earlier phases completed. Keep informational reason otherwise.
-      if (first.execState === 'running') reasons.push('First phase already running');
+      if (first.execState === 'running' || first.execState === 'paused') reasons.push('First phase already running');
     }
     return reasons;
   }
@@ -200,7 +335,7 @@ export const makeSelectExecSummary = (campaignId: string) => createSelector(
   phases => phases.reduce<Record<string, number>>((acc, p) => {
     acc[p.execState] = (acc[p.execState] || 0) + 1;
     return acc;
-  }, { idle:0, running:0, completed:0, failed:0 })
+  }, { idle:0, running:0, paused:0, completed:0, failed:0 })
 );
 
 // Exec runtime selectors
@@ -226,7 +361,7 @@ export const selectRetryEligiblePhases = (campaignId: string) => (state: RootSta
 
 export const makeSelectActiveExecutionPhase = (campaignId: string) => createSelector(
   makeSelectPipelinePhases(campaignId),
-  phases => phases.find(p => p.execState === 'running')
+  phases => phases.find(p => p.execState === 'running' || p.execState === 'paused')
 );
 
 export const makeSelectNextRunnablePhase = (campaignId: string) => createSelector(
@@ -259,7 +394,7 @@ export const makeSelectPhaseProgressMap = (campaignId: string) => createSelector
   makeSelectPipelinePhases(campaignId),
   phases => phases.reduce<Record<PipelinePhaseKey, { percent: number; statusRaw?: string }>>((acc, p) => {
     // For now we only know discrete states; treat completed=100, running=50 (placeholder), otherwise 0.
-    const percent = p.execState === 'completed' ? 100 : p.execState === 'running' ? 50 : 0;
+    const percent = p.execState === 'completed' ? 100 : (p.execState === 'running' || p.execState === 'paused') ? 50 : 0;
     acc[p.key] = { percent, statusRaw: p.statusRaw };
     return acc;
   }, {} as Record<PipelinePhaseKey, { percent: number; statusRaw?: string }>)
@@ -472,7 +607,7 @@ export const makeSelectPipelineOverview = (campaignId: string) => createSelector
       nextAction
     };
   }
-);
+) as unknown as (state: RootState) => PipelineOverview;
 
 // ---------------------------------------------
 // Export Namespace

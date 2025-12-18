@@ -21,7 +21,8 @@ get:
             sample:
               summary: Two wrapped events
               value:
-                - type: campaign_progress
+                - version: 1
+                  type: campaign_progress
                   timestamp: '2025-01-01T00:00:00Z'
                   payload:
                     campaignId: '00000000-0000-0000-0000-000000000000'
@@ -54,7 +55,8 @@ get:
                         itemsProcessed: 0
                         itemsTotal: 0
                     timeline: []
-                - type: phase_started
+                - version: 1
+                  type: phase_started
                   timestamp: '2025-01-01T00:01:00Z'
                   payload:
                     phase: discovery

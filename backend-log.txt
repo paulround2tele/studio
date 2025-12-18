@@ -1,1 +1,13 @@
-make: *** No rule to make target 'run'.  Stop.
+2025/12/18 13:25:57 Loaded environment variables from ../.env
+2025/12/18 13:25:57 Config: Attempting to load main config from: config.json
+2025/12/18 13:25:57 Optimization configuration initialized for environment: 
+2025/12/18 13:25:57 INIT campaignStorePostgres constructed db_nil=false
+2025/12/18 13:25:57 ProxyManager: Initializing with 0 proxy entries.
+2025/12/18 13:25:57 ProxyManager: Performing initial health checks for 0 supported proxies (timeout per proxy: 7s)...
+2025/12/18 13:25:57 ProxyManager: Initialization and initial health checks complete. Total managed: 0, Initially active: 0
+2025/12/18 13:25:57 StealthAwareDNS: Stealth mode enabled
+2025/12/18 13:25:57 StealthAwareHTTP: Stealth mode enabled
+2025/12/18 13:25:57 Starting monitoring service...
+2025/12/18 13:25:57 Monitoring service started
+2025/12/18 13:25:57 ✓ Resource cleanup service started
+2025/12/18 13:25:57 Chi server starting on :8080 (OpenAPI-generated)

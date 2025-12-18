@@ -55,6 +55,8 @@ export interface SSEOptions {
 const DEFAULT_EVENT_TYPES = [
   'campaign_progress',
   'phase_started',
+  'phase_paused',
+  'phase_resumed',
   'phase_completed',
   'phase_failed',
   'domain_generated',

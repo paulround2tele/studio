@@ -19,6 +19,7 @@ get:
             progress:
               summary: Progress event
               value:
+                version: 1
                 type: campaign_progress
                 timestamp: '2025-01-01T00:00:05Z'
                 payload:
@@ -55,6 +56,7 @@ get:
             phaseStarted:
               summary: Phase started event
               value:
+                version: 1
                 type: phase_started
                 timestamp: '2025-01-01T00:00:10Z'
                 payload:

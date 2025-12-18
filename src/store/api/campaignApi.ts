@@ -31,6 +31,7 @@ import type { CampaignModeUpdateResponse } from '@/lib/api-client/models/campaig
 import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campaign-phases-status-response';
 import type { CampaignRestartResponse } from '@/lib/api-client/models/campaign-restart-response';
 import type { CampaignStopResponse } from '@/lib/api-client/models/campaign-stop-response';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 // Helper for axios/fetch hybrid responses (no any)
 const unwrap = <T>(resp: { data?: T } | T): T | undefined => {
@@ -38,6 +39,37 @@ const unwrap = <T>(resp: { data?: T } | T): T | undefined => {
     return (resp as { data?: T }).data;
   }
   return resp as T;
+};
+
+const patchCampaignStatusPhase = (
+  draft: CampaignPhasesStatusResponse | undefined,
+  apiPhase: string,
+  status: string
+): void => {
+  if (!draft?.phases?.length) {
+    return;
+  }
+
+  const normalizedTarget = normalizeToApiPhase(String(apiPhase).toLowerCase());
+  if (!normalizedTarget) {
+    return;
+  }
+
+  draft.phases.forEach((phaseEntry) => {
+    const normalizedEntry = normalizeToApiPhase(String(phaseEntry.phase ?? '').toLowerCase());
+    if (!normalizedEntry || normalizedEntry !== normalizedTarget) {
+      return;
+    }
+    // The OpenAPI types represent status as a string enum; accept runtime strings.
+    (phaseEntry as unknown as { status?: unknown }).status = status;
+  });
+};
+
+const patchStandalonePhaseStatus = (draft: PhaseStatusResponse | undefined, status: string): void => {
+  if (!draft) {
+    return;
+  }
+  (draft as unknown as { status?: unknown }).status = status;
 };
 
 // Centralized API configuration targeting /api/v2
@@ -178,6 +210,30 @@ export const campaignApi = createApi({
           return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
+      onQueryStarted: async ({ campaignId, phase }, { dispatch, queryFulfilled }) => {
+        const optimisticStatus = 'in_progress';
+        const patches = [
+          dispatch(
+            campaignApi.util.updateQueryData('getCampaignStatus', campaignId, (draft) => {
+              patchCampaignStatusPhase(draft, phase, optimisticStatus);
+            })
+          ),
+        ];
+
+        try {
+          const { data } = await queryFulfilled;
+          const serverStatus = (data as unknown as { status?: string })?.status;
+          if (serverStatus) {
+            dispatch(
+              campaignApi.util.updateQueryData('getCampaignStatus', campaignId, (draft) => {
+                patchCampaignStatusPhase(draft, phase, serverStatus);
+              })
+            );
+          }
+        } catch {
+          patches.forEach((p) => p.undo());
+        }
+      },
       invalidatesTags: (result, error, { campaignId, phase }) => [
         { type: 'Campaign', id: campaignId },
         { type: 'CampaignProgress', id: campaignId },
@@ -201,6 +257,30 @@ export const campaignApi = createApi({
           return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
+      onQueryStarted: async ({ campaignId, phase }, { dispatch, queryFulfilled }) => {
+        const optimisticStatus = 'paused';
+        const patches = [
+          dispatch(
+            campaignApi.util.updateQueryData('getCampaignStatus', campaignId, (draft) => {
+              patchCampaignStatusPhase(draft, phase, optimisticStatus);
+            })
+          ),
+        ];
+
+        try {
+          const { data } = await queryFulfilled;
+          const serverStatus = (data as unknown as { status?: string })?.status;
+          if (serverStatus) {
+            dispatch(
+              campaignApi.util.updateQueryData('getCampaignStatus', campaignId, (draft) => {
+                patchCampaignStatusPhase(draft, phase, serverStatus);
+              })
+            );
+          }
+        } catch {
+          patches.forEach((p) => p.undo());
+        }
+      },
       invalidatesTags: (result, error, { campaignId, phase }) => [
         { type: 'Campaign', id: campaignId },
         { type: 'CampaignProgress', id: campaignId },
@@ -221,6 +301,30 @@ export const campaignApi = createApi({
         } catch (error) {
           const norm = toRtkError(error);
           return { error: { status: norm.status ?? 500, data: norm } };
+        }
+      },
+      onQueryStarted: async ({ campaignId, phase }, { dispatch, queryFulfilled }) => {
+        const optimisticStatus = 'in_progress';
+        const patches = [
+          dispatch(
+            campaignApi.util.updateQueryData('getCampaignStatus', campaignId, (draft) => {
+              patchCampaignStatusPhase(draft, phase, optimisticStatus);
+            })
+          ),
+        ];
+
+        try {
+          const { data } = await queryFulfilled;
+          const serverStatus = (data as unknown as { status?: string })?.status;
+          if (serverStatus) {
+            dispatch(
+              campaignApi.util.updateQueryData('getCampaignStatus', campaignId, (draft) => {
+                patchCampaignStatusPhase(draft, phase, serverStatus);
+              })
+            );
+          }
+        } catch {
+          patches.forEach((p) => p.undo());
         }
       },
       invalidatesTags: (result, error, { campaignId, phase }) => [

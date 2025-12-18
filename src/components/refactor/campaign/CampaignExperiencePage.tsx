@@ -30,13 +30,11 @@ import { WarningBar as _WarningBar } from './WarningBar';
 import { WarningPills as _WarningPills } from './WarningPills';
 import { MoverList } from './MoverList';
 import { Histogram } from './Histogram';
-import { mergeCampaignPhases } from './phaseStatusUtils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-import { useCampaignPhaseStream } from '@/hooks/useCampaignPhaseStream';
-import type { PhaseUpdateEvent } from '@/hooks/useCampaignPhaseStream';
+import { useCampaignSSE } from '@/hooks/useCampaignSSE';
 import { 
   useGetCampaignMetricsQuery,
   useGetCampaignFunnelQuery,
@@ -57,6 +55,7 @@ import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
 import { API_PHASE_ORDER, normalizeToApiPhase } from '@/lib/utils/phaseNames';
 import type { ApiPhase } from '@/lib/utils/phaseNames';
 import type { CampaignPhaseEnum } from '@/lib/api-client/models/campaign-phase-enum';
+import type { CampaignPhasesStatusResponsePhasesInner } from '@/lib/api-client/models/campaign-phases-status-response-phases-inner';
 import { useToast } from '@/hooks/use-toast';
 
 import type { CampaignKpi } from '../types';
@@ -228,11 +227,8 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     }
   }, [refetchFunnel, refetchMetrics]);
 
-  const handlePhaseUpdate = React.useCallback((event: PhaseUpdateEvent) => {
-    console.log('Phase update:', event);
-    const terminalStatus = event.status === 'completed' || event.status === 'failed';
-    const force = terminalStatus || (event.progressPercentage ?? 0) >= 100;
-    refreshRealtimeData({ force });
+  const handlePhaseTerminalEvent = React.useCallback(() => {
+    refreshRealtimeData({ force: true });
   }, [refreshRealtimeData]);
   const { data: recommendationsData, isLoading: recsLoading } = useGetCampaignRecommendationsQuery(campaignId);
   const { data: enrichedData } = useGetCampaignEnrichedQuery(campaignId);
@@ -249,13 +245,26 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   // Only gate on authentication; `isInitialized` has proven unreliable and can prevent the SSE URL from being set.
   const sseEnabled = Boolean(campaignId && isAuthenticated);
 
-  const { phases, isConnected, hasEverConnected, error: sseError, lastUpdate } = useCampaignPhaseStream(campaignId, {
-    enabled: sseEnabled,
-    onPhaseUpdate: handlePhaseUpdate,
-    onError: (error) => {
-      console.error('SSE error:', error);
-    }
+  const { isConnected, error: sseError } = useCampaignSSE({
+    campaignId,
+    autoConnect: sseEnabled,
+    events: {
+      onPhaseCompleted: handlePhaseTerminalEvent,
+      onPhaseFailed: handlePhaseTerminalEvent,
+      onAnalysisCompleted: handlePhaseTerminalEvent,
+      onAnalysisFailed: handlePhaseTerminalEvent,
+      onError: (message) => {
+        console.error('SSE error:', message);
+      },
+    },
   });
+
+  const [hasEverConnected, setHasEverConnected] = React.useState(false);
+  React.useEffect(() => {
+    if (isConnected) {
+      setHasEverConnected(true);
+    }
+  }, [isConnected]);
 
   React.useEffect(() => {
     if (!hasEverConnected) {
@@ -264,7 +273,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     refreshRealtimeData({ force: true });
   }, [hasEverConnected, refreshRealtimeData]);
 
-  const { data: statusSnapshot } = useGetCampaignStatusQuery(campaignId);
+  const { data: statusSnapshot, refetch: refetchStatusSnapshot } = useGetCampaignStatusQuery(campaignId);
   const domainItems = React.useMemo(() => domainsList?.items ?? [], [domainsList]);
   const leadAggregates = domainsList?.aggregates?.lead;
   const leadPanelError = React.useMemo(
@@ -298,12 +307,73 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     });
   }, []);
 
-  const pipelinePhases = React.useMemo(() => mergeCampaignPhases({
-    statusSnapshot,
-    funnelData,
-    ssePhases: phases,
-    sseLastUpdate: lastUpdate
-  }), [statusSnapshot, funnelData, phases, lastUpdate]);
+  const pipelinePhases = React.useMemo(() => {
+    const byPhase = new Map<ApiPhase, CampaignPhasesStatusResponsePhasesInner>();
+
+    const statusRank = (status?: string): number => {
+      switch (status) {
+        case 'failed':
+          return 60;
+        case 'paused':
+          return 50;
+        case 'in_progress':
+        case 'running':
+          return 40;
+        case 'completed':
+          return 30;
+        case 'configured':
+        case 'ready':
+          return 20;
+        case 'not_started':
+          return 10;
+        default:
+          return 0;
+      }
+    };
+
+    const shouldReplaceSnapshot = (
+      existing: CampaignPhasesStatusResponsePhasesInner,
+      incoming: CampaignPhasesStatusResponsePhasesInner
+    ): boolean => {
+      const existingRank = statusRank(existing.status);
+      const incomingRank = statusRank(incoming.status);
+      if (incomingRank !== existingRank) return incomingRank > existingRank;
+
+      // Tie-breakers: prefer whichever has started/failed/completed timestamps or higher progress.
+      const existingHasTimeline = Boolean(existing.startedAt || existing.completedAt || existing.failedAt);
+      const incomingHasTimeline = Boolean(incoming.startedAt || incoming.completedAt || incoming.failedAt);
+      if (incomingHasTimeline !== existingHasTimeline) return incomingHasTimeline;
+
+      const existingProgress = typeof existing.progressPercentage === 'number' ? existing.progressPercentage : 0;
+      const incomingProgress = typeof incoming.progressPercentage === 'number' ? incoming.progressPercentage : 0;
+      return incomingProgress > existingProgress;
+    };
+
+    statusSnapshot?.phases?.forEach((phaseSnapshot) => {
+      const normalized = normalizeToApiPhase(String(phaseSnapshot.phase).toLowerCase());
+      if (!normalized) return;
+      const key = normalized as ApiPhase;
+      const existing = byPhase.get(key);
+      if (!existing || shouldReplaceSnapshot(existing, phaseSnapshot)) {
+        byPhase.set(key, phaseSnapshot);
+      }
+    });
+
+    return API_PHASE_ORDER.map((phaseKey) => {
+      const snap = byPhase.get(phaseKey);
+      return {
+        key: phaseKey,
+        label: getPhaseDisplayName(phaseKey),
+        status: (snap?.status as PipelinePhase['status']) ?? 'not_started',
+        progressPercentage: snap?.progressPercentage ?? 0,
+        startedAt: snap?.startedAt,
+        completedAt: snap?.completedAt,
+        failedAt: snap?.failedAt,
+        errorMessage: snap?.errorMessage,
+        errorDetails: snap?.errorDetails,
+      } satisfies PipelinePhase;
+    });
+  }, [statusSnapshot]);
 
   const activePhaseKey = React.useMemo(() => {
     const runningPhase = pipelinePhases.find((phase) => phase.status === 'in_progress');
@@ -353,8 +423,12 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   }, [selectedPhaseRuntimeControls]);
 
   const canPauseSelectedPhase = resolvedControlSupport.canPause;
-  const canStopCampaign = resolvedControlSupport.canStop;
-  const canRunSelectedPhase = selectedPhaseStatus === 'paused'
+  // Stop is a campaign-level action (stops whichever phase is active), so it should not depend
+  // on the currently selected phase's runtimeControls.
+  const canStopCampaign = React.useMemo(() => {
+    return pipelinePhases.some((phase) => phase.status === 'in_progress' || phase.status === 'paused');
+  }, [pipelinePhases]);
+  const canRunSelectedPhase = isSelectedPhasePaused
     ? resolvedControlSupport.canResume
     : resolvedControlSupport.canRestart;
 
@@ -396,11 +470,27 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   }, [phaseOptions]);
 
   const preferredPhaseSelection = React.useMemo<ApiPhase>(() => {
+    const pausedKeys = pipelinePhases
+      .map((phase) => {
+        if (phase.status !== 'paused') {
+          return null;
+        }
+        return normalizeToApiPhase(String(phase.key).toLowerCase());
+      })
+      .filter((key): key is ApiPhase => Boolean(key));
+
+    if (pausedKeys.length > 0) {
+      const pausedSet = new Set<ApiPhase>(pausedKeys);
+      const earliestPaused = API_PHASE_ORDER.find((phaseKey) => pausedSet.has(phaseKey));
+      return earliestPaused ?? pausedKeys[0]!;
+    }
+
     if (failedPhaseKeys.length > 0) {
       return failedPhaseKeys[0]!;
     }
+
     return phaseOptions[0]?.value ?? ('validation' as ApiPhase);
-  }, [failedPhaseKeys, phaseOptions]);
+  }, [failedPhaseKeys, phaseOptions, pipelinePhases]);
 
   const isSelectedPhaseAvailable = React.useMemo(() => {
     return phaseOptions.some((option) => option.value === selectedPhaseKey);
@@ -436,9 +526,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   const isBulkActionRunning = bulkAction !== 'idle';
   const isRetryingFailed = bulkAction === 'retryFailed';
   const isRestartingCampaign = bulkAction === 'restartCampaign';
-  const isControlStatusLoading = Boolean(
-    selectedPhaseKey && (isPhaseStatusLoading || isPhaseStatusFetching)
-  );
+  const isControlStatusLoading = Boolean(selectedPhaseKey && (isPhaseStatusLoading || isPhaseStatusFetching));
   const runtimeControlsUnavailable = Boolean(
     selectedPhaseKey && !selectedPhaseRuntimeControls && !isControlStatusLoading
   );
@@ -465,8 +553,11 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         campaignId,
         phase: phaseKey as CampaignPhaseEnum,
       }).unwrap();
+
+      // Ensure the pipeline snapshot catches up immediately (SSE may lag or omit control-state transitions).
+      refetchStatusSnapshot();
     },
-    [campaignId, startPhaseMutation]
+    [campaignId, refetchStatusSnapshot, startPhaseMutation]
   );
 
   const resumePhaseInternal = React.useCallback(
@@ -478,8 +569,11 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         campaignId,
         phase: phaseKey as CampaignPhaseEnum,
       }).unwrap();
+
+      // Ensure the pipeline snapshot catches up immediately (SSE may lag or omit control-state transitions).
+      refetchStatusSnapshot();
     },
-    [campaignId, resumePhaseMutation]
+    [campaignId, refetchStatusSnapshot, resumePhaseMutation]
   );
 
   const handleRunSelectedPhase = React.useCallback(async () => {
@@ -516,6 +610,9 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     }
     try {
       await pausePhaseMutation({ campaignId, phase: selectedPhaseKey as CampaignPhaseEnum }).unwrap();
+
+      // Ensure the pipeline snapshot catches up immediately (SSE may lag or omit control-state transitions).
+      refetchStatusSnapshot();
       toast({
         title: `${getPhaseDisplayName(selectedPhaseKey)} pause requested`,
         description: 'Phase pause signal sent successfully.',
@@ -527,7 +624,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         variant: 'destructive',
       });
     }
-  }, [campaignId, canPauseSelectedPhase, pausePhaseMutation, selectedPhaseKey, toast]);
+  }, [campaignId, canPauseSelectedPhase, pausePhaseMutation, refetchStatusSnapshot, selectedPhaseKey, toast]);
 
   const handleStopCampaign = React.useCallback(async () => {
     if (!campaignId || !canStopCampaign) {
@@ -904,7 +1001,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
               <Button
                 variant="destructive"
                 onClick={handleStopCampaign}
-                disabled={!selectedPhaseKey || isActionDisabled || !canStopCampaign}
+                disabled={isActionDisabled || !canStopCampaign}
                 className="min-w-[150px]"
               >
                 {isStopCampaignLoading && !isBulkActionRunning && (

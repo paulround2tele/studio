@@ -2154,6 +2154,7 @@ func (s *campaignStorePostgres) PausePhase(ctx context.Context, exec store.Queri
 	query := `
 		UPDATE campaign_phases 
 		SET status = 'paused',
+		    paused_at = $1,
 		    updated_at = $1
 		WHERE campaign_id = $2 AND phase_type = $3 AND status = 'in_progress'`
 
@@ -2171,6 +2172,34 @@ func (s *campaignStorePostgres) PausePhase(ctx context.Context, exec store.Queri
 
 	if err := s.upsertPhaseExecutionPause(ctx, exec, campaignID, phaseType, now); err != nil {
 		return fmt.Errorf("failed to persist pause state for phase %s campaign %s: %w", phaseType, campaignID, err)
+	}
+
+	return nil
+}
+
+func (s *campaignStorePostgres) ResumePhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
+	now := time.Now()
+	query := `
+		UPDATE campaign_phases
+		SET status = 'in_progress',
+		    paused_at = NULL,
+		    updated_at = $1
+		WHERE campaign_id = $2 AND phase_type = $3 AND status = 'paused'`
+
+	result, err := exec.ExecContext(ctx, query, now, campaignID, phaseType)
+	if err != nil {
+		return fmt.Errorf("failed to resume phase %s for campaign %s: %w", phaseType, campaignID, err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		log.Printf("No paused phase %s found to resume for campaign %s", phaseType, campaignID)
+	} else {
+		log.Printf("Resumed phase %s for campaign %s", phaseType, campaignID)
+	}
+
+	if err := s.upsertPhaseExecutionResume(ctx, exec, campaignID, phaseType, now); err != nil {
+		return fmt.Errorf("failed to persist resume state for phase %s campaign %s: %w", phaseType, campaignID, err)
 	}
 
 	return nil
@@ -2284,6 +2313,23 @@ func (s *campaignStorePostgres) upsertPhaseExecutionPause(ctx context.Context, e
 			paused_at = EXCLUDED.paused_at,
 			updated_at = NOW()`
 	_, err := exec.ExecContext(ctx, query, campaignID, phaseType, models.ExecutionStatusPaused, pausedAt)
+	return err
+}
+
+func (s *campaignStorePostgres) upsertPhaseExecutionResume(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, resumedAt time.Time) error {
+	if exec == nil {
+		exec = s.db
+	}
+	if exec == nil {
+		return fmt.Errorf("nil exec provided")
+	}
+	query := `INSERT INTO phase_executions (campaign_id, phase_type, status, updated_at, created_at)
+	          VALUES ($1,$2,$3,$4,NOW())
+	          ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
+			status = EXCLUDED.status,
+			paused_at = NULL,
+			updated_at = EXCLUDED.updated_at`
+	_, err := exec.ExecContext(ctx, query, campaignID, phaseType, models.ExecutionStatusInProgress, resumedAt)
 	return err
 }
 

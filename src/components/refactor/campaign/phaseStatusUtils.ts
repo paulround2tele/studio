@@ -166,6 +166,44 @@ function applySseOverlay(phases: Map<PhaseKey, MutablePhase>, ssePhases?: Pipeli
     const target = phases.get(normalized as PhaseKey);
     if (!target) return;
 
+    // Only apply SSE patches that carry meaningful phase data.
+    // The SSE hook keeps a full list of phases initialized to `not_started`; when a single phase updates,
+    // we must avoid overwriting other phases' snapshot-derived statuses with default SSE placeholders.
+    const sseHasMeaningfulPhaseData = Boolean(
+      (ssePhase.status && ssePhase.status !== 'not_started') ||
+        (ssePhase.progressPercentage ?? 0) > 0 ||
+        !!ssePhase.startedAt ||
+        !!ssePhase.completedAt ||
+        !!ssePhase.failedAt ||
+        !!ssePhase.errorMessage ||
+        !!ssePhase.errorDetails ||
+        !!ssePhase.lastMessage ||
+        !!ssePhase.lastEventAt
+    );
+    if (!sseHasMeaningfulPhaseData) {
+      return;
+    }
+
+    // Prevent default SSE placeholders from clobbering authoritative snapshot state.
+    // We intentionally DO allow `paused` <-> `in_progress` transitions because resume/pause
+    // may appear first via SSE, while the snapshot endpoint can lag.
+    const currentStatus = target.status ?? 'not_started';
+    const incomingStatus = ssePhase.status ?? currentStatus;
+
+    if (incomingStatus === 'not_started' && currentStatus !== 'not_started') {
+      return;
+    }
+
+    // If we already show `paused`, ignore stray `in_progress` updates unless progress increases.
+    // This handles a common case where a few in-flight progress events arrive after pause.
+    if (currentStatus === 'paused' && incomingStatus === 'in_progress') {
+      const currentPct = target.progressPercentage ?? 0;
+      const incomingPct = clampProgress(ssePhase.progressPercentage ?? 0);
+      if (incomingPct <= currentPct) {
+        return;
+      }
+    }
+
     target.status = ssePhase.status;
     target.progressPercentage = clampProgress(ssePhase.progressPercentage ?? 0);
     target.startedAt = ssePhase.startedAt;

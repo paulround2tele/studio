@@ -28,6 +28,8 @@ var (
 	ErrMissingPhaseConfigs = fmt.Errorf("missing_phase_configs")
 	// ErrPhaseDependenciesNotMet indicates a requested phase attempted to start before its prerequisites completed.
 	ErrPhaseDependenciesNotMet = fmt.Errorf("phase_dependencies_not_met")
+	// ErrAnotherPhaseRunning indicates a different phase is already running for the campaign.
+	ErrAnotherPhaseRunning = fmt.Errorf("another_phase_running")
 	// ErrNoActivePhase indicates no phase is currently running for the campaign when a stop was requested.
 	ErrNoActivePhase = fmt.Errorf("no_active_phase")
 )
@@ -170,6 +172,7 @@ func classifyOrchestratorError(err error) OrchestratorErrorKind {
 	case errors.Is(err, ErrPhaseDependenciesNotMet),
 		errors.Is(err, ErrMissingPhaseConfigs),
 		errors.Is(err, errRehydratePhaseConfigMissing),
+		errors.Is(err, errRehydratePhaseConfigInvalid),
 		errors.Is(err, domainservices.ErrPhaseExecutionMissing),
 		errors.Is(err, domainservices.ErrPhaseNotRunning),
 		errors.Is(err, domainservices.ErrPhasePauseUnsupported),
@@ -349,11 +352,15 @@ func (o *CampaignOrchestrator) refreshPhaseStatuses(ctx context.Context, exec *C
 		if _, exists := exec.PhaseStatuses[phase]; !exists {
 			exec.PhaseStatuses[phase] = defaultPhaseStatus(exec.CampaignID, phase)
 		}
-		fresh, err := o.GetPhaseStatus(ctx, exec.CampaignID, phase)
+		fresh, err := o.getPhaseStatusRuntime(ctx, exec.CampaignID, phase)
 		if err != nil || fresh == nil {
 			continue
 		}
-		exec.PhaseStatuses[phase] = fresh
+		existing := exec.PhaseStatuses[phase]
+		// Don't let a missing runtime execution ("not_started") overwrite a persisted paused/running/completed status.
+		if existing == nil || existing.Status == models.PhaseStatusNotStarted || fresh.Status != models.PhaseStatusNotStarted {
+			exec.PhaseStatuses[phase] = fresh
+		}
 	}
 }
 
@@ -410,7 +417,6 @@ func (o *CampaignOrchestrator) snapshotExecutionFromStore(ctx context.Context, c
 				switch st.Status {
 				case models.PhaseStatusInProgress, models.PhaseStatusPaused:
 					snapshot.CurrentPhase = phase
-					break
 				}
 			}
 			if snapshot.CurrentPhase != "" {
@@ -422,6 +428,22 @@ func (o *CampaignOrchestrator) snapshotExecutionFromStore(ctx context.Context, c
 }
 
 var errRehydratePhaseConfigMissing = errors.New("rehydration skipped: persisted phase configuration not found")
+
+var errRehydratePhaseConfigInvalid = errors.New("rehydration skipped: persisted phase configuration invalid")
+
+func isRestoreConfigValidationError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	// Conservative matching: only treat clearly validation-shaped errors as skippable
+	// during restore. Anything else should still fail the rehydration attempt.
+	return strings.Contains(msg, "invalid domain generation configuration") ||
+		strings.Contains(msg, "invalid configuration type") ||
+		strings.Contains(msg, "cannot be empty") ||
+		strings.Contains(msg, "must be positive") ||
+		strings.Contains(msg, "must ")
+}
 
 // phaseExecutionHandles tracks live phase executions across orchestrator instances so we can
 // cancel stale workers (and drop their progress) when ownership changes after a restart.
@@ -785,6 +807,13 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		return o.wrapPhaseError(phase, fmt.Errorf("invalid database interface in dependencies"))
 	}
 
+	// Enforce campaign-level exclusivity: only one phase may be running at a time.
+	if active, err := o.findRunningPhase(ctx, querier, campaignID); err != nil {
+		return o.wrapPhaseError(phase, err)
+	} else if active != nil && active.PhaseType != phase {
+		return o.wrapPhaseError(phase, fmt.Errorf("%w: campaign %s already running %s", ErrAnotherPhaseRunning, campaignID, active.PhaseType))
+	}
+
 	campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID)
 	if err != nil {
 		return o.wrapPhaseError(phase, fmt.Errorf("failed to get campaign for SSE broadcasting: %w", err))
@@ -921,6 +950,33 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	return nil
 }
 
+// findRunningPhase returns the currently running phase for a campaign (status=in_progress) if any.
+func (o *CampaignOrchestrator) findRunningPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.CampaignPhase, error) {
+	if o == nil || o.store == nil || exec == nil {
+		return nil, fmt.Errorf("campaign store not initialized")
+	}
+	// Canonical source of truth for the currently running phase is the campaign row.
+	// campaign_phases may not be updated for in-progress execution in all paths.
+	if campaign, err := o.store.GetCampaignByID(ctx, exec, campaignID); err == nil && campaign != nil {
+		if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusInProgress && campaign.CurrentPhase != nil {
+			return &models.CampaignPhase{PhaseType: *campaign.CurrentPhase, Status: models.PhaseStatusInProgress}, nil
+		}
+	}
+	phases, err := o.store.GetCampaignPhases(ctx, exec, campaignID)
+	if err != nil && !errors.Is(err, store.ErrNotFound) {
+		return nil, fmt.Errorf("failed to load campaign phases: %w", err)
+	}
+	for _, phase := range phases {
+		if phase == nil {
+			continue
+		}
+		if phase.Status == models.PhaseStatusInProgress {
+			return phase, nil
+		}
+	}
+	return nil, nil
+}
+
 // StartPhaseByString is a convenience method for the worker service that accepts string phase type
 func (o *CampaignOrchestrator) StartPhaseByString(ctx context.Context, campaignID uuid.UUID, phaseType string) error {
 	phase, err := parsePhaseType(phaseType)
@@ -989,7 +1045,7 @@ func (o *CampaignOrchestrator) restoreInFlightPhases(ctx context.Context, sleepB
 	rehydrated := 0
 	for _, campaign := range candidates {
 		if err := o.rehydrateCampaignPhase(ctx, querier, campaign); err != nil {
-			if errors.Is(err, errRehydratePhaseConfigMissing) {
+			if errors.Is(err, errRehydratePhaseConfigMissing) || errors.Is(err, errRehydratePhaseConfigInvalid) {
 				continue
 			}
 			if o.deps.Logger != nil {
@@ -1012,6 +1068,38 @@ func (o *CampaignOrchestrator) restoreInFlightPhases(ctx context.Context, sleepB
 		})
 	}
 	return nil
+}
+
+func (o *CampaignOrchestrator) hydratePhaseConfigurationForRestore(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phase models.PhaseTypeEnum, service domainservices.PhaseService) error {
+	err := o.hydratePhaseConfiguration(ctx, exec, campaignID, phase, service)
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, errRehydratePhaseConfigMissing) {
+		return err
+	}
+	// Missing persisted config should be skip-only during restore and never auto-start.
+	if errors.Is(err, errPhaseConfigMissing) || errors.Is(err, store.ErrNotFound) {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "campaign.rehydrate.phase.skip_config_missing", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"error":       err.Error(),
+			})
+		}
+		return errRehydratePhaseConfigMissing
+	}
+	if isRestoreConfigValidationError(err) {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "campaign.rehydrate.phase.skip_config_invalid", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"error":       err.Error(),
+			})
+		}
+		return errRehydratePhaseConfigInvalid
+	}
+	return err
 }
 
 func waitForDuration(ctx context.Context, d time.Duration) error {
@@ -1089,8 +1177,8 @@ func (o *CampaignOrchestrator) rehydrateCampaignPhase(ctx context.Context, exec 
 	if err != nil {
 		return o.wrapPhaseError(phase, fmt.Errorf("failed to get service for phase %s during restore: %w", phase, err))
 	}
-	if err := o.hydratePhaseConfiguration(ctx, exec, campaign.ID, phase, service); err != nil {
-		return o.wrapPhaseError(phase, fmt.Errorf("failed to hydrate configuration for %s during restore: %w", phase, err))
+	if err := o.hydratePhaseConfigurationForRestore(ctx, exec, campaign.ID, phase, service); err != nil {
+		return err
 	}
 	o.attachControlChannel(ctx, campaign.ID, phase, service)
 	if !o.autoResumeOnRestart.Load() {
@@ -1253,12 +1341,108 @@ func parsePhaseType(phaseType string) (models.PhaseTypeEnum, error) {
 
 // GetPhaseStatus returns the current status of a specific phase
 func (o *CampaignOrchestrator) GetPhaseStatus(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) (*domainservices.PhaseStatus, error) {
-	// Get the appropriate domain service for the phase
+	runtimeStatus, runtimeErr := o.getPhaseStatusRuntime(ctx, campaignID, phase)
+
+	// Prefer persisted campaign phase state when available (survives restarts).
+	if o == nil || o.store == nil {
+		return runtimeStatus, runtimeErr
+	}
+	if o.deps.DB == nil {
+		return runtimeStatus, runtimeErr
+	}
+	querier, ok := o.deps.DB.(store.Querier)
+	if !ok || querier == nil {
+		return runtimeStatus, runtimeErr
+	}
+
+	row, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase)
+	if err != nil || row == nil {
+		return runtimeStatus, runtimeErr
+	}
+
+	storeStatus := phaseStatusFromRow(campaignID, row)
+	if storeStatus != nil {
+		// Hydrate persisted configuration so API clients can discover runtime control capabilities.
+		if payload, cfgErr := o.loadPhaseConfigurationPayload(ctx, querier, campaignID, phase); cfgErr == nil && len(payload) > 0 {
+			var cfg map[string]interface{}
+			if jsonErr := json.Unmarshal(payload, &cfg); jsonErr == nil {
+				storeStatus.Configuration = cfg
+			}
+		}
+	}
+
+	// Ensure runtime control capabilities are available even when a phase has no in-memory execution
+	// and the persisted config payload doesn't include runtime_controls.
+	if service, svcErr := o.getPhaseService(phase); svcErr == nil && service != nil {
+		// Many services expose Capabilities() without implementing the full PhaseController
+		// (pause/resume is handled via the orchestrator control bus).
+		type capabilityProvider interface {
+			Capabilities() domainservices.PhaseControlCapabilities
+		}
+		supported := true
+		var caps domainservices.PhaseControlCapabilities
+		switch v := service.(type) {
+		case domainservices.PhaseController:
+			caps = v.Capabilities()
+		case capabilityProvider:
+			caps = v.Capabilities()
+		default:
+			supported = false
+		}
+		if supported {
+			if storeStatus != nil {
+			if storeStatus.Configuration == nil {
+				storeStatus.Configuration = make(map[string]interface{}, 1)
+			}
+			if _, ok := storeStatus.Configuration["runtime_controls"]; !ok {
+				storeStatus.Configuration["runtime_controls"] = caps
+			}
+		}
+		if runtimeStatus != nil {
+			if runtimeStatus.Configuration == nil {
+				runtimeStatus.Configuration = make(map[string]interface{}, 1)
+			}
+			if _, ok := runtimeStatus.Configuration["runtime_controls"]; !ok {
+				runtimeStatus.Configuration["runtime_controls"] = caps
+			}
+		}
+		}
+	}
+
+	// If runtime has no execution, don't let it hide a persisted pause/resume state.
+	if runtimeStatus == nil {
+		return storeStatus, nil
+	}
+	if storeStatus == nil {
+		return runtimeStatus, runtimeErr
+	}
+
+	if runtimeStatus.Status == models.PhaseStatusNotStarted && storeStatus.Status != models.PhaseStatusNotStarted {
+		return storeStatus, nil
+	}
+
+	// Merge persisted runtime_controls into the runtime status when runtime is missing them.
+	if storeStatus.Configuration != nil {
+		if runtimeStatus.Configuration == nil {
+			runtimeStatus.Configuration = make(map[string]interface{}, len(storeStatus.Configuration))
+		}
+		if _, ok := runtimeStatus.Configuration["runtime_controls"]; !ok {
+			if rc, ok := storeStatus.Configuration["runtime_controls"]; ok {
+				runtimeStatus.Configuration["runtime_controls"] = rc
+			}
+		}
+	}
+
+	return runtimeStatus, runtimeErr
+}
+
+// getPhaseStatusRuntime returns phase status from the in-memory phase service.
+// This reflects the current process' view and may report "not_started" after a restart.
+func (o *CampaignOrchestrator) getPhaseStatusRuntime(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) (*domainservices.PhaseStatus, error) {
 	service, err := o.getPhaseService(phase)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get service for phase %s: %w", phase, err)
 	}
-
 	return service.GetStatus(ctx, campaignID)
 }
 
@@ -1332,10 +1516,30 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 	if o.store == nil {
 		return fmt.Errorf("campaign store not initialized")
 	}
+	querier, ok := o.deps.DB.(store.Querier)
+	if !ok {
+		return fmt.Errorf("invalid database interface in dependencies")
+	}
+	// Determine if the DB believes this phase is active. If yes, we can persist pause state even if
+	// the runtime control channel is unavailable (e.g., backend restart).
+	var phaseInProgressInStore bool
+	if row, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase); err == nil && row != nil {
+		phaseInProgressInStore = row.Status == models.PhaseStatusInProgress
+	}
 	o.deps.Logger.Info(ctx, "Pausing campaign phase", map[string]interface{}{
 		"campaign_id": campaignID,
 		"phase":       phase,
 	})
+
+	// Resolve user ID for SSE broadcasting (best-effort).
+	var userID *uuid.UUID
+	if o.sseService != nil {
+		if querier, ok := o.deps.DB.(store.Querier); ok {
+			if campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID); err == nil && campaign.UserID != nil {
+				userID = campaign.UserID
+			}
+		}
+	}
 
 	service, err := o.getPhaseService(phase)
 	if err != nil {
@@ -1345,11 +1549,35 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 	o.attachControlChannel(ctx, campaignID, phase, service)
 
 	ack := make(chan error, 1)
-	if err := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalPause, ack); err != nil {
+	controlErr := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalPause, ack)
+	var ackErr error
+	if controlErr == nil {
+		ackErr = awaitControlAck(ctx, ack, domainservices.ErrPhasePauseTimeout)
+	} else {
+		ackErr = controlErr
+	}
+	if ackErr != nil {
+		// If runtime isn't available but DB shows the phase in progress, still persist the pause so
+		// snapshot reads reflect user intent and UI doesn't get stuck.
+		if !(phaseInProgressInStore && (errors.Is(ackErr, domainservices.ErrPhaseExecutionMissing) || errors.Is(ackErr, domainservices.ErrPhaseNotRunning))) {
+			return ackErr
+		}
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "phase.pause.runtime_unavailable.persisting", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"error":       ackErr.Error(),
+			})
+		}
+	}
+
+	if err := o.store.PausePhase(ctx, querier, campaignID, phase); err != nil {
 		return err
 	}
-	if err := awaitControlAck(ctx, ack, domainservices.ErrPhasePauseTimeout); err != nil {
-		return err
+
+	if o.sseService != nil && userID != nil {
+		evt := services.CreatePhasePausedEvent(campaignID, *userID, phase)
+		o.sseService.BroadcastToCampaign(campaignID, evt)
 	}
 
 	o.deps.Logger.Info(ctx, "Phase paused successfully", map[string]interface{}{
@@ -1373,10 +1601,38 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 		recordFailure()
 		return fmt.Errorf("campaign store not initialized")
 	}
+	querier, ok := o.deps.DB.(store.Querier)
+	if !ok {
+		recordFailure()
+		return fmt.Errorf("invalid database interface in dependencies")
+	}
+
+	// Enforce campaign-level exclusivity: cannot resume a phase while another phase is running.
+	if active, err := o.findRunningPhase(ctx, querier, campaignID); err != nil {
+		recordFailure()
+		return err
+	} else if active != nil && active.PhaseType != phase {
+		recordFailure()
+		return fmt.Errorf("%w: campaign %s already running %s", ErrAnotherPhaseRunning, campaignID, active.PhaseType)
+	}
+	var phasePausedInStore bool
+	if row, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase); err == nil && row != nil {
+		phasePausedInStore = row.Status == models.PhaseStatusPaused
+	}
 	o.deps.Logger.Info(ctx, "Resuming campaign phase", map[string]interface{}{
 		"campaign_id": campaignID,
 		"phase":       phase,
 	})
+
+	// Resolve user ID for SSE broadcasting (best-effort).
+	var userID *uuid.UUID
+	if o.sseService != nil {
+		if querier, ok := o.deps.DB.(store.Querier); ok {
+			if campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID); err == nil && campaign.UserID != nil {
+				userID = campaign.UserID
+			}
+		}
+	}
 
 	// Re-attach control channel in case backend restarted or channel was closed
 	service, err := o.getPhaseService(phase)
@@ -1387,16 +1643,45 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 	o.attachControlChannel(ctx, campaignID, phase, service)
 
 	ack := make(chan error, 1)
-	if err := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalResume, ack); err != nil {
-		recordFailure()
-		return err
+	controlErr := o.broadcastControlSignal(ctx, campaignID, phase, domainservices.ControlSignalResume, ack)
+	var ackErr error
+	if controlErr == nil {
+		ackErr = awaitControlAck(ctx, ack, domainservices.ErrPhaseResumeTimeout)
+	} else {
+		ackErr = controlErr
 	}
-	if err := awaitControlAck(ctx, ack, domainservices.ErrPhaseResumeTimeout); err != nil {
+	if ackErr != nil {
+		// If runtime isn't available but DB shows the phase paused, attempt a best-effort restart.
+		if phasePausedInStore && (errors.Is(ackErr, domainservices.ErrPhaseExecutionMissing) || errors.Is(ackErr, domainservices.ErrPhaseNotRunning)) {
+			if o.deps.Logger != nil {
+				o.deps.Logger.Warn(ctx, "phase.resume.runtime_unavailable.restarting", map[string]interface{}{
+					"campaign_id": campaignID,
+					"phase":       phase,
+					"error":       ackErr.Error(),
+				})
+			}
+			if err := o.StartPhaseInternal(ctx, campaignID, phase); err != nil {
+				recordFailure()
+				return err
+			}
+			// Treat as successful resume.
+			ackErr = nil
+		} else {
+			recordFailure()
+			return ackErr
+		}
+	}
+	if err := o.store.ResumePhase(ctx, querier, campaignID, phase); err != nil {
 		recordFailure()
 		return err
 	}
 	if o.metrics != nil {
 		o.metrics.IncPhaseResumeSuccesses()
+	}
+
+	if o.sseService != nil && userID != nil {
+		evt := services.CreatePhaseResumedEvent(campaignID, *userID, phase)
+		o.sseService.BroadcastToCampaign(campaignID, evt)
 	}
 
 	o.deps.Logger.Info(ctx, "Phase resumed successfully", map[string]interface{}{
@@ -2053,11 +2338,21 @@ func decodePhaseConfiguration(phase models.PhaseTypeEnum, payload []byte) (inter
 		}
 		return &cfg, nil
 	case models.PhaseTypeDomainGeneration:
-		var cfg domainservices.DomainGenerationConfig
-		if err := json.Unmarshal(payload, &cfg); err != nil {
+		// Try to unmarshal as map first to handle legacy/test configs gracefully
+		var m map[string]interface{}
+		if err := json.Unmarshal(payload, &m); err != nil {
 			return nil, err
 		}
-		return &cfg, nil
+		// If it has required domain generation fields, unmarshal into typed config
+		if _, hasPattern := m["patternType"]; hasPattern || m["pattern_type"] != nil {
+			var cfg domainservices.DomainGenerationConfig
+			if err := json.Unmarshal(payload, &cfg); err != nil {
+				return nil, err
+			}
+			return &cfg, nil
+		}
+		// Otherwise return as map for Configure to handle gracefully
+		return m, nil
 	case models.PhaseTypeEnrichment:
 		copyBuf := make([]byte, len(payload))
 		copy(copyBuf, payload)

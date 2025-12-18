@@ -4,12 +4,10 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { Button } from '@/components/ui/button';
 import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
 import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
-import type { PipelineRelatedRootState as _PipelineRelatedRootState } from '@/store/types/pipelineState';
 
 export const ConversionCTA: React.FC<{ campaignId: string }> = ({ campaignId }) => {
-  const overviewSel = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
-  const ov = useAppSelector(overviewSel);
-  const allConfigured = ov?.config?.progress?.configured === ov?.config?.progress?.total;
+  const allConfiguredSel = React.useMemo(() => pipelineSelectors.allConfigured(campaignId), [campaignId]);
+  const allConfigured = useAppSelector(allConfiguredSel);
   const dispatch = useAppDispatch();
   const fullSequence = useAppSelector(s => s.campaignUI?.byId?.[campaignId]?.fullSequenceMode);
   const show = useMemo(() => !fullSequence && allConfigured, [fullSequence, allConfigured]);
