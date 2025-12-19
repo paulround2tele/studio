@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Play, Loader2 } from 'lucide-react';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import { getApiErrorMessage } from '@/lib/utils/getApiErrorMessage';
 
 interface ReduxPhaseTransitionButtonProps {
   campaignId: string;
@@ -55,12 +56,14 @@ export const ReduxPhaseTransitionButton: React.FC<ReduxPhaseTransitionButtonProp
       });
       
     } catch (error) {
+      const message = getApiErrorMessage(error, 'Failed to start phase');
+
       // Update Redux state on failure
-      dispatch(failPhaseTransition(error instanceof Error ? error.message : 'Unknown error'));
+      dispatch(failPhaseTransition(message));
       
       toast({
         title: "Phase Start Failed", 
-        description: error instanceof Error ? error.message : 'Failed to start phase',
+        description: message,
         variant: "destructive"
       });
     }

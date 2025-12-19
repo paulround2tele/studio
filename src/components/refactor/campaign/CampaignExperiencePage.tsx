@@ -159,11 +159,24 @@ function formatPhaseActionError(error: unknown): string {
     return 'Unable to complete the request. Please try again.';
   }
 
-  const fetchLike = error as (FetchBaseQueryError & { data?: { message?: unknown } }) | undefined;
+  const fetchLike = error as (FetchBaseQueryError & { data?: unknown }) | undefined;
   if (fetchLike && typeof fetchLike === 'object' && 'status' in fetchLike) {
-    const payloadMessage = typeof fetchLike.data?.message === 'string' ? fetchLike.data!.message.trim() : '';
-    if (payloadMessage) {
-      return payloadMessage;
+    const data = fetchLike.data as
+      | {
+          message?: unknown;
+          error?: { message?: unknown; code?: unknown };
+          details?: Record<string, unknown>;
+        }
+      | undefined;
+
+    const payloadMessage =
+      (typeof data?.error?.message === 'string' ? data.error.message : null)
+      ?? (typeof data?.message === 'string' ? data.message : null)
+      ?? extractPhaseErrorDetailsMessage((data?.details as Record<string, unknown> | null) ?? null);
+
+    const normalizedPayloadMessage = sanitizePhaseErrorText(payloadMessage);
+    if (normalizedPayloadMessage) {
+      return normalizedPayloadMessage;
     }
     if (typeof fetchLike.status === 'number') {
       return `Request failed (${fetchLike.status})`;

@@ -6,6 +6,7 @@ import { Loader2, Play, Pause, Square, ArrowRight } from 'lucide-react';
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { useToast } from '@/hooks/use-toast';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import { getApiErrorMessage } from '@/lib/utils/getApiErrorMessage';
 
 // Use enums from OpenAPI schema  
 
@@ -70,7 +71,7 @@ export function PhaseTransitionButton({
   description: `Started ${apiPhase} phase`,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to start phase';
+      const errorMessage = getApiErrorMessage(error, 'Failed to start phase');
       
       toast({
         title: 'Phase Start Failed',

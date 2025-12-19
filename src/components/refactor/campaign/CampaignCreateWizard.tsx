@@ -179,7 +179,9 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
     goal: {
       executionMode: 'manual',
     },
-    pattern: {},
+    pattern: {
+      maxDomains: 100,
+    },
     targeting: {
       includeKeywords: [],
       excludeKeywords: [],
@@ -445,12 +447,26 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
             const msg = (data as { message?: unknown }).message;
             if (typeof msg === 'string' && msg.trim().length > 0) return msg;
           }
+          if (data && typeof data === 'object' && 'error' in data) {
+            const maybeError = (data as { error?: unknown }).error;
+            if (maybeError && typeof maybeError === 'object' && 'message' in (maybeError as object)) {
+              const msg = (maybeError as { message?: unknown }).message;
+              if (typeof msg === 'string' && msg.trim().length > 0) return msg;
+            }
+          }
           // Direct data.message shape
           if ('data' in (err as object)) {
             const anyData = (err as { data?: unknown }).data;
             if (anyData && typeof anyData === 'object' && 'message' in anyData) {
               const msg = (anyData as { message?: unknown }).message;
               if (typeof msg === 'string' && msg.trim().length > 0) return msg;
+            }
+            if (anyData && typeof anyData === 'object' && 'error' in anyData) {
+              const maybeError = (anyData as { error?: unknown }).error;
+              if (maybeError && typeof maybeError === 'object' && 'message' in (maybeError as object)) {
+                const msg = (maybeError as { message?: unknown }).message;
+                if (typeof msg === 'string' && msg.trim().length > 0) return msg;
+              }
             }
           }
         }
@@ -518,7 +534,15 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
           if (errorObj.data && typeof errorObj.data === 'object') {
             const data = errorObj.data as Record<string, unknown>;
             code = typeof data.code === 'string' ? data.code : undefined;
-            message = typeof data.message === 'string' ? data.message : 'Auto-start failed';
+            if (typeof data.message === 'string') {
+              message = data.message;
+            } else if (data.error && typeof data.error === 'object' && 'message' in (data.error as object) && typeof (data.error as { message?: unknown }).message === 'string') {
+              message = String((data.error as { message?: unknown }).message);
+            } else if (typeof data.error === 'string') {
+              message = data.error;
+            } else {
+              message = 'Auto-start failed';
+            }
           } else if (e instanceof Error) {
             message = e.message;
           } else {

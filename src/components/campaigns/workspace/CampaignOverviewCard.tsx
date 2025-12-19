@@ -10,6 +10,8 @@ import { Switch } from '@/components/ui/switch';
 import { useStartPhaseStandaloneMutation, useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
 import type { EnrichedCampaignResponse, ScoringProfile } from '@/lib/api-client/models';
 import { useListScoringProfilesQuery } from '@/store/api/scoringApi';
+import { useToast } from '@/hooks/use-toast';
+import { getApiErrorMessage } from '@/lib/utils/getApiErrorMessage';
 
 interface CampaignOverviewCardProps {
   campaignId: string;
@@ -28,6 +30,7 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const ov = useAppSelector(selectOverview);
   const { config, exec, phases, mode, nextAction } = ov;
   const dispatch = useAppDispatch();
+  const { toast } = useToast();
   const [startPhase, { isLoading }] = useStartPhaseStandaloneMutation();
   // Enriched campaign & scoring profile data
   const { data: enriched } = useGetCampaignEnrichedQuery(campaignId, { skip: !campaignId });
@@ -86,7 +89,15 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const handlePrimaryCTA = async () => {
     if (!nextAction) return;
     if (nextAction.type === 'start') {
-      await startPhase({ campaignId, phase: nextAction.phase });
+      try {
+        await startPhase({ campaignId, phase: nextAction.phase }).unwrap();
+      } catch (e: unknown) {
+        toast({
+          title: 'Phase Start Failed',
+          description: getApiErrorMessage(e, 'Failed to start phase'),
+          variant: 'destructive',
+        });
+      }
     }
   };
 

@@ -17,6 +17,8 @@ import type { PhaseStatusResponse } from '@/lib/api-client/models/phase-status-r
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
 import { useCampaignSSE } from '@/hooks/useCampaignSSE';
+import { useToast } from '@/hooks/use-toast';
+import { getApiErrorMessage } from '@/lib/utils/getApiErrorMessage';
 
 type CampaignPhase = PhaseStatusResponse['phase'];
 
@@ -42,6 +44,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
   const retryEligible = useAppSelector(React.useMemo(()=>selectRetryEligiblePhases(campaignId),[campaignId]));
   const dispatch = useAppDispatch();
   const [startPhase] = useStartPhaseStandaloneMutation();
+  const { toast } = useToast();
   const pendingAutoStarts = React.useRef<Set<string>>(new Set());
   const autoAdvanceAlerts = React.useMemo(() => {
     if (!mode.autoAdvance || !mode.hint) return [];
@@ -160,7 +163,25 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
             {retryEligible.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-1" aria-label="Retry failed phase buttons">
                 {retryEligible.map(p => (
-                  <Button key={p} size="sm" variant="destructive" className="text-[10px] py-1" onClick={()=>startPhase({ campaignId, phase: p as CampaignPhase })}>Retry {friendlyPhaseLabel(p)}</Button>
+                  <Button
+                    key={p}
+                    size="sm"
+                    variant="destructive"
+                    className="text-[10px] py-1"
+                    onClick={async () => {
+                      try {
+                        await startPhase({ campaignId, phase: p as CampaignPhase }).unwrap();
+                      } catch (e: unknown) {
+                        toast({
+                          title: 'Retry Failed',
+                          description: getApiErrorMessage(e, `Failed to retry ${friendlyPhaseLabel(p)}`),
+                          variant: 'destructive',
+                        });
+                      }
+                    }}
+                  >
+                    Retry {friendlyPhaseLabel(p)}
+                  </Button>
                 ))}
               </div>
             )}

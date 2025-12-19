@@ -357,6 +357,13 @@ func (o *CampaignOrchestrator) refreshPhaseStatuses(ctx context.Context, exec *C
 			continue
 		}
 		existing := exec.PhaseStatuses[phase]
+
+		// If the store says the phase is paused, respect that state even if the runtime
+		// still reports in_progress.
+		if existing != nil && existing.Status == models.PhaseStatusPaused && fresh.Status == models.PhaseStatusInProgress {
+			fresh.Status = models.PhaseStatusPaused
+		}
+
 		// Don't let a missing runtime execution ("not_started") overwrite a persisted paused/running/completed status.
 		if existing == nil || existing.Status == models.PhaseStatusNotStarted || fresh.Status != models.PhaseStatusNotStarted {
 			exec.PhaseStatuses[phase] = fresh
@@ -1391,21 +1398,21 @@ func (o *CampaignOrchestrator) GetPhaseStatus(ctx context.Context, campaignID uu
 		}
 		if supported {
 			if storeStatus != nil {
-			if storeStatus.Configuration == nil {
-				storeStatus.Configuration = make(map[string]interface{}, 1)
+				if storeStatus.Configuration == nil {
+					storeStatus.Configuration = make(map[string]interface{}, 1)
+				}
+				if _, ok := storeStatus.Configuration["runtime_controls"]; !ok {
+					storeStatus.Configuration["runtime_controls"] = caps
+				}
 			}
-			if _, ok := storeStatus.Configuration["runtime_controls"]; !ok {
-				storeStatus.Configuration["runtime_controls"] = caps
+			if runtimeStatus != nil {
+				if runtimeStatus.Configuration == nil {
+					runtimeStatus.Configuration = make(map[string]interface{}, 1)
+				}
+				if _, ok := runtimeStatus.Configuration["runtime_controls"]; !ok {
+					runtimeStatus.Configuration["runtime_controls"] = caps
+				}
 			}
-		}
-		if runtimeStatus != nil {
-			if runtimeStatus.Configuration == nil {
-				runtimeStatus.Configuration = make(map[string]interface{}, 1)
-			}
-			if _, ok := runtimeStatus.Configuration["runtime_controls"]; !ok {
-				runtimeStatus.Configuration["runtime_controls"] = caps
-			}
-		}
 		}
 	}
 
@@ -1418,6 +1425,12 @@ func (o *CampaignOrchestrator) GetPhaseStatus(ctx context.Context, campaignID uu
 	}
 
 	if runtimeStatus.Status == models.PhaseStatusNotStarted && storeStatus.Status != models.PhaseStatusNotStarted {
+		return storeStatus, nil
+	}
+
+	// If the store says the phase is paused, respect that state even if the runtime
+	// still reports in_progress (e.g. during shutdown or race condition).
+	if storeStatus.Status == models.PhaseStatusPaused && runtimeStatus.Status == models.PhaseStatusInProgress {
 		return storeStatus, nil
 	}
 

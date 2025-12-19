@@ -19,6 +19,7 @@ import type { CampaignResponse } from '@/lib/api-client/models/campaign-response
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { validateUUID } from '@/lib/utils/uuidValidation';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import { getApiErrorMessage } from '@/lib/utils/getApiErrorMessage';
 
 // Clean, modular section components
 import { CampaignDetailsSection } from './sections/CampaignDetailsSection';
@@ -177,11 +178,7 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
       console.error('Phase transition error:', error);
       
       let errorTitle = "Error Starting Phase";
-      let errorDescription = "Failed to start the phase. Please try again.";
-      
-      if (error instanceof Error) {
-        errorDescription = error.message;
-      }
+      let errorDescription = getApiErrorMessage(error, 'Failed to start the phase. Please try again.');
       
       toast({
         title: errorTitle,
