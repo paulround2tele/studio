@@ -59,18 +59,18 @@ var _ httpBulkValidator = (*httpvalidator.HTTPValidator)(nil)
 // httpValidationService orchestrates the HTTP validation engine
 // It wraps httpvalidator.HTTPValidator without replacing its core functionality
 type httpValidationService struct {
-	store         store.CampaignStore
-	personaStore  store.PersonaStore
-	proxyStore    store.ProxyStore
-	deps          Dependencies
-	validator     httpBulkValidator
+	store        store.CampaignStore
+	personaStore store.PersonaStore
+	proxyStore   store.ProxyStore
+	deps         Dependencies
+	validator    httpBulkValidator
 	// keyword scanner (lazy init)
 	kwScanner *keywordscanner.Service
 
 	// metrics (registered once globally)
-	metricsOnce sync.Once
+	metricsOnce    sync.Once
 	disableMetrics bool
-	mtx         struct {
+	mtx            struct {
 		fetchOutcome      *prometheus.CounterVec
 		fetchAlias        *prometheus.CounterVec
 		microCrawl        prometheus.Counter
@@ -547,7 +547,7 @@ func microcrawlResultFromVector(fv map[string]interface{}) *extraction.Microcraw
 
 // httpValidationExecution tracks HTTP validation execution state
 type httpValidationExecution struct {
-	CampaignID     uuid.UUID                         `json:"campaign_id"`
+	CampaignID     uuid.UUID `json:"campaign_id"`
 	runID          uuid.UUID
 	Status         models.PhaseStatusEnum            `json:"status"`
 	StartedAt      time.Time                         `json:"started_at"`
