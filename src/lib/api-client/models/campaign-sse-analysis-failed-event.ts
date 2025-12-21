@@ -16,38 +16,14 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { AnalysisFailedEvent } from './analysis-failed-event';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { CampaignSseEnvelope } from './campaign-sse-envelope';
 
 /**
- * 
+ * @type CampaignSseAnalysisFailedEvent
  * @export
- * @interface CampaignSseAnalysisFailedEvent
  */
-export interface CampaignSseAnalysisFailedEvent {
-  /**
-   * 
-   * @memberof CampaignSseAnalysisFailedEvent
-   */
-  'type': 
-      'analysis_failed'
-;
-  /**
-   * 
-   * @memberof CampaignSseAnalysisFailedEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSseAnalysisFailedEvent
-   */
-  'payload': 
-        
-          
-          AnalysisFailedEvent
-    ;
-}
+export type CampaignSseAnalysisFailedEvent = CampaignSseEnvelope;
 
 

@@ -6,7 +6,6 @@ import { useToast } from '@/hooks/use-toast';
 import { campaignApi } from '@/store/api/campaignApi';
 import type { CampaignProgressResponse } from '@/lib/api-client/models/campaign-progress-response';
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
-import type { CampaignSseEvent } from '@/lib/api-client/models/campaign-sse-event';
 import type { AnalysisReuseEnrichmentEvent } from '@/lib/api-client/models/analysis-reuse-enrichment-event';
 import type { AnalysisFailedEvent } from '@/lib/api-client/models/analysis-failed-event';
 import type { DomainStatusEvent } from '@/lib/api-client/models/domain-status-event';
@@ -25,10 +24,12 @@ export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
   // Build SSE URL (Next.js rewrite proxies to backend localhost:8080)
   const url = campaignId ? `/api/v2/sse/campaigns/${campaignId}/events` : null;
 
-  function isCampaignSseEvent(obj: unknown): obj is CampaignSseEvent {
+  // Type guard for SSE events that have a type field (for discriminator union narrowing)
+  interface TypedSseEvent { type: string; payload?: unknown; version?: number }
+  function isTypedSseEvent(obj: unknown): obj is TypedSseEvent {
     if (!obj || typeof obj !== 'object') return false;
     const t = (obj as { type?: unknown }).type;
-    return typeof t === 'string'; // rely on generated union narrowing after guard
+    return typeof t === 'string';
   }
 
   const { isConnected } = useSSE(
@@ -37,7 +38,7 @@ export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
       if (!campaignId) return;
       const raw = evt.data as unknown;
       // Handle non-modeled event names (legacy / internal) by evt.event fallback
-      if (!isCampaignSseEvent(raw)) {
+      if (!isTypedSseEvent(raw)) {
         if (evt.event === 'counters_reconciled') {
           toast({ title: 'Counters reconciled', description: 'Campaign counters adjusted for consistency.' });
           dispatch(

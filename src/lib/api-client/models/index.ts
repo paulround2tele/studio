@@ -92,6 +92,7 @@ export * from './campaign-sse-analysis-reuse-enrichment-event';
 export * from './campaign-sse-completed-event';
 export * from './campaign-sse-domain-generated-event';
 export * from './campaign-sse-domain-validated-event';
+export * from './campaign-sse-envelope';
 export * from './campaign-sse-event';
 export * from './campaign-sse-event-payload';
 export * from './campaign-sse-event-type';

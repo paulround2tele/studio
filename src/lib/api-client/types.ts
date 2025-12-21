@@ -2013,35 +2013,46 @@ export interface components {
             timestamp?: string;
             version?: string;
         };
+        /** @description Canonical SSE envelope applied to all campaign SSE events. */
+        CampaignSseEnvelope: {
+            /** @description Envelope version emitted by the server (currently 1). */
+            version: number;
+        };
         /** @description Analysis phase reused existing feature vectors. */
         AnalysisReuseEnrichmentEvent: {
             /** @description Number of feature vectors reused from prior HTTP phase enrichment. */
             featureVectorCount?: number | null;
         };
-        CampaignSseAnalysisReuseEnrichmentEvent: {
+        CampaignSseAnalysisReuseEnrichmentEvent: components["schemas"]["CampaignSseEnvelope"] & {
+            /** @enum {string} */
+            type: "analysis_reuse_enrichment";
+            /** Format: date-time */
+            timestamp?: string;
+            payload: components["schemas"]["AnalysisReuseEnrichmentEvent"];
+        } & {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "CampaignSseAnalysisReuseEnrichmentEvent";
-            /** Format: date-time */
-            timestamp?: string;
-            payload?: components["schemas"]["AnalysisReuseEnrichmentEvent"];
         };
         /** @description Analysis phase preflight or execution failed. */
         AnalysisFailedEvent: {
             error: string;
             errorCode?: string | null;
         };
-        CampaignSseAnalysisFailedEvent: {
+        CampaignSseAnalysisFailedEvent: components["schemas"]["CampaignSseEnvelope"] & {
+            /** @enum {string} */
+            type: "analysis_failed";
+            /** Format: date-time */
+            timestamp?: string;
+            payload: components["schemas"]["AnalysisFailedEvent"];
+        } & {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "CampaignSseAnalysisFailedEvent";
-            /** Format: date-time */
-            timestamp?: string;
-            payload: components["schemas"]["AnalysisFailedEvent"];
         };
         PhaseProgressSummary: {
             /** @enum {string} */
@@ -2095,15 +2106,18 @@ export interface components {
             /** @description Chronological list of timeline events for campaign lifecycle */
             timeline: components["schemas"]["TimelineEvent"][];
         };
-        CampaignSseProgressEvent: {
+        CampaignSseProgressEvent: components["schemas"]["CampaignSseEnvelope"] & {
+            /** @enum {string} */
+            type: "campaign_progress";
+            /** Format: date-time */
+            timestamp?: string;
+            payload: components["schemas"]["CampaignProgressResponse"];
+        } & {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "CampaignSseProgressEvent";
-            /** Format: date-time */
-            timestamp?: string;
-            payload?: components["schemas"]["CampaignProgressResponse"];
         };
         /** @description Canonical nested analysis feature vector for a discovered domain. */
         DomainAnalysisFeatures: {
@@ -2157,79 +2171,97 @@ export interface components {
             httpReason?: string | null;
             features?: components["schemas"]["DomainAnalysisFeatures"];
         };
-        CampaignSseDomainGeneratedEvent: {
+        CampaignSseDomainGeneratedEvent: components["schemas"]["CampaignSseEnvelope"] & {
+            /** @enum {string} */
+            type: "domain_generated";
+            /** Format: date-time */
+            timestamp?: string;
+            payload: components["schemas"]["DomainStatusEvent"];
+        } & {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "CampaignSseDomainGeneratedEvent";
+        };
+        CampaignSseDomainValidatedEvent: components["schemas"]["CampaignSseEnvelope"] & {
+            /** @enum {string} */
+            type: "domain_validated";
             /** Format: date-time */
             timestamp?: string;
-            payload?: components["schemas"]["DomainStatusEvent"];
-        };
-        CampaignSseDomainValidatedEvent: {
+            payload: components["schemas"]["DomainStatusEvent"];
+        } & {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "CampaignSseDomainValidatedEvent";
-            /** Format: date-time */
-            timestamp?: string;
-            payload?: components["schemas"]["DomainStatusEvent"];
         };
         /** @description Phase lifecycle transition (started or completed). */
         PhaseTransitionEvent: {
             phase: string;
         };
-        CampaignSsePhaseStartedEvent: {
+        CampaignSsePhaseStartedEvent: components["schemas"]["CampaignSseEnvelope"] & {
+            /** @enum {string} */
+            type: "phase_started";
+            /** Format: date-time */
+            timestamp?: string;
+            payload: components["schemas"]["PhaseTransitionEvent"];
+        } & {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "CampaignSsePhaseStartedEvent";
+        };
+        CampaignSsePhaseCompletedEvent: components["schemas"]["CampaignSseEnvelope"] & {
+            /** @enum {string} */
+            type: "phase_completed";
             /** Format: date-time */
             timestamp?: string;
-            payload?: components["schemas"]["PhaseTransitionEvent"];
-        };
-        CampaignSsePhaseCompletedEvent: {
+            payload: components["schemas"]["PhaseTransitionEvent"];
+        } & {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "CampaignSsePhaseCompletedEvent";
-            /** Format: date-time */
-            timestamp?: string;
-            payload?: components["schemas"]["PhaseTransitionEvent"];
         };
         /** @description Phase failure event. */
         PhaseFailedEvent: {
             phase: string;
             error: string;
         };
-        CampaignSsePhaseFailedEvent: {
+        CampaignSsePhaseFailedEvent: components["schemas"]["CampaignSseEnvelope"] & {
+            /** @enum {string} */
+            type: "phase_failed";
+            /** Format: date-time */
+            timestamp?: string;
+            payload: components["schemas"]["PhaseFailedEvent"];
+        } & {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "CampaignSsePhaseFailedEvent";
-            /** Format: date-time */
-            timestamp?: string;
-            payload?: components["schemas"]["PhaseFailedEvent"];
         };
         /** @description Campaign has fully completed successfully. */
         CampaignCompletedEvent: {
             /** Format: uuid */
             campaignId: string;
         };
-        CampaignSseCompletedEvent: {
+        CampaignSseCompletedEvent: components["schemas"]["CampaignSseEnvelope"] & {
+            /** @enum {string} */
+            type: "campaign_completed";
+            /** Format: date-time */
+            timestamp?: string;
+            payload: components["schemas"]["CampaignCompletedEvent"];
+        } & {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             type: "CampaignSseCompletedEvent";
-            /** Format: date-time */
-            timestamp?: string;
-            payload?: components["schemas"]["CampaignCompletedEvent"];
         };
         /** @description Discriminated union of all campaign SSE event wrapper objects. */
         CampaignSseEvent: components["schemas"]["CampaignSseAnalysisReuseEnrichmentEvent"] | components["schemas"]["CampaignSseAnalysisFailedEvent"] | components["schemas"]["CampaignSseProgressEvent"] | components["schemas"]["CampaignSseDomainGeneratedEvent"] | components["schemas"]["CampaignSseDomainValidatedEvent"] | components["schemas"]["CampaignSsePhaseStartedEvent"] | components["schemas"]["CampaignSsePhaseCompletedEvent"] | components["schemas"]["CampaignSsePhaseFailedEvent"] | components["schemas"]["CampaignSseCompletedEvent"];
@@ -3285,6 +3317,16 @@ export interface components {
             campaignId: string;
             /** Format: float */
             overallProgressPercentage: number;
+            /**
+             * @description The phase currently controllable (pausedPhase ?? inProgressPhase ?? null). Per P2 contract §1.
+             * @enum {string|null}
+             */
+            controlPhase?: "generation" | "dns" | "http" | "analysis" | "leads" | null;
+            /**
+             * Format: int64
+             * @description Monotonic sequence number from the most recent lifecycle event. Used by frontend SSE guards. Per P2 contract §5.
+             */
+            lastSequence: number;
             /** @description Optional campaign-level failure message surfaced when the overall run fails. */
             errorMessage?: string | null;
             phases: {
@@ -7089,6 +7131,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             500: components["responses"]["InternalServerError"];
         };
     };
@@ -7116,6 +7159,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             500: components["responses"]["InternalServerError"];
         };
     };

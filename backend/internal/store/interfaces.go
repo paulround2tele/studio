@@ -71,6 +71,13 @@ type CampaignStore interface {
 	ResumePhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error
 	FailPhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string, errorDetails map[string]interface{}) error
 
+	// P2: Lifecycle event persistence with sequence tracking
+	// RecordLifecycleEvent inserts a state event and returns the auto-generated sequence number.
+	// eventType: phase_started, phase_paused, phase_resumed, phase_completed, phase_failed
+	RecordLifecycleEvent(ctx context.Context, exec Querier, campaignID uuid.UUID, eventType string, phase models.PhaseTypeEnum, fromStatus, toStatus models.PhaseStatusEnum, metadata map[string]interface{}) (int64, error)
+	// GetLastLifecycleSequence returns the most recent sequence number for a campaign's lifecycle events.
+	GetLastLifecycleSequence(ctx context.Context, exec Querier, campaignID uuid.UUID) (int64, error)
+
 	CreateGeneratedDomains(ctx context.Context, exec Querier, domains []*models.GeneratedDomain) error
 	GetGeneratedDomainsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, limit int, lastOffsetIndex int64, filter *ListCampaignDomainsFilter) ([]*models.GeneratedDomain, error)
 	CountGeneratedDomainsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID) (int64, error)

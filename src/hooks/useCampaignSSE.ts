@@ -24,6 +24,57 @@ import type { CampaignPhase } from '@/types/domain';
 import { getApiBasePath } from '@/lib/api/config';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
+// ────────────────────────────────────────────────────────────────────────────
+// P2 Contract: SSE Sequence Guards
+// ────────────────────────────────────────────────────────────────────────────
+// Per P2 Phase State Contract §5:
+// - Track lastSequence from getCampaignStatus snapshot
+// - Apply lifecycle SSE events only if event.sequence > lastSequence
+// - Ignore stale/out-of-order lifecycle events
+// - Progress events must not change lifecycle state when phase is paused/completed/failed
+// - On SSE reconnect → refetch snapshot and reset lastSequence baseline
+
+/** Lifecycle event types that carry a sequence number */
+const LIFECYCLE_EVENT_TYPES = new Set([
+  'phase_started',
+  'phase_completed',
+  'phase_failed',
+  'phase_paused',
+  'phase_resumed',
+]);
+
+/** Phase statuses that block progress updates from changing lifecycle state */
+const TERMINAL_PHASE_STATUSES = new Set(['paused', 'completed', 'failed']);
+
+/**
+ * Extract sequence number from SSE event payload
+ * Backend emits sequence in payload.sequence or envelope.sequence
+ */
+const extractEventSequence = (
+  payload: Record<string, unknown> | undefined,
+  envelope: Record<string, unknown> | undefined
+): number | undefined => {
+  const seq = payload?.sequence ?? envelope?.sequence ?? payload?.sequenceNumber ?? envelope?.sequenceNumber;
+  if (typeof seq === 'number' && Number.isFinite(seq) && seq > 0) {
+    return seq;
+  }
+  return undefined;
+};
+
+/**
+ * Check if an SSE event is a lifecycle event that requires sequence validation
+ */
+const isLifecycleEvent = (eventType: string): boolean => {
+  return LIFECYCLE_EVENT_TYPES.has(eventType);
+};
+
+/**
+ * Check if a phase status blocks progress updates from mutating lifecycle
+ */
+const isTerminalPhaseStatus = (status: string | undefined): boolean => {
+  return status ? TERMINAL_PHASE_STATUSES.has(status.toLowerCase()) : false;
+};
+
 const joinUrl = (base: string, path: string): string => {
   const trimmedBase = base.replace(/\/+$/, '');
   const trimmedPath = path.replace(/^\/+/, '');
@@ -177,7 +228,7 @@ const mapPhase = (raw: string | undefined): PipelinePhase | string => {
   return BACKEND_TO_INTERNAL_PHASE[raw] || raw;
 };
 
-const normalizeSnapshotStatus = (status: string | undefined): string | undefined => {
+const _normalizeSnapshotStatus = (status: string | undefined): string | undefined => {
   if (!status) return status;
   // Snapshot uses in_progress; SSE/phase-status may emit running.
   if (status === 'running') return 'in_progress';
@@ -557,6 +608,54 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
   const eventsRef = useRef<CampaignSSEEvents>({ ...events });
   const [fallbackApplied, setFallbackApplied] = useState(false);
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // P2 Contract: Sequence tracking for SSE guards
+  // ─────────────────────────────────────────────────────────────────────────
+  // Track the lastSequence from snapshot to guard against stale/out-of-order events
+  const lastSequenceRef = useRef<number>(0);
+  
+  // Query the campaign status to get the baseline lastSequence
+  // Skip if no campaignId to avoid unnecessary queries
+  const { data: statusSnapshot } = campaignApi.endpoints.getCampaignStatus.useQuery(
+    campaignId ?? '',
+    { skip: !campaignId }
+  );
+  
+  // Update lastSequenceRef when snapshot changes (including on reconnect refetch)
+  useEffect(() => {
+    if (statusSnapshot?.lastSequence !== undefined) {
+      const snapshotSeq = statusSnapshot.lastSequence;
+      // Only update if snapshot has a higher sequence (authoritative)
+      if (snapshotSeq >= lastSequenceRef.current) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[useCampaignSSE] sequence baseline updated from snapshot', {
+            campaignId,
+            previousSeq: lastSequenceRef.current,
+            newSeq: snapshotSeq,
+          });
+        }
+        lastSequenceRef.current = snapshotSeq;
+      }
+    }
+  }, [statusSnapshot?.lastSequence, campaignId]);
+
+  /**
+   * Get current phase status from the cached snapshot
+   * Used to guard progress events from changing lifecycle state of terminal phases
+   */
+  const getPhaseStatus = useCallback((phase: string): string | undefined => {
+    if (!statusSnapshot?.phases) return undefined;
+    const normalizedPhase = normalizeToApiPhase(phase.toLowerCase());
+    if (!normalizedPhase) return undefined;
+    
+    const phaseEntry = statusSnapshot.phases.find((p) => {
+      const entryPhase = normalizeToApiPhase(String((p as unknown as Record<string, unknown>).phase ?? '').toLowerCase());
+      return entryPhase === normalizedPhase;
+    });
+    
+    return (phaseEntry as unknown as Record<string, unknown> | undefined)?.status as string | undefined;
+  }, [statusSnapshot]);
+
   useEffect(() => {
     eventsRef.current = { ...events };
   }, [events]);
@@ -636,6 +735,51 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
       return;
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // P2 Contract: Sequence guard for lifecycle events
+    // ─────────────────────────────────────────────────────────────────────────
+    // For lifecycle events (phase_started, phase_completed, phase_failed, phase_paused, phase_resumed),
+    // only apply if event.sequence > lastSequence. This prevents out-of-order/stale events.
+    const eventSequence = extractEventSequence(payload, dataObj);
+    const eventType = event.event ?? '';
+    
+    if (isLifecycleEvent(eventType)) {
+      if (eventSequence !== undefined) {
+        if (eventSequence <= lastSequenceRef.current) {
+          // Stale/out-of-order lifecycle event - ignore
+          captureDebugEvent('lifecycle_event_stale', {
+            campaignId: resolvedCampaignId,
+            eventType,
+            eventSequence,
+            lastSequence: lastSequenceRef.current,
+          });
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('[useCampaignSSE] Ignoring stale lifecycle event', {
+              eventType,
+              eventSequence,
+              lastSequence: lastSequenceRef.current,
+            });
+          }
+          return;
+        }
+        // Valid lifecycle event - update sequence baseline
+        lastSequenceRef.current = eventSequence;
+        captureDebugEvent('lifecycle_event_accepted', {
+          campaignId: resolvedCampaignId,
+          eventType,
+          eventSequence,
+        });
+      }
+      // If no sequence on lifecycle event, still process it (backwards compat)
+      // but log a warning in dev
+      else if (process.env.NODE_ENV !== 'production') {
+        console.warn('[useCampaignSSE] Lifecycle event missing sequence number', {
+          eventType,
+          payload,
+        });
+      }
+    }
+
     const handlers = eventsRef.current;
 
     switch (event.event) {
@@ -653,45 +797,79 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
         if (progressData) {
           setLastProgress(progressData);
           handlers.onProgress?.(resolvedCampaignId, progressData);
-          // If backend provides current_phase & 100% progress but no explicit phase_completed yet, synthesize completion.
+          
+          // ─────────────────────────────────────────────────────────────────
+          // P2 Contract: Guard progress events from changing terminal phase state
+          // ─────────────────────────────────────────────────────────────────
+          // Progress events must not change lifecycle state when phase is paused/completed/failed.
+          // We can still update progress percentage, but NOT synthesize completion or change status.
           const rawPhase =
             progressData.current_phase ||
             (typeof payload?.current_phase === 'string' ? (payload.current_phase as string) : undefined);
-          const pct = progressData.progress_pct;
-          if (rawPhase && typeof pct === 'number' && pct >= 100) {
-            const phase = mapPhase(rawPhase);
-            if (!completedRef.current.has(`${resolvedCampaignId}:${phase}`)) {
-              completedRef.current.add(`${resolvedCampaignId}:${phase}`);
-              const pipelinePhase = toPipelinePhase(phase);
-              if (pipelinePhase) {
-                dispatch(phaseCompleted({ campaignId: resolvedCampaignId, phase: pipelinePhase }));
-              }
+          const phase = rawPhase ? mapPhase(rawPhase) : undefined;
+          const currentPhaseStatus = phase ? getPhaseStatus(phase) : undefined;
+          const isPhaseTerminal = isTerminalPhaseStatus(currentPhaseStatus);
+          
+          if (isPhaseTerminal) {
+            // Phase is in terminal state - only update progress percentage, not lifecycle
+            captureDebugEvent('progress_blocked_terminal', {
+              campaignId: resolvedCampaignId,
+              phase,
+              status: currentPhaseStatus,
+              percent: progressData.progress_pct,
+            });
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[useCampaignSSE] Progress event blocked from changing terminal phase state', {
+                phase,
+                status: currentPhaseStatus,
+                progress: progressData.progress_pct,
+              });
+            }
+            // Still update progress percentage in cache (informational only)
+            if (typeof progressData.progress_pct === 'number' && Number.isFinite(progressData.progress_pct) && phase) {
               dispatch(
                 campaignApi.util.updateQueryData('getCampaignStatus', resolvedCampaignId, (draft) => {
-                  patchCampaignStatusPhase(draft, phase, { status: 'completed', progressPercentage: 100 });
-                })
-              );
-              synthesizedCompletion = true;
-            }
-          }
-
-          // Snapshot-centric updates: patch overall + current phase progress.
-          if (typeof progressData.progress_pct === 'number' && Number.isFinite(progressData.progress_pct)) {
-            dispatch(
-              campaignApi.util.updateQueryData('getCampaignStatus', resolvedCampaignId, (draft) => {
-                if (!draft) return;
-                draft.overallProgressPercentage = progressData.progress_pct;
-                const current =
-                  progressData.current_phase ||
-                  (typeof payload?.current_phase === 'string' ? (payload.current_phase as string) : undefined);
-                if (current) {
-                  const phase = mapPhase(current);
+                  if (!draft) return;
+                  // Only update percentage, NOT status
                   patchCampaignStatusPhase(draft, phase, {
                     progressPercentage: progressData.progress_pct,
                   });
+                })
+              );
+            }
+          } else {
+            // Phase is NOT terminal - allow normal processing including synthesized completion
+            const pct = progressData.progress_pct;
+            if (rawPhase && typeof pct === 'number' && pct >= 100) {
+              if (!completedRef.current.has(`${resolvedCampaignId}:${phase}`)) {
+                completedRef.current.add(`${resolvedCampaignId}:${phase}`);
+                const pipelinePhase = toPipelinePhase(phase as string);
+                if (pipelinePhase) {
+                  dispatch(phaseCompleted({ campaignId: resolvedCampaignId, phase: pipelinePhase }));
                 }
-              })
-            );
+                dispatch(
+                  campaignApi.util.updateQueryData('getCampaignStatus', resolvedCampaignId, (draft) => {
+                    patchCampaignStatusPhase(draft, phase as string, { status: 'completed', progressPercentage: 100 });
+                  })
+                );
+                synthesizedCompletion = true;
+              }
+            }
+
+            // Snapshot-centric updates: patch overall + current phase progress.
+            if (typeof progressData.progress_pct === 'number' && Number.isFinite(progressData.progress_pct)) {
+              dispatch(
+                campaignApi.util.updateQueryData('getCampaignStatus', resolvedCampaignId, (draft) => {
+                  if (!draft) return;
+                  draft.overallProgressPercentage = progressData.progress_pct;
+                  if (phase) {
+                    patchCampaignStatusPhase(draft, phase, {
+                      progressPercentage: progressData.progress_pct,
+                    });
+                  }
+                })
+              );
+            }
           }
         }
         captureDebugEvent('campaign_progress', {
@@ -939,7 +1117,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
           eventType: event.event,
         });
     }
-  }, [dispatch, campaignId, captureDebugEvent]);
+  }, [dispatch, campaignId, captureDebugEvent, getPhaseStatus]);
 
   // Use the generic SSE hook
   const sseConnection = useSSE(sseUrl, handleSSEEvent, {
@@ -1021,6 +1199,15 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
         // Clear local deduplication state so we process fresh events
         completedRef.current.clear();
+        
+        // P2 Contract: Reset sequence baseline on reconnect
+        // The snapshot refetch will restore it from the authoritative server state
+        // This ensures we don't reject valid events after reconnect
+        lastSequenceRef.current = 0;
+        captureDebugEvent('sequence_baseline_reset', {
+          campaignId,
+          reason: 'sse_reconnect',
+        });
       }
     }
   }, [sseConnection.connectedAt, campaignId, dispatch, captureDebugEvent]);

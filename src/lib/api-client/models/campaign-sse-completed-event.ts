@@ -16,38 +16,14 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { CampaignCompletedEvent } from './campaign-completed-event';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { CampaignSseEnvelope } from './campaign-sse-envelope';
 
 /**
- * 
+ * @type CampaignSseCompletedEvent
  * @export
- * @interface CampaignSseCompletedEvent
  */
-export interface CampaignSseCompletedEvent {
-  /**
-   * 
-   * @memberof CampaignSseCompletedEvent
-   */
-  'type': 
-      'campaign_completed'
-;
-  /**
-   * 
-   * @memberof CampaignSseCompletedEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSseCompletedEvent
-   */
-  'payload'?: 
-        
-          
-          CampaignCompletedEvent
-    ;
-}
+export type CampaignSseCompletedEvent = CampaignSseEnvelope;
 
 

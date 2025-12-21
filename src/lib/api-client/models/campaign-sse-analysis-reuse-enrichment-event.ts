@@ -16,38 +16,14 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { AnalysisReuseEnrichmentEvent } from './analysis-reuse-enrichment-event';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { CampaignSseEnvelope } from './campaign-sse-envelope';
 
 /**
- * 
+ * @type CampaignSseAnalysisReuseEnrichmentEvent
  * @export
- * @interface CampaignSseAnalysisReuseEnrichmentEvent
  */
-export interface CampaignSseAnalysisReuseEnrichmentEvent {
-  /**
-   * 
-   * @memberof CampaignSseAnalysisReuseEnrichmentEvent
-   */
-  'type': 
-      'analysis_reuse_enrichment'
-;
-  /**
-   * 
-   * @memberof CampaignSseAnalysisReuseEnrichmentEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSseAnalysisReuseEnrichmentEvent
-   */
-  'payload'?: 
-        
-          
-          AnalysisReuseEnrichmentEvent
-    ;
-}
+export type CampaignSseAnalysisReuseEnrichmentEvent = CampaignSseEnvelope;
 
 

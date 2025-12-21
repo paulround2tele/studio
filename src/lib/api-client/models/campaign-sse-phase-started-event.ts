@@ -15,39 +15,15 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
+import type { CampaignSseEnvelope } from './campaign-sse-envelope';
+// May contain unused imports in some cases
+// @ts-ignore
 import type { PhaseTransitionEvent } from './phase-transition-event';
 
 /**
- * 
+ * @type CampaignSsePhaseStartedEvent
  * @export
- * @interface CampaignSsePhaseStartedEvent
  */
-export interface CampaignSsePhaseStartedEvent {
-  /**
-   * 
-   * @memberof CampaignSsePhaseStartedEvent
-   */
-  'type': 
-      'phase_started'
-;
-  /**
-   * 
-   * @memberof CampaignSsePhaseStartedEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSsePhaseStartedEvent
-   */
-  'payload'?: 
-        
-          
-          PhaseTransitionEvent
-    ;
-}
+export type CampaignSsePhaseStartedEvent = CampaignSseEnvelope;
 
 

@@ -260,6 +260,12 @@ func (s *stubCampaignStore) UpdateCampaignMode(ctx context.Context, exec store.Q
 func (s *stubCampaignStore) GetCampaignMode(ctx context.Context, exec store.Querier, id uuid.UUID) (string, error) {
 	return "", nil
 }
+func (s *stubCampaignStore) RecordLifecycleEvent(ctx context.Context, exec store.Querier, campaignID uuid.UUID, eventType string, phase models.PhaseTypeEnum, fromStatus, toStatus models.PhaseStatusEnum, metadata map[string]interface{}) (int64, error) {
+	return 0, nil
+}
+func (s *stubCampaignStore) GetLastLifecycleSequence(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (int64, error) {
+	return 0, nil
+}
 
 // mockSSEPreflight for capturing events
 type mockSSEPreflight struct {

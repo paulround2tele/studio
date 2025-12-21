@@ -1555,6 +1555,7 @@ const { status, data } = await apiInstance.campaignsPhasePause(
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |
+|**409** | Conflict |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -1613,6 +1614,7 @@ const { status, data } = await apiInstance.campaignsPhaseResume(
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |
+|**409** | Conflict |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

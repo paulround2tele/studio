@@ -1558,15 +1558,39 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 	if !ok {
 		return fmt.Errorf("invalid database interface in dependencies")
 	}
-	// Determine if the DB believes this phase is active. If yes, we can persist pause state even if
-	// the runtime control channel is unavailable (e.g., backend restart).
+
+	// P2: State machine validation - check current state before attempting pause
+	var currentStatus models.PhaseStatusEnum = models.PhaseStatusNotStarted
 	var phaseInProgressInStore bool
 	if row, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase); err == nil && row != nil {
+		currentStatus = row.Status
 		phaseInProgressInStore = row.Status == models.PhaseStatusInProgress
 	}
+
+	// P2: Idempotent - already paused is success
+	if currentStatus == models.PhaseStatusPaused {
+		o.deps.Logger.Debug(ctx, "Phase already paused (idempotent success)", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+		})
+		return nil
+	}
+
+	// P2: Validate transition via state machine
+	if err := services.ValidateTransition(currentStatus, models.PhaseStatusPaused, phase); err != nil {
+		o.deps.Logger.Warn(ctx, "Invalid pause transition rejected by state machine", map[string]interface{}{
+			"campaign_id":    campaignID,
+			"phase":          phase,
+			"current_status": currentStatus,
+			"error":          err.Error(),
+		})
+		return err
+	}
+
 	o.deps.Logger.Info(ctx, "Pausing campaign phase", map[string]interface{}{
-		"campaign_id": campaignID,
-		"phase":       phase,
+		"campaign_id":    campaignID,
+		"phase":          phase,
+		"current_status": currentStatus,
 	})
 
 	// Resolve user ID for SSE broadcasting (best-effort).
@@ -1625,6 +1649,20 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 		return err
 	}
 
+	// P2: Record lifecycle event and get sequence number for SSE
+	var seqNum int64
+	seqNum, seqErr := o.store.RecordLifecycleEvent(ctx, querier, campaignID, "phase_paused", phase, currentStatus, models.PhaseStatusPaused, map[string]interface{}{
+		"trigger": "user_request",
+	})
+	if seqErr != nil && o.deps.Logger != nil {
+		o.deps.Logger.Warn(ctx, "phase.pause.record_lifecycle_event_failed", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+			"error":       seqErr.Error(),
+		})
+		// Non-fatal: continue with sequence 0 if recording fails
+	}
+
 	// P0 Fix: Sync campaign row immediately so lead_generation_campaigns.phase_status = 'paused'.
 	// Without this, the DB trigger may not prioritize paused status, and findRunningPhase/exclusivity
 	// checks could see stale state.
@@ -1640,14 +1678,16 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 		// Non-fatal: phase row is paused, campaign row sync is best-effort
 	}
 
+	// P2: Emit SSE with sequence number
 	if o.sseService != nil && userID != nil {
-		evt := services.CreatePhasePausedEvent(campaignID, *userID, phase)
+		evt := services.CreatePhasePausedEventWithSequence(campaignID, *userID, phase, seqNum)
 		o.sseService.BroadcastToCampaign(campaignID, evt)
 	}
 
 	o.deps.Logger.Info(ctx, "Phase paused successfully", map[string]interface{}{
 		"campaign_id": campaignID,
 		"phase":       phase,
+		"sequence":    seqNum,
 	})
 	return nil
 }
@@ -1672,6 +1712,35 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 		return fmt.Errorf("invalid database interface in dependencies")
 	}
 
+	// P2: State machine validation - check current state before attempting resume
+	var currentStatus models.PhaseStatusEnum = models.PhaseStatusNotStarted
+	var phasePausedInStore bool
+	if row, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase); err == nil && row != nil {
+		currentStatus = row.Status
+		phasePausedInStore = row.Status == models.PhaseStatusPaused
+	}
+
+	// P2: Idempotent - already in_progress is success
+	if currentStatus == models.PhaseStatusInProgress {
+		o.deps.Logger.Debug(ctx, "Phase already in progress (idempotent success)", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+		})
+		return nil
+	}
+
+	// P2: Validate transition via state machine
+	if err := services.ValidateTransition(currentStatus, models.PhaseStatusInProgress, phase); err != nil {
+		o.deps.Logger.Warn(ctx, "Invalid resume transition rejected by state machine", map[string]interface{}{
+			"campaign_id":    campaignID,
+			"phase":          phase,
+			"current_status": currentStatus,
+			"error":          err.Error(),
+		})
+		recordFailure()
+		return err
+	}
+
 	// Enforce campaign-level exclusivity: cannot resume a phase while another phase is running.
 	if active, err := o.findRunningPhase(ctx, querier, campaignID); err != nil {
 		recordFailure()
@@ -1680,13 +1749,11 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 		recordFailure()
 		return fmt.Errorf("%w: campaign %s already running %s", ErrAnotherPhaseRunning, campaignID, active.PhaseType)
 	}
-	var phasePausedInStore bool
-	if row, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase); err == nil && row != nil {
-		phasePausedInStore = row.Status == models.PhaseStatusPaused
-	}
+
 	o.deps.Logger.Info(ctx, "Resuming campaign phase", map[string]interface{}{
-		"campaign_id": campaignID,
-		"phase":       phase,
+		"campaign_id":    campaignID,
+		"phase":          phase,
+		"current_status": currentStatus,
 	})
 
 	// Resolve user ID for SSE broadcasting (best-effort).
@@ -1744,14 +1811,30 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 		o.metrics.IncPhaseResumeSuccesses()
 	}
 
+	// P2: Record lifecycle event and get sequence number for SSE
+	var seqNum int64
+	seqNum, seqErr := o.store.RecordLifecycleEvent(ctx, querier, campaignID, "phase_resumed", phase, currentStatus, models.PhaseStatusInProgress, map[string]interface{}{
+		"trigger": "user_request",
+	})
+	if seqErr != nil && o.deps.Logger != nil {
+		o.deps.Logger.Warn(ctx, "phase.resume.record_lifecycle_event_failed", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+			"error":       seqErr.Error(),
+		})
+		// Non-fatal: continue with sequence 0 if recording fails
+	}
+
+	// P2: Emit SSE with sequence number
 	if o.sseService != nil && userID != nil {
-		evt := services.CreatePhaseResumedEvent(campaignID, *userID, phase)
+		evt := services.CreatePhaseResumedEventWithSequence(campaignID, *userID, phase, seqNum)
 		o.sseService.BroadcastToCampaign(campaignID, evt)
 	}
 
 	o.deps.Logger.Info(ctx, "Phase resumed successfully", map[string]interface{}{
 		"campaign_id": campaignID,
 		"phase":       phase,
+		"sequence":    seqNum,
 	})
 	return nil
 }

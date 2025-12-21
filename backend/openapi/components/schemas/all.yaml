@@ -2006,6 +2006,15 @@ CampaignPhasesStatusResponse:
   properties:
     campaignId: { type: string, format: uuid }
     overallProgressPercentage: { type: number, format: float }
+    controlPhase:
+      type: string
+      enum: [generation, dns, http, analysis, leads]
+      nullable: true
+      description: The phase currently controllable (pausedPhase ?? inProgressPhase ?? null). Per P2 contract §1.
+    lastSequence:
+      type: integer
+      format: int64
+      description: Monotonic sequence number from the most recent lifecycle event. Used by frontend SSE guards. Per P2 contract §5.
     errorMessage:
       type: string
       nullable: true
@@ -2035,7 +2044,7 @@ CampaignPhasesStatusResponse:
             additionalProperties: {}
             description: Structured metadata describing why the phase failed (code, message, context, etc.).
         required: [phase, status, progressPercentage]
-  required: [campaignId, overallProgressPercentage, phases]
+  required: [campaignId, overallProgressPercentage, phases, lastSequence]
 
 CampaignFunnelResponse:
   type: object

@@ -5,7 +5,46 @@
 
 ---
 
-## 1. Phase States
+## 1. Control Phase Definition
+
+### The `controlPhase` Concept
+
+At any moment, a campaign has exactly one **controlPhase** — the phase that pause/resume/stop operations target.
+
+```
+controlPhase = pausedPhase ?? inProgressPhase ?? null
+```
+
+**Resolution Order**:
+1. If any phase is `paused` → that phase is `controlPhase`
+2. Else if any phase is `in_progress` → that phase is `controlPhase`
+3. Else → `controlPhase` is `null` (no active work)
+
+### Rules
+
+| Rule | Description |
+|------|-------------|
+| **Control targets controlPhase** | All pause/resume/start controls MUST target `controlPhase`, never a UI-selected/inspect phase |
+| **Snapshot exposes controlPhase** | `GET /campaigns/{id}/status` response includes `controlPhase` field |
+| **UI selection ≠ control target** | User may inspect any phase, but controls always operate on `controlPhase` |
+| **Null handling** | If `controlPhase` is null, pause/resume return `409 Conflict` |
+
+### Snapshot Response Shape
+
+```json
+{
+  "campaignId": "uuid",
+  "controlPhase": "dns_validation",
+  "phases": { ... },
+  "lastSequence": 42
+}
+```
+
+**Invariant**: Frontend must never send pause/resume to a phase other than `controlPhase`. This prevents regressions where UI attempts to control the wrong phase.
+
+---
+
+## 2. Phase States
 
 A campaign phase exists in exactly one of these states:
 
@@ -19,7 +58,7 @@ A campaign phase exists in exactly one of these states:
 
 ---
 
-## 2. Valid State Transitions
+## 3. Valid State Transitions
 
 ```
                     ┌─────────────┐
@@ -63,9 +102,30 @@ A campaign phase exists in exactly one of these states:
 
 **Invariant**: All state changes MUST go through the state machine validator. No bypass paths.
 
+### Rerun/Retry Preconditions
+
+Transitions from `completed` or `failed` back to `in_progress` have additional preconditions:
+
+| Precondition | Description |
+|--------------|-------------|
+| **No concurrent execution** | No other phase may be `in_progress` at the time of rerun/retry |
+| **Predecessor outputs exist** | Required outputs from prior phases must still be available |
+
+If preconditions are not met, return `409 Conflict` with reason.
+
+```json
+{
+  "error": {
+    "code": "RERUN_PRECONDITION_FAILED",
+    "reason": "another_phase_in_progress",
+    "blocking_phase": "http_validation"
+  }
+}
+```
+
 ---
 
-## 3. State Authority Hierarchy
+## 4. State Authority Hierarchy
 
 ```
 Snapshot (GET /status) > SSE Events > Optimistic Updates
@@ -84,9 +144,55 @@ Snapshot (GET /status) > SSE Events > Optimistic Updates
 3. **Optimistic is temporary**: Overwritten by next SSE event or snapshot.
 4. **SSE guards never block snapshot**: Snapshot application bypasses sequence checks.
 
+### Snapshot Carries Sequence
+
+The snapshot response MUST include `lastSequence`:
+
+```json
+{
+  "campaignId": "uuid",
+  "controlPhase": "dns_validation",
+  "lastSequence": 42,
+  "phases": { ... }
+}
+```
+
+On SSE reconnect:
+1. Fetch snapshot
+2. Set `lastAppliedSequence = snapshot.lastSequence`
+3. Discard any SSE events with `sequence ≤ lastAppliedSequence`
+
+This ensures snapshot and SSE cannot diverge.
+
 ---
 
-## 4. SSE Event Semantics
+## 5. Sequence Generation
+
+### Source of Truth
+
+Sequence numbers are generated and managed exclusively by the backend:
+
+| Rule | Description |
+|------|-------------|
+| **Generated in orchestrator** | Sequence is assigned at the moment a lifecycle transition is persisted to DB |
+| **Stored in DB** | Sequence is stored or derivable from campaign state |
+| **SSE emits, never invents** | SSE service reads sequence from DB; never generates its own |
+| **Monotonically increasing** | Per campaign, sequence always increases |
+
+### Sequence Flow
+
+```
+1. Orchestrator persists state change → assigns sequence N
+2. SSE service reads from DB → emits event with sequence N
+3. Frontend receives event → checks N > lastApplied
+4. Snapshot fetched → returns lastSequence = current max
+```
+
+**Invariant**: Because sequence originates from DB and both snapshot and SSE read from DB, they cannot diverge.
+
+---
+
+## 6. SSE Event Semantics
 
 ### Lifecycle Events (Full Authority)
 
@@ -108,6 +214,20 @@ These events update phase status:
 
 **Invariant**: `campaign_progress` events must not modify lifecycle state. They report progress within the current state only.
 
+### Progress Event Guards
+
+Progress events MUST be ignored when the phase is in a terminal or suspended state:
+
+| Phase State | Progress Event Handling |
+|-------------|------------------------|
+| `in_progress` | ✅ Apply progress update |
+| `paused` | ❌ Ignore (log warning) |
+| `completed` | ❌ Ignore (log warning) |
+| `failed` | ❌ Ignore (log warning) |
+| `not_started` | ❌ Ignore (log warning) |
+
+**Invariant**: Progress events must never downgrade lifecycle state. A progress event arriving after `phase_paused` cannot flip state back to `in_progress`.
+
 ### Event Envelope
 
 All SSE events include:
@@ -128,7 +248,7 @@ All SSE events include:
 
 ---
 
-## 5. Control Signal Semantics
+## 7. Control Signal Semantics
 
 ### Idempotency
 
@@ -152,13 +272,40 @@ Content-Type: application/json
 | Transition invalid | `409 Conflict` | Rejected with current state |
 | Phase not found | `404 Not Found` | - |
 
+### 409 Conflict Error Envelope
+
+All invalid transition responses use a standardized error shape:
+
+```json
+{
+  "error": {
+    "code": "INVALID_PHASE_TRANSITION",
+    "current_state": "paused",
+    "attempted_action": "complete",
+    "message": "Cannot transition from 'paused' to 'completed'"
+  }
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `code` | Machine-readable error code |
+| `current_state` | Actual phase state at time of request |
+| `attempted_action` | The action that was attempted |
+| `message` | Human-readable explanation |
+
+Frontend handles 409 by:
+1. Reading `current_state` from response
+2. Updating cache to match actual state
+3. Not showing error toast (user sees corrected UI)
+
 ### Idempotency Guarantee
 
 Clients may safely retry control signals. The same request sent N times has the same effect as sending it once.
 
 ---
 
-## 6. Reconnection Protocol
+## 8. Reconnection Protocol
 
 When SSE connection is re-established:
 
@@ -171,7 +318,7 @@ When SSE connection is re-established:
 
 ---
 
-## 7. Frontend State Machine
+## 9. Frontend State Machine
 
 The frontend maintains a **mirror** of the backend state machine for UX purposes:
 
@@ -187,7 +334,7 @@ const canResume = phaseStateMachine.canTransition(currentState, 'in_progress');
 
 ---
 
-## 8. Invariants Summary
+## 10. Invariants Summary
 
 1. **Single source of truth**: Backend database is authoritative.
 2. **No refetch on pause/resume**: SSE + optimistic updates handle sync.
@@ -196,10 +343,81 @@ const canResume = phaseStateMachine.canTransition(currentState, 'in_progress');
 5. **Progress ≠ Status**: `campaign_progress` never changes lifecycle state.
 6. **State machine enforced**: All transitions validated, invalid rejected.
 7. **Idempotent controls**: Duplicate signals are safe.
+8. **controlPhase is canonical**: All controls target controlPhase, never UI-selected phase.
+9. **Progress ignores terminal states**: Progress events for paused/completed/failed phases are discarded.
 
 ---
 
-## 9. Debugging Checklist
+## 11. Required Validation Scenarios
+
+These scenarios are **contract-level invariants**, not just tests. Any implementation must pass all of them.
+
+### Scenario 1: Pause Survives Refresh
+```
+1. Phase is in_progress
+2. User clicks Pause → UI shows paused
+3. User refreshes browser
+4. UI still shows paused (from snapshot)
+```
+**Validates**: Snapshot authority, optimistic update not lost
+
+### Scenario 2: Pause Survives Backend Restart
+```
+1. Phase is paused
+2. Backend restarts
+3. SSE reconnects, fetches snapshot
+4. UI still shows paused
+```
+**Validates**: DB persistence, reconnection protocol
+
+### Scenario 3: Resume Continues Progress
+```
+1. Phase is paused at 50%
+2. User clicks Resume
+3. Progress continues from 50%, no reset to 0%
+4. No duplicate phase_started events
+```
+**Validates**: Resume semantics, progress preservation
+
+### Scenario 4: Out-of-Order SSE Ignored
+```
+1. Snapshot fetched with sequence=10
+2. SSE event arrives with sequence=8
+3. Event is discarded (not applied)
+4. UI state unchanged
+```
+**Validates**: Sequence guards, stale event rejection
+
+### Scenario 5: Duplicate Pause Idempotent
+```
+1. Phase is in_progress
+2. Pause sent twice (network retry)
+3. Both return 200 OK
+4. Phase is paused (not errored)
+```
+**Validates**: Idempotency, no error on duplicate
+
+### Scenario 6: Invalid Transition Rejected
+```
+1. Phase is paused
+2. Attempt to complete (invalid)
+3. Returns 409 with current_state: paused
+4. Phase remains paused
+```
+**Validates**: State machine enforcement, 409 envelope
+
+### Scenario 7: Progress After Pause Ignored
+```
+1. Phase is paused
+2. Stale campaign_progress event arrives
+3. Event is ignored
+4. Phase remains paused, no flip to in_progress
+```
+**Validates**: Progress guards, flip-flop prevention
+
+---
+
+## 12. Debugging Checklist
 
 When investigating state issues:
 
@@ -215,4 +433,5 @@ When investigating state issues:
 
 | Date | Change |
 |------|--------|
+| 2025-12-21 | Added controlPhase definition, rerun preconditions, sequence source, 409 envelope, progress guards, E2E scenarios |
 | 2025-12-21 | Initial contract created (P2 hardening) |

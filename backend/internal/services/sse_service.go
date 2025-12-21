@@ -908,3 +908,91 @@ func CreatePhaseAutoStartedEvent(campaignID uuid.UUID, userID uuid.UUID, phase m
 		Timestamp: time.Now(),
 	}
 }
+
+// ====================================================================
+// P2 Contract: SSE Lifecycle Events with Sequence (§5-6 of PHASE_STATE_CONTRACT.md)
+// ====================================================================
+
+// CreatePhaseStartedEventWithSequence creates a phase started SSE event with lifecycle sequence.
+// Per contract: sequence is monotonically increasing per campaign, generated at persist time.
+func CreatePhaseStartedEventWithSequence(campaignID uuid.UUID, userID uuid.UUID, phase models.PhaseTypeEnum, sequence int64) SSEEvent {
+	return SSEEvent{
+		Event:      SSEEventPhaseStarted,
+		CampaignID: &campaignID,
+		UserID:     &userID,
+		Data: map[string]interface{}{
+			"campaign_id": campaignID.String(),
+			"phase":       string(phase),
+			"sequence":    sequence,
+			"message":     fmt.Sprintf("Phase %s started", phase),
+		},
+		Timestamp: time.Now(),
+	}
+}
+
+// CreatePhasePausedEventWithSequence creates a phase paused SSE event with lifecycle sequence.
+func CreatePhasePausedEventWithSequence(campaignID uuid.UUID, userID uuid.UUID, phase models.PhaseTypeEnum, sequence int64) SSEEvent {
+	return SSEEvent{
+		Event:      SSEEventPhasePaused,
+		CampaignID: &campaignID,
+		UserID:     &userID,
+		Data: map[string]interface{}{
+			"campaign_id": campaignID.String(),
+			"phase":       string(phase),
+			"sequence":    sequence,
+			"message":     fmt.Sprintf("Phase %s paused", phase),
+		},
+		Timestamp: time.Now(),
+	}
+}
+
+// CreatePhaseResumedEventWithSequence creates a phase resumed SSE event with lifecycle sequence.
+func CreatePhaseResumedEventWithSequence(campaignID uuid.UUID, userID uuid.UUID, phase models.PhaseTypeEnum, sequence int64) SSEEvent {
+	return SSEEvent{
+		Event:      SSEEventPhaseResumed,
+		CampaignID: &campaignID,
+		UserID:     &userID,
+		Data: map[string]interface{}{
+			"campaign_id": campaignID.String(),
+			"phase":       string(phase),
+			"sequence":    sequence,
+			"message":     fmt.Sprintf("Phase %s resumed", phase),
+		},
+		Timestamp: time.Now(),
+	}
+}
+
+// CreatePhaseCompletedEventWithSequence creates a phase completed SSE event with lifecycle sequence.
+func CreatePhaseCompletedEventWithSequence(campaignID uuid.UUID, userID uuid.UUID, phase models.PhaseTypeEnum, sequence int64, results map[string]interface{}) SSEEvent {
+	data := map[string]interface{}{
+		"campaign_id": campaignID.String(),
+		"phase":       string(phase),
+		"sequence":    sequence,
+		"results":     results,
+		"message":     fmt.Sprintf("Phase %s completed successfully", phase),
+	}
+	return SSEEvent{
+		Event:      SSEEventPhaseCompleted,
+		CampaignID: &campaignID,
+		UserID:     &userID,
+		Data:       data,
+		Timestamp:  time.Now(),
+	}
+}
+
+// CreatePhaseFailedEventWithSequence creates a phase failed SSE event with lifecycle sequence.
+func CreatePhaseFailedEventWithSequence(campaignID uuid.UUID, userID uuid.UUID, phase models.PhaseTypeEnum, sequence int64, errorMsg string) SSEEvent {
+	return SSEEvent{
+		Event:      SSEEventPhaseFailed,
+		CampaignID: &campaignID,
+		UserID:     &userID,
+		Data: map[string]interface{}{
+			"campaign_id": campaignID.String(),
+			"phase":       string(phase),
+			"sequence":    sequence,
+			"error":       errorMsg,
+			"message":     fmt.Sprintf("Phase %s failed", phase),
+		},
+		Timestamp: time.Now(),
+	}
+}

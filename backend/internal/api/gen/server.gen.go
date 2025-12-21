@@ -172,6 +172,15 @@ const (
 	CampaignPhaseEnumValidation CampaignPhaseEnum = "validation"
 )
 
+// Defines values for CampaignPhasesStatusResponseControlPhase.
+const (
+	CampaignPhasesStatusResponseControlPhaseAnalysis   CampaignPhasesStatusResponseControlPhase = "analysis"
+	CampaignPhasesStatusResponseControlPhaseDns        CampaignPhasesStatusResponseControlPhase = "dns"
+	CampaignPhasesStatusResponseControlPhaseGeneration CampaignPhasesStatusResponseControlPhase = "generation"
+	CampaignPhasesStatusResponseControlPhaseHttp       CampaignPhasesStatusResponseControlPhase = "http"
+	CampaignPhasesStatusResponseControlPhaseLeads      CampaignPhasesStatusResponseControlPhase = "leads"
+)
+
 // Defines values for CampaignPhasesStatusResponsePhasesPhase.
 const (
 	CampaignPhasesStatusResponsePhasesPhaseAnalysis   CampaignPhasesStatusResponsePhasesPhase = "analysis"
@@ -567,11 +576,11 @@ const (
 
 // Defines values for CampaignsPhaseExecutionPutParamsPhaseType.
 const (
-	Analysis   CampaignsPhaseExecutionPutParamsPhaseType = "analysis"
-	Discovery  CampaignsPhaseExecutionPutParamsPhaseType = "discovery"
-	Enrichment CampaignsPhaseExecutionPutParamsPhaseType = "enrichment"
-	Extraction CampaignsPhaseExecutionPutParamsPhaseType = "extraction"
-	Validation CampaignsPhaseExecutionPutParamsPhaseType = "validation"
+	CampaignsPhaseExecutionPutParamsPhaseTypeAnalysis   CampaignsPhaseExecutionPutParamsPhaseType = "analysis"
+	CampaignsPhaseExecutionPutParamsPhaseTypeDiscovery  CampaignsPhaseExecutionPutParamsPhaseType = "discovery"
+	CampaignsPhaseExecutionPutParamsPhaseTypeEnrichment CampaignsPhaseExecutionPutParamsPhaseType = "enrichment"
+	CampaignsPhaseExecutionPutParamsPhaseTypeExtraction CampaignsPhaseExecutionPutParamsPhaseType = "extraction"
+	CampaignsPhaseExecutionPutParamsPhaseTypeValidation CampaignsPhaseExecutionPutParamsPhaseType = "validation"
 )
 
 // Defines values for DbBulkQueryParamsXRequestedWith.
@@ -1133,8 +1142,14 @@ type CampaignPhaseEnum string
 type CampaignPhasesStatusResponse struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 
+	// ControlPhase The phase currently controllable (pausedPhase ?? inProgressPhase ?? null). Per P2 contract §1.
+	ControlPhase *CampaignPhasesStatusResponseControlPhase `json:"controlPhase"`
+
 	// ErrorMessage Optional campaign-level failure message surfaced when the overall run fails.
-	ErrorMessage              *string `json:"errorMessage"`
+	ErrorMessage *string `json:"errorMessage"`
+
+	// LastSequence Monotonic sequence number from the most recent lifecycle event. Used by frontend SSE guards. Per P2 contract §5.
+	LastSequence              int64   `json:"lastSequence"`
 	OverallProgressPercentage float32 `json:"overallProgressPercentage"`
 	Phases                    []struct {
 		CompletedAt *time.Time `json:"completedAt"`
@@ -1153,6 +1168,9 @@ type CampaignPhasesStatusResponse struct {
 		Status             CampaignPhasesStatusResponsePhasesStatus `json:"status"`
 	} `json:"phases"`
 }
+
+// CampaignPhasesStatusResponseControlPhase The phase currently controllable (pausedPhase ?? inProgressPhase ?? null). Per P2 contract §1.
+type CampaignPhasesStatusResponseControlPhase string
 
 // CampaignPhasesStatusResponsePhasesPhase defines model for CampaignPhasesStatusResponse.Phases.Phase.
 type CampaignPhasesStatusResponsePhasesPhase string
@@ -11238,6 +11256,15 @@ type CampaignsPhasePause404JSONResponse struct{ NotFoundJSONResponse }
 func (response CampaignsPhasePause404JSONResponse) VisitCampaignsPhasePauseResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhasePause409JSONResponse struct{ ConflictJSONResponse }
+
+func (response CampaignsPhasePause409JSONResponse) VisitCampaignsPhasePauseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
 
 	return json.NewEncoder(w).Encode(response)
 }

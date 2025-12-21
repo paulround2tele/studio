@@ -65,7 +65,7 @@ const patchCampaignStatusPhase = (
   });
 };
 
-const patchStandalonePhaseStatus = (draft: PhaseStatusResponse | undefined, status: string): void => {
+const _patchStandalonePhaseStatus = (draft: PhaseStatusResponse | undefined, status: string): void => {
   if (!draft) {
     return;
   }

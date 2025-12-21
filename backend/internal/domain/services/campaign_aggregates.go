@@ -172,6 +172,10 @@ type StatusDTO struct {
 	OverallProgressPercentage float64            `json:"overallProgressPercentage"`
 	Phases                    []PhaseStatusItem  `json:"phases"`
 	ErrorMessage              *string            `json:"errorMessage,omitempty"`
+	// P2 Contract: controlPhase = pausedPhase ?? inProgressPhase ?? null (§1)
+	ControlPhase *string `json:"controlPhase,omitempty"`
+	// P2 Contract: Monotonic sequence from last lifecycle event (§5)
+	LastSequence int64 `json:"lastSequence"`
 }
 
 type PhaseStatusItem struct {
@@ -639,10 +643,38 @@ func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *Ag
 		}
 	}
 
+	// P2: Compute controlPhase = pausedPhase ?? inProgressPhase ?? null
+	var controlPhase *string
+	for _, phase := range phases {
+		if phase.Status == "paused" {
+			controlPhase = &phase.Phase
+			break
+		}
+	}
+	if controlPhase == nil {
+		for _, phase := range phases {
+			if phase.Status == "in_progress" {
+				controlPhase = &phase.Phase
+				break
+			}
+		}
+	}
+
+	// P2: Get last lifecycle sequence number
+	var lastSeq int64
+	if err := repo.DB().QueryRowContext(ctx, `SELECT COALESCE(MAX(sequence_number), 0) FROM campaign_state_events WHERE campaign_id = $1`, campaignID).Scan(&lastSeq); err != nil {
+		if err != sql.ErrNoRows {
+			// Non-fatal: default to 0
+			lastSeq = 0
+		}
+	}
+
 	dto := StatusDTO{
 		CampaignID:                openapi_types.UUID(campaignID),
 		OverallProgressPercentage: overallProgress,
 		Phases:                    phases,
+		ControlPhase:              controlPhase,
+		LastSequence:              lastSeq,
 	}
 	if campaignError.Valid {
 		errMsg := campaignError.String

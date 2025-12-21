@@ -323,6 +323,12 @@ func (f *fakeCampaignStore) UpdateCampaignMode(ctx context.Context, exec store.Q
 func (f *fakeCampaignStore) GetCampaignMode(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (string, error) {
 	return "", fmt.Errorf("not implemented")
 }
+func (f *fakeCampaignStore) RecordLifecycleEvent(ctx context.Context, exec store.Querier, campaignID uuid.UUID, eventType string, phase models.PhaseTypeEnum, fromStatus, toStatus models.PhaseStatusEnum, metadata map[string]interface{}) (int64, error) {
+	return 0, nil
+}
+func (f *fakeCampaignStore) GetLastLifecycleSequence(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (int64, error) {
+	return 0, nil
+}
 
 // Test verifying parity of filtered results between cursor path and legacy path for http_keyword_validation (filters by DNS OK).
 func TestFilteredHTTPKeywordValidationCursor(t *testing.T) {

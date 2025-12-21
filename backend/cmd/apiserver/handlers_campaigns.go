@@ -446,11 +446,20 @@ func (h *strictHandlers) CampaignsStatusGet(ctx context.Context, r gen.Campaigns
 		}
 	}
 
+	// P2: Map controlPhase to typed enum
+	var controlPhasePtr *gen.CampaignPhasesStatusResponseControlPhase
+	if dto.ControlPhase != nil {
+		cp := gen.CampaignPhasesStatusResponseControlPhase(*dto.ControlPhase)
+		controlPhasePtr = &cp
+	}
+
 	data := gen.CampaignPhasesStatusResponse{
 		CampaignId:                dto.CampaignID,
 		OverallProgressPercentage: float32(dto.OverallProgressPercentage),
 		Phases:                    phases,
 		ErrorMessage:              dto.ErrorMessage,
+		ControlPhase:              controlPhasePtr,
+		LastSequence:              dto.LastSequence,
 	}
 	return gen.CampaignsStatusGet200JSONResponse(data), nil
 }
@@ -2054,6 +2063,16 @@ func (h *strictHandlers) CampaignsPhasePause(ctx context.Context, r gen.Campaign
 		return gen.CampaignsPhasePause400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Orchestrator.PausePhase(ctx, campaignID, phaseModel); err != nil {
+		// P2: Check for state machine validation error - return 409 Conflict with structured envelope
+		var transitionErr *services.PhaseTransitionError
+		if errors.As(err, &transitionErr) {
+			err409 := transitionErr.To409Error("pause")
+			return gen.CampaignsPhasePause409JSONResponse{ConflictJSONResponse: gen.ConflictJSONResponse{
+				Error:     gen.ApiError{Message: err409.Message, Code: gen.CONFLICT, Timestamp: time.Now()},
+				RequestId: reqID(),
+				Success:   boolPtr(false),
+			}}, nil
+		}
 		switch {
 		case errors.Is(err, domainservices.ErrPhasePauseUnsupported):
 			msg := fmt.Sprintf("%s phase does not support pausing", phases.ToAPI(string(phaseModel)))
@@ -2097,6 +2116,16 @@ func (h *strictHandlers) CampaignsPhaseResume(ctx context.Context, r gen.Campaig
 		return gen.CampaignsPhaseResume400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Orchestrator.ResumePhase(ctx, campaignID, phaseModel); err != nil {
+		// P2: Check for state machine validation error - return 409 Conflict with structured envelope
+		var transitionErr *services.PhaseTransitionError
+		if errors.As(err, &transitionErr) {
+			err409 := transitionErr.To409Error("resume")
+			return gen.CampaignsPhaseResume409JSONResponse{ConflictJSONResponse: gen.ConflictJSONResponse{
+				Error:     gen.ApiError{Message: err409.Message, Code: gen.CONFLICT, Timestamp: time.Now()},
+				RequestId: reqID(),
+				Success:   boolPtr(false),
+			}}, nil
+		}
 		switch {
 		case errors.Is(err, domainservices.ErrPhaseResumeUnsupported):
 			msg := fmt.Sprintf("%s phase does not support resuming", phases.ToAPI(string(phaseModel)))

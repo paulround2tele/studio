@@ -2842,4 +2842,66 @@ func (s *campaignStorePostgres) GetCampaignMode(ctx context.Context, exec store.
 	return mode, nil
 }
 
+// RecordLifecycleEvent inserts a lifecycle state event and returns the auto-generated sequence number.
+// This implements P2 contract §5 - sequence tracking for SSE lifecycle guards.
+func (s *campaignStorePostgres) RecordLifecycleEvent(ctx context.Context, exec store.Querier, campaignID uuid.UUID, eventType string, phase models.PhaseTypeEnum, fromStatus, toStatus models.PhaseStatusEnum, metadata map[string]interface{}) (int64, error) {
+	if exec == nil {
+		exec = s.db
+	}
+
+	// Encode metadata as JSON
+	eventData, err := json.Marshal(metadata)
+	if err != nil {
+		eventData = []byte("{}")
+	}
+
+	// Build operation context
+	opCtx := map[string]interface{}{
+		"phase":      string(phase),
+		"fromStatus": string(fromStatus),
+		"toStatus":   string(toStatus),
+		"timestamp":  time.Now().UTC().Format(time.RFC3339Nano),
+	}
+	opCtxJSON, _ := json.Marshal(opCtx)
+
+	// Insert and return the sequence number
+	query := `
+		INSERT INTO campaign_state_events (
+			campaign_id, event_type, source_state, target_state, reason,
+			triggered_by, event_data, operation_context
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING sequence_number`
+
+	var seqNum int64
+	err = exec.GetContext(ctx, &seqNum, query,
+		campaignID,
+		eventType,
+		string(fromStatus),
+		string(toStatus),
+		fmt.Sprintf("Phase %s: %s → %s", phase, fromStatus, toStatus),
+		"orchestrator",
+		eventData,
+		opCtxJSON,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("RecordLifecycleEvent failed: %w", err)
+	}
+
+	return seqNum, nil
+}
+
+// GetLastLifecycleSequence returns the most recent sequence number for a campaign's lifecycle events.
+func (s *campaignStorePostgres) GetLastLifecycleSequence(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (int64, error) {
+	if exec == nil {
+		exec = s.db
+	}
+
+	query := `SELECT COALESCE(MAX(sequence_number), 0) FROM campaign_state_events WHERE campaign_id = $1`
+	var seqNum int64
+	if err := exec.GetContext(ctx, &seqNum, query, campaignID); err != nil {
+		return 0, fmt.Errorf("GetLastLifecycleSequence failed: %w", err)
+	}
+	return seqNum, nil
+}
+
 var _ store.CampaignStore = (*campaignStorePostgres)(nil)

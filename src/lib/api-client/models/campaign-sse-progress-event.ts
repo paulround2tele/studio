@@ -16,38 +16,14 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { CampaignProgressResponse } from './campaign-progress-response';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { CampaignSseEnvelope } from './campaign-sse-envelope';
 
 /**
- * 
+ * @type CampaignSseProgressEvent
  * @export
- * @interface CampaignSseProgressEvent
  */
-export interface CampaignSseProgressEvent {
-  /**
-   * 
-   * @memberof CampaignSseProgressEvent
-   */
-  'type': 
-      'campaign_progress'
-;
-  /**
-   * 
-   * @memberof CampaignSseProgressEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSseProgressEvent
-   */
-  'payload'?: 
-        
-          
-          CampaignProgressResponse
-    ;
-}
+export type CampaignSseProgressEvent = CampaignSseEnvelope;
 
 

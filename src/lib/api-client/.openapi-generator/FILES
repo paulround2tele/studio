@@ -113,6 +113,7 @@ docs/CampaignSseAnalysisReuseEnrichmentEvent.md
 docs/CampaignSseCompletedEvent.md
 docs/CampaignSseDomainGeneratedEvent.md
 docs/CampaignSseDomainValidatedEvent.md
+docs/CampaignSseEnvelope.md
 docs/CampaignSseEvent.md
 docs/CampaignSseEventPayload.md
 docs/CampaignSseEventType.md
@@ -361,6 +362,7 @@ models/campaign-sse-analysis-reuse-enrichment-event.ts
 models/campaign-sse-completed-event.ts
 models/campaign-sse-domain-generated-event.ts
 models/campaign-sse-domain-validated-event.ts
+models/campaign-sse-envelope.ts
 models/campaign-sse-event-payload.ts
 models/campaign-sse-event-type.ts
 models/campaign-sse-event.ts

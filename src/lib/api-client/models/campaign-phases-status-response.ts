@@ -42,6 +42,22 @@ export interface CampaignPhasesStatusResponse {
           number
     ;
   /**
+   * The phase currently controllable (pausedPhase ?? inProgressPhase ?? null). Per P2 contract §1.
+   * @memberof CampaignPhasesStatusResponse
+   */
+  'controlPhase'?: 
+      'generation' | 'dns' | 'http' | 'analysis' | 'leads'
+;
+  /**
+   * Monotonic sequence number from the most recent lifecycle event. Used by frontend SSE guards. Per P2 contract §5.
+   * @memberof CampaignPhasesStatusResponse
+   */
+  'lastSequence': 
+        
+          
+          number
+    ;
+  /**
    * Optional campaign-level failure message surfaced when the overall run fails.
    * @memberof CampaignPhasesStatusResponse
    */

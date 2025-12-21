@@ -15,39 +15,15 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
+import type { CampaignSseEnvelope } from './campaign-sse-envelope';
+// May contain unused imports in some cases
+// @ts-ignore
 import type { DomainStatusEvent } from './domain-status-event';
 
 /**
- * 
+ * @type CampaignSseDomainValidatedEvent
  * @export
- * @interface CampaignSseDomainValidatedEvent
  */
-export interface CampaignSseDomainValidatedEvent {
-  /**
-   * 
-   * @memberof CampaignSseDomainValidatedEvent
-   */
-  'type': 
-      'domain_validated'
-;
-  /**
-   * 
-   * @memberof CampaignSseDomainValidatedEvent
-   */
-  'timestamp'?: 
-        
-          
-          string
-    ;
-  /**
-   * 
-   * @memberof CampaignSseDomainValidatedEvent
-   */
-  'payload'?: 
-        
-          
-          DomainStatusEvent
-    ;
-}
+export type CampaignSseDomainValidatedEvent = CampaignSseEnvelope;
 
 

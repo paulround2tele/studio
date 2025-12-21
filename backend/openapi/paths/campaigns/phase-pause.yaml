@@ -21,4 +21,5 @@ post:
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '409': { $ref: '../../components/responses.yaml#/Conflict' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
