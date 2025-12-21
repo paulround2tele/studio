@@ -1111,7 +1111,12 @@ func (s *domainGenerationService) awaitResume(ctx context.Context, execution *do
 			return true
 		case cmd, ok := <-execution.controlCh:
 			if !ok {
-				return s.isStopRequested(execution)
+				if s.isStopRequested(execution) {
+					return true
+				}
+				// Channel closed (likely due to re-attach).
+				// Continue loop to pick up new channel.
+				continue
 			}
 			switch cmd.Signal {
 			case ControlSignalResume:

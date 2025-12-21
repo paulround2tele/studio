@@ -1184,7 +1184,10 @@ func (s *dnsValidationService) awaitResume(ctx context.Context, execution *dnsEx
 			return true
 		case cmd, ok := <-execution.controlCh:
 			if !ok {
-				return s.isStopRequested(execution)
+				if s.isStopRequested(execution) {
+					return true
+				}
+				continue
 			}
 			switch cmd.Signal {
 			case ControlSignalResume:

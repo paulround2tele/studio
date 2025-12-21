@@ -179,9 +179,7 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
     goal: {
       executionMode: 'manual',
     },
-    pattern: {
-      maxDomains: 100,
-    },
+    pattern: {},
     targeting: {
       includeKeywords: [],
       excludeKeywords: [],

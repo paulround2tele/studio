@@ -2634,6 +2634,22 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 		return
 	}
 
+	// Ensure the canonical campaign row never stays stuck in "in_progress" once a phase finishes.
+	if finalStatus != nil {
+		if querier, ok := o.deps.DB.(store.Querier); ok {
+			phaseStatus := finalStatus.Status
+			phaseRef := phase
+			if err := o.store.UpdateCampaignPhaseFields(ctx, querier, campaignID, &phaseRef, &phaseStatus); err != nil && o.deps.Logger != nil {
+				o.deps.Logger.Warn(ctx, "campaign.phase.sync_failed", map[string]interface{}{
+					"campaign_id": campaignID,
+					"phase":       phase,
+					"status":      phaseStatus,
+					"error":       err.Error(),
+				})
+			}
+		}
+	}
+
 	// Broadcast phase completed event via SSE with final stats if available
 	var cachedUserID *uuid.UUID
 	if o.sseService != nil {
