@@ -281,11 +281,9 @@ export const campaignApi = createApi({
           patches.forEach((p) => p.undo());
         }
       },
-      invalidatesTags: (result, error, { campaignId, phase }) => [
-        { type: 'Campaign', id: campaignId },
-        { type: 'CampaignProgress', id: campaignId },
-        { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
-      ],
+      // P1 Fix: Remove invalidatesTags to prevent refetch race.
+      // Optimistic update + SSE phase_paused event handle cache correctly.
+      // Refetch during pause would return stale in_progress causing flip-flop.
     }),
 
   resumePhaseStandalone: builder.mutation<
@@ -327,11 +325,9 @@ export const campaignApi = createApi({
           patches.forEach((p) => p.undo());
         }
       },
-      invalidatesTags: (result, error, { campaignId, phase }) => [
-        { type: 'Campaign', id: campaignId },
-        { type: 'CampaignProgress', id: campaignId },
-        { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
-      ],
+      // P1 Fix: Remove invalidatesTags to prevent refetch race.
+      // Optimistic update + SSE phase_resumed event handle cache correctly.
+      // Refetch during resume would return stale paused causing flip-flop.
     }),
 
   stopPhaseStandalone: builder.mutation<

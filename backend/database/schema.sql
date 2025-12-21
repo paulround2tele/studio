@@ -1960,6 +1960,7 @@ $$;
 
 --
 -- Name: sync_campaign_from_phases(uuid); Type: FUNCTION; Schema: public; Owner: -
+-- P0 Fix: Now includes 'paused' in priority selection (migration 000070)
 --
 
 CREATE FUNCTION public.sync_campaign_from_phases(campaign_uuid uuid) RETURNS void
@@ -1976,10 +1977,11 @@ BEGIN
     FROM lead_generation_campaigns
     WHERE id = campaign_uuid;
 
+    -- P0 Fix: Include 'paused' in the active status check alongside 'in_progress' and 'failed'.
     SELECT phase_type, status INTO computed_current_phase, computed_phase_status
     FROM campaign_phases
     WHERE campaign_id = campaign_uuid
-      AND status IN ('in_progress', 'failed')
+      AND status IN ('in_progress', 'paused', 'failed')
     ORDER BY phase_order
     LIMIT 1;
 

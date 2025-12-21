@@ -126,8 +126,10 @@ type CampaignOrchestrator struct {
 	mu                 sync.RWMutex
 	campaignExecutions map[uuid.UUID]*CampaignExecution
 
-	// in-flight auto starts to prevent duplicate chaining (campaignID+phase key)
-	autoStartInProgress map[string]struct{}
+	// P1 Fix: Unified phase start guard to prevent auto-advance vs manual race.
+	// Key format: "campaignID:phase". Set at StartPhaseInternal entry, cleared after Execute completes.
+	// This ensures only one goroutine can start a specific phase at a time.
+	phaseStartInProgress map[string]struct{}
 
 	// Optional post-completion hooks
 	hooks []PostCompletionHook
@@ -682,7 +684,7 @@ func NewCampaignOrchestrator(
 		metrics:             metrics,
 		control:             newInMemoryPhaseControlManager(),
 		campaignExecutions:  make(map[uuid.UUID]*CampaignExecution),
-		autoStartInProgress: make(map[string]struct{}),
+		phaseStartInProgress: make(map[string]struct{}),
 		hooks:               make([]PostCompletionHook, 0),
 	}
 }
@@ -794,6 +796,29 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		"campaign_id": campaignID,
 		"phase":       phase,
 	})
+
+	// P1 Fix: Unified phase start guard to prevent auto-advance vs manual race.
+	// This check+set must be atomic to prevent both callers from proceeding.
+	startKey := campaignID.String() + ":" + string(phase)
+	o.mu.Lock()
+	if _, inProgress := o.phaseStartInProgress[startKey]; inProgress {
+		o.mu.Unlock()
+		o.deps.Logger.Debug(ctx, "Phase start already in progress (race prevented)", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+		})
+		return nil // Idempotent: another goroutine is already starting this phase
+	}
+	o.phaseStartInProgress[startKey] = struct{}{}
+	o.mu.Unlock()
+
+	// Ensure we clear the guard when this function returns (success or failure)
+	defer func() {
+		o.mu.Lock()
+		delete(o.phaseStartInProgress, startKey)
+		o.mu.Unlock()
+	}()
+
 	// Idempotency guard: ignore duplicate start if same phase already in progress
 	o.mu.RLock()
 	if exec, ok := o.campaignExecutions[campaignID]; ok && exec.CurrentPhase == phase && exec.OverallStatus == models.PhaseStatusInProgress {
@@ -1570,6 +1595,18 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 		ackErr = controlErr
 	}
 	if ackErr != nil {
+		// P0 Fix: ErrControlChannelFull MUST NOT be silently ignored.
+		// If the channel is full, the phase runtime exists but is overloaded - pause was NOT delivered.
+		// Return error so UI doesn't show paused while runtime keeps running.
+		if errors.Is(ackErr, ErrControlChannelFull) {
+			if o.deps.Logger != nil {
+				o.deps.Logger.Error(ctx, "phase.pause.control_channel_full", ackErr, map[string]interface{}{
+					"campaign_id": campaignID,
+					"phase":       phase,
+				})
+			}
+			return fmt.Errorf("pause signal could not be delivered (channel full): %w", ackErr)
+		}
 		// If runtime isn't available but DB shows the phase in progress, still persist the pause so
 		// snapshot reads reflect user intent and UI doesn't get stuck.
 		if !(phaseInProgressInStore && (errors.Is(ackErr, domainservices.ErrPhaseExecutionMissing) || errors.Is(ackErr, domainservices.ErrPhaseNotRunning))) {
@@ -1586,6 +1623,21 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 
 	if err := o.store.PausePhase(ctx, querier, campaignID, phase); err != nil {
 		return err
+	}
+
+	// P0 Fix: Sync campaign row immediately so lead_generation_campaigns.phase_status = 'paused'.
+	// Without this, the DB trigger may not prioritize paused status, and findRunningPhase/exclusivity
+	// checks could see stale state.
+	pausedStatus := models.PhaseStatusPaused
+	if err := o.store.UpdateCampaignPhaseFields(ctx, querier, campaignID, &phase, &pausedStatus); err != nil {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "campaign.pause.sync_campaign_row_failed", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"error":       err.Error(),
+			})
+		}
+		// Non-fatal: phase row is paused, campaign row sync is best-effort
 	}
 
 	if o.sseService != nil && userID != nil {
@@ -2741,22 +2793,8 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 		if !ok {
 			return
 		}
-		// Under strict model A mid-chain gating is removed; auto-advance simply attempts the next phase assuming pre-validation.
-		key := campaignID.String() + ":" + string(next)
-		o.mu.Lock()
-		if _, exists := o.autoStartInProgress[key]; exists {
-			o.mu.Unlock()
-			return
-		}
-		o.autoStartInProgress[key] = struct{}{}
-		o.mu.Unlock()
-
-		defer func() {
-			o.mu.Lock()
-			delete(o.autoStartInProgress, key)
-			o.mu.Unlock()
-		}()
-
+		// P1 Fix: The phaseStartInProgress guard in StartPhaseInternal now handles the race.
+		// No need for separate autoStartInProgress tracking here.
 		o.deps.Logger.Info(ctx, "Auto-advancing to next phase (full_sequence mode)", map[string]interface{}{"campaign_id": campaignID, "from_phase": phase, "to_phase": next})
 		if o.sseService != nil && cachedUserID != nil {
 			evt := services.CreatePhaseAutoStartedEvent(campaignID, *cachedUserID, next)

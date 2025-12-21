@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSSE, type SSEEvent } from './useSSE';
 import { useAppDispatch } from '@/store/hooks';
-import { phaseStarted, phaseCompleted, phaseFailed } from '@/store/slices/pipelineExecSlice';
+import { phaseStarted, phaseCompleted, phaseFailed, resetPipelineExec } from '@/store/slices/pipelineExecSlice';
 import { campaignApi } from '@/store/api/campaignApi';
 import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campaign-phases-status-response';
 import { PipelinePhase, PhaseRunStatus as _PhaseRunStatus } from '@/utils/phaseStatus';
@@ -978,6 +978,52 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
       reconnectAttempts: sseConnection.reconnectAttempts,
     });
   }, [campaignId, captureDebugEvent, sseConnection.error, sseConnection.readyState, sseConnection.reconnectAttempts]);
+
+  // P1 Fix: On SSE reconnect, force a fresh getCampaignStatus snapshot to ensure
+  // we don't continue with stale cache data after a network interruption.
+  const prevConnectedAtRef = useRef<string | null>(null);
+  useEffect(() => {
+    const currentConnectedAt = sseConnection.connectedAt;
+    const previousConnectedAt = prevConnectedAtRef.current;
+
+    // First connection - just store the timestamp
+    if (!previousConnectedAt && currentConnectedAt) {
+      prevConnectedAtRef.current = currentConnectedAt;
+      return;
+    }
+
+    // Reconnection detected - connectedAt changed
+    if (previousConnectedAt && currentConnectedAt && previousConnectedAt !== currentConnectedAt) {
+      prevConnectedAtRef.current = currentConnectedAt;
+
+      // If we have a campaignId, invalidate and refetch the status to resync
+      if (campaignId) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[useCampaignSSE] SSE reconnected, invalidating getCampaignStatus to resync', {
+            campaignId,
+            previousConnectedAt,
+            currentConnectedAt,
+          });
+        }
+        captureDebugEvent('reconnect_resync', {
+          campaignId,
+          previousConnectedAt,
+          currentConnectedAt,
+        });
+
+        // Invalidate the campaign cache to force a fresh fetch
+        dispatch(
+          campaignApi.util.invalidateTags([{ type: 'Campaign', id: campaignId }])
+        );
+
+        // Also reset the pipelineExec slice to avoid parallel stale state
+        dispatch(resetPipelineExec({ campaignId }));
+
+        // Clear local deduplication state so we process fresh events
+        completedRef.current.clear();
+      }
+    }
+  }, [sseConnection.connectedAt, campaignId, dispatch, captureDebugEvent]);
 
   useEffect(() => {
     if (fallbackApplied) return;

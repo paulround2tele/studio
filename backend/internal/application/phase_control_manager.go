@@ -22,10 +22,13 @@ var (
 	// ErrControlChannelMissing indicates no control subscription exists for the requested phase.
 	ErrControlChannelMissing = errors.New("phase control channel missing")
 	// ErrControlChannelFull indicates the subscription channel exists but cannot accept new commands.
+	// P0 Fix: This error MUST propagate to API callers - do not silently succeed.
 	ErrControlChannelFull = errors.New("phase control channel full")
 )
 
-const defaultPhaseControlBuffer = 8
+// defaultPhaseControlBuffer sets the buffered channel capacity for control signals.
+// P0 Fix: Increased from 8 to 32 to handle rapid pause/resume spam without dropping signals.
+const defaultPhaseControlBuffer = 32
 
 // inMemoryPhaseControlManager provides a lightweight, goroutine-safe implementation suitable for a single process.
 type inMemoryPhaseControlManager struct {
