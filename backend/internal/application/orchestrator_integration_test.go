@@ -150,6 +150,8 @@ type testMetrics struct {
 	phaseResumeAttempts      int
 	phaseResumeSuccesses     int
 	phaseResumeFailures      int
+	transitionBlocked        int // P3: Guard metric
+	transitionBypass         int // P3.4: Bypass audit metric
 	durations                map[string]time.Duration
 	autoStartLatency         time.Duration
 	firstPhaseRunningLatency time.Duration
@@ -168,6 +170,8 @@ func (m *testMetrics) IncAutoStartSuccesses()   { m.autoStartSuccesses++ }
 func (m *testMetrics) IncAutoStartFailures()    { m.autoStartFailures++ }
 func (m *testMetrics) IncManualModeCreations()  { m.manualModeCreations++ }
 func (m *testMetrics) IncAutoModeCreations()    { m.autoModeCreations++ }
+func (m *testMetrics) IncTransitionBlocked()    { m.transitionBlocked++ } // P3
+func (m *testMetrics) IncTransitionBypass()     { m.transitionBypass++ }  // P3.4
 func (m *testMetrics) RecordAutoStartLatency(d time.Duration) {
 	m.autoStartLatency += d
 }

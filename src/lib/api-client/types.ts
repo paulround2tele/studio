@@ -1453,7 +1453,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Start campaign phase */
+        /**
+         * Start campaign phase
+         * @description Start a campaign phase. Validates that prior phases are complete and configs exist.
+         *
+         *     P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
+         *
+         */
         post: operations["campaigns_phase_start"];
         delete?: never;
         options?: never;
@@ -1473,6 +1479,10 @@ export interface paths {
         /**
          * Pause campaign phase
          * @description Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+         *
+         *     P3.2: Supports expected_state precondition - if provided, pause only proceeds when current state matches.
+         *     P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
+         *
          */
         post: operations["campaigns_phase_pause"];
         delete?: never;
@@ -1493,6 +1503,10 @@ export interface paths {
         /**
          * Resume campaign phase
          * @description Resume a previously paused phase and transition it back to in_progress when supported.
+         *
+         *     P3.2: Supports expected_state precondition - if provided, resume only proceeds when current state matches.
+         *     P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
+         *
          */
         post: operations["campaigns_phase_resume"];
         delete?: never;
@@ -1544,7 +1558,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Stop campaign phase */
+        /**
+         * Stop campaign phase
+         * @description Stop/cancel a running or paused phase, marking it as failed.
+         *
+         *     P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
+         *
+         */
         post: operations["campaigns_phase_stop"];
         delete?: never;
         options?: never;
@@ -1564,6 +1584,9 @@ export interface paths {
         /**
          * Stop the currently running campaign phase
          * @description Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+         *
+         *     P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
+         *
          */
         post: operations["campaigns_stop"];
         delete?: never;
@@ -3269,6 +3292,11 @@ export interface components {
             /** @description Keyword sets for extraction phase */
             keywordSetIds?: string[];
         };
+        /**
+         * @description Phase lifecycle status (P3.2 expected_state precondition)
+         * @enum {string}
+         */
+        PhaseStatusEnum: "not_started" | "ready" | "configured" | "in_progress" | "paused" | "completed" | "failed";
         /** @description Response model for campaign mode update operation. */
         CampaignModeUpdateResponse: {
             mode: components["schemas"]["CampaignModeEnum"];
@@ -7071,7 +7099,12 @@ export interface operations {
     campaigns_phase_start: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description P3.3: Unique key for duplicate request detection. If a request with this key was already
+                 *     processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+                 *      */
+                "X-Idempotency-Key"?: string;
+            };
             path: {
                 campaignId: string;
                 phase: components["schemas"]["CampaignPhaseEnum"];
@@ -7109,8 +7142,18 @@ export interface operations {
     };
     campaigns_phase_pause: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                /** @description P3.2: Precondition check. If provided, pause only proceeds when current phase status matches.
+                 *     Returns 409 EXPECTED_STATE_MISMATCH if actual state differs.
+                 *      */
+                expected_state?: components["schemas"]["PhaseStatusEnum"];
+            };
+            header?: {
+                /** @description P3.3: Unique key for duplicate request detection. If a request with this key was already
+                 *     processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+                 *      */
+                "X-Idempotency-Key"?: string;
+            };
             path: {
                 campaignId: string;
                 phase: components["schemas"]["CampaignPhaseEnum"];
@@ -7137,8 +7180,18 @@ export interface operations {
     };
     campaigns_phase_resume: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                /** @description P3.2: Precondition check. If provided, resume only proceeds when current phase status matches.
+                 *     Returns 409 EXPECTED_STATE_MISMATCH if actual state differs.
+                 *      */
+                expected_state?: components["schemas"]["PhaseStatusEnum"];
+            };
+            header?: {
+                /** @description P3.3: Unique key for duplicate request detection. If a request with this key was already
+                 *     processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+                 *      */
+                "X-Idempotency-Key"?: string;
+            };
             path: {
                 campaignId: string;
                 phase: components["schemas"]["CampaignPhaseEnum"];
@@ -7233,7 +7286,12 @@ export interface operations {
     campaigns_phase_stop: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description P3.3: Unique key for duplicate request detection. If a request with this key was already
+                 *     processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+                 *      */
+                "X-Idempotency-Key"?: string;
+            };
             path: {
                 campaignId: string;
                 phase: components["schemas"]["CampaignPhaseEnum"];
@@ -7260,7 +7318,12 @@ export interface operations {
     campaigns_stop: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description P3.3: Unique key for duplicate request detection. If a request with this key was already
+                 *     processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+                 *      */
+                "X-Idempotency-Key"?: string;
+            };
             path: {
                 campaignId: string;
             };

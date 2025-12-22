@@ -270,7 +270,9 @@ Content-Type: application/json
 | Transition valid, executed | `200 OK` | State changed |
 | Already in target state | `200 OK` | No-op (idempotent success) |
 | Transition invalid | `409 Conflict` | Rejected with current state |
+| Expected state mismatch | `409 Conflict` | Precondition failed (P3.2) |
 | Phase not found | `404 Not Found` | - |
+| Invalid expected_state value | `400 Bad Request` | - |
 
 ### 409 Conflict Error Envelope
 
@@ -293,6 +295,71 @@ All invalid transition responses use a standardized error shape:
 | `current_state` | Actual phase state at time of request |
 | `attempted_action` | The action that was attempted |
 | `message` | Human-readable explanation |
+
+### P3.2: expected_state Precondition
+
+Control endpoints accept an optional `expected_state` query parameter:
+
+```http
+POST /api/v2/campaigns/{id}/phases/{phase}/pause?expected_state=in_progress
+```
+
+Behavior:
+- If `expected_state` matches current state → proceed with transition
+- If `expected_state` doesn't match → return 409 with `EXPECTED_STATE_MISMATCH`
+- If `expected_state` is omitted → backward-compatible (no precondition check)
+- If `expected_state` is invalid → return 400
+
+**Expected State Mismatch Response**:
+```json
+{
+  "error": {
+    "code": "EXPECTED_STATE_MISMATCH",
+    "current_state": "paused",
+    "expected_state": "in_progress",
+    "attempted_action": "pause",
+    "message": "Expected state 'in_progress' but current state is 'paused'; cannot pause"
+  },
+  "requestId": "uuid",
+  "success": false
+}
+```
+
+### P3.3: X-Idempotency-Key Header
+
+Control endpoints accept an optional `X-Idempotency-Key` header:
+
+```http
+POST /api/v2/campaigns/{id}/phases/{phase}/pause
+POST /api/v2/campaigns/{id}/phases/{phase}/resume
+POST /api/v2/campaigns/{id}/phases/{phase}/start
+POST /api/v2/campaigns/{id}/phases/{phase}/stop
+POST /api/v2/campaigns/{id}/stop
+X-Idempotency-Key: client-generated-uuid-or-timestamp
+```
+
+Behavior:
+- First request with a key → executes operation, caches result, emits SSE
+- Subsequent requests with same key (within 5 min TTL) → returns cached result, NO new SSE
+- Different key → executes as new operation
+- No key → backward-compatible (no caching)
+
+**Supported Operations**:
+| Operation | Endpoint | Supports Idempotency |
+|-----------|----------|---------------------|
+| Pause | `POST /phases/{phase}/pause` | ✓ |
+| Resume | `POST /phases/{phase}/resume` | ✓ |
+| Start | `POST /phases/{phase}/start` | ✓ |
+| Stop (phase) | `POST /phases/{phase}/stop` | ✓ |
+| Stop (campaign) | `POST /campaigns/{id}/stop` | ✓ |
+
+**Purpose**: Prevents duplicate SSE emissions from rapid double-clicks or network retries.
+
+**Key Format**: Any unique string (e.g., UUID, timestamp, request fingerprint).
+
+**TTL**: Keys expire after 5 minutes. After expiration, the same key will execute a new operation.
+
+**Error Caching**: If the first request fails (e.g., 409), the error is also cached. Retries with the same key return the cached error without re-executing.
 
 Frontend handles 409 by:
 1. Reading `current_state` from response
@@ -415,6 +482,44 @@ These scenarios are **contract-level invariants**, not just tests. Any implement
 ```
 **Validates**: Progress guards, flip-flop prevention
 
+### Scenario 8: expected_state Precondition (P3.2)
+```
+1. Phase is paused
+2. Pause request with expected_state=in_progress
+3. Returns 409 with EXPECTED_STATE_MISMATCH
+4. Phase remains paused (no state change)
+```
+**Validates**: Precondition enforcement, stale client detection
+
+### Scenario 9: Idempotency Key Deduplication (P3.3)
+```
+1. Phase is in_progress
+2. Two rapid pause requests with same X-Idempotency-Key
+3. First request pauses, second returns cached result
+4. Only ONE SSE phase_paused event emitted
+```
+**Validates**: Duplicate prevention, no double SSE sequences
+
+### Scenario 10: Idempotency Key Expiration (P3.3)
+```
+1. Pause with key "abc" succeeds
+2. Wait > 5 minutes (TTL)
+3. Resume phase
+4. Pause with key "abc" again
+5. New SSE event emitted (key expired)
+```
+**Validates**: TTL expiration, fresh execution after timeout
+
+### Scenario 11: Bypass Audit Detection (P3.4)
+```
+1. Server restarts while phase is running
+2. RestoreInFlightPhases uses transitionPhaseDirect
+3. P3.4 audit log emitted: "Transition bypass detected"
+4. Metric transition_bypass_total increments
+5. Dashboard shows bypass count for migration tracking
+```
+**Validates**: Observability of legacy bypass paths
+
 ---
 
 ## 12. Debugging Checklist
@@ -426,6 +531,69 @@ When investigating state issues:
 3. Confirm `campaign_progress` is not touching status
 4. Verify snapshot was fetched after any reconnect
 5. Check for `invalidatesTags` triggering unwanted refetches
+6. **P3.4**: Check for "Transition bypass detected" logs - these indicate legacy paths
+
+---
+
+## 13. P3.4: Transition Guard Unification
+
+### Current Architecture
+
+All status mutations SHOULD flow through `transitionPhase()`:
+
+```
+┌────────────────┐     ┌──────────────────┐     ┌────────────────┐
+│  HTTP Handler  │────▶│ transitionPhase()│────▶│   Database     │
+└────────────────┘     │  (state machine) │     └────────────────┘
+                       └────────┬─────────┘
+                                │
+                       ┌────────▼─────────┐
+                       │   SSE Emission   │
+                       │  (with sequence) │
+                       └──────────────────┘
+```
+
+### Known Bypass Points (P3.4 Tracked)
+
+| Caller | Reason | Status |
+|--------|--------|--------|
+| `transitionPhaseDirect` | Legacy bypass | **DEPRECATED** - no callers remain |
+| `recordCampaignStop` | Campaign stop flow | **MIGRATED** - now uses transitionPhase() |
+| `PausePhaseWithOpts` | Runtime coordination | Uses ValidateTransition + RecordLifecycleEvent (correct pattern) |
+| `ResumePhaseWithOpts` | Runtime coordination | Uses ValidateTransition + RecordLifecycleEvent (correct pattern) |
+
+### P3 Final: Migration Complete
+
+As of P3 Final, all lifecycle mutations either:
+1. Go through `transitionPhase()` (canonical path)
+2. Use `ValidateTransition()` + `RecordLifecycleEvent()` + SSE emission (specialized but correct)
+
+The `transitionPhaseDirect()` function is now **DEPRECATED** with zero callers.
+
+### Audit Logging
+
+All bypasses are logged with:
+- **Log**: `P3.4: Transition bypass detected`
+- **Metric**: `transition_bypass_total`
+- **Fields**: campaign_id, phase, from_status, to_status, caller, reason
+
+### Multi-Instance Idempotency (Redis)
+
+For multi-instance deployments, replace in-memory cache with Redis:
+
+```go
+// Interface for pluggable store
+type IdempotencyStore interface {
+    Get(key string) (*IdempotencyEntry, error)
+    Set(key string, result interface{}, err error, ttl time.Duration) error
+}
+
+// Redis implementation
+// SETNX <key> <json> EX 300
+// GET <key>
+```
+
+See: `backend/internal/services/idempotency_cache.go` for implementation notes.
 
 ---
 
@@ -433,5 +601,8 @@ When investigating state issues:
 
 | Date | Change |
 |------|--------|
-| 2025-12-21 | Added controlPhase definition, rerun preconditions, sequence source, 409 envelope, progress guards, E2E scenarios |
-| 2025-12-21 | Initial contract created (P2 hardening) |
+| 2025-12-21 | **P3 FINAL**: Unified control plane - all lifecycle mutations validated, transitionPhaseDirect deprecated |
+| 2025-12-21 | P3 Final: OpenAPI updated with expected_state + X-Idempotency-Key on pause/resume/start/stop |
+| 2025-12-21 | P3 Final: Frontend uses idempotency keys and expected_state preconditions |
+| 2025-12-21 | P3.4: Transition guard unification - added TransitionBypassAudit, IncTransitionBypass metric, Redis migration docs |
+| 2025-12-21 | P3.3: Extended X-Idempotency-Key to Start, Stop, StopCampaign operations |

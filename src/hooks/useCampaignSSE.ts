@@ -1,6 +1,6 @@
 // File: src/hooks/useCampaignSSE.ts
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useSSE, type SSEEvent } from './useSSE';
+import { useSharedSSE, type SSEEvent } from './useSSE';
 import { useAppDispatch } from '@/store/hooks';
 import { phaseStarted, phaseCompleted, phaseFailed, resetPipelineExec } from '@/store/slices/pipelineExecSlice';
 import { campaignApi } from '@/store/api/campaignApi';
@@ -1119,13 +1119,8 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
     }
   }, [dispatch, campaignId, captureDebugEvent, getPhaseStatus]);
 
-  // Use the generic SSE hook
-  const sseConnection = useSSE(sseUrl, handleSSEEvent, {
-    autoReconnect: true,
-    maxReconnectAttempts: 5,
-    reconnectDelay: 3000,
-    withCredentials: true,
-  });
+  // Use the shared SSE hook (deduplicates connections per URL)
+  const sseConnection = useSharedSSE(sseUrl, handleSSEEvent);
 
   if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
     const win = window as typeof window & { __campaignSSESnapshots?: Array<Record<string, unknown>> };

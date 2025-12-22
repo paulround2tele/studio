@@ -3389,6 +3389,10 @@ paths:
       tags:
         - campaigns
       summary: Start campaign phase
+      description: |
+        Start a campaign phase. Validates that prior phases are complete and configs exist.
+
+        P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
       operationId: campaigns_phase_start
       parameters:
         - name: campaignId
@@ -3402,6 +3406,15 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/CampaignPhaseEnum'
+        - name: X-Idempotency-Key
+          in: header
+          required: false
+          description: |
+            P3.3: Unique key for duplicate request detection. If a request with this key was already
+            processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+          schema:
+            type: string
+            maxLength: 64
       responses:
         '200':
           description: Started
@@ -3436,7 +3449,11 @@ paths:
       tags:
         - campaigns
       summary: Pause campaign phase
-      description: Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+      description: |
+        Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+
+        P3.2: Supports expected_state precondition - if provided, pause only proceeds when current state matches.
+        P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
       operationId: campaigns_phase_pause
       parameters:
         - name: campaignId
@@ -3450,6 +3467,23 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/CampaignPhaseEnum'
+        - name: expected_state
+          in: query
+          required: false
+          description: |
+            P3.2: Precondition check. If provided, pause only proceeds when current phase status matches.
+            Returns 409 EXPECTED_STATE_MISMATCH if actual state differs.
+          schema:
+            $ref: '#/components/schemas/PhaseStatusEnum'
+        - name: X-Idempotency-Key
+          in: header
+          required: false
+          description: |
+            P3.3: Unique key for duplicate request detection. If a request with this key was already
+            processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+          schema:
+            type: string
+            maxLength: 64
       responses:
         '200':
           description: Paused
@@ -3472,7 +3506,11 @@ paths:
       tags:
         - campaigns
       summary: Resume campaign phase
-      description: Resume a previously paused phase and transition it back to in_progress when supported.
+      description: |
+        Resume a previously paused phase and transition it back to in_progress when supported.
+
+        P3.2: Supports expected_state precondition - if provided, resume only proceeds when current state matches.
+        P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
       operationId: campaigns_phase_resume
       parameters:
         - name: campaignId
@@ -3486,6 +3524,23 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/CampaignPhaseEnum'
+        - name: expected_state
+          in: query
+          required: false
+          description: |
+            P3.2: Precondition check. If provided, resume only proceeds when current phase status matches.
+            Returns 409 EXPECTED_STATE_MISMATCH if actual state differs.
+          schema:
+            $ref: '#/components/schemas/PhaseStatusEnum'
+        - name: X-Idempotency-Key
+          in: header
+          required: false
+          description: |
+            P3.3: Unique key for duplicate request detection. If a request with this key was already
+            processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+          schema:
+            type: string
+            maxLength: 64
       responses:
         '200':
           description: Resumed
@@ -3587,6 +3642,10 @@ paths:
       tags:
         - campaigns
       summary: Stop campaign phase
+      description: |
+        Stop/cancel a running or paused phase, marking it as failed.
+
+        P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
       operationId: campaigns_phase_stop
       parameters:
         - name: campaignId
@@ -3600,6 +3659,15 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/CampaignPhaseEnum'
+        - name: X-Idempotency-Key
+          in: header
+          required: false
+          description: |
+            P3.3: Unique key for duplicate request detection. If a request with this key was already
+            processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+          schema:
+            type: string
+            maxLength: 64
       responses:
         '200':
           description: Stopped
@@ -3620,7 +3688,10 @@ paths:
       tags:
         - campaigns
       summary: Stop the currently running campaign phase
-      description: Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+      description: |
+        Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+
+        P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
       operationId: campaigns_stop
       parameters:
         - name: campaignId
@@ -3629,6 +3700,15 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: X-Idempotency-Key
+          in: header
+          required: false
+          description: |
+            P3.3: Unique key for duplicate request detection. If a request with this key was already
+            processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+          schema:
+            type: string
+            maxLength: 64
       responses:
         '200':
           description: Campaign stop acknowledged
@@ -7092,6 +7172,17 @@ components:
           description: Keyword sets for extraction phase
       required:
         - configuration
+    PhaseStatusEnum:
+      type: string
+      description: Phase lifecycle status (P3.2 expected_state precondition)
+      enum:
+        - not_started
+        - ready
+        - configured
+        - in_progress
+        - paused
+        - completed
+        - failed
     CampaignModeUpdateResponse:
       type: object
       description: Response model for campaign mode update operation.

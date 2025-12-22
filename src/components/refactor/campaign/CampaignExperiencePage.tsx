@@ -22,6 +22,7 @@ import { LeadResultsPanel } from './LeadResultsPanel';
 import type { CampaignRecommendation } from '@/lib/api-client/models/campaign-recommendation';
 import type { Recommendation } from '@/types/campaignMetrics';
 import { ConfigSummary } from './ConfigSummary';
+import { PhaseConfigDisplay } from './PhaseConfigDisplay';
 import { ConfigSummaryPanel as _ConfigSummaryPanel } from './ConfigSummaryPanel';
 import { MomentumPanel as _MomentumPanel } from './MomentumPanel';
 import { ClassificationBuckets as _ClassificationBuckets } from './ClassificationBuckets';
@@ -44,6 +45,7 @@ import {
   useGetCampaignClassificationsQuery,
   useGetCampaignMomentumQuery,
   useGetCampaignStatusQuery,
+  useGetCampaignPhaseConfigsQuery,
   useRestartCampaignMutation,
   useStartPhaseStandaloneMutation,
   useGetPhaseStatusStandaloneQuery,
@@ -287,6 +289,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   }, [hasEverConnected, refreshRealtimeData]);
 
   const { data: statusSnapshot, refetch: refetchStatusSnapshot } = useGetCampaignStatusQuery(campaignId);
+  const { data: phaseConfigsData } = useGetCampaignPhaseConfigsQuery(campaignId);
   const domainItems = React.useMemo(() => domainsList?.items ?? [], [domainsList]);
   const leadAggregates = domainsList?.aggregates?.lead;
   const leadPanelError = React.useMemo(
@@ -1095,6 +1098,12 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
               title="Campaign Configuration"
             />
           </div>
+
+          {/* Phase Configurations (DNS/HTTP Personas, Keyword Sets, Domain Discovery) */}
+          <PhaseConfigDisplay
+            configs={phaseConfigsData?.configs as Record<string, unknown>}
+            configsPresent={phaseConfigsData?.configsPresent as Record<string, boolean>}
+          />
         </div>
 
         {/* Right column: Recommendations and other insights */}

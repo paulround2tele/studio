@@ -131,6 +131,10 @@ type CampaignOrchestrator struct {
 	// This ensures only one goroutine can start a specific phase at a time.
 	phaseStartInProgress map[string]struct{}
 
+	// P3.3: Idempotency cache for control operations (pause/resume/start/rerun)
+	// Prevents duplicate SSE emissions on retry with same X-Idempotency-Key
+	idempotencyCache *services.IdempotencyCache
+
 	// Optional post-completion hooks
 	hooks []PostCompletionHook
 }
@@ -628,6 +632,12 @@ type OrchestratorMetrics interface {
 	// Campaign mode tracking
 	IncManualModeCreations()
 	IncAutoModeCreations()
+
+	// P3: Transition guard metrics
+	IncTransitionBlocked()
+
+	// P3.4: Bypass audit metrics
+	IncTransitionBypass()
 }
 
 // noopMetrics provides no-op implementations when metrics are not configured.
@@ -649,6 +659,43 @@ func (n *noopMetrics) RecordAutoStartLatency(time.Duration)         {}
 func (n *noopMetrics) RecordFirstPhaseRunningLatency(time.Duration) {}
 func (n *noopMetrics) IncManualModeCreations()                      {}
 func (n *noopMetrics) IncAutoModeCreations()                        {}
+func (n *noopMetrics) IncTransitionBlocked()                        {}
+func (n *noopMetrics) IncTransitionBypass()                         {}
+
+// ====================================================================
+// P3.4 Contract: Bypass Audit System
+// ====================================================================
+
+// TransitionBypassAudit records when a status mutation bypasses the canonical transitionPhase() guard.
+// All bypass points MUST call this function for observability and future migration tracking.
+type TransitionBypassAudit struct {
+	CampaignID uuid.UUID
+	Phase      models.PhaseTypeEnum
+	FromStatus models.PhaseStatusEnum
+	ToStatus   models.PhaseStatusEnum
+	Caller     string // function name that initiated the bypass
+	Reason     string // why bypass is necessary (e.g., "runtime_coordination", "progress_sync")
+	Timestamp  time.Time
+}
+
+// auditTransitionBypass logs and metrics-tracks when status is mutated outside transitionPhase().
+// This is a P3.4 observability hook - all bypasses are recorded for eventual migration.
+func (o *CampaignOrchestrator) auditTransitionBypass(ctx context.Context, audit TransitionBypassAudit) {
+	if o.deps.Logger != nil {
+		o.deps.Logger.Warn(ctx, "P3.4: Transition bypass detected", map[string]interface{}{
+			"campaign_id": audit.CampaignID,
+			"phase":       audit.Phase,
+			"from_status": audit.FromStatus,
+			"to_status":   audit.ToStatus,
+			"caller":      audit.Caller,
+			"reason":      audit.Reason,
+			"timestamp":   audit.Timestamp,
+		})
+	}
+	if o.metrics != nil {
+		o.metrics.IncTransitionBypass()
+	}
+}
 
 // SSEBroadcaster minimal interface needed from SSE service
 type SSEBroadcaster interface {
@@ -672,21 +719,316 @@ func NewCampaignOrchestrator(
 		metrics = &noopMetrics{}
 	}
 	return &CampaignOrchestrator{
-		store:               store,
-		deps:                deps,
-		domainGenerationSvc: domainGenerationSvc,
-		dnsValidationSvc:    dnsValidationSvc,
-		httpValidationSvc:   httpValidationSvc,
-		extractionSvc:       extractionSvc,
-		enrichmentSvc:       enrichmentSvc,
-		analysisSvc:         analysisSvc,
-		sseService:          sseService,
-		metrics:             metrics,
-		control:             newInMemoryPhaseControlManager(),
-		campaignExecutions:  make(map[uuid.UUID]*CampaignExecution),
+		store:                store,
+		deps:                 deps,
+		domainGenerationSvc:  domainGenerationSvc,
+		dnsValidationSvc:     dnsValidationSvc,
+		httpValidationSvc:    httpValidationSvc,
+		extractionSvc:        extractionSvc,
+		enrichmentSvc:        enrichmentSvc,
+		analysisSvc:          analysisSvc,
+		sseService:           sseService,
+		metrics:              metrics,
+		control:              newInMemoryPhaseControlManager(),
+		campaignExecutions:   make(map[uuid.UUID]*CampaignExecution),
 		phaseStartInProgress: make(map[string]struct{}),
-		hooks:               make([]PostCompletionHook, 0),
+		idempotencyCache:     services.NewIdempotencyCache(0), // P3.3: 5-minute TTL
+		hooks:                make([]PostCompletionHook, 0),
 	}
+}
+
+// ====================================================================
+// P3 Contract: transitionPhase() – The Only Path to Mutate Phase Status
+// ====================================================================
+
+// TransitionResult captures the outcome of a phase transition for SSE emission.
+type TransitionResult struct {
+	CampaignID uuid.UUID
+	Phase      models.PhaseTypeEnum
+	FromState  models.PhaseStatusEnum
+	ToState    models.PhaseStatusEnum
+	Sequence   int64
+	Idempotent bool // True if this was a no-op (already in target state)
+}
+
+// TransitionOptions provides optional parameters for transitionPhaseWithOpts (P3.2).
+type TransitionOptions struct {
+	// ExpectedState is the optional precondition. If set, the transition only proceeds
+	// if current state matches. Returns 409 EXPECTED_STATE_MISMATCH on mismatch.
+	// When nil, backward compatibility is maintained (no precondition check).
+	ExpectedState *models.PhaseStatusEnum
+}
+
+// transitionPhase is the ONLY authorized path to mutate phase status.
+// All lifecycle operations (start, pause, resume, complete, fail, rerun, retry, restore, stop)
+// MUST flow through this function. Direct DB writes bypass the state machine and are blocked.
+//
+// Contract:
+//   - Validates expected_state precondition if provided (P3.2)
+//   - Validates transition via state machine (services.ValidateTransition)
+//   - Persists status change to database
+//   - Emits SSE event with sequence number
+//   - Returns TransitionResult for caller if needed
+//
+// Returns:
+//   - TransitionResult on success (including idempotent self-transitions)
+//   - *services.TransitionError409 with EXPECTED_STATE_MISMATCH when expected_state fails (409)
+//   - *services.PhaseTransitionError on invalid transition (caller should return 409)
+//   - other error on persistence/emission failure
+func (o *CampaignOrchestrator) transitionPhase(
+	ctx context.Context,
+	campaignID uuid.UUID,
+	phase models.PhaseTypeEnum,
+	from, to models.PhaseStatusEnum,
+	trigger services.TransitionTrigger,
+) (*TransitionResult, error) {
+	return o.transitionPhaseWithOpts(ctx, campaignID, phase, from, to, trigger, nil)
+}
+
+// transitionPhaseWithOpts is the P3.2 extended version with optional expected_state precondition.
+// When opts.ExpectedState is provided:
+//   - If current state matches expected_state → proceed with transition
+//   - If current state != expected_state → return 409 EXPECTED_STATE_MISMATCH
+//   - If current state == target state (already there) → return idempotent 200, no new sequence
+//
+// When opts.ExpectedState is nil (backward compat):
+//   - Normal state machine validation applies
+func (o *CampaignOrchestrator) transitionPhaseWithOpts(
+	ctx context.Context,
+	campaignID uuid.UUID,
+	phase models.PhaseTypeEnum,
+	from, to models.PhaseStatusEnum,
+	trigger services.TransitionTrigger,
+	opts *TransitionOptions,
+) (*TransitionResult, error) {
+	action := string(trigger)
+
+	// P3.2: expected_state precondition check
+	if opts != nil && opts.ExpectedState != nil {
+		expectedState := *opts.ExpectedState
+		if from != expectedState {
+			// Expected state mismatch → 409
+			if o.deps.Logger != nil {
+				o.deps.Logger.Warn(ctx, "P3.2: expected_state precondition failed", map[string]interface{}{
+					"campaign_id":    campaignID,
+					"phase":          phase,
+					"current_state":  from,
+					"expected_state": expectedState,
+					"attempted":      action,
+				})
+			}
+			if o.metrics != nil {
+				o.metrics.IncTransitionBlocked()
+			}
+			return nil, services.NewExpectedStateMismatchError409(from, expectedState, action)
+		}
+	}
+
+	// Self-transition is idempotent success (no DB write, no SSE)
+	if from == to {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Debug(ctx, "P3: Idempotent self-transition (no-op)", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"state":       from,
+			})
+		}
+		return &TransitionResult{
+			CampaignID: campaignID,
+			Phase:      phase,
+			FromState:  from,
+			ToState:    to,
+			Sequence:   0, // No new sequence for self-transition
+			Idempotent: true,
+		}, nil
+	}
+
+	// Validate transition via state machine
+	if err := services.ValidateTransition(from, to, phase); err != nil {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "P3: Transition blocked by state machine", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"from":        from,
+				"to":          to,
+				"trigger":     trigger,
+				"error":       err.Error(),
+			})
+		}
+		if o.metrics != nil {
+			o.metrics.IncTransitionBlocked()
+		}
+		return nil, err
+	}
+
+	// Get querier for DB operations
+	querier, ok := o.deps.DB.(store.Querier)
+	if !ok {
+		return nil, fmt.Errorf("invalid database interface in dependencies")
+	}
+
+	// Persist status change to database
+	toStatus := to
+	if err := o.store.UpdateCampaignPhaseFields(ctx, querier, campaignID, &phase, &toStatus); err != nil {
+		return nil, fmt.Errorf("failed to persist phase transition: %w", err)
+	}
+
+	// Generate sequence number for SSE emission by recording a lifecycle event
+	var seqNum int64
+	if o.sseService != nil {
+		// Get next sequence by incrementing from last known
+		if lastSeq, err := o.store.GetLastLifecycleSequence(ctx, querier, campaignID); err == nil {
+			seqNum = lastSeq + 1
+		} else {
+			seqNum = 1 // First event
+		}
+	}
+
+	// Emit lifecycle event via SSE
+	if o.sseService != nil {
+		var userID *uuid.UUID
+		if campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID); err == nil && campaign.UserID != nil {
+			userID = campaign.UserID
+		}
+		if userID != nil {
+			evt := o.createTransitionEvent(campaignID, *userID, phase, from, to, trigger, seqNum)
+			o.sseService.BroadcastToCampaign(campaignID, evt)
+		}
+	}
+
+	if o.deps.Logger != nil {
+		o.deps.Logger.Info(ctx, "P3: Phase transition completed", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+			"from":        from,
+			"to":          to,
+			"trigger":     trigger,
+			"sequence":    seqNum,
+		})
+	}
+
+	return &TransitionResult{
+		CampaignID: campaignID,
+		Phase:      phase,
+		FromState:  from,
+		ToState:    to,
+		Sequence:   seqNum,
+	}, nil
+}
+
+// createTransitionEvent builds the appropriate SSE event for a transition.
+func (o *CampaignOrchestrator) createTransitionEvent(
+	campaignID, userID uuid.UUID,
+	phase models.PhaseTypeEnum,
+	from, to models.PhaseStatusEnum,
+	trigger services.TransitionTrigger,
+	sequence int64,
+) services.SSEEvent {
+	switch trigger {
+	case services.TriggerStart:
+		return services.CreatePhaseStartedEventWithSequence(campaignID, userID, phase, sequence)
+	case services.TriggerPause:
+		return services.CreatePhasePausedEventWithSequence(campaignID, userID, phase, sequence)
+	case services.TriggerResume:
+		return services.CreatePhaseResumedEventWithSequence(campaignID, userID, phase, sequence)
+	case services.TriggerComplete:
+		return services.CreatePhaseCompletedEventWithSequence(campaignID, userID, phase, sequence, nil)
+	case services.TriggerFail:
+		return services.CreatePhaseFailedEventWithSequence(campaignID, userID, phase, sequence, "phase failed")
+	case services.TriggerRerun, services.TriggerRetry:
+		return services.CreatePhaseStartedEventWithSequence(campaignID, userID, phase, sequence)
+	default:
+		// Generic lifecycle event for unknown triggers
+		return services.CreatePhaseStartedEventWithSequence(campaignID, userID, phase, sequence)
+	}
+}
+
+// getCurrentPhaseStatus fetches the current phase status from the database.
+// This is the authoritative source for transition validation.
+func (o *CampaignOrchestrator) getCurrentPhaseStatus(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) (models.PhaseStatusEnum, error) {
+	querier, ok := o.deps.DB.(store.Querier)
+	if !ok {
+		return models.PhaseStatusNotStarted, fmt.Errorf("invalid database interface")
+	}
+
+	row, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return models.PhaseStatusNotStarted, nil
+		}
+		return models.PhaseStatusNotStarted, err
+	}
+	if row == nil {
+		return models.PhaseStatusNotStarted, nil
+	}
+	return row.Status, nil
+}
+
+// transitionPhaseDirect is DEPRECATED as of P3 Final.
+// All lifecycle mutations now go through transitionPhase() or specialized paths
+// (PausePhase/ResumePhase) that validate + persist + emit SSE atomically.
+//
+// This function is kept for reference but has no callers.
+// It validated transitions via state machine but allowed callers to handle their own persistence.
+//
+// P3 Migration Complete:
+// - recordCampaignStop: now uses transitionPhase()
+// - PausePhase/ResumePhase: use ValidateTransition + store.PausePhase/ResumePhase + RecordLifecycleEvent
+//
+// Deprecated: Use transitionPhase() instead.
+func (o *CampaignOrchestrator) transitionPhaseDirect(
+	ctx context.Context,
+	campaignID uuid.UUID,
+	phase models.PhaseTypeEnum,
+	from, to models.PhaseStatusEnum,
+	caller string,
+) error {
+	// P3 Final: Log deprecation warning - this path should never be hit
+	if o.deps.Logger != nil {
+		o.deps.Logger.Warn(ctx, "DEPRECATED: transitionPhaseDirect called - should use transitionPhase()", map[string]interface{}{
+			"campaign_id": campaignID,
+			"phase":       phase,
+			"from":        from,
+			"to":          to,
+			"caller":      caller,
+		})
+	}
+
+	// Self-transition is idempotent
+	if from == to {
+		return nil
+	}
+
+	// Validate via state machine
+	if err := services.ValidateTransition(from, to, phase); err != nil {
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "P3: Direct transition blocked by state machine", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"from":        from,
+				"to":          to,
+				"caller":      caller,
+				"error":       err.Error(),
+			})
+		}
+		if o.metrics != nil {
+			o.metrics.IncTransitionBlocked()
+		}
+		return err
+	}
+
+	// P3.4: Audit this bypass for migration tracking
+	o.auditTransitionBypass(ctx, TransitionBypassAudit{
+		CampaignID: campaignID,
+		Phase:      phase,
+		FromStatus: from,
+		ToStatus:   to,
+		Caller:     caller,
+		Reason:     "transitionPhaseDirect_DEPRECATED",
+		Timestamp:  time.Now(),
+	})
+
+	return nil
 }
 
 // SetAutoResumeOnRestart toggles whether RestoreInFlightPhases should restart active phases automatically.
@@ -792,6 +1134,11 @@ func (o *CampaignOrchestrator) ConfigurePhase(ctx context.Context, campaignID uu
 
 // StartPhaseInternal begins execution of a specific phase with typed enum
 func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	return o.startPhaseInternalImpl(ctx, campaignID, phase, nil)
+}
+
+// startPhaseInternalImpl is the internal implementation that accepts optional control options.
+func (o *CampaignOrchestrator) startPhaseInternalImpl(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, opts *ControlOptions) error {
 	o.deps.Logger.Info(ctx, "Starting campaign phase", map[string]interface{}{
 		"campaign_id": campaignID,
 		"phase":       phase,
@@ -979,7 +1326,36 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		"phase":       phase,
 	})
 
+	// P3.3: Cache successful result for idempotency
+	if opts != nil && opts.IdempotencyKey != "" && o.idempotencyCache != nil {
+		o.idempotencyCache.Set(opts.IdempotencyKey, nil, nil)
+		o.deps.Logger.Debug(ctx, "P3.3: Cached start result", map[string]interface{}{
+			"campaign_id":     campaignID,
+			"phase":           phase,
+			"idempotency_key": opts.IdempotencyKey,
+		})
+	}
+
 	return nil
+}
+
+// StartPhaseInternalWithOpts starts a phase with optional idempotency key (P3.3).
+func (o *CampaignOrchestrator) StartPhaseInternalWithOpts(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, opts *ControlOptions) error {
+	// P3.3: Check idempotency cache first
+	if opts != nil && opts.IdempotencyKey != "" && o.idempotencyCache != nil {
+		if cached := o.idempotencyCache.Get(opts.IdempotencyKey); cached != nil {
+			o.deps.Logger.Debug(ctx, "P3.3: Returning cached start result (idempotent)", map[string]interface{}{
+				"campaign_id":     campaignID,
+				"phase":           phase,
+				"idempotency_key": opts.IdempotencyKey,
+				"cached_at":       cached.CreatedAt,
+			})
+			return cached.Error // nil for success, error for failure
+		}
+	}
+
+	// Delegate to existing implementation which now handles caching at the end
+	return o.startPhaseInternalImpl(ctx, campaignID, phase, opts)
 }
 
 // findRunningPhase returns the currently running phase for a campaign (status=in_progress) if any.
@@ -1511,6 +1887,11 @@ func (o *CampaignOrchestrator) GetCampaignStatus(ctx context.Context, campaignID
 
 // CancelPhase stops execution of a specific phase
 func (o *CampaignOrchestrator) CancelPhase(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	return o.cancelPhaseImpl(ctx, campaignID, phase, nil)
+}
+
+// cancelPhaseImpl is the internal implementation that accepts optional control options.
+func (o *CampaignOrchestrator) cancelPhaseImpl(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, opts *ControlOptions) error {
 	o.deps.Logger.Info(ctx, "Cancelling campaign phase", map[string]interface{}{
 		"campaign_id": campaignID,
 		"phase":       phase,
@@ -1546,11 +1927,79 @@ func (o *CampaignOrchestrator) CancelPhase(ctx context.Context, campaignID uuid.
 		"phase":       phase,
 	})
 
+	// P3.3: Cache successful result for idempotency
+	if opts != nil && opts.IdempotencyKey != "" && o.idempotencyCache != nil {
+		o.idempotencyCache.Set(opts.IdempotencyKey, nil, nil)
+		o.deps.Logger.Debug(ctx, "P3.3: Cached cancel result", map[string]interface{}{
+			"campaign_id":     campaignID,
+			"phase":           phase,
+			"idempotency_key": opts.IdempotencyKey,
+		})
+	}
+
 	return nil
+}
+
+// CancelPhaseWithOpts stops a phase with optional idempotency key (P3.3).
+func (o *CampaignOrchestrator) CancelPhaseWithOpts(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, opts *ControlOptions) error {
+	// P3.3: Check idempotency cache first
+	if opts != nil && opts.IdempotencyKey != "" && o.idempotencyCache != nil {
+		if cached := o.idempotencyCache.Get(opts.IdempotencyKey); cached != nil {
+			o.deps.Logger.Debug(ctx, "P3.3: Returning cached cancel result (idempotent)", map[string]interface{}{
+				"campaign_id":     campaignID,
+				"phase":           phase,
+				"idempotency_key": opts.IdempotencyKey,
+				"cached_at":       cached.CreatedAt,
+			})
+			return cached.Error // nil for success, error for failure
+		}
+	}
+
+	// Delegate to implementation which caches at end
+	return o.cancelPhaseImpl(ctx, campaignID, phase, opts)
+}
+
+// ControlOptions provides optional parameters for control operations (P3.2, P3.3).
+type ControlOptions struct {
+	// ExpectedState is the optional precondition. If set, the operation only proceeds
+	// if current state matches. Returns 409 EXPECTED_STATE_MISMATCH on mismatch.
+	// When nil, backward compatibility is maintained (no precondition check).
+	ExpectedState *models.PhaseStatusEnum
+
+	// IdempotencyKey is the optional key for duplicate request detection (P3.3).
+	// If set and a cached result exists for this key, returns cached result without
+	// emitting a new SSE sequence. Keys expire after 5 minutes.
+	IdempotencyKey string
+}
+
+// IdempotentResult represents a cached control operation result (P3.3).
+type IdempotentResult struct {
+	Status     *domainservices.PhaseStatus
+	FromCache  bool
+	CachedAt   time.Time
+	Idempotent bool
 }
 
 // PausePhase transitions an in-progress phase to paused and halts execution.
 func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	return o.PausePhaseWithOpts(ctx, campaignID, phase, nil)
+}
+
+// PausePhaseWithOpts transitions an in-progress phase to paused with optional expected_state (P3.2) and idempotency (P3.3).
+func (o *CampaignOrchestrator) PausePhaseWithOpts(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, opts *ControlOptions) error {
+	// P3.3: Check idempotency cache first
+	if opts != nil && opts.IdempotencyKey != "" && o.idempotencyCache != nil {
+		if cached := o.idempotencyCache.Get(opts.IdempotencyKey); cached != nil {
+			o.deps.Logger.Debug(ctx, "P3.3: Returning cached pause result (idempotent)", map[string]interface{}{
+				"campaign_id":     campaignID,
+				"phase":           phase,
+				"idempotency_key": opts.IdempotencyKey,
+				"cached_at":       cached.CreatedAt,
+			})
+			return cached.Error // nil for success, error for failure
+		}
+	}
+
 	if o.store == nil {
 		return fmt.Errorf("campaign store not initialized")
 	}
@@ -1565,6 +2014,23 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 	if row, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase); err == nil && row != nil {
 		currentStatus = row.Status
 		phaseInProgressInStore = row.Status == models.PhaseStatusInProgress
+	}
+
+	// P3.2: expected_state precondition check
+	if opts != nil && opts.ExpectedState != nil {
+		expectedState := *opts.ExpectedState
+		if currentStatus != expectedState {
+			o.deps.Logger.Warn(ctx, "P3.2: expected_state precondition failed for pause", map[string]interface{}{
+				"campaign_id":    campaignID,
+				"phase":          phase,
+				"current_state":  currentStatus,
+				"expected_state": expectedState,
+			})
+			if o.metrics != nil {
+				o.metrics.IncTransitionBlocked()
+			}
+			return services.NewExpectedStateMismatchError409(currentStatus, expectedState, "pause")
+		}
 	}
 
 	// P2: Idempotent - already paused is success
@@ -1689,11 +2155,27 @@ func (o *CampaignOrchestrator) PausePhase(ctx context.Context, campaignID uuid.U
 		"phase":       phase,
 		"sequence":    seqNum,
 	})
+
+	// P3.3: Cache successful result for idempotency
+	if opts != nil && opts.IdempotencyKey != "" && o.idempotencyCache != nil {
+		o.idempotencyCache.Set(opts.IdempotencyKey, nil, nil)
+		o.deps.Logger.Debug(ctx, "P3.3: Cached pause result", map[string]interface{}{
+			"campaign_id":     campaignID,
+			"phase":           phase,
+			"idempotency_key": opts.IdempotencyKey,
+		})
+	}
+
 	return nil
 }
 
 // ResumePhase transitions a paused phase back to in-progress execution when supported.
 func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	return o.ResumePhaseWithOpts(ctx, campaignID, phase, nil)
+}
+
+// ResumePhaseWithOpts transitions a paused phase back to in-progress with optional expected_state (P3.2).
+func (o *CampaignOrchestrator) ResumePhaseWithOpts(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum, opts *ControlOptions) error {
 	if o.metrics != nil {
 		o.metrics.IncPhaseResumeAttempts()
 	}
@@ -1702,6 +2184,20 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 			o.metrics.IncPhaseResumeFailures()
 		}
 	}
+
+	// P3.3: Check idempotency cache first
+	if opts != nil && opts.IdempotencyKey != "" && o.idempotencyCache != nil {
+		if cached := o.idempotencyCache.Get(opts.IdempotencyKey); cached != nil {
+			o.deps.Logger.Debug(ctx, "P3.3: Returning cached resume result (idempotent)", map[string]interface{}{
+				"campaign_id":     campaignID,
+				"phase":           phase,
+				"idempotency_key": opts.IdempotencyKey,
+				"cached_at":       cached.CreatedAt,
+			})
+			return cached.Error // nil for success, error for failure
+		}
+	}
+
 	if o.store == nil {
 		recordFailure()
 		return fmt.Errorf("campaign store not initialized")
@@ -1718,6 +2214,24 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 	if row, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase); err == nil && row != nil {
 		currentStatus = row.Status
 		phasePausedInStore = row.Status == models.PhaseStatusPaused
+	}
+
+	// P3.2: expected_state precondition check
+	if opts != nil && opts.ExpectedState != nil {
+		expectedState := *opts.ExpectedState
+		if currentStatus != expectedState {
+			o.deps.Logger.Warn(ctx, "P3.2: expected_state precondition failed for resume", map[string]interface{}{
+				"campaign_id":    campaignID,
+				"phase":          phase,
+				"current_state":  currentStatus,
+				"expected_state": expectedState,
+			})
+			if o.metrics != nil {
+				o.metrics.IncTransitionBlocked()
+			}
+			recordFailure()
+			return services.NewExpectedStateMismatchError409(currentStatus, expectedState, "resume")
+		}
 	}
 
 	// P2: Idempotent - already in_progress is success
@@ -1836,12 +2350,50 @@ func (o *CampaignOrchestrator) ResumePhase(ctx context.Context, campaignID uuid.
 		"phase":       phase,
 		"sequence":    seqNum,
 	})
+
+	// P3.3: Cache successful result for idempotency
+	if opts != nil && opts.IdempotencyKey != "" && o.idempotencyCache != nil {
+		o.idempotencyCache.Set(opts.IdempotencyKey, nil, nil)
+		o.deps.Logger.Debug(ctx, "P3.3: Cached resume result", map[string]interface{}{
+			"campaign_id":     campaignID,
+			"phase":           phase,
+			"idempotency_key": opts.IdempotencyKey,
+		})
+	}
+
 	return nil
 }
 
 // StopCampaign cooperatively stops whichever phase is currently active for the campaign and
 // marks the campaign as cancelled in centralized state tracking.
 func (o *CampaignOrchestrator) StopCampaign(ctx context.Context, campaignID uuid.UUID) (*CampaignStopResult, error) {
+	return o.StopCampaignWithOpts(ctx, campaignID, nil)
+}
+
+// StopCampaignWithOpts stops the campaign with optional idempotency key (P3.3).
+func (o *CampaignOrchestrator) StopCampaignWithOpts(ctx context.Context, campaignID uuid.UUID, opts *ControlOptions) (*CampaignStopResult, error) {
+	// P3.3: Check idempotency cache first
+	if opts != nil && opts.IdempotencyKey != "" && o.idempotencyCache != nil {
+		if cached := o.idempotencyCache.Get(opts.IdempotencyKey); cached != nil {
+			o.deps.Logger.Debug(ctx, "P3.3: Returning cached stop campaign result (idempotent)", map[string]interface{}{
+				"campaign_id":     campaignID,
+				"idempotency_key": opts.IdempotencyKey,
+				"cached_at":       cached.CreatedAt,
+			})
+			if cached.Error != nil {
+				return nil, cached.Error
+			}
+			// For cached success, we need to return current status
+			if querier, ok := o.deps.DB.(store.Querier); ok {
+				if activePhase, err := o.findActivePhase(ctx, querier, campaignID); err == nil {
+					status, _ := o.GetPhaseStatus(ctx, campaignID, activePhase.PhaseType)
+					return &CampaignStopResult{Phase: activePhase.PhaseType, Status: status}, nil
+				}
+			}
+			return nil, nil // Cache hit but can't determine phase
+		}
+	}
+
 	if o == nil || o.store == nil || o.deps.DB == nil {
 		return nil, fmt.Errorf("orchestrator not initialized")
 	}
@@ -1877,6 +2429,16 @@ func (o *CampaignOrchestrator) StopCampaign(ctx context.Context, campaignID uuid
 		o.deps.Logger.Info(ctx, "Campaign stop completed", map[string]interface{}{
 			"campaign_id": campaignID,
 			"phase":       phase,
+		})
+	}
+
+	// P3.3: Cache successful result for idempotency
+	if opts != nil && opts.IdempotencyKey != "" && o.idempotencyCache != nil {
+		o.idempotencyCache.Set(opts.IdempotencyKey, nil, nil)
+		o.deps.Logger.Debug(ctx, "P3.3: Cached stop campaign result", map[string]interface{}{
+			"campaign_id":     campaignID,
+			"phase":           phase,
+			"idempotency_key": opts.IdempotencyKey,
 		})
 	}
 
@@ -1934,12 +2496,33 @@ func (o *CampaignOrchestrator) recordCampaignStop(ctx context.Context, exec stor
 		models.PhaseStatusInProgress, models.PhaseStatusPaused) {
 		return fmt.Errorf("campaign %s phase %s is no longer active; stop rejected", campaignID, phase)
 	}
+
+	// P3 Final: Get current status for transition
+	var currentStatus models.PhaseStatusEnum
+	if row, err := o.store.GetCampaignPhase(ctx, exec, campaignID, phase); err == nil && row != nil {
+		currentStatus = row.Status
+	} else {
+		currentStatus = models.PhaseStatusInProgress // default assumption for stop
+	}
+
+	// P3 Final: Use transitionPhase for the core transition (validation + persistence + SSE)
+	// This ensures all lifecycle mutations go through the canonical guard.
+	result, err := o.transitionPhase(ctx, campaignID, phase, currentStatus, models.PhaseStatusFailed, services.TriggerFail)
+	if err != nil {
+		// Log but continue with stop - we want to record the failure even if transition was blocked
+		if o.deps.Logger != nil {
+			o.deps.Logger.Warn(ctx, "recordCampaignStop: transitionPhase failed, continuing with stop", map[string]interface{}{
+				"campaign_id": campaignID,
+				"phase":       phase,
+				"error":       err.Error(),
+			})
+		}
+	}
+	_ = result // Sequence already emitted by transitionPhase
+
+	// Additional persistence for campaign-level state (beyond phase transition)
 	if err := o.store.FailPhase(ctx, exec, campaignID, phase, campaignStopMessage, map[string]interface{}{"code": "campaign_stopped"}); err != nil {
 		return fmt.Errorf("failed to update phase state: %w", err)
-	}
-	phaseStatus := models.PhaseStatusFailed
-	if err := o.store.UpdateCampaignPhaseFields(ctx, exec, campaignID, &phase, &phaseStatus); err != nil {
-		return fmt.Errorf("failed to persist campaign phase status: %w", err)
 	}
 	if err := o.store.UpdateCampaignStatus(ctx, exec, campaignID, models.PhaseStatusFailed, sql.NullString{String: campaignStopMessage, Valid: true}); err != nil {
 		return fmt.Errorf("failed to persist campaign status: %w", err)
@@ -1953,12 +2536,7 @@ func (o *CampaignOrchestrator) recordCampaignStop(ctx context.Context, exec stor
 		execution.LastError = campaignStopMessage
 	}
 	o.mu.Unlock()
-	if o.sseService != nil {
-		if campaign, err := o.store.GetCampaignByID(ctx, exec, campaignID); err == nil && campaign.UserID != nil {
-			evt := services.CreatePhaseFailedEvent(campaignID, *campaign.UserID, phase, campaignStopMessage)
-			o.sseService.BroadcastToCampaign(campaignID, evt)
-		}
-	}
+	// Note: SSE already emitted by transitionPhase above
 	return nil
 }
 

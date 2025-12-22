@@ -29,6 +29,12 @@ type RuntimeMetrics struct {
 	manualModeCreations atomic.Int64
 	autoModeCreations   atomic.Int64
 
+	// P3: Transition guard metrics
+	transitionBlocked atomic.Int64
+
+	// P3.4: Bypass audit metrics
+	transitionBypass atomic.Int64
+
 	// Simple duration aggregations (nanoseconds accumulated)
 	domainPhaseDurationNs   atomic.Int64
 	dnsPhaseDurationNs      atomic.Int64
@@ -62,6 +68,12 @@ func (m *RuntimeMetrics) IncAutoStartFailures()  { m.autoStartFailures.Add(1) }
 // Campaign mode tracking
 func (m *RuntimeMetrics) IncManualModeCreations() { m.manualModeCreations.Add(1) }
 func (m *RuntimeMetrics) IncAutoModeCreations()   { m.autoModeCreations.Add(1) }
+
+// P3: Transition guard metrics
+func (m *RuntimeMetrics) IncTransitionBlocked() { m.transitionBlocked.Add(1) }
+
+// P3.4: Bypass audit metrics
+func (m *RuntimeMetrics) IncTransitionBypass() { m.transitionBypass.Add(1) }
 
 // Auto-start timing
 func (m *RuntimeMetrics) RecordAutoStartLatency(d time.Duration) {
@@ -113,6 +125,9 @@ func (m *RuntimeMetrics) Snapshot() map[string]int64 {
 		// Campaign mode distribution
 		"campaign_manual_mode_creations_total": m.manualModeCreations.Load(),
 		"campaign_auto_mode_creations_total":   m.autoModeCreations.Load(),
+
+		// P3: Transition guard
+		"transition_blocked_total": m.transitionBlocked.Load(),
 	}
 }
 

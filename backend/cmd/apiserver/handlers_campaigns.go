@@ -1454,6 +1454,9 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 		return gen.CampaignsPhaseStart401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
+	// P3.3: Parse X-Idempotency-Key header
+	idempotencyKey := getHeaderRaw(ctx, "X-Idempotency-Key")
+
 	// Track if this is an auto-start (look for correlation ID in context or assume manual for now)
 	// TODO: Implement proper correlation ID tracking via headers or request enhancement
 	isAutoStart := false
@@ -1483,17 +1486,26 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 		}
 		return gen.CampaignsPhaseStart400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if err := h.deps.Orchestrator.StartPhaseInternal(ctx, uuid.UUID(r.CampaignId), phaseModel); err != nil {
+
+	// P3.3: Use WithOpts if idempotency key provided
+	var startErr error
+	if idempotencyKey != "" {
+		opts := &application.ControlOptions{IdempotencyKey: idempotencyKey}
+		startErr = h.deps.Orchestrator.StartPhaseInternalWithOpts(ctx, uuid.UUID(r.CampaignId), phaseModel, opts)
+	} else {
+		startErr = h.deps.Orchestrator.StartPhaseInternal(ctx, uuid.UUID(r.CampaignId), phaseModel)
+	}
+	if startErr != nil {
 		// Track failed auto-start attempts
 		if isAutoStart && h.deps.Metrics != nil {
 			h.deps.Metrics.IncAutoStartFailures()
 		}
 
-		if errors.Is(err, application.ErrMissingPhaseConfigs) {
+		if errors.Is(startErr, application.ErrMissingPhaseConfigs) {
 			missing := []string{}
 			// Attempt typed extraction using concrete error type
 			var mpe *application.MissingPhaseConfigsError
-			if errors.As(err, &mpe) && mpe != nil {
+			if errors.As(startErr, &mpe) && mpe != nil {
 				missing = mpe.Missing
 			}
 			conflict := gen.CampaignsPhaseStart409JSONResponse{Error: gen.ApiError{Message: "missing required phase configurations", Code: gen.CONFLICT, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}
@@ -1511,9 +1523,9 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 			}
 			return conflict, nil
 		}
-		if errors.Is(err, application.ErrPhaseDependenciesNotMet) {
+		if errors.Is(startErr, application.ErrPhaseDependenciesNotMet) {
 			var depErr *application.PhaseDependencyError
-			if errors.As(err, &depErr) && depErr != nil {
+			if errors.As(startErr, &depErr) && depErr != nil {
 				phaseName := phases.ToAPI(string(depErr.Phase))
 				blockingName := phases.ToAPI(string(depErr.BlockingPhase))
 				msg := fmt.Sprintf("%s phase cannot start until %s completes (current status: %s)", phaseName, blockingName, depErr.BlockingStatus)
@@ -1521,15 +1533,15 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 				return resp, nil
 			}
 		}
-		if errors.Is(err, application.ErrAnotherPhaseRunning) {
+		if errors.Is(startErr, application.ErrAnotherPhaseRunning) {
 			msg := "another phase is already running; stop or pause it before starting a new phase"
 			resp := gen.CampaignsPhaseStart409JSONResponse{Error: gen.ApiError{Message: msg, Code: gen.CONFLICT, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}
 			return resp, nil
 		}
-		if strings.Contains(err.Error(), "not configured") || strings.Contains(err.Error(), "cannot start") {
-			return gen.CampaignsPhaseStart400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "failed to start phase: " + err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		if strings.Contains(startErr.Error(), "not configured") || strings.Contains(startErr.Error(), "cannot start") {
+			return gen.CampaignsPhaseStart400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "failed to start phase: " + startErr.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.CampaignsPhaseStart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to start phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to start phase: " + startErr.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
 	// Track successful auto-start and timing
@@ -1974,6 +1986,10 @@ func (h *strictHandlers) CampaignsPhaseStop(ctx context.Context, r gen.Campaigns
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
 		return gen.CampaignsPhaseStop401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
+
+	// P3.3: Parse X-Idempotency-Key header
+	idempotencyKey := getHeaderRaw(ctx, "X-Idempotency-Key")
+
 	campaignID := uuid.UUID(r.CampaignId)
 	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, campaignID); err != nil {
 		if err == store.ErrNotFound {
@@ -1988,13 +2004,22 @@ func (h *strictHandlers) CampaignsPhaseStop(ctx context.Context, r gen.Campaigns
 	if err := h.ensurePhaseSupportsControl(ctx, campaignID, phaseModel, controlCapabilityStop); err != nil {
 		return gen.CampaignsPhaseStop400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if err := h.deps.Orchestrator.CancelPhase(ctx, campaignID, phaseModel); err != nil {
-		if errors.Is(err, domainservices.ErrPhaseExecutionMissing) || errors.Is(err, domainservices.ErrPhaseNotRunning) {
+
+	// P3.3: Use WithOpts if idempotency key provided
+	var stopErr error
+	if idempotencyKey != "" {
+		opts := &application.ControlOptions{IdempotencyKey: idempotencyKey}
+		stopErr = h.deps.Orchestrator.CancelPhaseWithOpts(ctx, campaignID, phaseModel, opts)
+	} else {
+		stopErr = h.deps.Orchestrator.CancelPhase(ctx, campaignID, phaseModel)
+	}
+	if stopErr != nil {
+		if errors.Is(stopErr, domainservices.ErrPhaseExecutionMissing) || errors.Is(stopErr, domainservices.ErrPhaseNotRunning) {
 			phaseName := phases.ToAPI(string(phaseModel))
 			msg := fmt.Sprintf("%s phase is not currently running", phaseName)
 			return gen.CampaignsPhaseStop400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: msg, Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.CampaignsPhaseStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to stop phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to stop phase: " + stopErr.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, campaignID, phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
@@ -2006,6 +2031,10 @@ func (h *strictHandlers) CampaignsStop(ctx context.Context, r gen.CampaignsStopR
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
 		return gen.CampaignsStop401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
+
+	// P3.3: Parse X-Idempotency-Key header
+	idempotencyKey := getHeaderRaw(ctx, "X-Idempotency-Key")
+
 	campaignID := uuid.UUID(r.CampaignId)
 	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, campaignID); err != nil {
 		if err == store.ErrNotFound {
@@ -2013,10 +2042,19 @@ func (h *strictHandlers) CampaignsStop(ctx context.Context, r gen.CampaignsStopR
 		}
 		return gen.CampaignsStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	result, err := h.deps.Orchestrator.StopCampaign(ctx, campaignID)
-	if err != nil {
+
+	// P3.3: Use WithOpts if idempotency key provided
+	var result *application.CampaignStopResult
+	var stopErr error
+	if idempotencyKey != "" {
+		opts := &application.ControlOptions{IdempotencyKey: idempotencyKey}
+		result, stopErr = h.deps.Orchestrator.StopCampaignWithOpts(ctx, campaignID, opts)
+	} else {
+		result, stopErr = h.deps.Orchestrator.StopCampaign(ctx, campaignID)
+	}
+	if stopErr != nil {
 		switch {
-		case errors.Is(err, application.ErrNoActivePhase), errors.Is(err, domainservices.ErrPhaseExecutionMissing), errors.Is(err, domainservices.ErrPhaseNotRunning):
+		case errors.Is(stopErr, application.ErrNoActivePhase), errors.Is(stopErr, domainservices.ErrPhaseExecutionMissing), errors.Is(stopErr, domainservices.ErrPhaseNotRunning):
 			msg := "campaign is not currently running"
 			return gen.CampaignsStop400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: msg, Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		default:
@@ -2062,7 +2100,32 @@ func (h *strictHandlers) CampaignsPhasePause(ctx context.Context, r gen.Campaign
 	if err := h.ensurePhaseSupportsControl(ctx, campaignID, phaseModel, controlCapabilityPause); err != nil {
 		return gen.CampaignsPhasePause400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if err := h.deps.Orchestrator.PausePhase(ctx, campaignID, phaseModel); err != nil {
+
+	// P3.2 + P3.3: Parse expected_state and X-Idempotency-Key
+	var controlOpts *application.ControlOptions
+	expectedStateRaw := getQueryRaw(ctx, "expected_state")
+	idempotencyKey := getHeaderRaw(ctx, "X-Idempotency-Key")
+	if expectedStateRaw != "" || idempotencyKey != "" {
+		controlOpts = &application.ControlOptions{IdempotencyKey: idempotencyKey}
+		if expectedStateRaw != "" {
+			expectedStatus := models.PhaseStatusEnum(expectedStateRaw)
+			if !isValidPhaseStatus(expectedStatus) {
+				return gen.CampaignsPhasePause400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: fmt.Sprintf("invalid expected_state value: %s", expectedStateRaw), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			controlOpts.ExpectedState = &expectedStatus
+		}
+	}
+
+	if err := h.deps.Orchestrator.PausePhaseWithOpts(ctx, campaignID, phaseModel, controlOpts); err != nil {
+		// P3.2: Check for expected_state mismatch error - return 409 with rich envelope
+		var transitionErr409 *services.TransitionError409
+		if errors.As(err, &transitionErr409) {
+			return gen.CampaignsPhasePause409JSONResponse{ConflictJSONResponse: gen.ConflictJSONResponse{
+				Error:     gen.ApiError{Message: transitionErr409.Message, Code: gen.CONFLICT, Timestamp: time.Now()},
+				RequestId: reqID(),
+				Success:   boolPtr(false),
+			}}, nil
+		}
 		// P2: Check for state machine validation error - return 409 Conflict with structured envelope
 		var transitionErr *services.PhaseTransitionError
 		if errors.As(err, &transitionErr) {
@@ -2115,7 +2178,32 @@ func (h *strictHandlers) CampaignsPhaseResume(ctx context.Context, r gen.Campaig
 	if err := h.ensurePhaseSupportsControl(ctx, campaignID, phaseModel, controlCapabilityResume); err != nil {
 		return gen.CampaignsPhaseResume400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	if err := h.deps.Orchestrator.ResumePhase(ctx, campaignID, phaseModel); err != nil {
+
+	// P3.2 + P3.3: Parse expected_state and X-Idempotency-Key
+	var controlOpts *application.ControlOptions
+	expectedStateRaw := getQueryRaw(ctx, "expected_state")
+	idempotencyKey := getHeaderRaw(ctx, "X-Idempotency-Key")
+	if expectedStateRaw != "" || idempotencyKey != "" {
+		controlOpts = &application.ControlOptions{IdempotencyKey: idempotencyKey}
+		if expectedStateRaw != "" {
+			expectedStatus := models.PhaseStatusEnum(expectedStateRaw)
+			if !isValidPhaseStatus(expectedStatus) {
+				return gen.CampaignsPhaseResume400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: fmt.Sprintf("invalid expected_state value: %s", expectedStateRaw), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			controlOpts.ExpectedState = &expectedStatus
+		}
+	}
+
+	if err := h.deps.Orchestrator.ResumePhaseWithOpts(ctx, campaignID, phaseModel, controlOpts); err != nil {
+		// P3.2: Check for expected_state mismatch error - return 409 with rich envelope
+		var transitionErr409 *services.TransitionError409
+		if errors.As(err, &transitionErr409) {
+			return gen.CampaignsPhaseResume409JSONResponse{ConflictJSONResponse: gen.ConflictJSONResponse{
+				Error:     gen.ApiError{Message: transitionErr409.Message, Code: gen.CONFLICT, Timestamp: time.Now()},
+				RequestId: reqID(),
+				Success:   boolPtr(false),
+			}}, nil
+		}
 		// P2: Check for state machine validation error - return 409 Conflict with structured envelope
 		var transitionErr *services.PhaseTransitionError
 		if errors.As(err, &transitionErr) {
@@ -2664,6 +2752,34 @@ func getQueryRaw(ctx context.Context, key string) string {
 		}
 	}
 	return ""
+}
+
+// getHeaderRaw extracts a raw HTTP header value from context (P3.3).
+// Requires "request_headers" to be injected into context upstream.
+func getHeaderRaw(ctx context.Context, key string) string {
+	if v := ctx.Value("request_headers"); v != nil {
+		if headers, ok := v.(map[string]string); ok {
+			return headers[key]
+		}
+	}
+	return ""
+}
+
+// isValidPhaseStatus validates that a PhaseStatusEnum value is a known status (P3.2).
+func isValidPhaseStatus(status models.PhaseStatusEnum) bool {
+	switch status {
+	case models.PhaseStatusNotStarted,
+		models.PhaseStatusReady,
+		models.PhaseStatusConfigured,
+		models.PhaseStatusInProgress,
+		models.PhaseStatusPaused,
+		models.PhaseStatusCompleted,
+		models.PhaseStatusFailed,
+		models.PhaseStatusSkipped:
+		return true
+	default:
+		return false
+	}
 }
 
 // toFloat32Val safely dereferences *float32 returning 0 when nil

@@ -31,7 +31,15 @@ import type { CampaignModeUpdateResponse } from '@/lib/api-client/models/campaig
 import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campaign-phases-status-response';
 import type { CampaignRestartResponse } from '@/lib/api-client/models/campaign-restart-response';
 import type { CampaignStopResponse } from '@/lib/api-client/models/campaign-stop-response';
+import type { CampaignsPhaseConfigsList200Response } from '@/lib/api-client/models/campaigns-phase-configs-list200-response';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+
+import type { PhaseStatusEnum } from '@/lib/api-client/models/phase-status-enum';
+
+// P3 Final: Generate unique idempotency key for control operations
+const generateIdempotencyKey = (operation: string, campaignId: string, phase: string): string => {
+  return `${operation}:${campaignId}:${phase}:${Date.now()}`;
+};
 
 // Helper for axios/fetch hybrid responses (no any)
 const unwrap = <T>(resp: { data?: T } | T): T | undefined => {
@@ -244,11 +252,22 @@ export const campaignApi = createApi({
 
   pausePhaseStandalone: builder.mutation<
       PhaseStatusResponse,
-      { campaignId: string; phase: string }
+      { campaignId: string; phase: string; expectedState?: string }
     >({
-      queryFn: async ({ campaignId, phase }) => {
+      queryFn: async ({ campaignId, phase, expectedState }) => {
         try {
-          const response = await campaignsApi.campaignsPhasePause(campaignId, phase as CampaignPhaseEnum);
+          // P3.3: Generate idempotency key to prevent duplicate transitions
+          const idempotencyKey = generateIdempotencyKey('pause', campaignId, phase);
+          
+          // P3.2: Pass expected_state for precondition check
+          const expectedStateEnum = expectedState ? expectedState as PhaseStatusEnum : undefined;
+          
+          const response = await campaignsApi.campaignsPhasePause(
+            campaignId,
+            phase as CampaignPhaseEnum,
+            expectedStateEnum,
+            idempotencyKey
+          );
           const data = unwrap<PhaseStatusResponse>(response);
           if (!data) return { error: { status: 500, data: { message: 'Empty phase pause response' } } };
           return { data };
@@ -288,11 +307,22 @@ export const campaignApi = createApi({
 
   resumePhaseStandalone: builder.mutation<
       PhaseStatusResponse,
-      { campaignId: string; phase: string }
+      { campaignId: string; phase: string; expectedState?: string }
     >({
-      queryFn: async ({ campaignId, phase }) => {
+      queryFn: async ({ campaignId, phase, expectedState }) => {
         try {
-          const response = await campaignsApi.campaignsPhaseResume(campaignId, phase as CampaignPhaseEnum);
+          // P3.3: Generate idempotency key to prevent duplicate transitions
+          const idempotencyKey = generateIdempotencyKey('resume', campaignId, phase);
+          
+          // P3.2: Pass expected_state for precondition check
+          const expectedStateEnum = expectedState ? expectedState as PhaseStatusEnum : undefined;
+          
+          const response = await campaignsApi.campaignsPhaseResume(
+            campaignId,
+            phase as CampaignPhaseEnum,
+            expectedStateEnum,
+            idempotencyKey
+          );
           const data = unwrap<PhaseStatusResponse>(response);
           if (!data) return { error: { status: 500, data: { message: 'Empty phase resume response' } } };
           return { data };
@@ -336,7 +366,14 @@ export const campaignApi = createApi({
     >({
       queryFn: async ({ campaignId, phase }) => {
         try {
-          const response = await campaignsApi.campaignsPhaseStop(campaignId, phase as CampaignPhaseEnum);
+          // P3.3: Generate idempotency key to prevent duplicate stop transitions
+          const idempotencyKey = generateIdempotencyKey('stop', campaignId, phase);
+          
+          const response = await campaignsApi.campaignsPhaseStop(
+            campaignId,
+            phase as CampaignPhaseEnum,
+            idempotencyKey
+          );
           const data = unwrap<PhaseStatusResponse>(response);
           if (!data) return { error: { status: 500, data: { message: 'Empty phase stop response' } } };
           return { data };
@@ -571,6 +608,24 @@ export const campaignApi = createApi({
       ],
     }),
 
+    // Phase configurations (domain discovery config, DNS/HTTP personas, keyword sets)
+    getCampaignPhaseConfigs: builder.query<CampaignsPhaseConfigsList200Response, string>({
+      queryFn: async (campaignId) => {
+        try {
+          const response = await campaignsApi.campaignsPhaseConfigsList(campaignId);
+          const data = unwrap<CampaignsPhaseConfigsList200Response>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty phase configs response' } } };
+          return { data };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
+        }
+      },
+      providesTags: (result, error, campaignId) => [
+        { type: 'Campaign', id: campaignId },
+      ],
+    }),
+
     duplicateCampaign: builder.mutation<CampaignResponse, string>({
       queryFn: async (campaignId) => {
         try {
@@ -651,6 +706,7 @@ export const {
   useGetCampaignMomentumQuery,
   useGetCampaignRecommendationsQuery,
   useGetCampaignStatusQuery,
+  useGetCampaignPhaseConfigsQuery,
   useDuplicateCampaignMutation,
   useRestartCampaignMutation,
   useStopCampaignMutation,

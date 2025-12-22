@@ -1,13 +1,25 @@
 post:
   tags: [campaigns]
   summary: Stop the currently running campaign phase
-  description: Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+  description: |
+    Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+    
+    P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
   operationId: campaigns_stop
   parameters:
     - name: campaignId
       in: path
       required: true
       schema: { type: string, format: uuid }
+    - name: X-Idempotency-Key
+      in: header
+      required: false
+      description: |
+        P3.3: Unique key for duplicate request detection. If a request with this key was already
+        processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+      schema:
+        type: string
+        maxLength: 64
   responses:
     '200':
       description: Campaign stop acknowledged

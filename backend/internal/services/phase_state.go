@@ -26,6 +26,8 @@ const (
 	ErrorCodeRerunPreconditionFailed TransitionErrorCode = "RERUN_PRECONDITION_FAILED"
 	// ErrorCodeNoControlPhase indicates no active phase to control.
 	ErrorCodeNoControlPhase TransitionErrorCode = "NO_CONTROL_PHASE"
+	// ErrorCodeExpectedStateMismatch indicates expected_state precondition was not met (P3.2).
+	ErrorCodeExpectedStateMismatch TransitionErrorCode = "EXPECTED_STATE_MISMATCH"
 )
 
 // TransitionError409 is the structured 409 Conflict response per the contract.
@@ -38,6 +40,8 @@ type TransitionError409 struct {
 	// Optional fields for rerun/retry failures
 	Reason        string `json:"reason,omitempty"`
 	BlockingPhase string `json:"blocking_phase,omitempty"`
+	// P3.2: expected_state precondition fields
+	ExpectedState *models.PhaseStatusEnum `json:"expected_state,omitempty"`
 }
 
 func (e *TransitionError409) Error() string {
@@ -74,16 +78,28 @@ func NewRerunPreconditionError409(currentState models.PhaseStatusEnum, reason, b
 	}
 }
 
+// NewExpectedStateMismatchError409 creates a 409 error when expected_state precondition fails (P3.2).
+// This is returned when the client provides expected_state but the actual state differs.
+func NewExpectedStateMismatchError409(currentState, expectedState models.PhaseStatusEnum, attemptedAction string) *TransitionError409 {
+	return &TransitionError409{
+		Code:            ErrorCodeExpectedStateMismatch,
+		CurrentState:    currentState,
+		AttemptedAction: attemptedAction,
+		Message:         fmt.Sprintf("Expected state '%s' but current state is '%s'; cannot %s", expectedState, currentState, attemptedAction),
+		ExpectedState:   &expectedState,
+	}
+}
+
 // ====================================================================
 // Legacy PhaseTransitionError (backward compatible)
 // ====================================================================
 
 // PhaseTransitionError is returned when an invalid state transition is attempted.
 type PhaseTransitionError struct {
-	From    models.PhaseStatusEnum
-	To      models.PhaseStatusEnum
-	Phase   models.PhaseTypeEnum
-	Reason  string
+	From   models.PhaseStatusEnum
+	To     models.PhaseStatusEnum
+	Phase  models.PhaseTypeEnum
+	Reason string
 }
 
 func (e *PhaseTransitionError) Error() string {
@@ -106,15 +122,15 @@ func (e *PhaseTransitionError) To409Error(attemptedAction string) *TransitionErr
 type TransitionTrigger string
 
 const (
-	TriggerStart      TransitionTrigger = "start"
-	TriggerPause      TransitionTrigger = "pause"
-	TriggerResume     TransitionTrigger = "resume"
-	TriggerComplete   TransitionTrigger = "complete"
-	TriggerFail       TransitionTrigger = "fail"
-	TriggerRerun      TransitionTrigger = "rerun"
-	TriggerRetry      TransitionTrigger = "retry"
-	TriggerSkip       TransitionTrigger = "skip"
-	TriggerConfigure  TransitionTrigger = "configure"
+	TriggerStart     TransitionTrigger = "start"
+	TriggerPause     TransitionTrigger = "pause"
+	TriggerResume    TransitionTrigger = "resume"
+	TriggerComplete  TransitionTrigger = "complete"
+	TriggerFail      TransitionTrigger = "fail"
+	TriggerRerun     TransitionTrigger = "rerun"
+	TriggerRetry     TransitionTrigger = "retry"
+	TriggerSkip      TransitionTrigger = "skip"
+	TriggerConfigure TransitionTrigger = "configure"
 )
 
 // phaseTransition defines a valid state transition.
@@ -287,7 +303,7 @@ type PhaseWithStatus struct {
 //
 // Resolution order:
 // 1. If any phase is paused → that phase is controlPhase
-// 2. Else if any phase is in_progress → that phase is controlPhase  
+// 2. Else if any phase is in_progress → that phase is controlPhase
 // 3. Else → nil (no active work)
 func ResolveControlPhase(phases []PhaseWithStatus) *models.PhaseTypeEnum {
 	var inProgressPhase *models.PhaseTypeEnum

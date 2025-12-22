@@ -43,6 +43,13 @@ func startChiServer() {
 	authCtx := func(next gen.StrictHandlerFunc, operationID string) gen.StrictHandlerFunc {
 		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, req interface{}) (interface{}, error) {
 			ctx = context.WithValue(ctx, "client_ip", clientIP(r))
+			// Inject request URL pointer for query param access in handlers (e.g., expected_state)
+			ctx = context.WithValue(ctx, "request_url", r.URL)
+			// P3.3: Inject relevant headers for idempotency key support
+			headers := map[string]string{
+				"X-Idempotency-Key": r.Header.Get("X-Idempotency-Key"),
+			}
+			ctx = context.WithValue(ctx, "request_headers", headers)
 			// Only attempt if session service is available
 			if deps.Session != nil {
 				if c, err := r.Cookie(config.SessionCookieName); err == nil {

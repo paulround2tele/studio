@@ -54,7 +54,7 @@ func TestValidateTransition_InvalidTransitions(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateTransition(tt.from, tt.to, models.PhaseTypeDNSValidation)
 			require.Error(t, err, "transition %s → %s should be invalid", tt.from, tt.to)
-			
+
 			var transErr *PhaseTransitionError
 			require.ErrorAs(t, err, &transErr)
 			assert.Equal(t, tt.from, transErr.From)
@@ -84,11 +84,11 @@ func TestCanTransition(t *testing.T) {
 	// Valid transitions
 	assert.True(t, CanTransition(models.PhaseStatusInProgress, models.PhaseStatusPaused))
 	assert.True(t, CanTransition(models.PhaseStatusPaused, models.PhaseStatusInProgress))
-	
+
 	// Invalid transitions
 	assert.False(t, CanTransition(models.PhaseStatusNotStarted, models.PhaseStatusPaused))
 	assert.False(t, CanTransition(models.PhaseStatusCompleted, models.PhaseStatusPaused))
-	
+
 	// Self-transition
 	assert.True(t, CanTransition(models.PhaseStatusInProgress, models.PhaseStatusInProgress))
 }
@@ -99,10 +99,10 @@ func TestGetTriggerForTransition(t *testing.T) {
 	assert.Equal(t, TriggerComplete, GetTriggerForTransition(models.PhaseStatusInProgress, models.PhaseStatusCompleted))
 	assert.Equal(t, TriggerRerun, GetTriggerForTransition(models.PhaseStatusCompleted, models.PhaseStatusInProgress))
 	assert.Equal(t, TriggerRetry, GetTriggerForTransition(models.PhaseStatusFailed, models.PhaseStatusInProgress))
-	
+
 	// Invalid transition returns empty
 	assert.Equal(t, TransitionTrigger(""), GetTriggerForTransition(models.PhaseStatusNotStarted, models.PhaseStatusPaused))
-	
+
 	// Self-transition returns empty
 	assert.Equal(t, TransitionTrigger(""), GetTriggerForTransition(models.PhaseStatusInProgress, models.PhaseStatusInProgress))
 }
@@ -138,7 +138,7 @@ func TestIsTerminalState(t *testing.T) {
 	assert.True(t, IsTerminalState(models.PhaseStatusCompleted))
 	assert.True(t, IsTerminalState(models.PhaseStatusFailed))
 	assert.True(t, IsTerminalState(models.PhaseStatusSkipped))
-	
+
 	assert.False(t, IsTerminalState(models.PhaseStatusNotStarted))
 	assert.False(t, IsTerminalState(models.PhaseStatusInProgress))
 	assert.False(t, IsTerminalState(models.PhaseStatusPaused))
@@ -146,7 +146,7 @@ func TestIsTerminalState(t *testing.T) {
 
 func TestIsActiveState(t *testing.T) {
 	assert.True(t, IsActiveState(models.PhaseStatusInProgress))
-	
+
 	assert.False(t, IsActiveState(models.PhaseStatusNotStarted))
 	assert.False(t, IsActiveState(models.PhaseStatusPaused))
 	assert.False(t, IsActiveState(models.PhaseStatusCompleted))
@@ -154,7 +154,7 @@ func TestIsActiveState(t *testing.T) {
 
 func TestIsPausedState(t *testing.T) {
 	assert.True(t, IsPausedState(models.PhaseStatusPaused))
-	
+
 	assert.False(t, IsPausedState(models.PhaseStatusInProgress))
 	assert.False(t, IsPausedState(models.PhaseStatusNotStarted))
 }
@@ -163,7 +163,7 @@ func TestCanStart(t *testing.T) {
 	assert.True(t, CanStart(models.PhaseStatusNotStarted))
 	assert.True(t, CanStart(models.PhaseStatusReady))
 	assert.True(t, CanStart(models.PhaseStatusConfigured))
-	
+
 	assert.False(t, CanStart(models.PhaseStatusInProgress))
 	assert.False(t, CanStart(models.PhaseStatusPaused))
 	assert.False(t, CanStart(models.PhaseStatusCompleted))
@@ -171,7 +171,7 @@ func TestCanStart(t *testing.T) {
 
 func TestCanPause(t *testing.T) {
 	assert.True(t, CanPause(models.PhaseStatusInProgress))
-	
+
 	assert.False(t, CanPause(models.PhaseStatusNotStarted))
 	assert.False(t, CanPause(models.PhaseStatusPaused))
 	assert.False(t, CanPause(models.PhaseStatusCompleted))
@@ -179,7 +179,7 @@ func TestCanPause(t *testing.T) {
 
 func TestCanResume(t *testing.T) {
 	assert.True(t, CanResume(models.PhaseStatusPaused))
-	
+
 	assert.False(t, CanResume(models.PhaseStatusNotStarted))
 	assert.False(t, CanResume(models.PhaseStatusInProgress))
 	assert.False(t, CanResume(models.PhaseStatusCompleted))
@@ -187,7 +187,7 @@ func TestCanResume(t *testing.T) {
 
 func TestCanRerun(t *testing.T) {
 	assert.True(t, CanRerun(models.PhaseStatusCompleted))
-	
+
 	assert.False(t, CanRerun(models.PhaseStatusNotStarted))
 	assert.False(t, CanRerun(models.PhaseStatusInProgress))
 	assert.False(t, CanRerun(models.PhaseStatusFailed))
@@ -195,7 +195,7 @@ func TestCanRerun(t *testing.T) {
 
 func TestCanRetry(t *testing.T) {
 	assert.True(t, CanRetry(models.PhaseStatusFailed))
-	
+
 	assert.False(t, CanRetry(models.PhaseStatusNotStarted))
 	assert.False(t, CanRetry(models.PhaseStatusInProgress))
 	assert.False(t, CanRetry(models.PhaseStatusCompleted))
@@ -227,7 +227,7 @@ func TestPhaseTransitionError_Error(t *testing.T) {
 func TestTransitionError409_Structure(t *testing.T) {
 	t.Run("invalid transition error", func(t *testing.T) {
 		err := NewTransitionError409(models.PhaseStatusPaused, "complete")
-		
+
 		assert.Equal(t, ErrorCodeInvalidTransition, err.Code)
 		assert.Equal(t, models.PhaseStatusPaused, err.CurrentState)
 		assert.Equal(t, "complete", err.AttemptedAction)
@@ -236,11 +236,11 @@ func TestTransitionError409_Structure(t *testing.T) {
 
 	t.Run("rerun precondition error", func(t *testing.T) {
 		err := NewRerunPreconditionError409(
-			models.PhaseStatusCompleted, 
-			"another_phase_in_progress", 
+			models.PhaseStatusCompleted,
+			"another_phase_in_progress",
 			"http_validation",
 		)
-		
+
 		assert.Equal(t, ErrorCodeRerunPreconditionFailed, err.Code)
 		assert.Equal(t, models.PhaseStatusCompleted, err.CurrentState)
 		assert.Equal(t, "another_phase_in_progress", err.Reason)
@@ -250,10 +250,10 @@ func TestTransitionError409_Structure(t *testing.T) {
 
 func TestTransitionError409_JSON(t *testing.T) {
 	err := NewTransitionError409(models.PhaseStatusPaused, "complete")
-	
+
 	jsonBytes, marshalErr := err.MarshalJSON()
 	require.NoError(t, marshalErr)
-	
+
 	// Should produce the contract-defined envelope structure
 	var envelope struct {
 		Error struct {
@@ -264,7 +264,7 @@ func TestTransitionError409_JSON(t *testing.T) {
 		} `json:"error"`
 	}
 	require.NoError(t, json.Unmarshal(jsonBytes, &envelope))
-	
+
 	assert.Equal(t, "INVALID_PHASE_TRANSITION", envelope.Error.Code)
 	assert.Equal(t, "paused", envelope.Error.CurrentState)
 	assert.Equal(t, "complete", envelope.Error.AttemptedAction)
@@ -278,9 +278,9 @@ func TestPhaseTransitionError_To409Error(t *testing.T) {
 		Phase:  models.PhaseTypeDNSValidation,
 		Reason: "phase must be running to pause",
 	}
-	
+
 	err409 := legacyErr.To409Error("pause")
-	
+
 	assert.Equal(t, ErrorCodeInvalidTransition, err409.Code)
 	assert.Equal(t, models.PhaseStatusNotStarted, err409.CurrentState)
 	assert.Equal(t, "pause", err409.AttemptedAction)
@@ -298,7 +298,7 @@ func TestResolveControlPhase(t *testing.T) {
 			{Phase: models.PhaseTypeDNSValidation, Status: models.PhaseStatusPaused},
 			{Phase: models.PhaseTypeHTTPKeywordValidation, Status: models.PhaseStatusNotStarted},
 		}
-		
+
 		result := ResolveControlPhase(phases)
 		require.NotNil(t, result)
 		assert.Equal(t, models.PhaseTypeDNSValidation, *result)
@@ -310,7 +310,7 @@ func TestResolveControlPhase(t *testing.T) {
 			{Phase: models.PhaseTypeDNSValidation, Status: models.PhaseStatusInProgress},
 			{Phase: models.PhaseTypeHTTPKeywordValidation, Status: models.PhaseStatusNotStarted},
 		}
-		
+
 		result := ResolveControlPhase(phases)
 		require.NotNil(t, result)
 		assert.Equal(t, models.PhaseTypeDNSValidation, *result)
@@ -322,7 +322,7 @@ func TestResolveControlPhase(t *testing.T) {
 			{Phase: models.PhaseTypeDNSValidation, Status: models.PhaseStatusCompleted},
 			{Phase: models.PhaseTypeHTTPKeywordValidation, Status: models.PhaseStatusNotStarted},
 		}
-		
+
 		result := ResolveControlPhase(phases)
 		assert.Nil(t, result)
 	})
@@ -333,7 +333,7 @@ func TestResolveControlPhase(t *testing.T) {
 			{Phase: models.PhaseTypeDomainGeneration, Status: models.PhaseStatusInProgress},
 			{Phase: models.PhaseTypeDNSValidation, Status: models.PhaseStatusPaused},
 		}
-		
+
 		result := ResolveControlPhase(phases)
 		require.NotNil(t, result)
 		assert.Equal(t, models.PhaseTypeDNSValidation, *result)
@@ -351,7 +351,7 @@ func TestResolveControlPhase(t *testing.T) {
 
 func TestNewLifecycleTransition(t *testing.T) {
 	campaignID := uuid.New()
-	
+
 	transition := NewLifecycleTransition(
 		campaignID,
 		models.PhaseTypeDNSValidation,
@@ -359,7 +359,7 @@ func TestNewLifecycleTransition(t *testing.T) {
 		models.PhaseStatusPaused,
 		42,
 	)
-	
+
 	assert.Equal(t, campaignID, transition.CampaignID)
 	assert.Equal(t, models.PhaseTypeDNSValidation, transition.Phase)
 	assert.Equal(t, models.PhaseStatusInProgress, transition.FromState)

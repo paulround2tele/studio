@@ -104,6 +104,8 @@ import type { PhaseExecution } from '../models';
 // @ts-ignore
 import type { PhaseExecutionUpdate } from '../models';
 // @ts-ignore
+import type { PhaseStatusEnum } from '../models';
+// @ts-ignore
 import type { PhaseStatusResponse } from '../models';
 // @ts-ignore
 import type { UpdateCampaignRequest } from '../models';
@@ -1278,14 +1280,16 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+         * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.  P3.2: Supports expected_state precondition - if provided, pause only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Pause campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {PhaseStatusEnum} [expectedState] P3.2: Precondition check. If provided, pause only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs. 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhasePause: async (campaignId: string, phase: CampaignPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsPhasePause: async (campaignId: string, phase: CampaignPhaseEnum, expectedState?: PhaseStatusEnum, xIdempotencyKey?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsPhasePause', 'campaignId', campaignId)
             // verify required parameter 'phase' is not null or undefined
@@ -1303,8 +1307,15 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
             // authentication cookieAuth required
 
+            if (expectedState !== undefined) {
+                localVarQueryParameter['expected_state'] = expectedState;
+            }
+
 
     
+            if (xIdempotencyKey != null) {
+                localVarHeaderParameter['X-Idempotency-Key'] = String(xIdempotencyKey);
+            }
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
             if (baseOptions.headers) {
@@ -1322,14 +1333,16 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Resume a previously paused phase and transition it back to in_progress when supported.
+         * Resume a previously paused phase and transition it back to in_progress when supported.  P3.2: Supports expected_state precondition - if provided, resume only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Resume campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {PhaseStatusEnum} [expectedState] P3.2: Precondition check. If provided, resume only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs. 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseResume: async (campaignId: string, phase: CampaignPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsPhaseResume: async (campaignId: string, phase: CampaignPhaseEnum, expectedState?: PhaseStatusEnum, xIdempotencyKey?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsPhaseResume', 'campaignId', campaignId)
             // verify required parameter 'phase' is not null or undefined
@@ -1347,8 +1360,15 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
             // authentication cookieAuth required
 
+            if (expectedState !== undefined) {
+                localVarQueryParameter['expected_state'] = expectedState;
+            }
+
 
     
+            if (xIdempotencyKey != null) {
+                localVarHeaderParameter['X-Idempotency-Key'] = String(xIdempotencyKey);
+            }
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
             if (baseOptions.headers) {
@@ -1366,14 +1386,15 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * 
+         * Start a campaign phase. Validates that prior phases are complete and configs exist.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Start campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseStart: async (campaignId: string, phase: CampaignPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsPhaseStart: async (campaignId: string, phase: CampaignPhaseEnum, xIdempotencyKey?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsPhaseStart', 'campaignId', campaignId)
             // verify required parameter 'phase' is not null or undefined
@@ -1393,6 +1414,9 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
 
     
+            if (xIdempotencyKey != null) {
+                localVarHeaderParameter['X-Idempotency-Key'] = String(xIdempotencyKey);
+            }
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
             if (baseOptions.headers) {
@@ -1454,14 +1478,15 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * 
+         * Stop/cancel a running or paused phase, marking it as failed.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Stop campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseStop: async (campaignId: string, phase: CampaignPhaseEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsPhaseStop: async (campaignId: string, phase: CampaignPhaseEnum, xIdempotencyKey?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsPhaseStop', 'campaignId', campaignId)
             // verify required parameter 'phase' is not null or undefined
@@ -1481,6 +1506,9 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
 
     
+            if (xIdempotencyKey != null) {
+                localVarHeaderParameter['X-Idempotency-Key'] = String(xIdempotencyKey);
+            }
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
             if (baseOptions.headers) {
@@ -1784,13 +1812,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+         * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Stop the currently running campaign phase
          * @param {string} campaignId 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsStop: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsStop: async (campaignId: string, xIdempotencyKey?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsStop', 'campaignId', campaignId)
             const localVarPath = `/campaigns/{campaignId}/stop`
@@ -1807,6 +1836,9 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
 
     
+            if (xIdempotencyKey != null) {
+                localVarHeaderParameter['X-Idempotency-Key'] = String(xIdempotencyKey);
+            }
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
             if (baseOptions.headers) {
@@ -2360,43 +2392,48 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+         * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.  P3.2: Supports expected_state precondition - if provided, pause only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Pause campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {PhaseStatusEnum} [expectedState] P3.2: Precondition check. If provided, pause only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs. 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhasePause(campaignId, phase, options);
+        async campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, expectedState?: PhaseStatusEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhasePause(campaignId, phase, expectedState, xIdempotencyKey, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhasePause']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Resume a previously paused phase and transition it back to in_progress when supported.
+         * Resume a previously paused phase and transition it back to in_progress when supported.  P3.2: Supports expected_state precondition - if provided, resume only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Resume campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {PhaseStatusEnum} [expectedState] P3.2: Precondition check. If provided, resume only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs. 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseResume(campaignId, phase, options);
+        async campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, expectedState?: PhaseStatusEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseResume(campaignId, phase, expectedState, xIdempotencyKey, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseResume']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Start a campaign phase. Validates that prior phases are complete and configs exist.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Start campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseStart(campaignId, phase, options);
+        async campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseStart(campaignId, phase, xIdempotencyKey, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseStart']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -2416,15 +2453,16 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Stop/cancel a running or paused phase, marking it as failed.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Stop campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseStop(campaignId, phase, options);
+        async campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PhaseStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseStop(campaignId, phase, xIdempotencyKey, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseStop']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -2522,14 +2560,15 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+         * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Stop the currently running campaign phase
          * @param {string} campaignId 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsStop(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignStopResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsStop(campaignId, options);
+        async campaignsStop(campaignId: string, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignStopResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsStop(campaignId, xIdempotencyKey, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsStop']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -2880,37 +2919,42 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.campaignsPhaseExecutionsList(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
-         * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+         * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.  P3.2: Supports expected_state precondition - if provided, pause only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Pause campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {PhaseStatusEnum} [expectedState] P3.2: Precondition check. If provided, pause only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs. 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
-            return localVarFp.campaignsPhasePause(campaignId, phase, options).then((request) => request(axios, basePath));
+        campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, expectedState?: PhaseStatusEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
+            return localVarFp.campaignsPhasePause(campaignId, phase, expectedState, xIdempotencyKey, options).then((request) => request(axios, basePath));
         },
         /**
-         * Resume a previously paused phase and transition it back to in_progress when supported.
+         * Resume a previously paused phase and transition it back to in_progress when supported.  P3.2: Supports expected_state precondition - if provided, resume only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Resume campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {PhaseStatusEnum} [expectedState] P3.2: Precondition check. If provided, resume only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs. 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
-            return localVarFp.campaignsPhaseResume(campaignId, phase, options).then((request) => request(axios, basePath));
+        campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, expectedState?: PhaseStatusEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
+            return localVarFp.campaignsPhaseResume(campaignId, phase, expectedState, xIdempotencyKey, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Start a campaign phase. Validates that prior phases are complete and configs exist.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Start campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
-            return localVarFp.campaignsPhaseStart(campaignId, phase, options).then((request) => request(axios, basePath));
+        campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
+            return localVarFp.campaignsPhaseStart(campaignId, phase, xIdempotencyKey, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2924,15 +2968,16 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.campaignsPhaseStatus(campaignId, phase, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Stop/cancel a running or paused phase, marking it as failed.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Stop campaign phase
          * @param {string} campaignId 
          * @param {CampaignPhaseEnum} phase 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
-            return localVarFp.campaignsPhaseStop(campaignId, phase, options).then((request) => request(axios, basePath));
+        campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse> {
+            return localVarFp.campaignsPhaseStop(campaignId, phase, xIdempotencyKey, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3006,14 +3051,15 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.campaignsStatusGet(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
-         * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+         * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
          * @summary Stop the currently running campaign phase
          * @param {string} campaignId 
+         * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsStop(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignStopResponse> {
-            return localVarFp.campaignsStop(campaignId, options).then((request) => request(axios, basePath));
+        campaignsStop(campaignId: string, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignStopResponse> {
+            return localVarFp.campaignsStop(campaignId, xIdempotencyKey, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3348,37 +3394,42 @@ export interface CampaignsApiInterface {
     campaignsPhaseExecutionsList(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignStateWithExecutions>;
 
     /**
-     * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+     * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.  P3.2: Supports expected_state precondition - if provided, pause only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
      * @summary Pause campaign phase
      * @param {string} campaignId 
      * @param {CampaignPhaseEnum} phase 
+     * @param {PhaseStatusEnum} [expectedState] P3.2: Precondition check. If provided, pause only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs. 
+     * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
+    campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, expectedState?: PhaseStatusEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
 
     /**
-     * Resume a previously paused phase and transition it back to in_progress when supported.
+     * Resume a previously paused phase and transition it back to in_progress when supported.  P3.2: Supports expected_state precondition - if provided, resume only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
      * @summary Resume campaign phase
      * @param {string} campaignId 
      * @param {CampaignPhaseEnum} phase 
+     * @param {PhaseStatusEnum} [expectedState] P3.2: Precondition check. If provided, resume only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs. 
+     * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
+    campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, expectedState?: PhaseStatusEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
 
     /**
-     * 
+     * Start a campaign phase. Validates that prior phases are complete and configs exist.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
      * @summary Start campaign phase
      * @param {string} campaignId 
      * @param {CampaignPhaseEnum} phase 
+     * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
+    campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
 
     /**
      * 
@@ -3392,15 +3443,16 @@ export interface CampaignsApiInterface {
     campaignsPhaseStatus(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
 
     /**
-     * 
+     * Stop/cancel a running or paused phase, marking it as failed.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
      * @summary Stop campaign phase
      * @param {string} campaignId 
      * @param {CampaignPhaseEnum} phase 
+     * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
+    campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<PhaseStatusResponse>;
 
     /**
      * 
@@ -3474,14 +3526,15 @@ export interface CampaignsApiInterface {
     campaignsStatusGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignPhasesStatusResponse>;
 
     /**
-     * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+     * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
      * @summary Stop the currently running campaign phase
      * @param {string} campaignId 
+     * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsStop(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignStopResponse>;
+    campaignsStop(campaignId: string, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignStopResponse>;
 
     /**
      * 
@@ -3868,42 +3921,47 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
     }
 
     /**
-     * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+     * Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.  P3.2: Supports expected_state precondition - if provided, pause only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
      * @summary Pause campaign phase
      * @param {string} campaignId 
      * @param {CampaignPhaseEnum} phase 
+     * @param {PhaseStatusEnum} [expectedState] P3.2: Precondition check. If provided, pause only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs. 
+     * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).campaignsPhasePause(campaignId, phase, options).then((request) => request(this.axios, this.basePath));
+    public campaignsPhasePause(campaignId: string, phase: CampaignPhaseEnum, expectedState?: PhaseStatusEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsPhasePause(campaignId, phase, expectedState, xIdempotencyKey, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Resume a previously paused phase and transition it back to in_progress when supported.
+     * Resume a previously paused phase and transition it back to in_progress when supported.  P3.2: Supports expected_state precondition - if provided, resume only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
      * @summary Resume campaign phase
      * @param {string} campaignId 
      * @param {CampaignPhaseEnum} phase 
+     * @param {PhaseStatusEnum} [expectedState] P3.2: Precondition check. If provided, resume only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs. 
+     * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).campaignsPhaseResume(campaignId, phase, options).then((request) => request(this.axios, this.basePath));
+    public campaignsPhaseResume(campaignId: string, phase: CampaignPhaseEnum, expectedState?: PhaseStatusEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsPhaseResume(campaignId, phase, expectedState, xIdempotencyKey, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
+     * Start a campaign phase. Validates that prior phases are complete and configs exist.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
      * @summary Start campaign phase
      * @param {string} campaignId 
      * @param {CampaignPhaseEnum} phase 
+     * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).campaignsPhaseStart(campaignId, phase, options).then((request) => request(this.axios, this.basePath));
+    public campaignsPhaseStart(campaignId: string, phase: CampaignPhaseEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsPhaseStart(campaignId, phase, xIdempotencyKey, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3920,16 +3978,17 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
     }
 
     /**
-     * 
+     * Stop/cancel a running or paused phase, marking it as failed.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
      * @summary Stop campaign phase
      * @param {string} campaignId 
      * @param {CampaignPhaseEnum} phase 
+     * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).campaignsPhaseStop(campaignId, phase, options).then((request) => request(this.axios, this.basePath));
+    public campaignsPhaseStop(campaignId: string, phase: CampaignPhaseEnum, xIdempotencyKey?: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsPhaseStop(campaignId, phase, xIdempotencyKey, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4018,15 +4077,16 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
     }
 
     /**
-     * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+     * Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
      * @summary Stop the currently running campaign phase
      * @param {string} campaignId 
+     * @param {string} [xIdempotencyKey] P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence. 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsStop(campaignId: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).campaignsStop(campaignId, options).then((request) => request(this.axios, this.basePath));
+    public campaignsStop(campaignId: string, xIdempotencyKey?: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsStop(campaignId, xIdempotencyKey, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

@@ -1504,7 +1504,7 @@ const { status, data } = await apiInstance.campaignsPhaseExecutionsList(
 # **campaignsPhasePause**
 > PhaseStatusResponse campaignsPhasePause()
 
-Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.
+Manually pause an in-progress phase. Discovery (domain generation) executes offline and cannot be paused.  P3.2: Supports expected_state precondition - if provided, pause only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
 
 ### Example
 
@@ -1519,10 +1519,14 @@ const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
 let phase: CampaignPhaseEnum; // (default to undefined)
+let expectedState: PhaseStatusEnum; //P3.2: Precondition check. If provided, pause only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs.  (optional) (default to undefined)
+let xIdempotencyKey: string; //P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.  (optional) (default to undefined)
 
 const { status, data } = await apiInstance.campaignsPhasePause(
     campaignId,
-    phase
+    phase,
+    expectedState,
+    xIdempotencyKey
 );
 ```
 
@@ -1532,6 +1536,8 @@ const { status, data } = await apiInstance.campaignsPhasePause(
 |------------- | ------------- | ------------- | -------------|
 | **campaignId** | [**string**] |  | defaults to undefined|
 | **phase** | **CampaignPhaseEnum** |  | defaults to undefined|
+| **expectedState** | **PhaseStatusEnum** | P3.2: Precondition check. If provided, pause only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs.  | (optional) defaults to undefined|
+| **xIdempotencyKey** | [**string**] | P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.  | (optional) defaults to undefined|
 
 
 ### Return type
@@ -1563,7 +1569,7 @@ const { status, data } = await apiInstance.campaignsPhasePause(
 # **campaignsPhaseResume**
 > PhaseStatusResponse campaignsPhaseResume()
 
-Resume a previously paused phase and transition it back to in_progress when supported.
+Resume a previously paused phase and transition it back to in_progress when supported.  P3.2: Supports expected_state precondition - if provided, resume only proceeds when current state matches. P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
 
 ### Example
 
@@ -1578,10 +1584,14 @@ const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
 let phase: CampaignPhaseEnum; // (default to undefined)
+let expectedState: PhaseStatusEnum; //P3.2: Precondition check. If provided, resume only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs.  (optional) (default to undefined)
+let xIdempotencyKey: string; //P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.  (optional) (default to undefined)
 
 const { status, data } = await apiInstance.campaignsPhaseResume(
     campaignId,
-    phase
+    phase,
+    expectedState,
+    xIdempotencyKey
 );
 ```
 
@@ -1591,6 +1601,8 @@ const { status, data } = await apiInstance.campaignsPhaseResume(
 |------------- | ------------- | ------------- | -------------|
 | **campaignId** | [**string**] |  | defaults to undefined|
 | **phase** | **CampaignPhaseEnum** |  | defaults to undefined|
+| **expectedState** | **PhaseStatusEnum** | P3.2: Precondition check. If provided, resume only proceeds when current phase status matches. Returns 409 EXPECTED_STATE_MISMATCH if actual state differs.  | (optional) defaults to undefined|
+| **xIdempotencyKey** | [**string**] | P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.  | (optional) defaults to undefined|
 
 
 ### Return type
@@ -1622,6 +1634,7 @@ const { status, data } = await apiInstance.campaignsPhaseResume(
 # **campaignsPhaseStart**
 > PhaseStatusResponse campaignsPhaseStart()
 
+Start a campaign phase. Validates that prior phases are complete and configs exist.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
 
 ### Example
 
@@ -1636,10 +1649,12 @@ const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
 let phase: CampaignPhaseEnum; // (default to undefined)
+let xIdempotencyKey: string; //P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.  (optional) (default to undefined)
 
 const { status, data } = await apiInstance.campaignsPhaseStart(
     campaignId,
-    phase
+    phase,
+    xIdempotencyKey
 );
 ```
 
@@ -1649,6 +1664,7 @@ const { status, data } = await apiInstance.campaignsPhaseStart(
 |------------- | ------------- | ------------- | -------------|
 | **campaignId** | [**string**] |  | defaults to undefined|
 | **phase** | **CampaignPhaseEnum** |  | defaults to undefined|
+| **xIdempotencyKey** | [**string**] | P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.  | (optional) defaults to undefined|
 
 
 ### Return type
@@ -1736,6 +1752,7 @@ const { status, data } = await apiInstance.campaignsPhaseStatus(
 # **campaignsPhaseStop**
 > PhaseStatusResponse campaignsPhaseStop()
 
+Stop/cancel a running or paused phase, marking it as failed.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
 
 ### Example
 
@@ -1750,10 +1767,12 @@ const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
 let phase: CampaignPhaseEnum; // (default to undefined)
+let xIdempotencyKey: string; //P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.  (optional) (default to undefined)
 
 const { status, data } = await apiInstance.campaignsPhaseStop(
     campaignId,
-    phase
+    phase,
+    xIdempotencyKey
 );
 ```
 
@@ -1763,6 +1782,7 @@ const { status, data } = await apiInstance.campaignsPhaseStop(
 |------------- | ------------- | ------------- | -------------|
 | **campaignId** | [**string**] |  | defaults to undefined|
 | **phase** | **CampaignPhaseEnum** |  | defaults to undefined|
+| **xIdempotencyKey** | [**string**] | P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.  | (optional) defaults to undefined|
 
 
 ### Return type
@@ -2167,7 +2187,7 @@ const { status, data } = await apiInstance.campaignsStatusGet(
 # **campaignsStop**
 > CampaignStopResponse campaignsStop()
 
-Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.
+Issues a cooperative stop command against whichever phase is active and marks the campaign as cancelled.  P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result. 
 
 ### Example
 
@@ -2181,9 +2201,11 @@ const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; // (default to undefined)
+let xIdempotencyKey: string; //P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.  (optional) (default to undefined)
 
 const { status, data } = await apiInstance.campaignsStop(
-    campaignId
+    campaignId,
+    xIdempotencyKey
 );
 ```
 
@@ -2192,6 +2214,7 @@ const { status, data } = await apiInstance.campaignsStop(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **campaignId** | [**string**] |  | defaults to undefined|
+| **xIdempotencyKey** | [**string**] | P3.3: Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.  | (optional) defaults to undefined|
 
 
 ### Return type

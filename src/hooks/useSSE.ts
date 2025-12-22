@@ -1,5 +1,6 @@
 // File: src/hooks/useSSE.ts
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
+import { subscribeToSSE, reconnectSSE, type ConnectionState } from './sseConnectionManager';
 
 // Narrowed runtime event shape used by consumers. `data` will be strongly typed when
 // the event name matches a known CampaignSseEvent discriminator; otherwise unknown.
@@ -507,5 +508,82 @@ export function useSSE(
     close,
     isConnected: readyState === ES_OPEN,
     reconnectAttempts: reconnectAttemptsRef.current,
+  };
+}
+
+/**
+ * Shared SSE hook that uses the connection manager to deduplicate connections.
+ * Multiple components calling this with the same URL will share a single EventSource.
+ * 
+ * This should be used instead of `useSSE` to prevent duplicate connections.
+ */
+export function useSharedSSE(
+  url: string | null,
+  onEvent?: (event: SSEEvent) => void
+): UseSSEReturn {
+  const [state, setState] = useState<ConnectionState>({
+    readyState: ES_CONNECTING,
+    error: null,
+    connectedAt: null,
+    reconnectAttempts: 0,
+  });
+  const [lastEvent, setLastEvent] = useState<SSEEvent | null>(null);
+  const [hasEverConnected, setHasEverConnected] = useState(false);
+  const onEventRef = useRef(onEvent);
+  
+  // Keep callback ref updated
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  }, [onEvent]);
+
+  useEffect(() => {
+    if (!url) {
+      setState({
+        readyState: ES_CLOSED,
+        error: null,
+        connectedAt: null,
+        reconnectAttempts: 0,
+      });
+      return;
+    }
+
+    const unsubscribe = subscribeToSSE(
+      url,
+      (event) => {
+        setLastEvent(event);
+        onEventRef.current?.(event);
+      },
+      (newState) => {
+        setState(newState);
+        if (newState.readyState === ES_OPEN) {
+          setHasEverConnected(true);
+        }
+      }
+    );
+
+    return unsubscribe;
+  }, [url]);
+
+  const reconnect = useCallback(() => {
+    if (url) {
+      reconnectSSE(url);
+    }
+  }, [url]);
+
+  const close = useCallback(() => {
+    // Note: closing is handled by unsubscribing (returned from subscribeToSSE)
+    // Individual components can't force-close a shared connection
+  }, []);
+
+  return {
+    readyState: state.readyState,
+    hasEverConnected,
+    connectedAt: state.connectedAt,
+    lastEvent,
+    error: state.error,
+    reconnect,
+    close,
+    isConnected: state.readyState === ES_OPEN,
+    reconnectAttempts: state.reconnectAttempts,
   };
 }

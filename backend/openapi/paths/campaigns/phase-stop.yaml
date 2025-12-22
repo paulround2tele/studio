@@ -1,6 +1,10 @@
 post:
   tags: [campaigns]
   summary: Stop campaign phase
+  description: |
+    Stop/cancel a running or paused phase, marking it as failed.
+    
+    P3.3: Supports X-Idempotency-Key header - duplicate requests with same key return cached result.
   operationId: campaigns_phase_stop
   parameters:
     - name: campaignId
@@ -11,6 +15,15 @@ post:
       in: path
       required: true
       schema: { $ref: '../../components/schemas/all.yaml#/CampaignPhaseEnum' }
+    - name: X-Idempotency-Key
+      in: header
+      required: false
+      description: |
+        P3.3: Unique key for duplicate request detection. If a request with this key was already
+        processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+      schema:
+        type: string
+        maxLength: 64
   responses:
     '200':
       description: Stopped

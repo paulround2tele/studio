@@ -207,6 +207,10 @@ CampaignRestartPhaseEnum:
 ExecutionStatusEnum:
   type: string
   enum: [not_started, ready, configured, in_progress, paused, completed, failed]
+PhaseStatusEnum:
+  type: string
+  description: Phase lifecycle status (P3.2 expected_state precondition)
+  enum: [not_started, ready, configured, in_progress, paused, completed, failed]
 
 CampaignState:
   type: object
