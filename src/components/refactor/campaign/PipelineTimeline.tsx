@@ -237,7 +237,6 @@ function ExpandedPhaseRow({ phase, isLast }: ExpandedPhaseRowProps) {
   const isCompleted = phase.status === 'completed';
   
   const startTime = formatTime(phase.startedAt);
-  const endTime = formatTime(phase.completedAt ?? phase.failedAt);
   const duration = formatDuration(
     phase.startedAt, 
     phase.completedAt ?? phase.failedAt ?? (isActive ? undefined : phase.startedAt)
@@ -245,34 +244,32 @@ function ExpandedPhaseRow({ phase, isLast }: ExpandedPhaseRowProps) {
   const errorMessage = isFailed ? getErrorMessage(phase) : null;
 
   return (
-    <div className="relative">
+    <div className="relative pl-2">
       {/* Vertical connector line */}
       {!isLast && (
         <div 
           className={cn(
-            "absolute left-4 top-10 w-0.5 h-full -ml-px",
-            isCompleted || isActive ? "bg-emerald-200 dark:bg-emerald-800" : "bg-gray-200 dark:bg-gray-700"
+            "absolute left-[1.35rem] top-7 w-0.5 h-full -ml-px",
+            isCompleted ? "bg-emerald-500/30 dark:bg-emerald-500/30" : "bg-gray-200 dark:bg-gray-800"
           )} 
         />
       )}
       
       <div className={cn(
-        "flex gap-4 p-3 rounded-lg transition-colors",
-        isActive && "bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800",
-        isFailed && "bg-red-50/50 dark:bg-red-900/10 border border-red-200 dark:border-red-800"
+        "flex gap-3 py-2 rounded-lg transition-colors items-start",
+        isActive && "bg-emerald-50/30 dark:bg-emerald-900/10"
       )}>
         {/* Status icon */}
         <div className={cn(
-          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-          isActive ? "bg-emerald-100 dark:bg-emerald-900/30" :
-          isFailed ? "bg-red-100 dark:bg-red-900/30" :
-          isCompleted ? "bg-emerald-100 dark:bg-emerald-900/30" :
-          "bg-gray-100 dark:bg-gray-800"
+          "flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5",
+          isActive ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" :
+          isFailed ? "bg-red-100 dark:bg-red-900/30 text-red-600" :
+          isCompleted ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" :
+          "bg-gray-100 dark:bg-gray-800 text-gray-400"
         )}>
           <Icon 
             className={cn(
-              "w-5 h-5",
-              config.iconColor,
+              "w-3.5 h-3.5",
               config.animate && "animate-spin"
             )} 
           />
@@ -281,36 +278,39 @@ function ExpandedPhaseRow({ phase, isLast }: ExpandedPhaseRowProps) {
         {/* Phase details */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <h4 className={cn(
-              "font-medium",
-              isActive ? "text-emerald-700 dark:text-emerald-300" :
-              isFailed ? "text-red-700 dark:text-red-300" :
-              isCompleted ? "text-emerald-600 dark:text-emerald-400" :
-              "text-gray-600 dark:text-gray-400"
-            )}>
-              {phase.label}
-            </h4>
-            <span className={cn(
-              "text-sm",
-              isActive ? "text-emerald-600 dark:text-emerald-400" :
-              isFailed ? "text-red-600 dark:text-red-400" :
-              isCompleted ? "text-emerald-500 dark:text-emerald-500" :
-              "text-gray-500 dark:text-gray-500"
-            )}>
-              {config.label}
-            </span>
+            <div className="flex items-center gap-2">
+              <h4 className={cn(
+                "font-medium text-sm",
+                isActive ? "text-emerald-700 dark:text-emerald-300" :
+                isFailed ? "text-red-700 dark:text-red-300" :
+                isCompleted ? "text-emerald-600 dark:text-emerald-400" :
+                "text-gray-600 dark:text-gray-400"
+              )}>
+                {phase.label}
+              </h4>
+              <span className={cn(
+                "text-xs px-1.5 py-0.5 rounded-full",
+                isActive ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300" :
+                isFailed ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300" :
+                isCompleted ? "text-emerald-600 dark:text-emerald-400" :
+                "text-gray-400 dark:text-gray-500"
+              )}>
+                {config.label}
+              </span>
+            </div>
+            
+            {/* Timing info - simplified */}
+            {(duration || startTime) && (
+              <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">
+                {duration || startTime}
+              </span>
+            )}
           </div>
           
           {/* Progress bar for active phases */}
           {isActive && (
-            <div className="mt-2">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-emerald-600 dark:text-emerald-400">Progress</span>
-                <span className="font-mono text-emerald-700 dark:text-emerald-300">
-                  {Math.round(phase.progressPercentage)}%
-                </span>
-              </div>
-              <div className="w-full bg-emerald-100 dark:bg-emerald-900/30 rounded-full h-2 overflow-hidden">
+            <div className="mt-1.5 flex items-center gap-2">
+              <div className="flex-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full h-1.5 overflow-hidden">
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-500",
@@ -319,50 +319,17 @@ function ExpandedPhaseRow({ phase, isLast }: ExpandedPhaseRowProps) {
                   style={{ width: `${Math.min(100, Math.max(0, phase.progressPercentage))}%` }}
                 />
               </div>
-            </div>
-          )}
-          
-          {/* Timing info */}
-          {(startTime || duration) && (
-            <div className="mt-2 flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-              {startTime && (
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  Started {startTime}
-                </span>
-              )}
-              {endTime && isCompleted && (
-                <span>Completed {endTime}</span>
-              )}
-              {endTime && isFailed && (
-                <span className="text-red-500">Failed {endTime}</span>
-              )}
-              {duration && (isCompleted || isFailed) && (
-                <span>Duration: {duration}</span>
-              )}
-              {duration && isActive && (
-                <span>Elapsed: {duration}</span>
-              )}
+              <span className="text-xs font-mono text-emerald-700 dark:text-emerald-300">
+                {Math.round(phase.progressPercentage)}%
+              </span>
             </div>
           )}
           
           {/* Error message for failed phases */}
           {errorMessage && (
-            <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/20 rounded text-sm text-red-700 dark:text-red-300">
+            <div className="mt-1 text-xs text-red-600 dark:text-red-400">
               {errorMessage}
             </div>
-          )}
-          
-          {/* Error details expandable */}
-          {isFailed && phase.errorDetails && (
-            <details className="mt-2">
-              <summary className="cursor-pointer text-xs text-red-600 dark:text-red-400 hover:underline">
-                View error details
-              </summary>
-              <pre className="mt-1 p-2 bg-red-50 dark:bg-red-900/10 text-red-800 dark:text-red-200 rounded text-xs overflow-x-auto">
-                {JSON.stringify(phase.errorDetails, null, 2)}
-              </pre>
-            </details>
           )}
         </div>
       </div>

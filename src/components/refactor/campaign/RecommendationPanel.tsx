@@ -35,6 +35,7 @@ const severityConfig = {
 export function RecommendationPanel({ recommendations, className }: RecommendationPanelProps) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const [expandedExplanations, setExpandedExplanations] = useState<Set<string>>(new Set());
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const isExplainabilityEnabled = process.env.NEXT_PUBLIC_ENABLE_ADV_REC_EXPLAIN !== 'false';
 
@@ -62,18 +63,30 @@ export function RecommendationPanel({ recommendations, className }: Recommendati
 
   return (
     <div className={cn("space-y-3", className)}>
-      <div className="flex items-center gap-2">
-        <Zap className="w-5 h-5 text-blue-600" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Recommendations
-        </h3>
-        {isExplainabilityEnabled && (
-          <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
-            AI Insights
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Zap className="w-5 h-5 text-blue-600" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Recommendations
+          </h3>
+          <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">
+            {visibleRecommendations.length}
           </span>
-        )}
+          {isExplainabilityEnabled && (
+            <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded ml-2">
+              AI Insights
+            </span>
+          )}
+        </div>
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        >
+          {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+        </button>
       </div>
       
+      {!isCollapsed && (
       <div className="space-y-3">
   {visibleRecommendations.map((recommendation) => {
           const config = severityConfig[recommendation.severity];
@@ -168,6 +181,7 @@ export function RecommendationPanel({ recommendations, className }: Recommendati
           );
         })}
       </div>
+      )}
     </div>
   );
 }

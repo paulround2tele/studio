@@ -131,6 +131,31 @@ export function FunnelSnapshot({
   ];
 
   const maxCount = Math.max(...stages.map(s => s.count));
+  const isEarlyStage = data.generated > 0 && data.dnsValid === 0 && data.httpValid === 0;
+
+  if (isEarlyStage) {
+    return (
+      <div className={cn("space-y-1", className)}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Conversion Funnel
+          </h3>
+        </div>
+        
+        <FunnelStageComponent
+          stage={stages[0]}
+          maxCount={stages[0].count}
+          showLabels={showLabels}
+          showPercentages={showPercentages}
+        />
+        
+        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+          Waiting for DNS & HTTP validation to begin...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("space-y-1", className)}>

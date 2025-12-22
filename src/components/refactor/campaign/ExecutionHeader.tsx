@@ -132,31 +132,31 @@ export function ExecutionHeader({
   return (
     <header
       className={cn(
-        "rounded-xl border bg-white dark:bg-gray-900 shadow-sm overflow-hidden",
+        "rounded-xl border bg-white dark:bg-gray-900 shadow-md overflow-hidden",
         className
       )}
       role="banner"
       aria-label="Campaign execution status"
     >
       {/* Main content area */}
-      <div className="p-6">
+      <div className="p-6 md:p-8">
         {/* Header row: Phase name + Status badge + SSE indicator */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+          <div className="flex items-center gap-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
               {phaseLabel}
             </h2>
             <Badge
               variant="secondary"
               className={cn(
-                "font-medium",
+                "font-semibold px-3 py-1 text-sm shadow-sm",
                 statusConfig.color,
                 statusConfig.bgColor
               )}
               aria-label={`Status: ${statusConfig.label}`}
             >
               {status === 'running' && (
-                <span className={cn("w-2 h-2 rounded-full mr-2 animate-pulse", statusConfig.pulseColor)} aria-hidden="true" />
+                <span className={cn("w-2.5 h-2.5 rounded-full mr-2 animate-pulse", statusConfig.pulseColor)} aria-hidden="true" />
               )}
               {statusConfig.label}
             </Badge>
@@ -164,7 +164,7 @@ export function ExecutionHeader({
           
           {/* SSE Status Indicator */}
           <div 
-            className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+            className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-3 py-1.5 rounded-full border border-gray-100 dark:border-gray-800"
             role="status"
             aria-label={`Connection: ${sseStatusLabel}`}
           >
@@ -180,19 +180,19 @@ export function ExecutionHeader({
 
         {/* Progress bar - only show when running or paused with progress */}
         {(status === 'running' || status === 'paused') && (
-          <div className="mb-4" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100} aria-label={`${phaseLabel} progress`}>
-            <div className="flex justify-between text-sm mb-2">
+          <div className="mb-8" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100} aria-label={`${phaseLabel} progress`}>
+            <div className="flex justify-between text-sm mb-2 font-medium">
               <span className="text-gray-600 dark:text-gray-400">
                 {progressText || 'Processing...'}
               </span>
-              <span className="font-mono text-gray-900 dark:text-gray-100">
+              <span className="font-mono text-gray-900 dark:text-gray-100 text-base">
                 {Math.round(progress)}%
               </span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-4 overflow-hidden border border-gray-200 dark:border-gray-700">
               <div
                 className={cn(
-                  "h-full rounded-full transition-all duration-500 ease-out",
+                  "h-full rounded-full transition-all duration-500 ease-out shadow-sm",
                   status === 'running' 
                     ? "bg-emerald-500" 
                     : "bg-amber-500"

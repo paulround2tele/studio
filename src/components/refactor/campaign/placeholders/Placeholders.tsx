@@ -61,6 +61,7 @@ function PlaceholderBase({
   hint,
   className,
   variant = 'default',
+  compact = false,
 }: {
   icon: React.ElementType;
   title: string;
@@ -68,12 +69,28 @@ function PlaceholderBase({
   hint?: string;
   className?: string;
   variant?: 'default' | 'loading' | 'success';
+  compact?: boolean;
 }) {
   const iconVariants = {
     default: 'text-gray-400 dark:text-gray-500',
     loading: 'text-blue-400 dark:text-blue-500 animate-pulse',
     success: 'text-green-400 dark:text-green-500',
   };
+
+  if (compact) {
+    return (
+      <div 
+        className={cn(
+          "flex items-center justify-center gap-3 p-4 text-center",
+          "bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-dashed border-gray-200 dark:border-gray-700",
+          className
+        )}
+      >
+        <Icon className={cn("w-5 h-5", iconVariants[variant])} />
+        <span className="text-sm text-gray-500 dark:text-gray-400">{description}</span>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -155,6 +172,7 @@ export function KpiPlaceholder({ currentPhase, className, isRunning }: Placehold
         description="Performance metrics will appear once analysis begins."
         hint="Tracks: High Potential, Leads, Keyword Coverage, Quality Scores"
         className={className}
+        compact={true}
       />
     );
   }
@@ -167,6 +185,7 @@ export function KpiPlaceholder({ currentPhase, className, isRunning }: Placehold
         description="Metrics require completed HTTP validation. Currently in the early pipeline stages."
         variant="loading"
         className={className}
+        compact={true}
       />
     );
   }
@@ -177,6 +196,7 @@ export function KpiPlaceholder({ currentPhase, className, isRunning }: Placehold
       title="No Metrics Yet"
       description="Analysis phase must complete before metrics are available."
       className={className}
+      compact={true}
     />
   );
 }

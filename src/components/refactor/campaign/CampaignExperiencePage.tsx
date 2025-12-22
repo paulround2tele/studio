@@ -1003,7 +1003,6 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
           Shows only when totalAnalyzed > 0 to avoid empty/meaningless metrics
           ═══════════════════════════════════════════════════════════════════════ */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">Key Metrics</h2>
         <KpiGate 
           metricsData={metricsData} 
           currentPhase={executionControlState.controlPhase ?? undefined}
@@ -1014,6 +1013,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
             />
           }
         >
+          <h2 className="text-lg font-semibold mb-3">Key Metrics</h2>
           <KpiGrid kpis={kpis} loading={isLoading} />
         </KpiGate>
       </div>
