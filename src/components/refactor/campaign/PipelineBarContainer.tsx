@@ -1,12 +1,12 @@
 /**
  * Pipeline Bar Container Component
- * Wraps PipelineBar with campaign-specific logic
+ * @deprecated Use PipelineTimeline component directly instead
+ * This component is maintained for backward compatibility with CampaignOverviewV2
  */
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import PipelineBar from '../shared/PipelineBar';
 import type { CampaignDomain, PipelineSegment } from '../types';
 
 interface PipelineBarContainerProps {
@@ -93,11 +93,33 @@ export function PipelineBarContainer({
             <div className="text-sm text-gray-600 dark:text-gray-400">
               {domains.length} domain{domains.length !== 1 ? 's' : ''} in pipeline
             </div>
-            <PipelineBar 
-              segments={segments}
-              showLabels={showLabels}
-              height={12}
-            />
+            {/* Simple inline bar visualization for backward compatibility */}
+            <div className="flex h-3 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+              {segments.map((segment, index) => (
+                <div
+                  key={`${segment.phase}-${index}`}
+                  className="h-full transition-all duration-300"
+                  style={{ 
+                    width: `${segment.count > 0 ? Math.max(5, (segment.count / domains.length) * 100) : 0}%`,
+                    backgroundColor: segment.color
+                  }}
+                  title={showLabels ? `${segment.phase}: ${segment.count}` : undefined}
+                />
+              ))}
+            </div>
+            {showLabels && (
+              <div className="flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400">
+                {segments.map((segment, index) => (
+                  <div key={`legend-${index}`} className="flex items-center gap-1.5">
+                    <div 
+                      className="w-2.5 h-2.5 rounded-full" 
+                      style={{ backgroundColor: segment.color }}
+                    />
+                    <span>{segment.phase}: {segment.count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

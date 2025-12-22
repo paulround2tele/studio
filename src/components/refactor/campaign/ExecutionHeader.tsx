@@ -182,7 +182,7 @@ export function ExecutionHeader({
         {(status === 'running' || status === 'paused') && (
           <div className="mb-6" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100} aria-label={`${phaseLabel} progress`}>
             <div className="flex justify-between text-sm mb-2 font-medium">
-              <span className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide font-semibold">
+              <span className="text-gray-600 dark:text-gray-400">
                 {progressText || 'Processing...'}
               </span>
               <span className="font-mono text-gray-900 dark:text-gray-100 text-base">

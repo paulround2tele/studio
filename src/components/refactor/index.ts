@@ -18,9 +18,6 @@ export { default as PatternStep } from './campaign/steps/PatternStep';
 export { default as TargetingStep } from './campaign/steps/TargetingStep';
 export { default as ReviewStep } from './campaign/steps/ReviewStep';
 
-// Shared components
-export { default as PipelineBar } from './shared/PipelineBar';
-
 // Types
 export type {
   CampaignDomain,

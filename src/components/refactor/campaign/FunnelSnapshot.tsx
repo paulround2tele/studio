@@ -133,7 +133,8 @@ export function FunnelSnapshot({
   const maxCount = Math.max(...stages.map(s => s.count));
   const isEarlyStage = data.generated > 0 && data.dnsValid === 0 && data.httpValid === 0;
 
-  if (isEarlyStage) {
+  const firstStage = stages[0];
+  if (isEarlyStage && firstStage) {
     return (
       <div className={cn("space-y-1", className)}>
         <div className="flex justify-between items-center mb-4">
@@ -143,8 +144,8 @@ export function FunnelSnapshot({
         </div>
         
         <FunnelStageComponent
-          stage={stages[0]}
-          maxCount={stages[0].count}
+          stage={firstStage}
+          maxCount={firstStage.count}
           showLabels={showLabels}
           showPercentages={showPercentages}
         />

@@ -207,9 +207,6 @@ export function KpiPlaceholder({ currentPhase, className, isRunning }: Placehold
 export function LeadsPlaceholder({ currentPhase, className, isRunning }: PlaceholderProps) {
   const { isEarly, hasStarted } = getPhaseContext(currentPhase);
   
-  // Use reduced padding (p-6 instead of default p-8) to reduce visual weight
-  const compactClass = cn("p-6", className);
-  
   if (!hasStarted) {
     return (
       <PlaceholderBase
@@ -217,7 +214,7 @@ export function LeadsPlaceholder({ currentPhase, className, isRunning }: Placeho
         title="Lead Results"
         description="Validated leads will appear after HTTP validation completes."
         hint="Leads are domains that passed all validation stages"
-        className={compactClass}
+        className={className}
       />
     );
   }
@@ -229,7 +226,7 @@ export function LeadsPlaceholder({ currentPhase, className, isRunning }: Placeho
         title="Validating Domains..."
         description="DNS and HTTP validation in progress. Leads will appear once domains pass validation."
         variant="loading"
-        className={compactClass}
+        className={className}
       />
     );
   }
@@ -239,7 +236,7 @@ export function LeadsPlaceholder({ currentPhase, className, isRunning }: Placeho
       icon={Users}
       title="No Leads Yet"
       description="No domains have passed HTTP validation yet."
-      className={compactClass}
+      className={className}
     />
   );
 }

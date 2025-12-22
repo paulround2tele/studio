@@ -25,7 +25,6 @@ import {
   PauseCircle,
   ChevronDown,
   ChevronUp,
-  Clock,
   Settings2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -256,10 +255,8 @@ function ExpandedPhaseRow({ phase, isLast }: ExpandedPhaseRowProps) {
       )}
       
       <div className={cn(
-        "flex gap-3 py-2 rounded-lg transition-colors items-start border-l-2",
-        isActive 
-          ? "bg-emerald-50/50 dark:bg-emerald-900/20 border-emerald-500 pl-3 shadow-sm" 
-          : "border-transparent pl-3.5"
+        "flex gap-3 py-2 rounded-lg transition-colors items-start",
+        isActive && "bg-emerald-50/30 dark:bg-emerald-900/10"
       )}>
         {/* Status icon */}
         <div className={cn(
