@@ -1019,14 +1019,14 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
       </div>
 
       {/* Two-column layout for detailed views */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 items-start">
         {/* Left column: Funnel & Leads */}
-        <div className="space-y-6">
+        <div className="space-y-4 h-full">
           {/* ═══════════════════════════════════════════════════════════════════════
               Funnel Snapshot (Phase 4 Gated)
               Shows only when generated > 0 to avoid empty funnel visualization
               ═══════════════════════════════════════════════════════════════════════ */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border">
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border h-full">
             {funnelLoading ? (
               <div className="flex items-center justify-center p-8">
                 <Loader2 className="w-6 h-6 animate-spin" />
@@ -1083,12 +1083,12 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         </div>
 
         {/* Right column: Recommendations and other insights */}
-        <div className="space-y-6">
+        <div className="space-y-4 h-full">
           {/* ═══════════════════════════════════════════════════════════════════════
               Recommendations Panel (Phase 4 Gated)
               Shows only when recommendations exist, with positive messaging otherwise
               ═══════════════════════════════════════════════════════════════════════ */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border">
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border h-full">
             {recsLoading ? (
               <div className="flex items-center justify-center p-8">
                 <Loader2 className="w-6 h-6 animate-spin" />

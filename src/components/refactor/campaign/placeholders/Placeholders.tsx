@@ -82,11 +82,11 @@ function PlaceholderBase({
       <div 
         className={cn(
           "flex items-center justify-center gap-3 p-4 text-center",
-          "bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-dashed border-gray-200 dark:border-gray-700",
+          "bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-dashed border-gray-200/60 dark:border-gray-700/60",
           className
         )}
       >
-        <Icon className={cn("w-5 h-5", iconVariants[variant])} />
+        <Icon className={cn("w-5 h-5 opacity-80", iconVariants[variant])} />
         <span className="text-sm text-gray-500 dark:text-gray-400">{description}</span>
       </div>
     );
@@ -96,11 +96,11 @@ function PlaceholderBase({
     <div 
       className={cn(
         "flex flex-col items-center justify-center p-8 text-center",
-        "bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-dashed border-gray-200 dark:border-gray-700",
+        "bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-dashed border-gray-200/60 dark:border-gray-700/60",
         className
       )}
     >
-      <div className={cn("mb-3", iconVariants[variant])}>
+      <div className={cn("mb-3 opacity-80", iconVariants[variant])}>
         <Icon className="w-10 h-10" />
       </div>
       <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -207,6 +207,9 @@ export function KpiPlaceholder({ currentPhase, className, isRunning }: Placehold
 export function LeadsPlaceholder({ currentPhase, className, isRunning }: PlaceholderProps) {
   const { isEarly, hasStarted } = getPhaseContext(currentPhase);
   
+  // Use reduced padding (p-6 instead of default p-8) to reduce visual weight
+  const compactClass = cn("p-6", className);
+  
   if (!hasStarted) {
     return (
       <PlaceholderBase
@@ -214,7 +217,7 @@ export function LeadsPlaceholder({ currentPhase, className, isRunning }: Placeho
         title="Lead Results"
         description="Validated leads will appear after HTTP validation completes."
         hint="Leads are domains that passed all validation stages"
-        className={className}
+        className={compactClass}
       />
     );
   }
@@ -226,7 +229,7 @@ export function LeadsPlaceholder({ currentPhase, className, isRunning }: Placeho
         title="Validating Domains..."
         description="DNS and HTTP validation in progress. Leads will appear once domains pass validation."
         variant="loading"
-        className={className}
+        className={compactClass}
       />
     );
   }
@@ -236,7 +239,7 @@ export function LeadsPlaceholder({ currentPhase, className, isRunning }: Placeho
       icon={Users}
       title="No Leads Yet"
       description="No domains have passed HTTP validation yet."
-      className={className}
+      className={compactClass}
     />
   );
 }

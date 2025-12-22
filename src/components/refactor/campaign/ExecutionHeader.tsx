@@ -141,7 +141,7 @@ export function ExecutionHeader({
       {/* Main content area */}
       <div className="p-6 md:p-8">
         {/* Header row: Phase name + Status badge + SSE indicator */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
           <div className="flex items-center gap-4">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
               {phaseLabel}
@@ -180,9 +180,9 @@ export function ExecutionHeader({
 
         {/* Progress bar - only show when running or paused with progress */}
         {(status === 'running' || status === 'paused') && (
-          <div className="mb-8" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100} aria-label={`${phaseLabel} progress`}>
+          <div className="mb-6" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100} aria-label={`${phaseLabel} progress`}>
             <div className="flex justify-between text-sm mb-2 font-medium">
-              <span className="text-gray-600 dark:text-gray-400">
+              <span className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide font-semibold">
                 {progressText || 'Processing...'}
               </span>
               <span className="font-mono text-gray-900 dark:text-gray-100 text-base">

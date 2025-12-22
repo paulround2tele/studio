@@ -256,8 +256,10 @@ function ExpandedPhaseRow({ phase, isLast }: ExpandedPhaseRowProps) {
       )}
       
       <div className={cn(
-        "flex gap-3 py-2 rounded-lg transition-colors items-start",
-        isActive && "bg-emerald-50/30 dark:bg-emerald-900/10"
+        "flex gap-3 py-2 rounded-lg transition-colors items-start border-l-2",
+        isActive 
+          ? "bg-emerald-50/50 dark:bg-emerald-900/20 border-emerald-500 pl-3 shadow-sm" 
+          : "border-transparent pl-3.5"
       )}>
         {/* Status icon */}
         <div className={cn(
@@ -376,19 +378,19 @@ export function PipelineTimeline({
             Pipeline
           </h3>
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-            <span className="flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            <span className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-medium">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
               {completedCount}/{phases.length}
             </span>
             {failedCount > 0 && (
-              <span className="flex items-center gap-1 text-red-500">
-                <XCircle className="w-4 h-4" />
+              <span className="flex items-center gap-1 text-red-500 text-xs font-medium">
+                <XCircle className="w-3.5 h-3.5" />
                 {failedCount} failed
               </span>
             )}
-            {activePhase && (
-              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                <Loader2 className="w-4 h-4 animate-spin" />
+            {activePhase && isExpanded && (
+              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 {activePhase.label}
               </span>
             )}
@@ -398,7 +400,7 @@ export function PipelineTimeline({
           variant="ghost"
           size="sm"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 h-8 px-2"
         >
           {isExpanded ? (
             <>

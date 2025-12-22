@@ -146,30 +146,30 @@ export function CampaignSseOverlay({ campaignId, maxEntries = 50 }: CampaignSseO
   }
 
   return (
-    <div className="pointer-events-auto fixed right-4 top-4 z-[9999] w-[420px] max-w-[92vw] text-xs text-white">
-      <div className="rounded-2xl border border-cyan-500/50 bg-[#040b1d]/95 shadow-[0_25px_60px_rgba(2,6,23,0.75)] backdrop-blur-md">
-        <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
-          <div className="space-y-1">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-cyan-300">Live SSE Feed</p>
-            <p className="text-base font-semibold text-white">
+    <div className="pointer-events-auto fixed right-4 top-4 z-[9999] w-[380px] max-w-[92vw] text-xs text-white">
+      <div className="rounded-xl border border-cyan-500/30 bg-[#040b1d]/90 shadow-[0_15px_40px_rgba(2,6,23,0.6)] backdrop-blur-sm">
+        <div className="flex items-start justify-between gap-3 border-b border-white/5 px-4 py-3">
+          <div className="space-y-0.5">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-300/80">Live SSE Feed</p>
+            <p className="text-sm font-semibold text-white">
               {campaignId ? `Campaign ${campaignId.slice(0, 8)}…` : 'All Campaigns'}
             </p>
-            <p className="text-[11px] text-slate-300">
+            <p className="text-[10px] text-slate-400">
               {lastEvent ? `Last: ${lastEvent.label} @ ${new Date(lastEvent.timestamp ?? '').toLocaleTimeString()}` : 'Awaiting events'}
             </p>
-            <p className="text-[11px] text-cyan-200">{connectionSummary}</p>
+            <p className="text-[10px] text-cyan-200/80">{connectionSummary}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white"
+              className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/80 hover:bg-white/10"
               onClick={() => setCollapsed((prev) => !prev)}
             >
               {collapsed ? 'Expand' : 'Collapse'}
             </button>
             <button
               type="button"
-              className="rounded-full border border-red-400/40 bg-red-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-red-100"
+              className="rounded-full border border-red-400/30 bg-red-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-100/80 hover:bg-red-500/20"
               onClick={() => setHidden(true)}
             >
               Hide
