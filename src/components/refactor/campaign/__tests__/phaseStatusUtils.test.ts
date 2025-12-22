@@ -1,7 +1,7 @@
 import { mergeCampaignPhases, deriveOverallProgress } from '../phaseStatusUtils';
 import { DEFAULT_PHASES } from '../../../../hooks/useCampaignPhaseStream';
 import type { CampaignPhasesStatusResponse } from '../../../../lib/api-client/models/campaign-phases-status-response';
-import type { PipelinePhase } from '../PipelineBar';
+import type { PipelinePhase } from '../PipelineTimeline';
 
 function cloneDefaultPhases(): PipelinePhase[] {
   return DEFAULT_PHASES.map((phase: PipelinePhase) => ({ ...phase }));

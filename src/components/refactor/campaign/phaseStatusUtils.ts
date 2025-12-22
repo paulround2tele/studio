@@ -4,7 +4,7 @@
  */
 
 import { DEFAULT_PHASES } from '@/hooks/useCampaignPhaseStream';
-import type { PipelinePhase } from './PipelineBar';
+import type { PipelinePhase } from './PipelineTimeline';
 import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campaign-phases-status-response';
 import type { CampaignPhasesStatusResponsePhasesInner } from '@/lib/api-client/models/campaign-phases-status-response-phases-inner';
 import type { FunnelData } from './FunnelSnapshot';

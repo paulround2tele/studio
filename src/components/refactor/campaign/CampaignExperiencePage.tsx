@@ -14,38 +14,37 @@ import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import type { SerializedError } from '@reduxjs/toolkit';
 
 import { KpiGrid } from './KpiGrid';
-import { PipelineBar } from './PipelineBar';
-import type { PipelinePhase } from './PipelineBar';
+import { PipelineTimeline } from './PipelineTimeline';
+import type { PipelinePhase } from './PipelineTimeline';
 import { FunnelSnapshot } from './FunnelSnapshot';
 import { RecommendationPanel } from './RecommendationPanel';
 import { LeadResultsPanel } from './LeadResultsPanel';
+// Phase 4: Progressive Disclosure Gates
+import { FunnelGate, LeadsGate, KpiGate, MomentumGate, RecommendationsGate, WarningsGate } from './gates';
+import { 
+  FunnelPlaceholder, 
+  KpiPlaceholder, 
+  LeadsPlaceholder, 
+  RecommendationsPlaceholder, 
+  WarningsPlaceholder 
+} from './placeholders';
 import type { CampaignRecommendation } from '@/lib/api-client/models/campaign-recommendation';
 import type { Recommendation } from '@/types/campaignMetrics';
-import { ConfigSummary } from './ConfigSummary';
-import { PhaseConfigDisplay } from './PhaseConfigDisplay';
-import { ConfigSummaryPanel as _ConfigSummaryPanel } from './ConfigSummaryPanel';
-import { MomentumPanel as _MomentumPanel } from './MomentumPanel';
-import { ClassificationBuckets as _ClassificationBuckets } from './ClassificationBuckets';
+import { ExecutionHeader } from './ExecutionHeader';
+import { ConfigInspector } from './ConfigInspector';
 import { WarningDistribution } from './WarningDistribution';
-import { WarningBar as _WarningBar } from './WarningBar';
-import { WarningPills as _WarningPills } from './WarningPills';
 import { MoverList } from './MoverList';
 import { Histogram } from './Histogram';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useCampaignSSE } from '@/hooks/useCampaignSSE';
 import { 
   useGetCampaignMetricsQuery,
   useGetCampaignFunnelQuery,
   useGetCampaignRecommendationsQuery,
-  useGetCampaignEnrichedQuery,
   useGetCampaignDomainsQuery,
-  useGetCampaignClassificationsQuery,
   useGetCampaignMomentumQuery,
   useGetCampaignStatusQuery,
-  useGetCampaignPhaseConfigsQuery,
   useRestartCampaignMutation,
   useStartPhaseStandaloneMutation,
   useGetPhaseStatusStandaloneQuery,
@@ -59,11 +58,10 @@ import type { ApiPhase } from '@/lib/utils/phaseNames';
 import type { CampaignPhaseEnum } from '@/lib/api-client/models/campaign-phase-enum';
 import type { CampaignPhasesStatusResponsePhasesInner } from '@/lib/api-client/models/campaign-phases-status-response-phases-inner';
 import { useToast } from '@/hooks/use-toast';
+import { useControlState } from '@/hooks/useControlState';
 
 import type { CampaignKpi } from '../types';
 import type { WarningData } from './WarningDistribution';
-import type { WarningBarData } from './WarningBar';
-import type { WarningPillData } from './WarningPills';
 
 interface CampaignExperiencePageProps {
   className?: string;
@@ -202,7 +200,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   const params = useParams();
   const campaignId = params?.id as string;
   const { toast } = useToast();
-  const [startPhaseMutation, { isLoading: isStartPhaseLoading }] = useStartPhaseStandaloneMutation();
+  const [startPhaseMutation, { isLoading: _isStartPhaseLoading }] = useStartPhaseStandaloneMutation();
   const [pausePhaseMutation, { isLoading: isPausePhaseLoading }] = usePausePhaseStandaloneMutation();
   const [resumePhaseMutation, { isLoading: isResumePhaseLoading }] = useResumePhaseStandaloneMutation();
   const [stopCampaignMutation, { isLoading: isStopCampaignLoading }] = useStopCampaignMutation();
@@ -246,12 +244,10 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     refreshRealtimeData({ force: true });
   }, [refreshRealtimeData]);
   const { data: recommendationsData, isLoading: recsLoading } = useGetCampaignRecommendationsQuery(campaignId);
-  const { data: enrichedData } = useGetCampaignEnrichedQuery(campaignId);
   const { data: domainsList, isLoading: domainsLoading, isFetching: domainsFetching, error: domainsError } = useGetCampaignDomainsQuery(
     { campaignId, limit: leadResultLimit, offset: 0 },
     { skip: !campaignId }
   );
-  const { data: _classificationsData } = useGetCampaignClassificationsQuery({ campaignId });
   const { data: momentumData } = useGetCampaignMomentumQuery(campaignId);
 
   const { isAuthenticated } = useAuth();
@@ -289,7 +285,29 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   }, [hasEverConnected, refreshRealtimeData]);
 
   const { data: statusSnapshot, refetch: refetchStatusSnapshot } = useGetCampaignStatusQuery(campaignId);
-  const { data: phaseConfigsData } = useGetCampaignPhaseConfigsQuery(campaignId);
+  // Phase 5: phaseConfigsData now loaded lazily in ConfigInspector drawer
+
+  // Phase 1 ExecutionHeader: Query runtime controls for the controlPhase (backend authority)
+  const controlPhaseKey = statusSnapshot?.controlPhase 
+    ? normalizeToApiPhase(statusSnapshot.controlPhase.toLowerCase()) as ApiPhase | null
+    : null;
+  
+  const {
+    data: controlPhaseStatusData,
+    isFetching: isControlPhaseStatusFetching,
+    isLoading: isControlPhaseStatusLoading,
+  } = useGetPhaseStatusStandaloneQuery(
+    { campaignId, phase: (controlPhaseKey ?? 'validation') as CampaignPhaseEnum },
+    { skip: !campaignId || !controlPhaseKey }
+  );
+
+  // Derive unified control state for ExecutionHeader
+  const executionControlState = useControlState(
+    statusSnapshot,
+    controlPhaseStatusData?.runtimeControls,
+    isControlPhaseStatusLoading || isControlPhaseStatusFetching
+  );
+
   const domainItems = React.useMemo(() => domainsList?.items ?? [], [domainsList]);
   const leadAggregates = domainsList?.aggregates?.lead;
   const leadPanelError = React.useMemo(
@@ -438,18 +456,16 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     } as const;
   }, [selectedPhaseRuntimeControls]);
 
-  const canPauseSelectedPhase = resolvedControlSupport.canPause;
+  // Phase selector control support (kept for potential future use but not shown in UI)
+  const _canPauseSelectedPhase = resolvedControlSupport.canPause;
   // Stop is a campaign-level action (stops whichever phase is active), so it should not depend
   // on the currently selected phase's runtimeControls.
-  const canStopCampaign = React.useMemo(() => {
+  const _canStopCampaign = React.useMemo(() => {
     return pipelinePhases.some((phase) => phase.status === 'in_progress' || phase.status === 'paused');
   }, [pipelinePhases]);
-  const canRunSelectedPhase = isSelectedPhasePaused
+  const _canRunSelectedPhase = isSelectedPhasePaused
     ? resolvedControlSupport.canResume
     : resolvedControlSupport.canRestart;
-
-  const runButtonLabel = isSelectedPhasePaused ? 'Resume Selected Phase' : 'Run Selected Phase';
-  const runButtonBusyLabel = isSelectedPhasePaused ? 'Resuming…' : 'Starting…';
 
   const phaseOptions = React.useMemo(() => {
     return pipelinePhases
@@ -538,27 +554,16 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     }
   }, [activePhaseKey, preferredPhaseSelection, selectedPhaseKey, phaseSelectTouched, isSelectedPhaseAvailable]);
 
-  const hasFailedPhases = failedPhaseKeys.length > 0;
-  const isBulkActionRunning = bulkAction !== 'idle';
+  // Bulk action state
+  const _isBulkActionRunning = bulkAction !== 'idle';
   const isRetryingFailed = bulkAction === 'retryFailed';
   const isRestartingCampaign = bulkAction === 'restartCampaign';
-  const isControlStatusLoading = Boolean(selectedPhaseKey && (isPhaseStatusLoading || isPhaseStatusFetching));
-  const runtimeControlsUnavailable = Boolean(
-    selectedPhaseKey && !selectedPhaseRuntimeControls && !isControlStatusLoading
+
+  // Phase selector control status (kept for internal phase operations)
+  const _isControlStatusLoading = Boolean(selectedPhaseKey && (isPhaseStatusLoading || isPhaseStatusFetching));
+  const _runtimeControlsUnavailable = Boolean(
+    selectedPhaseKey && !selectedPhaseRuntimeControls && !_isControlStatusLoading
   );
-  const runtimeControlStatusMessage = React.useMemo(() => {
-    if (!selectedPhaseKey) {
-      return null;
-    }
-    if (isControlStatusLoading) {
-      return 'Syncing runtime controls from backend…';
-    }
-    if (runtimeControlsUnavailable) {
-      return 'Runtime controls unavailable—actions remain disabled until the backend exposes updated capabilities.';
-    }
-    return null;
-  }, [isControlStatusLoading, runtimeControlsUnavailable, selectedPhaseKey]);
-  const isActionDisabled = isStartPhaseLoading || isPausePhaseLoading || isResumePhaseLoading || isStopCampaignLoading || isBulkActionRunning || isControlStatusLoading;
 
   const startPhaseInternal = React.useCallback(
     async (phaseKey: ApiPhase) => {
@@ -592,8 +597,13 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     [campaignId, refetchStatusSnapshot, resumePhaseMutation]
   );
 
-  const handleRunSelectedPhase = React.useCallback(async () => {
-    if (!selectedPhaseKey || !canRunSelectedPhase) {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DEPRECATED HANDLERS (Phase 2 cleanup)
+  // These were for the per-phase selector UI. Kept as underscore-prefixed
+  // for potential future use or gradual removal.
+  // ═══════════════════════════════════════════════════════════════════════════
+  const _handleRunSelectedPhase = React.useCallback(async () => {
+    if (!selectedPhaseKey || !_canRunSelectedPhase) {
       return;
     }
     try {
@@ -618,10 +628,10 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         variant: 'destructive',
       });
     }
-  }, [canRunSelectedPhase, resumePhaseInternal, selectedPhaseKey, selectedPhaseStatus, startPhaseInternal, toast]);
+  }, [_canRunSelectedPhase, resumePhaseInternal, selectedPhaseKey, selectedPhaseStatus, startPhaseInternal, toast]);
 
-  const handlePauseSelectedPhase = React.useCallback(async () => {
-    if (!selectedPhaseKey || !campaignId || !canPauseSelectedPhase) {
+  const _handlePauseSelectedPhase = React.useCallback(async () => {
+    if (!selectedPhaseKey || !campaignId || !_canPauseSelectedPhase) {
       return;
     }
     try {
@@ -640,10 +650,10 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         variant: 'destructive',
       });
     }
-  }, [campaignId, canPauseSelectedPhase, pausePhaseMutation, refetchStatusSnapshot, selectedPhaseKey, toast]);
+  }, [campaignId, _canPauseSelectedPhase, pausePhaseMutation, refetchStatusSnapshot, selectedPhaseKey, toast]);
 
-  const handleStopCampaign = React.useCallback(async () => {
-    if (!campaignId || !canStopCampaign) {
+  const _handleStopCampaign = React.useCallback(async () => {
+    if (!campaignId || !_canStopCampaign) {
       return;
     }
     try {
@@ -659,7 +669,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
         variant: 'destructive',
       });
     }
-  }, [campaignId, canStopCampaign, stopCampaignMutation, toast]);
+  }, [campaignId, _canStopCampaign, stopCampaignMutation, toast]);
 
   const handleRetryFailedPhases = React.useCallback(async () => {
     if (!failedPhaseKeys.length) {
@@ -713,6 +723,76 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
       setBulkAction('idle');
     }
   }, [campaignId, orderedPhaseKeys.length, restartCampaignMutation, toast]);
+
+  // ============================================================================
+  // Phase 1: ExecutionHeader Handlers (using controlPhase as authority)
+  // These operate on the backend-designated controlPhase, not user selection
+  // ============================================================================
+  
+  const handleExecutionPause = React.useCallback(async () => {
+    if (!controlPhaseKey || !campaignId || !executionControlState.canPause) {
+      return;
+    }
+    try {
+      await pausePhaseMutation({ campaignId, phase: controlPhaseKey as CampaignPhaseEnum }).unwrap();
+      refetchStatusSnapshot();
+      toast({
+        title: `${executionControlState.phaseLabel} pause requested`,
+        description: 'Phase will pause at next checkpoint.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Unable to pause',
+        description: formatPhaseActionError(error),
+        variant: 'destructive',
+      });
+    }
+  }, [campaignId, controlPhaseKey, executionControlState.canPause, executionControlState.phaseLabel, pausePhaseMutation, refetchStatusSnapshot, toast]);
+
+  const handleExecutionResume = React.useCallback(async () => {
+    if (!controlPhaseKey || !campaignId || !executionControlState.canResume) {
+      return;
+    }
+    try {
+      await resumePhaseMutation({ campaignId, phase: controlPhaseKey as CampaignPhaseEnum }).unwrap();
+      refetchStatusSnapshot();
+      toast({
+        title: `${executionControlState.phaseLabel} resumed`,
+        description: 'Phase execution continuing.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Unable to resume',
+        description: formatPhaseActionError(error),
+        variant: 'destructive',
+      });
+    }
+  }, [campaignId, controlPhaseKey, executionControlState.canResume, executionControlState.phaseLabel, refetchStatusSnapshot, resumePhaseMutation, toast]);
+
+  const handleExecutionStop = React.useCallback(async () => {
+    if (!campaignId || !executionControlState.canStop) {
+      return;
+    }
+    try {
+      await stopCampaignMutation(campaignId).unwrap();
+      refetchStatusSnapshot();
+      toast({
+        title: 'Campaign stop requested',
+        description: 'Active phase will wind down safely.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Unable to stop campaign',
+        description: formatPhaseActionError(error),
+        variant: 'destructive',
+      });
+    }
+  }, [campaignId, executionControlState.canStop, refetchStatusSnapshot, stopCampaignMutation, toast]);
+
+  // Track loading states for ExecutionHeader buttons
+  const isExecutionPauseLoading = isPausePhaseLoading;
+  const isExecutionResumeLoading = isResumePhaseLoading;
+  const isExecutionStopLoading = isStopCampaignLoading;
 
   const campaignErrorMessage = React.useMemo(() => {
     const firstFailedPhaseErrorDetails = statusSnapshot?.phases?.find((phase) => phase.status === 'failed')?.errorDetails;
@@ -823,46 +903,6 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     return warnings;
   }, [metricsData]);
 
-  // Transform for warning bar and pills
-  const _warningBarData: WarningBarData[] = warningData.map(w => ({
-    type: w.type,
-    count: w.count,
-    rate: w.rate,
-    severity: w.severity
-  }));
-
-  const _warningPillData: WarningPillData[] = warningData.map(w => ({
-    type: w.type,
-    count: w.count,
-    severity: w.severity
-  }));
-
-  // Configuration items for ConfigSummaryPanel
-  const configItems = React.useMemo(() => {
-    if (!enrichedData?.campaign) return [];
-    
-    const campaign = enrichedData.campaign;
-    
-    // Extract target domains from funnel data or progress
-    const targetDomains = funnelData?.generated || campaign.progress?.totalDomains || 0;
-    
-    // Map backend status to display format
-    const statusDisplay = campaign.status === 'draft' ? 'Draft' :
-                          campaign.status === 'running' ? 'Running' :
-                          campaign.status === 'paused' ? 'Paused' :
-                          campaign.status === 'completed' ? 'Completed' :
-                          campaign.status === 'failed' ? 'Failed' :
-                          campaign.status === 'cancelled' ? 'Cancelled' : 'Unknown';
-    
-    return [
-      { label: 'Campaign Type', value: 'Lead Generation', type: 'badge' as const },
-      { label: 'Target Domains', value: targetDomains, type: 'number' as const },
-      { label: 'Created', value: campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString() : 'Unknown', type: 'date' as const },
-      { label: 'Status', value: statusDisplay, type: 'badge' as const },
-      { label: 'Name', value: campaign.name || 'N/A', type: 'text' as const }
-    ];
-  }, [enrichedData, funnelData]);
-
   // Handle loading states
   if (!campaignId) {
     return (
@@ -878,15 +918,6 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
 
   const isLoading = metricsLoading || funnelLoading;
   const hasError = metricsError || funnelError;
-  const sseStatusLabel = (() => {
-    if (!sseEnabled) {
-      return isAuthenticated ? 'Disconnected' : 'Login required';
-    }
-    if (sseError) return `Disconnected (${sseError})`;
-    if (isConnected) return 'Live';
-    if (hasEverConnected) return 'Reconnecting…';
-    return 'Connecting…';
-  })();
 
   if (hasError) {
     return (
@@ -908,32 +939,33 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
 
   return (
     <div className={_className}>
-      {/* Header with SSE connection status */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Campaign Dashboard
-        </h1>
-        <div className="flex items-center gap-2 text-sm">
-          <div
-            className={`w-2 h-2 rounded-full ${
-              !sseEnabled
-                ? 'bg-gray-400'
-                :
-              isConnected && !sseError
-                ? 'bg-green-500'
-                : sseError
-                ? 'bg-red-500'
-                : hasEverConnected
-                ? 'bg-yellow-400'
-                : 'bg-yellow-400'
-            }`}
-            aria-hidden="true"
+      {/* ═══════════════════════════════════════════════════════════════════════
+          EXECUTION HEADER (Phase 2 Refactor)
+          Primary execution surface - "What's happening now?" + "What can I do?"
+          Source of truth: controlPhase from statusSnapshot
+          Controls via ControlDock pattern - contextual buttons only
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <ExecutionHeader
+        controlState={executionControlState}
+        isConnected={isConnected}
+        sseError={sseError}
+        onPause={handleExecutionPause}
+        onResume={handleExecutionResume}
+        onStop={handleExecutionStop}
+        onRestart={handleRestartCampaign}
+        onRetryFailed={handleRetryFailedPhases}
+        isPauseLoading={isExecutionPauseLoading}
+        isResumeLoading={isExecutionResumeLoading}
+        isStopLoading={isExecutionStopLoading}
+        isRestartLoading={isRestartingCampaign}
+        isRetryLoading={isRetryingFailed}
+        configButton={
+          <ConfigInspector 
+            campaignId={campaignId} 
+            funnelData={funnelData}
           />
-          <span className="text-gray-600 dark:text-gray-400">
-            {sseStatusLabel}
-          </span>
-        </div>
-      </div>
+        }
+      />
 
       {/* Pipeline Status Bar */}
       <div className="mb-6">
@@ -963,201 +995,164 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
             </AlertDescription>
           </Alert>
         )}
-        <PipelineBar phases={pipelinePhases} />
-        <div className="mt-4 rounded-lg border bg-white p-4 shadow-sm dark:bg-gray-900/40">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-            <div className="flex-1 min-w-[220px]">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Select phase
-              </p>
-              <Select
-                value={selectedPhaseKey}
-                onValueChange={(value) => {
-                  setPhaseSelectTouched(true);
-                  setSelectedPhaseKey(value as ApiPhase);
-                }}
-              >
-                <SelectTrigger className="w-full min-w-[220px]">
-                  <SelectValue placeholder="Choose a phase" />
-                </SelectTrigger>
-                <SelectContent>
-                  {phaseOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Phases can be rerun even after completion for troubleshooting or updated data.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                onClick={handleRunSelectedPhase}
-                disabled={!selectedPhaseKey || isActionDisabled || !canRunSelectedPhase}
-                className="min-w-[150px]"
-              >
-                {isStartPhaseLoading && !isBulkActionRunning && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                {isStartPhaseLoading && !isBulkActionRunning ? runButtonBusyLabel : runButtonLabel}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handlePauseSelectedPhase}
-                disabled={!selectedPhaseKey || isActionDisabled || !canPauseSelectedPhase}
-                className="min-w-[150px]"
-              >
-                {isPausePhaseLoading && !isBulkActionRunning && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Pause Phase
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleStopCampaign}
-                disabled={isActionDisabled || !canStopCampaign}
-                className="min-w-[150px]"
-              >
-                {isStopCampaignLoading && !isBulkActionRunning && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Stop Campaign
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={handleRetryFailedPhases}
-                disabled={!hasFailedPhases || isActionDisabled}
-                className="min-w-[150px]"
-              >
-                {isRetryingFailed && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Retry Failed Phases
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleRestartCampaign}
-                disabled={isActionDisabled}
-                className="min-w-[150px]"
-              >
-                {isRestartingCampaign && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Restart Campaign
-              </Button>
-            </div>
-            {runtimeControlStatusMessage && (
-              <p className="text-xs text-muted-foreground max-w-md" role="status">
-                {runtimeControlStatusMessage}
-              </p>
-            )}
-          </div>
-        </div>
+        <PipelineTimeline phases={pipelinePhases} />
       </div>
 
-      {/* KPI Grid */}
+      {/* ═══════════════════════════════════════════════════════════════════════
+          KPI Grid (Phase 4 Gated)
+          Shows only when totalAnalyzed > 0 to avoid empty/meaningless metrics
+          ═══════════════════════════════════════════════════════════════════════ */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-3">Key Metrics</h2>
-        <KpiGrid kpis={kpis} loading={isLoading} />
+        <KpiGate 
+          metricsData={metricsData} 
+          currentPhase={executionControlState.controlPhase ?? undefined}
+          placeholder={
+            <KpiPlaceholder 
+              currentPhase={executionControlState.controlPhase ?? undefined}
+              isRunning={executionControlState.status === 'running'}
+            />
+          }
+        >
+          <KpiGrid kpis={kpis} loading={isLoading} />
+        </KpiGate>
       </div>
 
       {/* Two-column layout for detailed views */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left column: Funnel */}
+        {/* Left column: Funnel & Leads */}
         <div className="space-y-6">
+          {/* ═══════════════════════════════════════════════════════════════════════
+              Funnel Snapshot (Phase 4 Gated)
+              Shows only when generated > 0 to avoid empty funnel visualization
+              ═══════════════════════════════════════════════════════════════════════ */}
           <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border">
             {funnelLoading ? (
               <div className="flex items-center justify-center p-8">
                 <Loader2 className="w-6 h-6 animate-spin" />
               </div>
-            ) : funnelData ? (
-              <FunnelSnapshot data={funnelData} />
             ) : (
-              <div className="text-center p-8 text-gray-500">
-                <p>Funnel data not available</p>
-              </div>
+              <FunnelGate 
+                funnelData={funnelData} 
+                currentPhase={executionControlState.controlPhase ?? undefined}
+                placeholder={
+                  <FunnelPlaceholder 
+                    currentPhase={executionControlState.controlPhase ?? undefined}
+                    isRunning={executionControlState.status === 'running'}
+                  />
+                }
+              >
+                <FunnelSnapshot data={funnelData!} />
+              </FunnelGate>
             )}
           </div>
 
+          {/* ═══════════════════════════════════════════════════════════════════════
+              Lead Results Panel (Phase 4 Gated)
+              Shows only when httpValid > 0 to avoid empty lead tables
+              ═══════════════════════════════════════════════════════════════════════ */}
           <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border">
-            <LeadResultsPanel
-              domains={domainItems}
-              aggregates={leadAggregates}
-              isLoading={domainsLoading}
-              isUpdating={domainsFetching}
-              loadedCount={domainItems.length}
-              totalAvailable={totalLeadDomains}
-              canLoadMore={canLoadMoreLeadData}
-              onLoadMore={canLoadMoreLeadData ? handleLoadMoreLeads : undefined}
-              error={leadPanelError}
-            />
+            <LeadsGate 
+              funnelData={funnelData} 
+              currentPhase={executionControlState.controlPhase ?? undefined}
+              placeholder={
+                <LeadsPlaceholder 
+                  currentPhase={executionControlState.controlPhase ?? undefined}
+                  isRunning={executionControlState.status === 'running'}
+                />
+              }
+            >
+              <LeadResultsPanel
+                domains={domainItems}
+                aggregates={leadAggregates}
+                isLoading={domainsLoading}
+                isUpdating={domainsFetching}
+                loadedCount={domainItems.length}
+                totalAvailable={totalLeadDomains}
+                canLoadMore={canLoadMoreLeadData}
+                onLoadMore={canLoadMoreLeadData ? handleLoadMoreLeads : undefined}
+                error={leadPanelError}
+              />
+            </LeadsGate>
           </div>
 
-          {/* Config Summary */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border">
-            <ConfigSummary 
-              config={configItems}
-              title="Campaign Configuration"
-            />
-          </div>
-
-          {/* Phase Configurations (DNS/HTTP Personas, Keyword Sets, Domain Discovery) */}
-          <PhaseConfigDisplay
-            configs={phaseConfigsData?.configs as Record<string, unknown>}
-            configsPresent={phaseConfigsData?.configsPresent as Record<string, boolean>}
-          />
+          {/* ═══════════════════════════════════════════════════════════════════════
+              Config panels moved to ConfigInspector drawer (Phase 5)
+              Access via "Configuration" button in ExecutionHeader
+              ═══════════════════════════════════════════════════════════════════════ */}
         </div>
 
         {/* Right column: Recommendations and other insights */}
         <div className="space-y-6">
-          {/* Recommendations */}
+          {/* ═══════════════════════════════════════════════════════════════════════
+              Recommendations Panel (Phase 4 Gated)
+              Shows only when recommendations exist, with positive messaging otherwise
+              ═══════════════════════════════════════════════════════════════════════ */}
           <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border">
             {recsLoading ? (
               <div className="flex items-center justify-center p-8">
                 <Loader2 className="w-6 h-6 animate-spin" />
               </div>
-            ) : recommendationsData?.recommendations ? (
-              <RecommendationPanel 
-                recommendations={recommendationsData.recommendations.map((r: CampaignRecommendation): Recommendation => ({
-                  id: r.id ?? `${r.rationaleCode}-${r.message}`,
-                  title: r.message,
-                  detail: r.message,
-                  rationale: r.rationaleCode,
-                  severity: 'info'
-                }))}
-              />
             ) : (
-              <div className="text-center p-8 text-gray-500">
-                <h3 className="text-lg font-medium mb-2">No Recommendations</h3>
-                <p>Recommendations will appear based on campaign performance</p>
-              </div>
+              <RecommendationsGate 
+                recommendationsData={recommendationsData} 
+                currentPhase={executionControlState.controlPhase ?? undefined}
+                placeholder={
+                  <RecommendationsPlaceholder 
+                    currentPhase={executionControlState.controlPhase ?? undefined}
+                    isRunning={executionControlState.status === 'running'}
+                  />
+                }
+              >
+                <RecommendationPanel 
+                  recommendations={recommendationsData!.recommendations!.map((r: CampaignRecommendation): Recommendation => ({
+                    id: r.id ?? `${r.rationaleCode}-${r.message}`,
+                    title: r.message,
+                    detail: r.message,
+                    rationale: r.rationaleCode,
+                    severity: 'info'
+                  }))}
+                />
+              </RecommendationsGate>
             )}
           </div>
 
-          {/* Additional insights panels - now implemented */}
+          {/* ═══════════════════════════════════════════════════════════════════════
+              Warning Distribution (Phase 4 Gated)
+              Shows quality issues when they exist, positive messaging otherwise
+              ═══════════════════════════════════════════════════════════════════════ */}
           <section aria-labelledby="insights-heading">
             <h3 id="insights-heading" className="sr-only">Additional Insights</h3>
-            {warningData.length > 0 ? (
+            <WarningsGate 
+              warningData={warningData} 
+              currentPhase={executionControlState.controlPhase ?? undefined}
+              placeholder={
+                <WarningsPlaceholder 
+                  currentPhase={executionControlState.controlPhase ?? undefined}
+                />
+              }
+            >
               <WarningDistribution
                 warnings={warningData}
                 totalDomains={metricsData?.totalAnalyzed || 0}
                 aria-label="Warning analysis and distribution"
               />
-            ) : (
-              <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border text-center text-gray-500">
-                <h3 className="text-lg font-medium mb-2">No Quality Issues</h3>
-                <p>All domains are passing quality checks</p>
-              </div>
-            )}
+            </WarningsGate>
           </section>
         </div>
       </div>
 
-      {/* Full-width momentum panel at bottom if data exists */}
-      {momentumData && (momentumData.moversUp?.length > 0 || momentumData.moversDown?.length > 0) && (
+      {/* ═══════════════════════════════════════════════════════════════════════
+          Momentum Analysis (Phase 4 Gated)
+          Shows trend data when movers exist, hidden otherwise (no placeholder needed)
+          Momentum is optional/advanced - don't clutter UI with placeholder
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <MomentumGate momentumData={momentumData}>
         <section className="mt-8" aria-labelledby="momentum-full-heading">
           <h2 id="momentum-full-heading" className="text-lg font-semibold mb-4">Momentum Analysis</h2>
           <div className="grid gap-6 lg:grid-cols-2">
             <MoverList
-              movers={momentumData.moversUp || []}
+              movers={momentumData?.moversUp || []}
               type="up"
               title="Top Gainers"
               maxItems={10}
@@ -1166,7 +1161,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
               aria-label="Detailed list of top gaining domains"
             />
             <MoverList
-              movers={momentumData.moversDown || []}
+              movers={momentumData?.moversDown || []}
               type="down"
               title="Top Decliners"
               maxItems={10}
@@ -1176,7 +1171,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
             />
           </div>
           
-          {momentumData.histogram && (
+          {momentumData?.histogram && (
             <div className="mt-6">
               <Histogram
                 bins={momentumData.histogram.map((count: number, idx: number) => ({
@@ -1192,7 +1187,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
             </div>
           )}
         </section>
-      )}
+      </MomentumGate>
 
       {/* Loading overlay for initial load */}
       {isLoading && !metricsData && (

@@ -10,7 +10,7 @@ import {
   type PhaseEvent,
   type CampaignSSEEvents,
 } from './useCampaignSSE';
-import type { PipelinePhase } from '@/components/refactor/campaign/PipelineBar';
+import type { PipelinePhase } from '@/components/refactor/campaign/PipelineTimeline';
 import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
 import { API_PHASE_ORDER, normalizeToApiPhase, type ApiPhase } from '@/lib/utils/phaseNames';
 
