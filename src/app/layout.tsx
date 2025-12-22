@@ -10,6 +10,7 @@ import { GlobalLoadingIndicator } from '@/components/ui/global-loading';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ReduxProvider } from '@/components/providers/ReduxProvider';
+import { NuqsProvider } from '@/components/providers/NuqsProvider';
 import { RTKCampaignDataProvider } from '@/providers/RTKCampaignDataProvider';
 import { NoSSR } from '@/components/providers/NoSSR';
 import NetworkRequestLogger from '@/components/debug/NetworkRequestLogger';
@@ -43,16 +44,18 @@ export default async function RootLayout({
           <>
             {process.env.NEXT_PUBLIC_ENABLE_NETWORK_LOGGING === 'true' ? <NetworkRequestLogger /> : null}
             <ReduxProvider>
-              <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
-                <AuthProvider>
-                  <RTKCampaignDataProvider>
-                    <GlobalLoadingIndicator />
-                    <AdvancedConditionalLayout>
-                      {children}
-                    </AdvancedConditionalLayout>
-                  </RTKCampaignDataProvider>
-                </AuthProvider>
-              </ThemeProvider>
+              <NuqsProvider>
+                <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
+                  <AuthProvider>
+                    <RTKCampaignDataProvider>
+                      <GlobalLoadingIndicator />
+                      <AdvancedConditionalLayout>
+                        {children}
+                      </AdvancedConditionalLayout>
+                    </RTKCampaignDataProvider>
+                  </AuthProvider>
+                </ThemeProvider>
+              </NuqsProvider>
             </ReduxProvider>
           </>
         </NoSSR>
