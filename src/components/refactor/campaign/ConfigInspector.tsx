@@ -50,19 +50,27 @@ interface ConfigInspectorProps {
 
 /**
  * Default trigger button for the config inspector
+ * Uses forwardRef to properly pass click handlers from SheetTrigger asChild
  */
-function DefaultTrigger({ className }: { className?: string }) {
+const DefaultTrigger = React.forwardRef<
+  HTMLButtonElement,
+  { className?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>
+>(({ className, ...props }, ref) => {
   return (
     <Button 
+      ref={ref}
       variant="outline" 
       size="sm"
-      className={cn("gap-2", className)}
+      className={cn("gap-2 hover:bg-accent", className)}
+      aria-label="Open campaign configuration"
+      {...props}
     >
       <Settings className="w-4 h-4" />
       Configuration
     </Button>
   );
-}
+});
+DefaultTrigger.displayName = 'DefaultTrigger';
 
 /**
  * Loading skeleton for drawer content

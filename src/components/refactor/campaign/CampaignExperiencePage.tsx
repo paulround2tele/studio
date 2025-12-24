@@ -1042,7 +1042,10 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
                   />
                 }
               >
-                <FunnelSnapshot data={funnelData!} />
+                <FunnelSnapshot 
+                  data={funnelData!} 
+                  currentPhase={executionControlState.controlPhase ?? undefined}
+                />
               </FunnelGate>
             )}
           </div>

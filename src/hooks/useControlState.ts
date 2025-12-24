@@ -155,11 +155,17 @@ export function useControlState(
     // Find the control phase snapshot (what backend says is controllable)
     const controlPhaseSnapshot = findControlPhaseSnapshot(phases, controlPhaseRaw);
     
-    // Use control phase snapshot if available, otherwise active phase
-    const displaySnapshot = controlPhaseSnapshot ?? activePhaseSnapshot;
+    // For DISPLAY (header label, progress): use active phase - this is what user sees happening NOW
+    // For CONTROLS (canPause, canResume, etc): use controlPhase - this is what backend allows
+    const displaySnapshot = activePhaseSnapshot ?? controlPhaseSnapshot;
     
     // Derive execution status
     const status = deriveExecutionStatus(phases, controlPhaseRaw ?? null);
+    
+    // Check how many phases have completed for better status messaging
+    const completedPhasesCount = phases?.filter(p => p.status === 'completed').length ?? 0;
+    const totalPhasesCount = phases?.length ?? 0;
+    const hasPartialProgress = completedPhasesCount > 0 && completedPhasesCount < totalPhasesCount;
     
     // Phase label - handle backend phase names like 'generation', 'dns', 'http', 'leads'
     let phaseLabel: string;
@@ -173,6 +179,9 @@ export function useControlState(
       phaseLabel = 'Campaign Complete';
     } else if (status === 'failed') {
       phaseLabel = 'Campaign Failed';
+    } else if (status === 'idle' && hasPartialProgress) {
+      // Pipeline stopped mid-way - phases completed but not all
+      phaseLabel = `Pipeline Stopped (${completedPhasesCount}/${totalPhasesCount} phases)`;
     } else {
       phaseLabel = 'No Active Phase';
     }

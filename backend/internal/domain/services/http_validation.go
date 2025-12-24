@@ -1999,8 +1999,55 @@ func (s *httpValidationService) storeHTTPResults(ctx context.Context, campaignID
 	return nil
 }
 
-// persistFeatureVectors performs a best-effort bulk update of feature_vector and last_http_fetched_at
-// Placeholder: refine with batched UPDATE (e.g., using jsonb_set) or dedicated store method later.
+// sanitizeJSONForPostgres removes problematic Unicode escape sequences that PostgreSQL JSONB rejects.
+// PostgreSQL doesn't support \u0000 (null) and can be picky about \u003c style escapes in some contexts.
+// This function converts the JSON to a string, replaces the escape sequences with their actual characters,
+// and returns the sanitized bytes.
+func sanitizeJSONForPostgres(raw []byte) []byte {
+	s := string(raw)
+	// Replace common HTML escape sequences that Go's json.Marshal produces
+	s = strings.ReplaceAll(s, "\\u003c", "<")
+	s = strings.ReplaceAll(s, "\\u003e", ">")
+	s = strings.ReplaceAll(s, "\\u0026", "&")
+	s = strings.ReplaceAll(s, "\\u0027", "'")
+	s = strings.ReplaceAll(s, "\\u0022", "\"")
+	// Remove null bytes which PostgreSQL JSONB doesn't support
+	s = strings.ReplaceAll(s, "\\u0000", "")
+	return []byte(s)
+}
+
+// extractKeywordsFromFeatureVector extracts the matched keyword patterns from a feature vector.
+// Returns a JSON array string of keywords suitable for the http_keywords column, or empty string if no keywords.
+func extractKeywordsFromFeatureVector(fv map[string]interface{}) string {
+	// First try kw_top3 which is the deduplicated top keywords
+	if top3, ok := fv["kw_top3"]; ok && top3 != nil {
+		if keywords, ok := top3.([]string); ok && len(keywords) > 0 {
+			jsonBytes, err := json.Marshal(keywords)
+			if err == nil {
+				return string(jsonBytes)
+			}
+		}
+		// Also handle []interface{} case
+		if keywords, ok := top3.([]interface{}); ok && len(keywords) > 0 {
+			strKeywords := make([]string, 0, len(keywords))
+			for _, k := range keywords {
+				if s, ok := k.(string); ok && s != "" {
+					strKeywords = append(strKeywords, s)
+				}
+			}
+			if len(strKeywords) > 0 {
+				jsonBytes, err := json.Marshal(strKeywords)
+				if err == nil {
+					return string(jsonBytes)
+				}
+			}
+		}
+	}
+	return ""
+}
+
+// persistFeatureVectors performs a best-effort bulk update of feature_vector, http_keywords, and last_http_fetched_at
+// Also updates http_keywords column when keywords are found in the feature vector.
 func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campaignID uuid.UUID, vectors map[string]map[string]interface{}) error {
 	if s.store == nil || len(vectors) == 0 {
 		return nil
@@ -2015,6 +2062,11 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 		// fallback per-domain
 		for domain, fv := range vectors {
 			raw, _ := json.Marshal(fv)
+			// Sanitize JSON to avoid PostgreSQL JSONB Unicode escape issues
+			raw = sanitizeJSONForPostgres(raw)
+
+			// Extract keywords for http_keywords column
+			httpKeywords := extractKeywordsFromFeatureVector(fv)
 
 			// Convert parked_confidence to proper float64 or nil
 			var parkedConf interface{} = nil
@@ -2045,7 +2097,12 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 			}
 
 			if exec != nil {
-				_, err := exec.ExecContext(ctx, `UPDATE generated_domains SET feature_vector = $1, last_http_fetched_at = NOW(), parked_confidence = CASE WHEN $2 IS NOT NULL THEN $2::numeric ELSE parked_confidence END, is_parked = CASE WHEN $3::boolean IS TRUE THEN TRUE ELSE is_parked END WHERE campaign_id = $4 AND domain_name = $5`, raw, parkedConf, isParked, campaignID, domain)
+				// Include http_keywords in the update
+				var httpKeywordsArg interface{} = nil
+				if httpKeywords != "" {
+					httpKeywordsArg = httpKeywords
+				}
+				_, err := exec.ExecContext(ctx, `UPDATE generated_domains SET feature_vector = $1, last_http_fetched_at = NOW(), parked_confidence = CASE WHEN $2 IS NOT NULL THEN $2::numeric ELSE parked_confidence END, is_parked = CASE WHEN $3::boolean IS TRUE THEN TRUE ELSE is_parked END, http_keywords = CASE WHEN $6 IS NOT NULL THEN $6 ELSE http_keywords END WHERE campaign_id = $4 AND domain_name = $5`, raw, parkedConf, isParked, campaignID, domain, httpKeywordsArg)
 				if err != nil && s.deps.Logger != nil {
 					s.deps.Logger.Debug(ctx, "Feature vector update failed", map[string]interface{}{"domain": domain, "error": err.Error()})
 				}
@@ -2060,12 +2117,21 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 	}
 	sort.Strings(domains)
 	valueStrings := make([]string, 0, len(domains))
-	args := make([]interface{}, 0, len(domains)*4+1)
-	args = append(args, campaignID) // $1
+	args := make([]interface{}, 0, len(domains)*5+1) // 5 columns per domain now
+	args = append(args, campaignID)                  // $1
 	idx := 2
 	for _, d := range domains {
 		fv := vectors[d]
 		raw, _ := json.Marshal(fv)
+		// Sanitize JSON to avoid PostgreSQL JSONB Unicode escape issues
+		raw = sanitizeJSONForPostgres(raw)
+
+		// Extract keywords for http_keywords column
+		httpKeywords := extractKeywordsFromFeatureVector(fv)
+		var httpKeywordsArg interface{} = nil
+		if httpKeywords != "" {
+			httpKeywordsArg = httpKeywords
+		}
 
 		// Convert parked_confidence to proper float64 or nil
 		var parkedConf interface{} = nil
@@ -2095,31 +2161,33 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 			}
 		}
 
-		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d)", idx, idx+1, idx+2, idx+3))
-		args = append(args, d, raw, parkedConf, isParked) // domain, feature_vector, parked_confidence, is_parked
-		idx += 4
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", idx, idx+1, idx+2, idx+3, idx+4))
+		args = append(args, d, raw, parkedConf, isParked, httpKeywordsArg) // domain, feature_vector, parked_confidence, is_parked, http_keywords
+		idx += 5
 	}
 	query := fmt.Sprintf(`WITH incoming AS (
 		SELECT 
 			v.column1::text AS domain_name,
 			v.column2::jsonb AS feature_vector,
 			v.column3::numeric AS parked_confidence,
-			v.column4::boolean AS is_parked
+			v.column4::boolean AS is_parked,
+			v.column5::text AS http_keywords
 		FROM (VALUES %s) AS v
 	)
 UPDATE generated_domains gd
 SET feature_vector = incoming.feature_vector,
 	last_http_fetched_at = NOW(),
 	parked_confidence = CASE WHEN incoming.parked_confidence IS NOT NULL THEN incoming.parked_confidence ELSE gd.parked_confidence END,
-	is_parked = CASE WHEN incoming.is_parked IS TRUE THEN TRUE ELSE gd.is_parked END
+	is_parked = CASE WHEN incoming.is_parked IS TRUE THEN TRUE ELSE gd.is_parked END,
+	http_keywords = CASE WHEN incoming.http_keywords IS NOT NULL THEN incoming.http_keywords ELSE gd.http_keywords END
 FROM incoming
 WHERE gd.campaign_id = $1 AND gd.domain_name = incoming.domain_name`, strings.Join(valueStrings, ","))
 
 	// Debug: Log the query and args
 	if s.deps.Logger != nil {
 		sampleLen := len(args)
-		if sampleLen > 5 {
-			sampleLen = 5
+		if sampleLen > 6 {
+			sampleLen = 6
 		}
 		s.deps.Logger.Debug(ctx, "Feature vector bulk update query", map[string]interface{}{
 			"campaign_id": campaignID.String(),
