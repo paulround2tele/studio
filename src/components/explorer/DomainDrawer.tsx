@@ -12,17 +12,16 @@
  * - DomainDrawerContent is memoized to prevent grid re-renders
  * - Drawer open/close state changes don't propagate to grid
  * 
- * DEGRADED STATE:
- * - Assumes score breakdown endpoint returns 500 (not implemented)
- * - Always surfaces isBreakdownUnavailable=true with explicit messaging
- * - Never silently hides missing data
+ * AUTHORITATIVE BREAKDOWN:
+ * - When useAuthoritativeBreakdown flag is enabled, fetches score breakdown from backend
+ * - Falls back to degraded state when flag is disabled or fetch fails
  * 
  * @see Phase 7.3 Drawer Integration
  */
 
 'use client';
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -34,8 +33,10 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import type { DomainRow } from '@/types/explorer/state';
-import type { DomainDrawerData } from '@/types/explorer/drawer';
-import { createDrawerData } from '@/types/explorer/drawer';
+import type { DomainDrawerData, DomainScoreBreakdown } from '@/types/explorer/drawer';
+import { createDrawerData, mapApiScoreBreakdown } from '@/types/explorer/drawer';
+import { useExplorerFeatureFlags } from '@/lib/features/explorerFlags';
+import { useGetCampaignDomainScoreBreakdownQuery } from '@/store/api/campaignApi';
 import { 
   DomainDrawerContent, 
   // DomainDrawerLoading - reserved for loading state when breakdown endpoint implemented
@@ -51,6 +52,8 @@ export interface DomainDrawerProps {
   isOpen: boolean;
   /** Domain being inspected (from useDomainsExplorer.inspectedDomain) */
   domain: DomainRow | null;
+  /** Campaign ID for breakdown fetch */
+  campaignId: string;
   /** Callback to close drawer (useDomainsExplorer.actions.closeDrawer) */
   onClose: () => void;
   /** Width variant */
@@ -86,22 +89,55 @@ const SIZE_CLASSES: Record<NonNullable<DomainDrawerProps['size']>, string> = {
 export function DomainDrawer({
   isOpen,
   domain,
+  campaignId,
   onClose,
   size = 'default',
   className,
 }: DomainDrawerProps) {
   // ========================================================================
+  // FEATURE FLAGS
+  // ========================================================================
+  
+  const { useAuthoritativeBreakdown } = useExplorerFeatureFlags();
+
+  // ========================================================================
+  // SCORE BREAKDOWN FETCH (when flag enabled)
+  // ========================================================================
+  
+  // Only fetch when drawer is open, flag enabled, and domain selected
+  const shouldFetchBreakdown = isOpen && useAuthoritativeBreakdown && !!domain;
+  
+  const { 
+    data: breakdownResponse,
+    isLoading: isLoadingBreakdown,
+    error: breakdownError,
+    refetch: refetchBreakdown,
+  } = useGetCampaignDomainScoreBreakdownQuery(
+    { campaignId, domain: domain?.domain ?? '' },
+    { skip: !shouldFetchBreakdown }
+  );
+
+  // Map API response to internal type
+  const scoreBreakdown: DomainScoreBreakdown | null = useMemo(() => {
+    if (!breakdownResponse) return null;
+    return mapApiScoreBreakdown(breakdownResponse);
+  }, [breakdownResponse]);
+
+  // ========================================================================
   // DRAWER DATA CONSTRUCTION
   // ========================================================================
   
   /**
-   * Construct drawer data from domain
+   * Construct drawer data from domain and breakdown response
    * 
-   * Per Phase 7.3 directive: "Assume score breakdown may remain 500"
-   * We default isBreakdownUnavailable=true since the endpoint isn't implemented.
+   * When useAuthoritativeBreakdown is enabled:
+   * - Fetches breakdown from backend
+   * - Sets isLoadingBreakdown during fetch
+   * - Sets isBreakdownUnavailable on 404 (domain not analyzed)
+   * - Sets breakdownError on other errors
    * 
-   * This is NOT lazy loading - we're acknowledging the endpoint doesn't exist.
-   * When backend implements it, we'll add the fetch logic here.
+   * When useAuthoritativeBreakdown is disabled:
+   * - Falls back to degraded state (isBreakdownUnavailable=true)
    */
   const drawerData: DomainDrawerData | null = useMemo(() => {
     if (!domain) return null;
@@ -109,16 +145,30 @@ export function DomainDrawer({
     // Create base drawer data
     const data = createDrawerData(domain);
     
-    // Mark breakdown as unavailable (backend returns 500)
-    // TODO: When backend implements /domains/{id}/breakdown:
-    // 1. Add lazy fetch logic here
-    // 2. Set isLoadingBreakdown=true while fetching
-    // 3. Set isBreakdownUnavailable based on response
+    // When flag disabled, use degraded path
+    if (!useAuthoritativeBreakdown) {
+      return {
+        ...data,
+        isBreakdownUnavailable: true, // Degraded mode
+      };
+    }
+    
+    // When flag enabled, use fetch results
+    const is404 = breakdownError && 'status' in breakdownError && breakdownError.status === 404;
+    const errorMessage = breakdownError && !is404 
+      ? ('data' in breakdownError && typeof breakdownError.data === 'object' && breakdownError.data !== null && 'message' in breakdownError.data 
+          ? String(breakdownError.data.message) 
+          : 'Failed to load breakdown')
+      : null;
+    
     return {
       ...data,
-      isBreakdownUnavailable: true, // Backend 500 for now
+      scoreBreakdown: scoreBreakdown,
+      isLoadingBreakdown: isLoadingBreakdown,
+      isBreakdownUnavailable: is404 ?? false,
+      breakdownError: errorMessage,
     };
-  }, [domain]);
+  }, [domain, useAuthoritativeBreakdown, scoreBreakdown, isLoadingBreakdown, breakdownError]);
 
   // ========================================================================
   // HANDLERS
@@ -143,14 +193,16 @@ export function DomainDrawer({
   }, [handleClose]);
 
   /**
-   * Retry breakdown fetch (placeholder for future implementation)
-   * Currently no-op since breakdown endpoint isn't implemented
+   * Retry breakdown fetch
+   * Only works when useAuthoritativeBreakdown flag is enabled
    */
   const handleRetryBreakdown = useCallback(() => {
-    // TODO: Implement when backend supports breakdown endpoint
-    // For now, this is a no-op since we can't actually retry
-    console.debug('[DomainDrawer] Breakdown retry requested (no-op, endpoint not implemented)');
-  }, []);
+    if (useAuthoritativeBreakdown && shouldFetchBreakdown) {
+      refetchBreakdown();
+    } else {
+      console.debug('[DomainDrawer] Breakdown retry requested but flag disabled or no domain');
+    }
+  }, [useAuthoritativeBreakdown, shouldFetchBreakdown, refetchBreakdown]);
 
   // ========================================================================
   // RENDER
@@ -231,6 +283,7 @@ DomainDrawer.displayName = 'DomainDrawer';
  *       <DomainDrawer
  *         isOpen={state.isDrawerOpen}
  *         domain={state.inspectedDomain}
+ *         campaignId={campaignId}
  *         onClose={actions.closeDrawer}
  *       />
  *     </>

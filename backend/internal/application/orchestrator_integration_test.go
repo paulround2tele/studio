@@ -134,6 +134,9 @@ func (s *stubPhaseService) ScoreDomains(ctx context.Context, campaignID uuid.UUI
 func (s *stubPhaseService) RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error {
 	return nil
 }
+func (s *stubPhaseService) ScoreBreakdownFull(ctx context.Context, campaignID uuid.UUID, domain string) (*domainservices.ScoreBreakdownResult, error) {
+	return nil, nil
+}
 
 // testMetrics captures orchestrator metric increments for assertions.
 type testMetrics struct {

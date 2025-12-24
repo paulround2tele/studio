@@ -1,3 +1,27 @@
+/**
+ * @deprecated Phase 7.5 - Use ResultsOverview and CampaignDomainsExplorer from @/components/explorer instead
+ * 
+ * MIGRATION:
+ * ```tsx
+ * // Before:
+ * import { LeadResultsPanel } from '@/components/refactor/campaign/LeadResultsPanel';
+ * <LeadResultsPanel domains={domains} aggregates={aggregates} ... />
+ * 
+ * // After:
+ * import { ResultsOverview, CampaignDomainsExplorer } from '@/components/explorer';
+ * <ResultsOverview counts={counts} filterState={filterState} ... />
+ * <CampaignDomainsExplorer campaignId={campaignId} />
+ * ```
+ * 
+ * The new explorer provides:
+ * - Combined overview and grid in one component
+ * - Better status counts visualization
+ * - Funnel progression display
+ * - Click-through filtering
+ * 
+ * @see Phase 7.5 Integration & Deprecation
+ */
+
 import React from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';

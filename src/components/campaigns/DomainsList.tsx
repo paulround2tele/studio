@@ -1,5 +1,29 @@
 "use client";
 
+/**
+ * @deprecated Phase 7.5 - Use CampaignDomainsExplorer from @/components/explorer instead
+ * 
+ * MIGRATION:
+ * ```tsx
+ * // Before:
+ * import { DomainsList } from '@/components/campaigns/DomainsList';
+ * <DomainsList campaignId={campaignId} />
+ * 
+ * // After:
+ * import { CampaignDomainsExplorer } from '@/components/explorer';
+ * <CampaignDomainsExplorer campaignId={campaignId} />
+ * ```
+ * 
+ * The new explorer provides:
+ * - Modern grid with column sorting
+ * - Domain detail drawer
+ * - Batch actions (export)
+ * - URL-synced filters
+ * - Better performance with virtualization
+ * 
+ * @see Phase 7.5 Integration & Deprecation
+ */
+
 import React from 'react';
 import { useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
 import { useListScoringProfilesQuery } from '@/store/api/scoringApi';
@@ -38,6 +62,9 @@ type DomainsListProps = {
   campaignId: string;
 };
 
+/**
+ * @deprecated Use CampaignDomainsExplorer from @/components/explorer instead
+ */
 export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_DOMAIN_PAGE_SIZE);
   const [paginated, api] = usePaginatedDomains(campaignId, { pageSize, infinite: false, virtualizationThreshold: 2000 });

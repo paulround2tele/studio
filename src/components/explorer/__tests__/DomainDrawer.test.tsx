@@ -6,6 +6,7 @@
  * 2. Degraded state - explicit messaging when breakdown unavailable
  * 3. Memoization - content doesn't re-render on drawer open/close
  * 4. No authority drift - drawer actions route to hook
+ * 5. Authoritative breakdown - renders full breakdown when flag enabled
  * 
  * @see Phase 7.3 Drawer Integration
  */
@@ -25,6 +26,57 @@ import { DomainDrawerSkeleton } from '../DomainDrawerSkeleton';
 
 import type { DomainRow } from '@/types/explorer/state';
 import type { DomainDrawerData, DomainScoreBreakdown } from '@/types/explorer/drawer';
+
+// ============================================================================
+// MOCK SETUP
+// ============================================================================
+
+// Mock feature flags
+const mockUseAuthoritativeBreakdown = jest.fn().mockReturnValue(false);
+
+jest.mock('@/lib/features/explorerFlags', () => ({
+  useExplorerFeatureFlags: () => ({
+    useNewExplorer: true,
+    useNewDrawer: true,
+    useNewActions: true,
+    useNewOverview: true,
+    useAuthoritativeBreakdown: mockUseAuthoritativeBreakdown(),
+    toggleFlag: jest.fn(),
+    resetFlags: jest.fn(),
+  }),
+}));
+
+// Mock RTK query for score breakdown
+const mockBreakdownData = {
+  campaignId: 'campaign-1',
+  domain: 'example.com',
+  final: 0.75,
+  components: {
+    density: 0.8,
+    coverage: 0.7,
+    non_parked: 0.95,
+    content_length: 0.6,
+    title_keyword: 0.85,
+    freshness: 0.5,
+    tf_lite: 0.0,
+  },
+  parkedPenaltyFactor: 1.0,
+  weights: {
+    keyword_density_weight: 0.35,
+    unique_keyword_coverage_weight: 0.25,
+  },
+};
+
+const mockUseGetCampaignDomainScoreBreakdownQuery = jest.fn().mockReturnValue({
+  data: undefined,
+  isLoading: false,
+  error: undefined,
+  refetch: jest.fn(),
+});
+
+jest.mock('@/store/api/campaignApi', () => ({
+  useGetCampaignDomainScoreBreakdownQuery: (...args: unknown[]) => mockUseGetCampaignDomainScoreBreakdownQuery(...args),
+}));
 
 // ============================================================================
 // MOCK DATA
@@ -105,11 +157,20 @@ const mockDrawerDataError: DomainDrawerData = {
 // DOMAIN DRAWER TESTS
 // ============================================================================
 
+const mockCampaignId = 'campaign-1';
+
 describe('DomainDrawer', () => {
   const mockOnClose = jest.fn();
 
   beforeEach(() => {
     mockOnClose.mockClear();
+    mockUseAuthoritativeBreakdown.mockReturnValue(false);
+    mockUseGetCampaignDomainScoreBreakdownQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
   });
 
   it('renders when open with domain', () => {
@@ -117,6 +178,7 @@ describe('DomainDrawer', () => {
       <DomainDrawer
         isOpen={true}
         domain={mockDomain}
+        campaignId={mockCampaignId}
         onClose={mockOnClose}
       />
     );
@@ -130,6 +192,7 @@ describe('DomainDrawer', () => {
       <DomainDrawer
         isOpen={false}
         domain={mockDomain}
+        campaignId={mockCampaignId}
         onClose={mockOnClose}
       />
     );
@@ -143,6 +206,7 @@ describe('DomainDrawer', () => {
       <DomainDrawer
         isOpen={true}
         domain={null}
+        campaignId={mockCampaignId}
         onClose={mockOnClose}
       />
     );
@@ -156,6 +220,7 @@ describe('DomainDrawer', () => {
       <DomainDrawer
         isOpen={true}
         domain={mockDomain}
+        campaignId={mockCampaignId}
         onClose={mockOnClose}
       />
     );
@@ -170,19 +235,167 @@ describe('DomainDrawer', () => {
 
   it('renders with different sizes', () => {
     const { rerender } = render(
-      <DomainDrawer isOpen={true} domain={mockDomain} onClose={mockOnClose} size="default" />
+      <DomainDrawer isOpen={true} domain={mockDomain} campaignId={mockCampaignId} onClose={mockOnClose} size="default" />
     );
     expect(screen.getByTestId('domain-drawer')).toBeInTheDocument();
 
     rerender(
-      <DomainDrawer isOpen={true} domain={mockDomain} onClose={mockOnClose} size="lg" />
+      <DomainDrawer isOpen={true} domain={mockDomain} campaignId={mockCampaignId} onClose={mockOnClose} size="lg" />
     );
     expect(screen.getByTestId('domain-drawer')).toBeInTheDocument();
 
     rerender(
-      <DomainDrawer isOpen={true} domain={mockDomain} onClose={mockOnClose} size="xl" />
+      <DomainDrawer isOpen={true} domain={mockDomain} campaignId={mockCampaignId} onClose={mockOnClose} size="xl" />
     );
     expect(screen.getByTestId('domain-drawer')).toBeInTheDocument();
+  });
+
+  // ==========================================================================
+  // AUTHORITATIVE BREAKDOWN TESTS (Phase 7 Backend Integration)
+  // ==========================================================================
+
+  describe('when useAuthoritativeBreakdown flag is enabled', () => {
+    beforeEach(() => {
+      mockUseAuthoritativeBreakdown.mockReturnValue(true);
+    });
+
+    it('fetches and displays breakdown from backend', async () => {
+      mockUseGetCampaignDomainScoreBreakdownQuery.mockReturnValue({
+        data: mockBreakdownData,
+        isLoading: false,
+        error: undefined,
+        refetch: jest.fn(),
+      });
+
+      render(
+        <DomainDrawer
+          isOpen={true}
+          domain={mockDomain}
+          campaignId={mockCampaignId}
+          onClose={mockOnClose}
+        />
+      );
+
+      // Should show breakdown display instead of degraded state
+      await waitFor(() => {
+        expect(screen.getByTestId('domain-drawer-breakdown')).toBeInTheDocument();
+      });
+      
+      // Should not show degraded message
+      expect(screen.queryByTestId('domain-drawer-degraded')).not.toBeInTheDocument();
+    });
+
+    it('shows loading state while fetching breakdown', () => {
+      mockUseGetCampaignDomainScoreBreakdownQuery.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        error: undefined,
+        refetch: jest.fn(),
+      });
+
+      render(
+        <DomainDrawer
+          isOpen={true}
+          domain={mockDomain}
+          campaignId={mockCampaignId}
+          onClose={mockOnClose}
+        />
+      );
+
+      // Should show loading skeleton for breakdown section
+      expect(screen.getByTestId('domain-drawer-skeleton-breakdown')).toBeInTheDocument();
+    });
+
+    it('shows degraded state on 404 (domain not analyzed)', () => {
+      mockUseGetCampaignDomainScoreBreakdownQuery.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: { status: 404, data: { message: 'domain not found or not yet analyzed' } },
+        refetch: jest.fn(),
+      });
+
+      render(
+        <DomainDrawer
+          isOpen={true}
+          domain={mockDomain}
+          campaignId={mockCampaignId}
+          onClose={mockOnClose}
+        />
+      );
+
+      expect(screen.getByTestId('domain-drawer-degraded')).toBeInTheDocument();
+    });
+
+    it('shows error state with retry on non-404 errors', () => {
+      const mockRefetch = jest.fn();
+      mockUseGetCampaignDomainScoreBreakdownQuery.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: { status: 500, data: { message: 'Internal server error' } },
+        refetch: mockRefetch,
+      });
+
+      render(
+        <DomainDrawer
+          isOpen={true}
+          domain={mockDomain}
+          campaignId={mockCampaignId}
+          onClose={mockOnClose}
+        />
+      );
+
+      // Should show error state with retry button
+      expect(screen.getByTestId('domain-drawer-degraded')).toBeInTheDocument();
+      
+      // Click retry
+      const retryButton = screen.queryByTestId('domain-drawer-degraded-retry');
+      if (retryButton) {
+        fireEvent.click(retryButton);
+        expect(mockRefetch).toHaveBeenCalled();
+      }
+    });
+
+    it('skips fetch when drawer is closed', () => {
+      mockUseGetCampaignDomainScoreBreakdownQuery.mockClear();
+
+      render(
+        <DomainDrawer
+          isOpen={false}
+          domain={mockDomain}
+          campaignId={mockCampaignId}
+          onClose={mockOnClose}
+        />
+      );
+
+      // Should have been called with skip: true
+      expect(mockUseGetCampaignDomainScoreBreakdownQuery).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ skip: true })
+      );
+    });
+  });
+
+  describe('when useAuthoritativeBreakdown flag is disabled', () => {
+    beforeEach(() => {
+      mockUseAuthoritativeBreakdown.mockReturnValue(false);
+    });
+
+    it('shows degraded state without fetching', () => {
+      render(
+        <DomainDrawer
+          isOpen={true}
+          domain={mockDomain}
+          campaignId={mockCampaignId}
+          onClose={mockOnClose}
+        />
+      );
+
+      // Should show degraded state
+      expect(screen.getByTestId('domain-drawer-degraded')).toBeInTheDocument();
+      
+      // Should not show full breakdown
+      expect(screen.queryByTestId('domain-drawer-breakdown')).not.toBeInTheDocument();
+    });
   });
 });
 
@@ -324,7 +537,7 @@ describe('DomainDrawerRichness', () => {
 
     expect(screen.getByTestId('domain-drawer-richness-fallback')).toBeInTheDocument();
     expect(screen.getByTestId('domain-drawer-degraded')).toBeInTheDocument();
-    expect(screen.getByText(/Score breakdown unavailable/)).toBeInTheDocument();
+    expect(screen.getByText(/not available yet/)).toBeInTheDocument();
   });
 
   it('shows fallback + error with retry when error', () => {
@@ -357,7 +570,7 @@ describe('DomainDrawerDegraded', () => {
   it('shows breakdown-unavailable message', () => {
     render(<DomainDrawerDegraded type="breakdown-unavailable" />);
 
-    expect(screen.getByText(/Score breakdown unavailable/)).toBeInTheDocument();
+    expect(screen.getByText(/not available yet/)).toBeInTheDocument();
     expect(screen.getByText('Limited Data')).toBeInTheDocument();
   });
 

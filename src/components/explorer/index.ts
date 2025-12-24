@@ -5,12 +5,21 @@
  * - DomainsGrid is the ONLY entry point for domain grid rendering
  * - DomainDrawer is the ONLY entry point for domain detail drawer
  * - DomainActionsBar is the ONLY entry point for batch actions
+ * - CampaignDomainsExplorer is the ONLY integration point for campaign pages
  * - useDomainsExplorer is the ONLY state authority (no shadow state)
  * - Server-side sorting only (isSortNonAuthoritative indicates client-only sort)
  * - URL-synced filters via useDomainFilters
  * 
  * @see docs/PHASE_7_RESULTS_EXPLORATION_ARCHITECTURE.md
  */
+
+// Phase 7.5: Integration Entry Point
+export { CampaignDomainsExplorer } from './CampaignDomainsExplorer';
+export type { CampaignDomainsExplorerProps } from './CampaignDomainsExplorer';
+
+// Phase 7.5: Results Overview
+export { ResultsOverview, ResultsOverviewCompact } from './ResultsOverview';
+export type { ResultsOverviewProps, ResultsOverviewCompactProps } from './ResultsOverview';
 
 // Phase 7.2: Grid Components
 export { DomainsGrid } from './DomainsGrid';

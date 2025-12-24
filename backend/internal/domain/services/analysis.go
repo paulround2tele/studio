@@ -1973,6 +1973,124 @@ func (s *analysisService) ScoreBreakdown(ctx context.Context, campaignID uuid.UU
 	return breakdown, nil
 }
 
+// ScoreBreakdownResult provides a structured response for the score breakdown API.
+// It includes component scores, weights, and penalty factors for full transparency.
+type ScoreBreakdownResult struct {
+	Components          map[string]float64 `json:"components"`
+	Final               float64            `json:"final"`
+	Weights             map[string]float64 `json:"weights"`
+	ParkedPenaltyFactor float64            `json:"parkedPenaltyFactor"`
+}
+
+// ScoreBreakdownFull recomputes component scores and returns structured result with weights.
+// This is the HTTP API-facing method that provides full transparency.
+func (s *analysisService) ScoreBreakdownFull(ctx context.Context, campaignID uuid.UUID, domain string) (*ScoreBreakdownResult, error) {
+	var dbx *sql.DB
+	switch db := s.deps.DB.(type) {
+	case *sqlx.DB:
+		dbx = db.DB
+	case *sql.DB:
+		dbx = db
+	}
+	if dbx == nil {
+		return nil, fmt.Errorf("db unavailable")
+	}
+	weightsMap, penaltyPtr, err := loadCampaignScoringWeights(ctx, dbx, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	parkedPenaltyFactor := 0.5
+	if penaltyPtr != nil {
+		parkedPenaltyFactor = *penaltyPtr
+	}
+	row := dbx.QueryRowContext(ctx, `SELECT feature_vector, last_http_fetched_at, is_parked, parked_confidence FROM generated_domains WHERE campaign_id=$1 AND domain_name=$2`, campaignID, domain)
+	var rawBytes []byte // Use []byte to handle NULL gracefully
+	var fetchedAt *time.Time
+	var isParked sql.NullBool
+	var parkedConf sql.NullFloat64
+	if err := row.Scan(&rawBytes, &fetchedAt, &isParked, &parkedConf); err != nil {
+		return nil, err // sql.ErrNoRows if domain not found/analyzed
+	}
+	fv := map[string]interface{}{}
+	if rawBytes != nil {
+		_ = json.Unmarshal(rawBytes, &fv)
+	}
+	kwUnique := asFloat(fv["kw_unique"])
+	kwHitsTotal := asFloat(fv["kw_hits_total"])
+	contentBytes := asFloat(fv["content_bytes"])
+	titleHas := boolVal(fv["title_has_keyword"])
+	isParkedB := isParked.Valid && isParked.Bool
+	now := time.Now()
+	freshness := 0.0
+	if fetchedAt != nil {
+		age := now.Sub(*fetchedAt).Hours() / 24.0
+		if age <= 1 {
+			freshness = 1
+		} else if age < 7 {
+			freshness = .7
+		} else if age < 30 {
+			freshness = .4
+		}
+	}
+	kwCoverage := clamp(kwUnique/5.0, 0, 1)
+	var density float64
+	if contentBytes > 0 && kwHitsTotal > 0 {
+		perKB := (kwHitsTotal / (contentBytes / 1024.0))
+		density = clamp(perKB/3.0, 0, 1)
+	} else {
+		density = kwCoverage
+	}
+	nonParked := 1.0
+	if isParkedB {
+		nonParked = 0
+	}
+	contentLen := clamp(contentBytes/50000.0, 0, 1)
+	titleScore := 0.0
+	if titleHas {
+		titleScore = 1
+	}
+	var tfLite float64
+	if v, ok := os.LookupEnv("ENABLE_TF_LITE"); ok && (v == "1" || strings.EqualFold(v, "true")) && contentBytes > 0 && kwHitsTotal > 0 {
+		perKB := kwHitsTotal / (contentBytes / 1024.0)
+		if perKB < 0 {
+			perKB = 0
+		}
+		idfApprox := math.Log(1 + kwUnique)
+		if idfApprox < 0 {
+			idfApprox = 0
+		}
+		perKBn := clamp(perKB/5.0, 0, 1)
+		idfN := clamp(idfApprox/2.4, 0, 1)
+		tfLite = perKBn * idfN
+	}
+	rel := density*weightsMap["keyword_density_weight"] +
+		kwCoverage*weightsMap["unique_keyword_coverage_weight"] +
+		nonParked*weightsMap["non_parked_weight"] +
+		contentLen*weightsMap["content_length_quality_weight"] +
+		titleScore*weightsMap["title_keyword_weight"] +
+		freshness*weightsMap["freshness_weight"]
+	if w, ok := weightsMap["tf_lite_weight"]; ok && w > 0 && tfLite > 0 {
+		rel += tfLite * w
+	}
+	if isParkedB && parkedConf.Valid && parkedConf.Float64 < 0.9 {
+		rel *= parkedPenaltyFactor
+	}
+	return &ScoreBreakdownResult{
+		Components: map[string]float64{
+			"density":        density,
+			"coverage":       kwCoverage,
+			"non_parked":     nonParked,
+			"content_length": contentLen,
+			"title_keyword":  titleScore,
+			"freshness":      freshness,
+			"tf_lite":        tfLite,
+		},
+		Final:               rel,
+		Weights:             weightsMap,
+		ParkedPenaltyFactor: parkedPenaltyFactor,
+	}, nil
+}
+
 // RescoreCampaign recomputes scores (alias of ScoreDomains for now; placeholder for profile diff logic)
 func (s *analysisService) RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error {
 	// Determine profile state prior to run

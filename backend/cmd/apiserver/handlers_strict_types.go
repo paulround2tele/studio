@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -21,20 +23,55 @@ type strictHandlers struct {
 var _ gen.StrictServerInterface = (*strictHandlers)(nil)
 
 // CampaignsDomainScoreBreakdown implements GET /campaigns/{campaignId}/domains/{domain}/score-breakdown
-// It delegates to the analysis service ScoreBreakdown method and returns component scores.
+// It delegates to the analysis service ScoreBreakdownFull method and returns component scores.
 func (h *strictHandlers) CampaignsDomainScoreBreakdown(ctx context.Context, r gen.CampaignsDomainScoreBreakdownRequestObject) (gen.CampaignsDomainScoreBreakdownResponseObject, error) {
-	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil {
+	if h.deps == nil || h.deps.AnalysisSvc == nil || h.deps.Stores.Campaign == nil {
 		return gen.CampaignsDomainScoreBreakdown500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if strings.TrimSpace(r.Domain) == "" {
 		return gen.CampaignsDomainScoreBreakdown400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "domain required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Ensure campaign exists (avoid leaking store errors)
-	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+	campaignID := uuid.UUID(r.CampaignId)
+	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, campaignID); err != nil {
 		return gen.CampaignsDomainScoreBreakdown404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	// TODO: Implement score breakdown once analysis service exposes per-domain component scores via orchestrator.
-	return gen.CampaignsDomainScoreBreakdown500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "score breakdown service not yet implemented", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+
+	// Call the analysis service for score breakdown
+	result, err := h.deps.AnalysisSvc.ScoreBreakdownFull(ctx, campaignID, r.Domain)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return gen.CampaignsDomainScoreBreakdown404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "domain not found or not yet analyzed", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsDomainScoreBreakdown500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+
+	// Map to OpenAPI response shape
+	finalScore := float32(result.Final)
+	parkedPenalty := float32(result.ParkedPenaltyFactor)
+
+	// Convert weights map to float32
+	weightsF32 := make(map[string]float32, len(result.Weights))
+	for k, v := range result.Weights {
+		weightsF32[k] = float32(v)
+	}
+
+	resp := gen.CampaignsDomainScoreBreakdown200JSONResponse{
+		CampaignId:          r.CampaignId,
+		Domain:              r.Domain,
+		Final:               finalScore,
+		Weights:             &weightsF32,
+		ParkedPenaltyFactor: &parkedPenalty,
+	}
+	resp.Components.Density = float32(result.Components["density"])
+	resp.Components.Coverage = float32(result.Components["coverage"])
+	resp.Components.NonParked = float32(result.Components["non_parked"])
+	resp.Components.ContentLength = float32(result.Components["content_length"])
+	resp.Components.TitleKeyword = float32(result.Components["title_keyword"])
+	resp.Components.Freshness = float32(result.Components["freshness"])
+	resp.Components.TfLite = float32(result.Components["tf_lite"])
+
+	return resp, nil
 }
 
 func boolPtr(b bool) *bool { return &b }

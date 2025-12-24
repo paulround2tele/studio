@@ -70,7 +70,7 @@ export const DomainDrawerDegraded = React.memo(function DomainDrawerDegraded({
 }: DomainDrawerDegradedProps) {
   // Default messages per type
   const defaultMessages: Record<DegradedStateType, string> = {
-    'breakdown-unavailable': 'Score breakdown unavailable (backend endpoint not yet implemented)',
+    'breakdown-unavailable': 'Score breakdown not available yet (domain pending analysis)',
     'breakdown-error': 'Failed to load score breakdown',
     'partial-data': 'Some data could not be loaded',
   };

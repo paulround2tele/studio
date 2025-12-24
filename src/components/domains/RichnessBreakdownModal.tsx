@@ -1,4 +1,34 @@
 "use client";
+
+/**
+ * @deprecated Phase 7.5 - Use DomainDrawer from @/components/explorer instead
+ * 
+ * MIGRATION:
+ * ```tsx
+ * // Before:
+ * import RichnessBreakdownModal from '@/components/domains/RichnessBreakdownModal';
+ * <RichnessBreakdownModal open={open} onClose={onClose} domain={domain} features={features} />
+ * 
+ * // After:
+ * import { DomainDrawer } from '@/components/explorer';
+ * <DomainDrawer
+ *   campaignId={campaignId}
+ *   domainId={domainId}
+ *   isOpen={isOpen}
+ *   onClose={onClose}
+ * />
+ * ```
+ * 
+ * The new drawer provides:
+ * - Full domain details (not just richness)
+ * - All features (keywords, microcrawl, richness)
+ * - Better layout with sections
+ * - Loading and error states
+ * - Degraded mode for missing features
+ * 
+ * @see Phase 7.5 Integration & Deprecation
+ */
+
 import React from 'react';
 import type { DomainAnalysisFeatures } from '@/lib/api-client/models/domain-analysis-features';
 import { cn } from '@/lib/utils';
@@ -29,6 +59,9 @@ const barColor: Record<string,string> = {
   penalty: 'bg-amber-500/70'
 };
 
+/**
+ * @deprecated Use DomainDrawer from @/components/explorer instead
+ */
 export const RichnessBreakdownModal: React.FC<Props> = ({ open, onClose, domain, features }) => {
   const ref = React.useRef<HTMLDivElement | null>(null);
   const [showJSON, setShowJSON] = React.useState(false);

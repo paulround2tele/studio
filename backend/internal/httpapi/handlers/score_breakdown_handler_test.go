@@ -3,12 +3,13 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"github.com/fntelecomllc/studio/backend/internal/domain/services"
-	"github.com/fntelecomllc/studio/backend/internal/models"
-	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/fntelecomllc/studio/backend/internal/domain/services"
+	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // full mock implementing services.AnalysisService minimally
@@ -33,6 +34,17 @@ func (m mockAnalysisService) RescoreCampaign(context.Context, uuid.UUID) error {
 // extension method
 func (m mockAnalysisService) ScoreBreakdown(ctx context.Context, cID uuid.UUID, domain string) (map[string]float64, error) {
 	return m.breakdown, m.err
+}
+func (m mockAnalysisService) ScoreBreakdownFull(ctx context.Context, cID uuid.UUID, domain string) (*services.ScoreBreakdownResult, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return &services.ScoreBreakdownResult{
+		Components:          m.breakdown,
+		Final:               m.breakdown["final"],
+		Weights:             map[string]float64{},
+		ParkedPenaltyFactor: 0.5,
+	}, nil
 }
 
 // Satisfy minimal interface marker

@@ -60,6 +60,8 @@ type AppDeps struct {
 	Logger HandlerLogger
 	// Aggregations cache (funnel & metrics)
 	AggregatesCache *domainservices.AggregatesCache
+	// Analysis service for score breakdown endpoint
+	AnalysisSvc domainservices.AnalysisService
 }
 
 // HandlerLogger defines the minimal logging surface required at the HTTP handler layer.
@@ -380,6 +382,9 @@ func initAppDependencies() (*AppDeps, error) {
 	httpValidationSvc := domainservices.NewHTTPValidationService(deps.Stores.Campaign, domainDeps, httpValSvc, deps.Stores.Persona, deps.Stores.Proxy, deps.Stores.Keyword)
 	enrichmentSvc := domainservices.NewEnrichmentService(deps.Stores.Campaign, domainDeps)
 	analysisSvc := domainservices.NewAnalysisService(deps.Stores.Campaign, domainDeps, contentFetcherSvc, deps.Stores.Persona, deps.Stores.Proxy)
+
+	// Expose analysis service for score breakdown endpoint
+	deps.AnalysisSvc = analysisSvc
 
 	var extractionPhaseSvc domainservices.PhaseService
 	if deps.DB != nil {

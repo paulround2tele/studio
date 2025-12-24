@@ -49,6 +49,14 @@ func (a *dualReadAnalysisStub) GetPhaseType() models.PhaseTypeEnum {
 func (a *dualReadAnalysisStub) ScoreDomains(ctx context.Context, campaignID uuid.UUID) error {
 	return nil
 }
+func (a *dualReadAnalysisStub) ScoreBreakdownFull(ctx context.Context, campaignID uuid.UUID, domain string) (*domainservices.ScoreBreakdownResult, error) {
+	return &domainservices.ScoreBreakdownResult{
+		Components:          map[string]float64{"density": 0.5, "coverage": 0.5, "non_parked": 1, "content_length": 0.5, "title_keyword": 1, "freshness": 1, "tf_lite": 0},
+		Final:               0.75,
+		Weights:             map[string]float64{"keyword_density_weight": 0.3, "unique_keyword_coverage_weight": 0.2},
+		ParkedPenaltyFactor: 0.5,
+	}, nil
+}
 
 // minimal fake campaign store implementing only methods we exercise
 type fakeCampaignStoreForDomains struct {
@@ -350,6 +358,12 @@ func (f *fakeCampaignStoreForDomains) BeginTxx(ctx context.Context, opts *sql.Tx
 	return nil, nil
 }
 func (f *fakeCampaignStoreForDomains) UnderlyingDB() *sqlx.DB { return nil }
+func (f *fakeCampaignStoreForDomains) GetLastLifecycleSequence(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (int64, error) {
+	return 0, nil
+}
+func (f *fakeCampaignStoreForDomains) RecordLifecycleEvent(ctx context.Context, exec store.Querier, campaignID uuid.UUID, eventType string, phase models.PhaseTypeEnum, fromStatus, toStatus models.PhaseStatusEnum, metadata map[string]interface{}) (int64, error) {
+	return 0, nil
+}
 
 func TestCampaignsDomainsListRebuildsCountersWhenMissing(t *testing.T) {
 	mdb, mock, err := sqlmock.New()

@@ -1,7 +1,34 @@
+/**
+ * @deprecated Phase 7.5 - Use useDomainsExplorer from @/lib/hooks/explorer/useDomainsExplorer instead
+ * 
+ * MIGRATION:
+ * ```tsx
+ * // Before:
+ * import { usePaginatedDomains } from '@/lib/hooks/usePaginatedDomains';
+ * const [paginated, api] = usePaginatedDomains(campaignId, { pageSize });
+ * 
+ * // After:
+ * import { useDomainsExplorer } from '@/lib/hooks/explorer/useDomainsExplorer';
+ * const explorer = useDomainsExplorer({ campaignId, initialPageSize: pageSize });
+ * ```
+ * 
+ * The new hook provides:
+ * - Server-side sorting support
+ * - URL-synced filters
+ * - Selection state management
+ * - Drawer state management
+ * - Better type safety
+ * 
+ * @see Phase 7.5 Integration & Deprecation
+ */
+
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
 import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
 
+/**
+ * @deprecated Use useDomainsExplorer from @/lib/hooks/explorer/useDomainsExplorer instead
+ */
 export interface UsePaginatedDomainsOptions {
   pageSize: number;
   infinite?: boolean; // start in infinite accumulation mode
@@ -11,6 +38,9 @@ export interface UsePaginatedDomainsOptions {
   filters?: Record<string, unknown>; // future backend pass-through
 }
 
+/**
+ * @deprecated Use useDomainsExplorer from @/lib/hooks/explorer/useDomainsExplorer instead
+ */
 export interface PaginatedDomainsState {
   page: number;
   pageSize: number;
@@ -26,6 +56,9 @@ export interface PaginatedDomainsState {
   cursorMode: boolean; // using hasNextPage without reliable total
 }
 
+/**
+ * @deprecated Use useDomainsExplorer from @/lib/hooks/explorer/useDomainsExplorer instead
+ */
 export interface PaginatedDomainsApi {
   next: () => void;
   prev: () => void;
