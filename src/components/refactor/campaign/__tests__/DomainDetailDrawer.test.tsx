@@ -344,4 +344,111 @@ describe('DomainDetailDrawer', () => {
       expect(screen.getByText('Domain Details')).toBeInTheDocument();
     });
   });
+
+  describe('Null/Partial Safety', () => {
+    it('handles domain with null domainScore gracefully', () => {
+      const domainWithNullScore: DomainListItem = {
+        ...mockDomain,
+        domainScore: undefined,
+      };
+      
+      mockUseGetCampaignDomainScoreBreakdownQuery.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      
+      expect(() => {
+        renderWithProviders(
+          <DomainDetailDrawer {...defaultProps} domain={domainWithNullScore} />
+        );
+      }).not.toThrow();
+      
+      // Should fallback to 0/100 display
+      expect(screen.getByText('0/100')).toBeInTheDocument();
+    });
+
+    it('handles API response with missing components gracefully', () => {
+      const partialBreakdown: DomainScoreBreakdownResponse = {
+        campaignId: 'test-campaign',
+        domain: 'example-domain.com',
+        components: {
+          density: 0.85,
+          // Missing: coverage, non_parked, content_length, title_keyword, freshness
+        } as DomainScoreBreakdownResponse['components'],
+        final: 60,
+      };
+      
+      mockUseGetCampaignDomainScoreBreakdownQuery.mockReturnValue({
+        data: partialBreakdown,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      
+      expect(() => {
+        renderWithProviders(<DomainDetailDrawer {...defaultProps} />);
+      }).not.toThrow();
+      
+      // Density should be present
+      expect(screen.getByText('85%')).toBeInTheDocument();
+      // Missing components should fallback to 0%
+      expect(screen.getAllByText('0%').length).toBeGreaterThan(0);
+    });
+
+    it('handles API response with null weights gracefully', () => {
+      const breakdownNoWeights: DomainScoreBreakdownResponse = {
+        campaignId: 'test-campaign',
+        domain: 'example-domain.com',
+        components: mockBreakdown.components,
+        final: 75,
+        weights: undefined,
+      };
+      
+      mockUseGetCampaignDomainScoreBreakdownQuery.mockReturnValue({
+        data: breakdownNoWeights,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      
+      expect(() => {
+        renderWithProviders(<DomainDetailDrawer {...defaultProps} />);
+      }).not.toThrow();
+    });
+
+    it('handles domain with no features/keywords gracefully', () => {
+      const domainNoFeatures: DomainListItem = {
+        id: '1',
+        domain: 'bare-domain.com',
+        domainScore: 50,
+        leadStatus: 'pending',
+        dnsStatus: 'ok',
+        httpStatus: 'ok',
+        // No features object
+      };
+      
+      expect(() => {
+        renderWithProviders(
+          <DomainDetailDrawer {...defaultProps} domain={domainNoFeatures} />
+        );
+      }).not.toThrow();
+      
+      expect(screen.getByText('No keywords detected in this domain.')).toBeInTheDocument();
+    });
+
+    it('handles domain with empty leadStatus gracefully', () => {
+      const domainNoStatus: DomainListItem = {
+        ...mockDomain,
+        leadStatus: undefined,
+      };
+      
+      expect(() => {
+        renderWithProviders(
+          <DomainDetailDrawer {...defaultProps} domain={domainNoStatus} />
+        );
+      }).not.toThrow();
+    });
+  });
 });

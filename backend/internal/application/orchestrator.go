@@ -1059,6 +1059,16 @@ func (o *CampaignOrchestrator) RescoreCampaign(ctx context.Context, campaignID u
 	return o.analysisSvc.RescoreCampaign(ctx, campaignID)
 }
 
+// ScoreBreakdown returns the component scores for a specific domain in a campaign.
+// This is used by the API to provide transparency into how scores are computed.
+// Returns (breakdown map, error). On error returns nil breakdown with descriptive error.
+func (o *CampaignOrchestrator) ScoreBreakdown(ctx context.Context, campaignID uuid.UUID, domain string) (map[string]float64, error) {
+	if o == nil || o.analysisSvc == nil {
+		return nil, fmt.Errorf("analysis service unavailable")
+	}
+	return o.analysisSvc.ScoreBreakdown(ctx, campaignID, domain)
+}
+
 // FetchAnalysisReadyFeatures returns analysis-ready feature maps for domains in a campaign
 // when the underlying analysis service supports the optional DualReadFetch method. It is a
 // thin indirection that keeps the concrete analysis service unexported while giving HTTP

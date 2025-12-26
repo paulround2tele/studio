@@ -201,6 +201,8 @@ type AnalysisService interface {
 	ScoreDomains(ctx context.Context, campaignID uuid.UUID) error
 	// RescoreCampaign recomputes scores (alias; allows differential logic later)
 	RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error
+	// ScoreBreakdown returns component scores for a single domain (read-only, for API transparency)
+	ScoreBreakdown(ctx context.Context, campaignID uuid.UUID, domain string) (map[string]float64, error)
 }
 
 // EventBus interface for publishing phase events

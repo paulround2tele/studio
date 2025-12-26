@@ -280,6 +280,11 @@ export function LeadResultsPanel({
 
       {hasAnyRows && (
         <>
+          {/* UX hint for discoverability */}
+          <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+            💡 Click a row to inspect score breakdown and keyword details.
+          </p>
+
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
