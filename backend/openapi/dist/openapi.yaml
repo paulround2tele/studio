@@ -3753,6 +3753,111 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/discovery-lineage:
+    get:
+      tags:
+        - campaigns
+      summary: Get discovery lineage for a campaign
+      description: |
+        Returns the discovery lineage for an existing campaign, including
+        the config hash, offset range used, and other campaigns sharing
+        the same discovery configuration.
+
+        This enables:
+        - Understanding which offset range this campaign covers
+        - Comparing yield across campaigns using the same pattern
+        - Analyzing pattern effectiveness over time
+      operationId: campaigns_discovery_lineage
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Discovery lineage information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryLineageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /discovery/preview:
+    post:
+      tags:
+        - campaigns
+      summary: Preview discovery configuration
+      description: |
+        Previews a discovery configuration before campaign creation.
+        Returns the config hash, next available offset, total combinations,
+        and prior campaigns that share this configuration.
+
+        Use this endpoint to understand:
+        - Where generation will start (next_offset)
+        - How many combinations remain for this pattern
+        - Historical yield from campaigns using the same pattern
+      operationId: discovery_preview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - patternType
+                - characterSet
+                - tld
+              properties:
+                patternType:
+                  type: string
+                  enum:
+                    - prefix_variable
+                    - suffix_variable
+                    - both_variable
+                  description: Domain name generation pattern type
+                constantString:
+                  type: string
+                  description: Fixed portion of the domain name
+                  example: telecom
+                prefixVariableLength:
+                  type: integer
+                  minimum: 0
+                  maximum: 10
+                  default: 0
+                  description: Length of variable prefix
+                suffixVariableLength:
+                  type: integer
+                  minimum: 0
+                  maximum: 10
+                  default: 0
+                  description: Length of variable suffix
+                characterSet:
+                  type: string
+                  description: Characters to use for variable portions
+                  example: abcdefghijklmnopqrstuvwxyz
+                tld:
+                  type: string
+                  description: Top-level domain
+                  example: .com
+      responses:
+        '200':
+          description: Discovery configuration preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryPreviewResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/status:
     get:
       tags:
@@ -6672,6 +6777,16 @@ components:
           type: string
           nullable: true
           description: Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)
+        domainScore:
+          type: number
+          format: float
+          nullable: true
+          description: Composite domain quality score (0-100) from Analysis & Scoring phase
+        leadScore:
+          type: number
+          format: float
+          nullable: true
+          description: Lead qualification score from Lead Enrichment phase
         features:
           $ref: '#/components/schemas/DomainAnalysisFeatures'
     PageInfo:
@@ -7270,6 +7385,131 @@ components:
       required:
         - campaignId
         - phasesRestarted
+    DiscoveryLineageCampaign:
+      type: object
+      description: Campaign in the discovery lineage with stats
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        offsetRange:
+          type: object
+          properties:
+            start:
+              type: integer
+              format: int64
+            end:
+              type: integer
+              format: int64
+        stats:
+          type: object
+          properties:
+            domainsGenerated:
+              type: integer
+              format: int64
+            dnsValid:
+              type: integer
+              format: int64
+            keywordMatches:
+              type: integer
+              format: int64
+            leads:
+              type: integer
+              format: int64
+          required:
+            - domainsGenerated
+            - dnsValid
+            - keywordMatches
+            - leads
+      required:
+        - id
+        - name
+        - createdAt
+        - stats
+    DiscoveryLineageResponse:
+      type: object
+      description: Discovery lineage for an existing campaign
+      properties:
+        success:
+          type: boolean
+          default: true
+        requestId:
+          type: string
+        data:
+          type: object
+          properties:
+            configHash:
+              type: string
+              description: SHA-256 hash of discovery configuration
+            thisCampaign:
+              type: object
+              properties:
+                offsetStart:
+                  type: integer
+                  format: int64
+                  description: First offset generated for this campaign
+                offsetEnd:
+                  type: integer
+                  format: int64
+                  description: Last offset generated for this campaign
+              required:
+                - offsetStart
+                - offsetEnd
+            priorCampaigns:
+              type: array
+              maxItems: 10
+              items:
+                $ref: '#/components/schemas/DiscoveryLineageCampaign'
+          required:
+            - configHash
+            - thisCampaign
+      required:
+        - success
+        - data
+    DiscoveryPreviewResponse:
+      type: object
+      description: Preview of discovery configuration with lineage information
+      properties:
+        success:
+          type: boolean
+          default: true
+        requestId:
+          type: string
+        data:
+          type: object
+          properties:
+            configHash:
+              type: string
+              description: SHA-256 hash of normalized discovery configuration
+              example: 5cf00a920956840d6bcbd68cf1da88d93d6840c09084016337dc3fd6536c0845
+            totalCombinations:
+              type: integer
+              format: int64
+              description: Total possible domain combinations for this pattern
+            nextOffset:
+              type: integer
+              format: int64
+              description: Next available offset (last_offset + 1). Generation will start here.
+            exhaustionWarning:
+              type: boolean
+              description: True if nextOffset + typical batch would exceed totalCombinations
+            priorCampaigns:
+              type: array
+              maxItems: 10
+              items:
+                $ref: '#/components/schemas/DiscoveryLineageCampaign'
+          required:
+            - configHash
+            - totalCombinations
+            - nextOffset
+      required:
+        - success
+        - data
     CampaignPhasesStatusResponse:
       type: object
       description: Consolidated phase status list plus overall progress

@@ -150,6 +150,12 @@ type CampaignStore interface {
 	// GetCampaignMode returns the execution mode (step_by_step or full_sequence) for a campaign.
 	GetCampaignMode(ctx context.Context, exec Querier, campaignID uuid.UUID) (string, error)
 
+	// Discovery lineage tracking
+	// UpdateCampaignDiscoveryLineage sets the config hash and offset range for a campaign
+	UpdateCampaignDiscoveryLineage(ctx context.Context, exec Querier, campaignID uuid.UUID, configHash string, offsetStart, offsetEnd int64) error
+	// GetDiscoveryLineage returns prior campaigns sharing the same config_hash with their stats
+	GetDiscoveryLineage(ctx context.Context, exec Querier, configHash string, excludeCampaignID *uuid.UUID, userID *string, limit int) ([]*DiscoveryLineageCampaign, error)
+
 	// Scoring profile operations (existing lightweight set) are implemented directly in postgres store via type assertion in handlers
 
 }
@@ -180,6 +186,19 @@ type ListValidationResultsFilter struct {
 	HasKeywords      *bool
 	Limit            int
 	Offset           int
+}
+
+// DiscoveryLineageCampaign represents a campaign in the discovery lineage with aggregated stats
+type DiscoveryLineageCampaign struct {
+	ID             uuid.UUID `db:"id" json:"id"`
+	Name           string    `db:"name" json:"name"`
+	CreatedAt      time.Time `db:"created_at" json:"createdAt"`
+	OffsetStart    *int64    `db:"discovery_offset_start" json:"offsetStart,omitempty"`
+	OffsetEnd      *int64    `db:"discovery_offset_end" json:"offsetEnd,omitempty"`
+	DomainsCount   int64     `db:"domains_count" json:"domainsCount"`
+	DNSValidCount  int64     `db:"dns_valid_count" json:"dnsValidCount"`
+	KeywordMatches int64     `db:"keyword_matches" json:"keywordMatches"`
+	LeadCount      int64     `db:"lead_count" json:"leadCount"`
 }
 
 // PersonaStore, ProxyStore, KeywordStore, AuditLogStore: methods will accept exec Querier where transactional execution is an option.

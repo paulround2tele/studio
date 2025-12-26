@@ -318,6 +318,8 @@ DomainListItem:
     leadStatus: { type: string, description: "Lead extraction status if available" }
     dnsReason: { type: string, nullable: true, description: "Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE)" }
     httpReason: { type: string, nullable: true, description: "Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)" }
+    domainScore: { type: number, format: float, nullable: true, description: "Composite domain quality score (0-100) from Analysis & Scoring phase" }
+    leadScore: { type: number, format: float, nullable: true, description: "Lead qualification score from Lead Enrichment phase" }
     features:
       $ref: '#/DomainAnalysisFeatures'
   # required list declared above with properties; stray duplicated fields removed
@@ -2671,4 +2673,110 @@ ProbabilisticForecastResponse:
         mape: { type: number, format: float }
         residualVariance: { type: number, format: float }
   required: [horizon, generatedAt, method, points]
+
+
+
+# Discovery Lineage Schemas
+DiscoveryPreviewResponse:
+  type: object
+  description: "Preview of discovery configuration with lineage information"
+  properties:
+    success: { type: boolean, default: true }
+    requestId: { type: string }
+    data:
+      type: object
+      properties:
+        configHash:
+          type: string
+          description: "SHA-256 hash of normalized discovery configuration"
+          example: "5cf00a920956840d6bcbd68cf1da88d93d6840c09084016337dc3fd6536c0845"
+        totalCombinations:
+          type: integer
+          format: int64
+          description: "Total possible domain combinations for this pattern"
+        nextOffset:
+          type: integer
+          format: int64
+          description: "Next available offset (last_offset + 1). Generation will start here."
+        exhaustionWarning:
+          type: boolean
+          description: "True if nextOffset + typical batch would exceed totalCombinations"
+        priorCampaigns:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/DiscoveryLineageCampaign"
+      required: [configHash, totalCombinations, nextOffset]
+  required: [success, data]
+
+DiscoveryLineageResponse:
+  type: object
+  description: "Discovery lineage for an existing campaign"
+  properties:
+    success: { type: boolean, default: true }
+    requestId: { type: string }
+    data:
+      type: object
+      properties:
+        configHash:
+          type: string
+          description: "SHA-256 hash of discovery configuration"
+        thisCampaign:
+          type: object
+          properties:
+            offsetStart:
+              type: integer
+              format: int64
+              description: "First offset generated for this campaign"
+            offsetEnd:
+              type: integer
+              format: int64
+              description: "Last offset generated for this campaign"
+          required: [offsetStart, offsetEnd]
+        priorCampaigns:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/DiscoveryLineageCampaign"
+      required: [configHash, thisCampaign]
+  required: [success, data]
+
+DiscoveryLineageCampaign:
+  type: object
+  description: "Campaign in the discovery lineage with stats"
+  properties:
+    id:
+      type: string
+      format: uuid
+    name:
+      type: string
+    createdAt:
+      type: string
+      format: date-time
+    offsetRange:
+      type: object
+      properties:
+        start:
+          type: integer
+          format: int64
+        end:
+          type: integer
+          format: int64
+    stats:
+      type: object
+      properties:
+        domainsGenerated:
+          type: integer
+          format: int64
+        dnsValid:
+          type: integer
+          format: int64
+        keywordMatches:
+          type: integer
+          format: int64
+        leads:
+          type: integer
+          format: int64
+      required: [domainsGenerated, dnsValid, keywordMatches, leads]
+  required: [id, name, createdAt, stats]
 

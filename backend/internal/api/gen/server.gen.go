@@ -454,6 +454,17 @@ const (
 	PhaseProgressSummaryStatusRunning    PhaseProgressSummaryStatus = "running"
 )
 
+// Defines values for PhaseStatusEnum.
+const (
+	PhaseStatusEnumCompleted  PhaseStatusEnum = "completed"
+	PhaseStatusEnumConfigured PhaseStatusEnum = "configured"
+	PhaseStatusEnumFailed     PhaseStatusEnum = "failed"
+	PhaseStatusEnumInProgress PhaseStatusEnum = "in_progress"
+	PhaseStatusEnumNotStarted PhaseStatusEnum = "not_started"
+	PhaseStatusEnumPaused     PhaseStatusEnum = "paused"
+	PhaseStatusEnumReady      PhaseStatusEnum = "ready"
+)
+
 // Defines values for PhaseStatusResponsePhase.
 const (
 	PhaseStatusResponsePhaseAnalysis   PhaseStatusResponsePhase = "analysis"
@@ -531,10 +542,10 @@ const (
 
 // Defines values for CampaignsDomainsListParamsHttpStatus.
 const (
-	Error   CampaignsDomainsListParamsHttpStatus = "error"
-	Ok      CampaignsDomainsListParamsHttpStatus = "ok"
-	Pending CampaignsDomainsListParamsHttpStatus = "pending"
-	Timeout CampaignsDomainsListParamsHttpStatus = "timeout"
+	CampaignsDomainsListParamsHttpStatusError   CampaignsDomainsListParamsHttpStatus = "error"
+	CampaignsDomainsListParamsHttpStatusOk      CampaignsDomainsListParamsHttpStatus = "ok"
+	CampaignsDomainsListParamsHttpStatusPending CampaignsDomainsListParamsHttpStatus = "pending"
+	CampaignsDomainsListParamsHttpStatusTimeout CampaignsDomainsListParamsHttpStatus = "timeout"
 )
 
 // Defines values for CampaignsDomainsListParamsSort.
@@ -591,6 +602,13 @@ const (
 // Defines values for DbBulkStatsParamsXRequestedWith.
 const (
 	XMLHttpRequest DbBulkStatsParamsXRequestedWith = "XMLHttpRequest"
+)
+
+// Defines values for DiscoveryPreviewJSONBodyPatternType.
+const (
+	BothVariable   DiscoveryPreviewJSONBodyPatternType = "both_variable"
+	PrefixVariable DiscoveryPreviewJSONBodyPatternType = "prefix_variable"
+	SuffixVariable DiscoveryPreviewJSONBodyPatternType = "suffix_variable"
 )
 
 // AnalysisFailedEvent Analysis phase preflight or execution failed.
@@ -1597,6 +1615,61 @@ type DatabaseValue struct {
 	StringValue *string  `json:"stringValue,omitempty"`
 }
 
+// DiscoveryLineageCampaign Campaign in the discovery lineage with stats
+type DiscoveryLineageCampaign struct {
+	CreatedAt   time.Time          `json:"createdAt"`
+	Id          openapi_types.UUID `json:"id"`
+	Name        string             `json:"name"`
+	OffsetRange *struct {
+		End   *int64 `json:"end,omitempty"`
+		Start *int64 `json:"start,omitempty"`
+	} `json:"offsetRange,omitempty"`
+	Stats struct {
+		DnsValid         int64 `json:"dnsValid"`
+		DomainsGenerated int64 `json:"domainsGenerated"`
+		KeywordMatches   int64 `json:"keywordMatches"`
+		Leads            int64 `json:"leads"`
+	} `json:"stats"`
+}
+
+// DiscoveryLineageResponse Discovery lineage for an existing campaign
+type DiscoveryLineageResponse struct {
+	Data struct {
+		// ConfigHash SHA-256 hash of discovery configuration
+		ConfigHash     string                      `json:"configHash"`
+		PriorCampaigns *[]DiscoveryLineageCampaign `json:"priorCampaigns,omitempty"`
+		ThisCampaign   struct {
+			// OffsetEnd Last offset generated for this campaign
+			OffsetEnd int64 `json:"offsetEnd"`
+
+			// OffsetStart First offset generated for this campaign
+			OffsetStart int64 `json:"offsetStart"`
+		} `json:"thisCampaign"`
+	} `json:"data"`
+	RequestId *string `json:"requestId,omitempty"`
+	Success   bool    `json:"success"`
+}
+
+// DiscoveryPreviewResponse Preview of discovery configuration with lineage information
+type DiscoveryPreviewResponse struct {
+	Data struct {
+		// ConfigHash SHA-256 hash of normalized discovery configuration
+		ConfigHash string `json:"configHash"`
+
+		// ExhaustionWarning True if nextOffset + typical batch would exceed totalCombinations
+		ExhaustionWarning *bool `json:"exhaustionWarning,omitempty"`
+
+		// NextOffset Next available offset (last_offset + 1). Generation will start here.
+		NextOffset     int64                       `json:"nextOffset"`
+		PriorCampaigns *[]DiscoveryLineageCampaign `json:"priorCampaigns,omitempty"`
+
+		// TotalCombinations Total possible domain combinations for this pattern
+		TotalCombinations int64 `json:"totalCombinations"`
+	} `json:"data"`
+	RequestId *string `json:"requestId,omitempty"`
+	Success   bool    `json:"success"`
+}
+
 // DomainAnalysisFeatures Canonical nested analysis feature vector for a discovered domain.
 type DomainAnalysisFeatures struct {
 	Keywords *struct {
@@ -1635,6 +1708,9 @@ type DomainListItem struct {
 	DnsStatus *string `json:"dnsStatus,omitempty"`
 	Domain    *string `json:"domain,omitempty"`
 
+	// DomainScore Composite domain quality score (0-100) from Analysis & Scoring phase
+	DomainScore *float32 `json:"domainScore"`
+
 	// Features Canonical nested analysis feature vector for a discovered domain.
 	Features *DomainAnalysisFeatures `json:"features,omitempty"`
 
@@ -1644,6 +1720,9 @@ type DomainListItem struct {
 	// HttpStatus HTTP validation status (authoritative)
 	HttpStatus *string             `json:"httpStatus,omitempty"`
 	Id         *openapi_types.UUID `json:"id,omitempty"`
+
+	// LeadScore Lead qualification score from Lead Enrichment phase
+	LeadScore *float32 `json:"leadScore"`
 
 	// LeadStatus Lead extraction status if available
 	LeadStatus *string `json:"leadStatus,omitempty"`
@@ -2092,6 +2171,9 @@ type PhaseRuntimeControls struct {
 	CanResume  bool `json:"canResume"`
 	CanStop    bool `json:"canStop"`
 }
+
+// PhaseStatusEnum Phase lifecycle status (P3.2 expected_state precondition)
+type PhaseStatusEnum string
 
 // PhaseStatusResponse defines model for PhaseStatusResponse.
 type PhaseStatusResponse struct {
@@ -2583,6 +2665,49 @@ type CampaignsPhaseExecutionGetParamsPhaseType string
 // CampaignsPhaseExecutionPutParamsPhaseType defines parameters for CampaignsPhaseExecutionPut.
 type CampaignsPhaseExecutionPutParamsPhaseType string
 
+// CampaignsPhasePauseParams defines parameters for CampaignsPhasePause.
+type CampaignsPhasePauseParams struct {
+	// ExpectedState P3.2: Precondition check. If provided, pause only proceeds when current phase status matches.
+	// Returns 409 EXPECTED_STATE_MISMATCH if actual state differs.
+	ExpectedState *PhaseStatusEnum `form:"expected_state,omitempty" json:"expected_state,omitempty"`
+
+	// XIdempotencyKey P3.3: Unique key for duplicate request detection. If a request with this key was already
+	// processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+	XIdempotencyKey *string `json:"X-Idempotency-Key,omitempty"`
+}
+
+// CampaignsPhaseResumeParams defines parameters for CampaignsPhaseResume.
+type CampaignsPhaseResumeParams struct {
+	// ExpectedState P3.2: Precondition check. If provided, resume only proceeds when current phase status matches.
+	// Returns 409 EXPECTED_STATE_MISMATCH if actual state differs.
+	ExpectedState *PhaseStatusEnum `form:"expected_state,omitempty" json:"expected_state,omitempty"`
+
+	// XIdempotencyKey P3.3: Unique key for duplicate request detection. If a request with this key was already
+	// processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+	XIdempotencyKey *string `json:"X-Idempotency-Key,omitempty"`
+}
+
+// CampaignsPhaseStartParams defines parameters for CampaignsPhaseStart.
+type CampaignsPhaseStartParams struct {
+	// XIdempotencyKey P3.3: Unique key for duplicate request detection. If a request with this key was already
+	// processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+	XIdempotencyKey *string `json:"X-Idempotency-Key,omitempty"`
+}
+
+// CampaignsPhaseStopParams defines parameters for CampaignsPhaseStop.
+type CampaignsPhaseStopParams struct {
+	// XIdempotencyKey P3.3: Unique key for duplicate request detection. If a request with this key was already
+	// processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+	XIdempotencyKey *string `json:"X-Idempotency-Key,omitempty"`
+}
+
+// CampaignsStopParams defines parameters for CampaignsStop.
+type CampaignsStopParams struct {
+	// XIdempotencyKey P3.3: Unique key for duplicate request detection. If a request with this key was already
+	// processed within 5 minutes, the cached result is returned without emitting a new SSE sequence.
+	XIdempotencyKey *string `json:"X-Idempotency-Key,omitempty"`
+}
+
 // ConfigUpdateHttpJSONBody defines parameters for ConfigUpdateHttp.
 type ConfigUpdateHttpJSONBody = map[string]interface{}
 
@@ -2644,6 +2769,30 @@ type DebugNetworkLogIngestJSONBody struct {
 	// Url Absolute or relative request URL observed by the browser
 	Url string `json:"url"`
 }
+
+// DiscoveryPreviewJSONBody defines parameters for DiscoveryPreview.
+type DiscoveryPreviewJSONBody struct {
+	// CharacterSet Characters to use for variable portions
+	CharacterSet string `json:"characterSet"`
+
+	// ConstantString Fixed portion of the domain name
+	ConstantString *string `json:"constantString,omitempty"`
+
+	// PatternType Domain name generation pattern type
+	PatternType DiscoveryPreviewJSONBodyPatternType `json:"patternType"`
+
+	// PrefixVariableLength Length of variable prefix
+	PrefixVariableLength *int `json:"prefixVariableLength,omitempty"`
+
+	// SuffixVariableLength Length of variable suffix
+	SuffixVariableLength *int `json:"suffixVariableLength,omitempty"`
+
+	// Tld Top-level domain
+	Tld string `json:"tld"`
+}
+
+// DiscoveryPreviewJSONBodyPatternType defines parameters for DiscoveryPreview.
+type DiscoveryPreviewJSONBodyPatternType string
 
 // KeywordExtractStreamParams defines parameters for KeywordExtractStream.
 type KeywordExtractStreamParams struct {
@@ -2823,6 +2972,9 @@ type DbBulkStatsJSONRequestBody = BulkDatabaseStatsRequest
 
 // DebugNetworkLogIngestJSONRequestBody defines body for DebugNetworkLogIngest for application/json ContentType.
 type DebugNetworkLogIngestJSONRequestBody DebugNetworkLogIngestJSONBody
+
+// DiscoveryPreviewJSONRequestBody defines body for DiscoveryPreview for application/json ContentType.
+type DiscoveryPreviewJSONRequestBody DiscoveryPreviewJSONBody
 
 // KeywordExtractBatchJSONRequestBody defines body for KeywordExtractBatch for application/json ContentType.
 type KeywordExtractBatchJSONRequestBody = BatchKeywordExtractionRequest
@@ -3647,6 +3799,9 @@ type ServerInterface interface {
 	// List stored phase configurations for a campaign
 	// (GET /campaigns/{campaignId}/configs)
 	CampaignsPhaseConfigsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Get discovery lineage for a campaign
+	// (GET /campaigns/{campaignId}/discovery-lineage)
+	CampaignsDiscoveryLineage(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams)
@@ -3691,19 +3846,19 @@ type ServerInterface interface {
 	CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
 	// Pause campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/pause)
-	CampaignsPhasePause(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
+	CampaignsPhasePause(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhasePauseParams)
 	// Resume campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/resume)
-	CampaignsPhaseResume(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
+	CampaignsPhaseResume(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhaseResumeParams)
 	// Start campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/start)
-	CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
+	CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhaseStartParams)
 	// Get phase status
 	// (GET /campaigns/{campaignId}/phases/{phase}/status)
 	CampaignsPhaseStatus(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
 	// Stop campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/stop)
-	CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
+	CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhaseStopParams)
 	// Get campaign progress
 	// (GET /campaigns/{campaignId}/progress)
 	CampaignsProgress(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
@@ -3730,7 +3885,7 @@ type ServerInterface interface {
 	CampaignsStatusGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Stop the currently running campaign phase
 	// (POST /campaigns/{campaignId}/stop)
-	CampaignsStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	CampaignsStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsStopParams)
 	// Get authentication configuration
 	// (GET /config/auth)
 	ConfigGetAuthentication(w http.ResponseWriter, r *http.Request)
@@ -3797,6 +3952,9 @@ type ServerInterface interface {
 	// Ingest frontend network log entry
 	// (POST /debug/network-log)
 	DebugNetworkLogIngest(w http.ResponseWriter, r *http.Request)
+	// Preview discovery configuration
+	// (POST /discovery/preview)
+	DiscoveryPreview(w http.ResponseWriter, r *http.Request)
 	// Batch keyword extraction
 	// (POST /extract/keywords)
 	KeywordExtractBatch(w http.ResponseWriter, r *http.Request)
@@ -4136,6 +4294,12 @@ func (_ Unimplemented) CampaignsPhaseConfigsList(w http.ResponseWriter, r *http.
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// Get discovery lineage for a campaign
+// (GET /campaigns/{campaignId}/discovery-lineage)
+func (_ Unimplemented) CampaignsDiscoveryLineage(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // List generated domains for a campaign
 // (GET /campaigns/{campaignId}/domains)
 func (_ Unimplemented) CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams) {
@@ -4222,19 +4386,19 @@ func (_ Unimplemented) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Re
 
 // Pause campaign phase
 // (POST /campaigns/{campaignId}/phases/{phase}/pause)
-func (_ Unimplemented) CampaignsPhasePause(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
+func (_ Unimplemented) CampaignsPhasePause(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhasePauseParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Resume campaign phase
 // (POST /campaigns/{campaignId}/phases/{phase}/resume)
-func (_ Unimplemented) CampaignsPhaseResume(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
+func (_ Unimplemented) CampaignsPhaseResume(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhaseResumeParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Start campaign phase
 // (POST /campaigns/{campaignId}/phases/{phase}/start)
-func (_ Unimplemented) CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
+func (_ Unimplemented) CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhaseStartParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4246,7 +4410,7 @@ func (_ Unimplemented) CampaignsPhaseStatus(w http.ResponseWriter, r *http.Reque
 
 // Stop campaign phase
 // (POST /campaigns/{campaignId}/phases/{phase}/stop)
-func (_ Unimplemented) CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
+func (_ Unimplemented) CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhaseStopParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4300,7 +4464,7 @@ func (_ Unimplemented) CampaignsStatusGet(w http.ResponseWriter, r *http.Request
 
 // Stop the currently running campaign phase
 // (POST /campaigns/{campaignId}/stop)
-func (_ Unimplemented) CampaignsStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+func (_ Unimplemented) CampaignsStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsStopParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4433,6 +4597,12 @@ func (_ Unimplemented) DbBulkStats(w http.ResponseWriter, r *http.Request, param
 // Ingest frontend network log entry
 // (POST /debug/network-log)
 func (_ Unimplemented) DebugNetworkLogIngest(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Preview discovery configuration
+// (POST /discovery/preview)
+func (_ Unimplemented) DiscoveryPreview(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5386,6 +5556,37 @@ func (siw *ServerInterfaceWrapper) CampaignsPhaseConfigsList(w http.ResponseWrit
 	handler.ServeHTTP(w, r)
 }
 
+// CampaignsDiscoveryLineage operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsDiscoveryLineage(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsDiscoveryLineage(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CampaignsDomainsList operation middleware
 func (siw *ServerInterfaceWrapper) CampaignsDomainsList(w http.ResponseWriter, r *http.Request) {
 
@@ -6017,8 +6218,40 @@ func (siw *ServerInterfaceWrapper) CampaignsPhasePause(w http.ResponseWriter, r 
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CampaignsPhasePauseParams
+
+	// ------------- Optional query parameter "expected_state" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "expected_state", r.URL.Query(), &params.ExpectedState)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "expected_state", Err: err})
+		return
+	}
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Idempotency-Key")]; found {
+		var XIdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Idempotency-Key", valueList[0], &XIdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-Idempotency-Key", Err: err})
+			return
+		}
+
+		params.XIdempotencyKey = &XIdempotencyKey
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.CampaignsPhasePause(w, r, campaignId, phase)
+		siw.Handler.CampaignsPhasePause(w, r, campaignId, phase, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6057,8 +6290,40 @@ func (siw *ServerInterfaceWrapper) CampaignsPhaseResume(w http.ResponseWriter, r
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CampaignsPhaseResumeParams
+
+	// ------------- Optional query parameter "expected_state" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "expected_state", r.URL.Query(), &params.ExpectedState)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "expected_state", Err: err})
+		return
+	}
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Idempotency-Key")]; found {
+		var XIdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Idempotency-Key", valueList[0], &XIdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-Idempotency-Key", Err: err})
+			return
+		}
+
+		params.XIdempotencyKey = &XIdempotencyKey
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.CampaignsPhaseResume(w, r, campaignId, phase)
+		siw.Handler.CampaignsPhaseResume(w, r, campaignId, phase, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6097,8 +6362,32 @@ func (siw *ServerInterfaceWrapper) CampaignsPhaseStart(w http.ResponseWriter, r 
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CampaignsPhaseStartParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Idempotency-Key")]; found {
+		var XIdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Idempotency-Key", valueList[0], &XIdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-Idempotency-Key", Err: err})
+			return
+		}
+
+		params.XIdempotencyKey = &XIdempotencyKey
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.CampaignsPhaseStart(w, r, campaignId, phase)
+		siw.Handler.CampaignsPhaseStart(w, r, campaignId, phase, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6177,8 +6466,32 @@ func (siw *ServerInterfaceWrapper) CampaignsPhaseStop(w http.ResponseWriter, r *
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CampaignsPhaseStopParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Idempotency-Key")]; found {
+		var XIdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Idempotency-Key", valueList[0], &XIdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-Idempotency-Key", Err: err})
+			return
+		}
+
+		params.XIdempotencyKey = &XIdempotencyKey
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.CampaignsPhaseStop(w, r, campaignId, phase)
+		siw.Handler.CampaignsPhaseStop(w, r, campaignId, phase, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6456,8 +6769,32 @@ func (siw *ServerInterfaceWrapper) CampaignsStop(w http.ResponseWriter, r *http.
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CampaignsStopParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Idempotency-Key")]; found {
+		var XIdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Idempotency-Key", valueList[0], &XIdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-Idempotency-Key", Err: err})
+			return
+		}
+
+		params.XIdempotencyKey = &XIdempotencyKey
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.CampaignsStop(w, r, campaignId)
+		siw.Handler.CampaignsStop(w, r, campaignId, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6944,6 +7281,26 @@ func (siw *ServerInterfaceWrapper) DebugNetworkLogIngest(w http.ResponseWriter, 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DebugNetworkLogIngest(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DiscoveryPreview operation middleware
+func (siw *ServerInterfaceWrapper) DiscoveryPreview(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DiscoveryPreview(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -9072,6 +9429,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/configs", wrapper.CampaignsPhaseConfigsList)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/campaigns/{campaignId}/discovery-lineage", wrapper.CampaignsDiscoveryLineage)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/domains", wrapper.CampaignsDomainsList)
 	})
 	r.Group(func(r chi.Router) {
@@ -9220,6 +9580,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/debug/network-log", wrapper.DebugNetworkLogIngest)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/discovery/preview", wrapper.DiscoveryPreview)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/extract/keywords", wrapper.KeywordExtractBatch)
@@ -10608,6 +10971,52 @@ func (response CampaignsPhaseConfigsList500JSONResponse) VisitCampaignsPhaseConf
 	return json.NewEncoder(w).Encode(response)
 }
 
+type CampaignsDiscoveryLineageRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+}
+
+type CampaignsDiscoveryLineageResponseObject interface {
+	VisitCampaignsDiscoveryLineageResponse(w http.ResponseWriter) error
+}
+
+type CampaignsDiscoveryLineage200JSONResponse DiscoveryLineageResponse
+
+func (response CampaignsDiscoveryLineage200JSONResponse) VisitCampaignsDiscoveryLineageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDiscoveryLineage401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsDiscoveryLineage401JSONResponse) VisitCampaignsDiscoveryLineageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDiscoveryLineage404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsDiscoveryLineage404JSONResponse) VisitCampaignsDiscoveryLineageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDiscoveryLineage500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsDiscoveryLineage500JSONResponse) VisitCampaignsDiscoveryLineageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type CampaignsDomainsListRequestObject struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 	Params     CampaignsDomainsListParams
@@ -11218,6 +11627,7 @@ func (response CampaignsPhaseConfigure500JSONResponse) VisitCampaignsPhaseConfig
 type CampaignsPhasePauseRequestObject struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 	Phase      CampaignPhaseEnum  `json:"phase"`
+	Params     CampaignsPhasePauseParams
 }
 
 type CampaignsPhasePauseResponseObject interface {
@@ -11283,6 +11693,7 @@ func (response CampaignsPhasePause500JSONResponse) VisitCampaignsPhasePauseRespo
 type CampaignsPhaseResumeRequestObject struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 	Phase      CampaignPhaseEnum  `json:"phase"`
+	Params     CampaignsPhaseResumeParams
 }
 
 type CampaignsPhaseResumeResponseObject interface {
@@ -11348,6 +11759,7 @@ func (response CampaignsPhaseResume500JSONResponse) VisitCampaignsPhaseResumeRes
 type CampaignsPhaseStartRequestObject struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 	Phase      CampaignPhaseEnum  `json:"phase"`
+	Params     CampaignsPhaseStartParams
 }
 
 type CampaignsPhaseStartResponseObject interface {
@@ -11469,6 +11881,7 @@ func (response CampaignsPhaseStatus500JSONResponse) VisitCampaignsPhaseStatusRes
 type CampaignsPhaseStopRequestObject struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 	Phase      CampaignPhaseEnum  `json:"phase"`
+	Params     CampaignsPhaseStopParams
 }
 
 type CampaignsPhaseStopResponseObject interface {
@@ -11919,6 +12332,7 @@ func (response CampaignsStatusGet500JSONResponse) VisitCampaignsStatusGetRespons
 
 type CampaignsStopRequestObject struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
+	Params     CampaignsStopParams
 }
 
 type CampaignsStopResponseObject interface {
@@ -13467,6 +13881,52 @@ type DebugNetworkLogIngest500JSONResponse struct {
 }
 
 func (response DebugNetworkLogIngest500JSONResponse) VisitDebugNetworkLogIngestResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscoveryPreviewRequestObject struct {
+	Body *DiscoveryPreviewJSONRequestBody
+}
+
+type DiscoveryPreviewResponseObject interface {
+	VisitDiscoveryPreviewResponse(w http.ResponseWriter) error
+}
+
+type DiscoveryPreview200JSONResponse DiscoveryPreviewResponse
+
+func (response DiscoveryPreview200JSONResponse) VisitDiscoveryPreviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscoveryPreview400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response DiscoveryPreview400JSONResponse) VisitDiscoveryPreviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscoveryPreview401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response DiscoveryPreview401JSONResponse) VisitDiscoveryPreviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscoveryPreview500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response DiscoveryPreview500JSONResponse) VisitDiscoveryPreviewResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -17174,6 +17634,9 @@ type StrictServerInterface interface {
 	// List stored phase configurations for a campaign
 	// (GET /campaigns/{campaignId}/configs)
 	CampaignsPhaseConfigsList(ctx context.Context, request CampaignsPhaseConfigsListRequestObject) (CampaignsPhaseConfigsListResponseObject, error)
+	// Get discovery lineage for a campaign
+	// (GET /campaigns/{campaignId}/discovery-lineage)
+	CampaignsDiscoveryLineage(ctx context.Context, request CampaignsDiscoveryLineageRequestObject) (CampaignsDiscoveryLineageResponseObject, error)
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(ctx context.Context, request CampaignsDomainsListRequestObject) (CampaignsDomainsListResponseObject, error)
@@ -17324,6 +17787,9 @@ type StrictServerInterface interface {
 	// Ingest frontend network log entry
 	// (POST /debug/network-log)
 	DebugNetworkLogIngest(ctx context.Context, request DebugNetworkLogIngestRequestObject) (DebugNetworkLogIngestResponseObject, error)
+	// Preview discovery configuration
+	// (POST /discovery/preview)
+	DiscoveryPreview(ctx context.Context, request DiscoveryPreviewRequestObject) (DiscoveryPreviewResponseObject, error)
 	// Batch keyword extraction
 	// (POST /extract/keywords)
 	KeywordExtractBatch(ctx context.Context, request KeywordExtractBatchRequestObject) (KeywordExtractBatchResponseObject, error)
@@ -18171,6 +18637,32 @@ func (sh *strictHandler) CampaignsPhaseConfigsList(w http.ResponseWriter, r *htt
 	}
 }
 
+// CampaignsDiscoveryLineage operation middleware
+func (sh *strictHandler) CampaignsDiscoveryLineage(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsDiscoveryLineageRequestObject
+
+	request.CampaignId = campaignId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsDiscoveryLineage(ctx, request.(CampaignsDiscoveryLineageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsDiscoveryLineage")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsDiscoveryLineageResponseObject); ok {
+		if err := validResponse.VisitCampaignsDiscoveryLineageResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // CampaignsDomainsList operation middleware
 func (sh *strictHandler) CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams) {
 	var request CampaignsDomainsListRequestObject
@@ -18563,11 +19055,12 @@ func (sh *strictHandler) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.
 }
 
 // CampaignsPhasePause operation middleware
-func (sh *strictHandler) CampaignsPhasePause(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
+func (sh *strictHandler) CampaignsPhasePause(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhasePauseParams) {
 	var request CampaignsPhasePauseRequestObject
 
 	request.CampaignId = campaignId
 	request.Phase = phase
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.CampaignsPhasePause(ctx, request.(CampaignsPhasePauseRequestObject))
@@ -18590,11 +19083,12 @@ func (sh *strictHandler) CampaignsPhasePause(w http.ResponseWriter, r *http.Requ
 }
 
 // CampaignsPhaseResume operation middleware
-func (sh *strictHandler) CampaignsPhaseResume(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
+func (sh *strictHandler) CampaignsPhaseResume(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhaseResumeParams) {
 	var request CampaignsPhaseResumeRequestObject
 
 	request.CampaignId = campaignId
 	request.Phase = phase
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.CampaignsPhaseResume(ctx, request.(CampaignsPhaseResumeRequestObject))
@@ -18617,11 +19111,12 @@ func (sh *strictHandler) CampaignsPhaseResume(w http.ResponseWriter, r *http.Req
 }
 
 // CampaignsPhaseStart operation middleware
-func (sh *strictHandler) CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
+func (sh *strictHandler) CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhaseStartParams) {
 	var request CampaignsPhaseStartRequestObject
 
 	request.CampaignId = campaignId
 	request.Phase = phase
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.CampaignsPhaseStart(ctx, request.(CampaignsPhaseStartRequestObject))
@@ -18671,11 +19166,12 @@ func (sh *strictHandler) CampaignsPhaseStatus(w http.ResponseWriter, r *http.Req
 }
 
 // CampaignsPhaseStop operation middleware
-func (sh *strictHandler) CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
+func (sh *strictHandler) CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum, params CampaignsPhaseStopParams) {
 	var request CampaignsPhaseStopRequestObject
 
 	request.CampaignId = campaignId
 	request.Phase = phase
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.CampaignsPhaseStop(ctx, request.(CampaignsPhaseStopRequestObject))
@@ -18927,10 +19423,11 @@ func (sh *strictHandler) CampaignsStatusGet(w http.ResponseWriter, r *http.Reque
 }
 
 // CampaignsStop operation middleware
-func (sh *strictHandler) CampaignsStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+func (sh *strictHandler) CampaignsStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsStopParams) {
 	var request CampaignsStopRequestObject
 
 	request.CampaignId = campaignId
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.CampaignsStop(ctx, request.(CampaignsStopRequestObject))
@@ -19561,6 +20058,37 @@ func (sh *strictHandler) DebugNetworkLogIngest(w http.ResponseWriter, r *http.Re
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(DebugNetworkLogIngestResponseObject); ok {
 		if err := validResponse.VisitDebugNetworkLogIngestResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DiscoveryPreview operation middleware
+func (sh *strictHandler) DiscoveryPreview(w http.ResponseWriter, r *http.Request) {
+	var request DiscoveryPreviewRequestObject
+
+	var body DiscoveryPreviewJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DiscoveryPreview(ctx, request.(DiscoveryPreviewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DiscoveryPreview")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DiscoveryPreviewResponseObject); ok {
+		if err := validResponse.VisitDiscoveryPreviewResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

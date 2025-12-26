@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import type { WizardPatternStep } from '../../types';
+import { DiscoveryPreviewPanel } from './DiscoveryPreviewPanel';
 
 interface PatternStepProps {
   data: Partial<WizardPatternStep>;
@@ -355,8 +356,27 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
           <ul className="list-disc ml-5 space-y-0.5 text-xs">
             {preview.map((d, i) => <li key={i}>{d}</li>)}
           </ul>
+          {/* Preview semantics clarification (P0) */}
+          <p className="text-[10px] text-amber-600 dark:text-amber-400 italic mt-1">
+            Preview shows examples from the start of the pattern, not your actual start offset.
+          </p>
         </div>
       </div>
+
+      {/* Discovery Lineage Preview Panel - shows configHash, nextOffset, priorCampaigns */}
+      {!usingVariationsMode && (
+        <DiscoveryPreviewPanel
+          patternType={patternType}
+          constantString={data.constantString || data.basePattern}
+          prefixVariableLength={prefixVariableLength}
+          suffixVariableLength={suffixVariableLength}
+          characterSet={charsetUnique}
+          tld={(data.tlds?.[0]) || data.tld || '.com'}
+          enabled={uniqueSize > 0 && totalVariableLength > 0}
+          domainsRequested={maxDomains}
+          batchSize={data.batchSize || 100}
+        />
+      )}
     </div>
   );
 }

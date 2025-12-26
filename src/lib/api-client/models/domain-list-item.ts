@@ -105,6 +105,24 @@ export interface DomainListItem {
           string
     ;
   /**
+   * Composite domain quality score (0-100) from Analysis & Scoring phase
+   * @memberof DomainListItem
+   */
+  'domainScore'?: 
+        
+          
+          number
+    ;
+  /**
+   * Lead qualification score from Lead Enrichment phase
+   * @memberof DomainListItem
+   */
+  'leadScore'?: 
+        
+          
+          number
+    ;
+  /**
    * 
    * @memberof DomainListItem
    */

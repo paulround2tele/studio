@@ -200,7 +200,8 @@ func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.
 	                 started_at, completed_at, progress_percentage, total_items, processed_items,
 	                 successful_items, failed_items, metadata, error_message, business_status,
 	                 campaign_type, total_phases, completed_phases, overall_progress,
-	                 dns_results, http_results, analysis_results
+	                 dns_results, http_results, analysis_results,
+	                 discovery_config_hash, discovery_offset_start, discovery_offset_end
 	             FROM lead_generation_campaigns WHERE id = $1`
 	err := exec.GetContext(ctx, campaign, query, id)
 
@@ -2902,6 +2903,78 @@ func (s *campaignStorePostgres) GetLastLifecycleSequence(ctx context.Context, ex
 		return 0, fmt.Errorf("GetLastLifecycleSequence failed: %w", err)
 	}
 	return seqNum, nil
+}
+
+// UpdateCampaignDiscoveryLineage sets the discovery config hash and offset range for a campaign.
+// This is called after domain generation completes to record the lineage information.
+func (s *campaignStorePostgres) UpdateCampaignDiscoveryLineage(ctx context.Context, exec store.Querier, campaignID uuid.UUID, configHash string, offsetStart, offsetEnd int64) error {
+	if exec == nil {
+		exec = s.db
+	}
+
+	query := `UPDATE lead_generation_campaigns 
+	          SET discovery_config_hash = $2, 
+	              discovery_offset_start = $3, 
+	              discovery_offset_end = $4,
+	              updated_at = NOW()
+	          WHERE id = $1`
+	result, err := exec.ExecContext(ctx, query, campaignID, configHash, offsetStart, offsetEnd)
+	if err != nil {
+		return fmt.Errorf("UpdateCampaignDiscoveryLineage failed: %w", err)
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return store.ErrNotFound
+	}
+	return nil
+}
+
+// GetDiscoveryLineage returns prior campaigns sharing the same discovery config hash with aggregated stats.
+// If excludeCampaignID is provided, that campaign is excluded from results.
+// If userID is provided, only campaigns accessible by that user are returned (auth scope).
+// Results are ordered by created_at DESC and limited to the specified count.
+func (s *campaignStorePostgres) GetDiscoveryLineage(ctx context.Context, exec store.Querier, configHash string, excludeCampaignID *uuid.UUID, userID *string, limit int) ([]*store.DiscoveryLineageCampaign, error) {
+	if exec == nil {
+		exec = s.db
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	// Query campaigns with the same config hash and aggregate domain stats
+	// Auth scope: filter by user_id if provided
+	query := `
+		SELECT 
+			c.id,
+			c.name,
+			c.created_at,
+			c.discovery_offset_start,
+			c.discovery_offset_end,
+			COALESCE(stats.domains_count, 0) as domains_count,
+			COALESCE(stats.dns_valid_count, 0) as dns_valid_count,
+			COALESCE(stats.keyword_matches, 0) as keyword_matches,
+			COALESCE(stats.lead_count, 0) as lead_count
+		FROM lead_generation_campaigns c
+		LEFT JOIN LATERAL (
+			SELECT 
+				COUNT(*) as domains_count,
+				COUNT(*) FILTER (WHERE dns_status = 'ok') as dns_valid_count,
+				COUNT(*) FILTER (WHERE http_keywords IS NOT NULL AND http_keywords != '' AND http_keywords != '[]') as keyword_matches,
+				COUNT(*) FILTER (WHERE lead_score > 0) as lead_count
+			FROM generated_domains
+			WHERE campaign_id = c.id
+		) stats ON true
+		WHERE c.discovery_config_hash = $1
+		  AND ($2::uuid IS NULL OR c.id != $2)
+		  AND ($4::varchar IS NULL OR c.user_id::text = $4)
+		ORDER BY c.created_at DESC
+		LIMIT $3`
+
+	var campaigns []*store.DiscoveryLineageCampaign
+	err := exec.SelectContext(ctx, &campaigns, query, configHash, excludeCampaignID, limit, userID)
+	if err != nil {
+		return nil, fmt.Errorf("GetDiscoveryLineage failed: %w", err)
+	}
+	return campaigns, nil
 }
 
 var _ store.CampaignStore = (*campaignStorePostgres)(nil)

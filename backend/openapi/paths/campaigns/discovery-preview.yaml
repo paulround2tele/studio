@@ -1,0 +1,62 @@
+post:
+  tags: [campaigns]
+  summary: Preview discovery configuration
+  description: |
+    Previews a discovery configuration before campaign creation.
+    Returns the config hash, next available offset, total combinations,
+    and prior campaigns that share this configuration.
+    
+    Use this endpoint to understand:
+    - Where generation will start (next_offset)
+    - How many combinations remain for this pattern
+    - Historical yield from campaigns using the same pattern
+  operationId: discovery_preview
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - patternType
+            - characterSet
+            - tld
+          properties:
+            patternType:
+              type: string
+              enum: [prefix_variable, suffix_variable, both_variable]
+              description: Domain name generation pattern type
+            constantString:
+              type: string
+              description: Fixed portion of the domain name
+              example: "telecom"
+            prefixVariableLength:
+              type: integer
+              minimum: 0
+              maximum: 10
+              default: 0
+              description: Length of variable prefix
+            suffixVariableLength:
+              type: integer
+              minimum: 0
+              maximum: 10
+              default: 0
+              description: Length of variable suffix
+            characterSet:
+              type: string
+              description: Characters to use for variable portions
+              example: "abcdefghijklmnopqrstuvwxyz"
+            tld:
+              type: string
+              description: Top-level domain
+              example: ".com"
+  responses:
+    '200':
+      description: Discovery configuration preview
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/all.yaml#/DiscoveryPreviewResponse'
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

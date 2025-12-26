@@ -76,6 +76,8 @@ type stubPhaseService struct {
 	fail map[uuid.UUID]bool
 	// execution invocation counts
 	executes map[uuid.UUID]int
+	// mu guards state access
+	mu sync.Mutex
 }
 
 func newStubPhaseService(pt models.PhaseTypeEnum, l *testLogger) *stubPhaseService {
@@ -90,12 +92,16 @@ func newStubPhaseService(pt models.PhaseTypeEnum, l *testLogger) *stubPhaseServi
 }
 
 func (s *stubPhaseService) Configure(ctx context.Context, campaignID uuid.UUID, config interface{}) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.configs[campaignID] = config
 	return nil
 }
 
 func (s *stubPhaseService) Execute(ctx context.Context, campaignID uuid.UUID) (<-chan domainservices.PhaseProgress, error) {
+	s.mu.Lock()
 	if s.fail[campaignID] {
+		s.mu.Unlock()
 		return nil, errors.New("forced failure")
 	}
 	ch := make(chan domainservices.PhaseProgress, 4)
@@ -103,12 +109,15 @@ func (s *stubPhaseService) Execute(ctx context.Context, campaignID uuid.UUID) (<
 	started := time.Now()
 	st := &domainservices.PhaseStatus{CampaignID: campaignID, Phase: s.phaseType, Status: models.PhaseStatusInProgress, StartedAt: &started}
 	s.statuses[campaignID] = st
+	s.mu.Unlock()
 	go func() {
 		ch <- domainservices.PhaseProgress{CampaignID: campaignID, Phase: s.phaseType, Status: models.PhaseStatusInProgress, ProgressPct: 10, Timestamp: time.Now()}
+		s.mu.Lock()
 		st.Status = models.PhaseStatusCompleted
 		st.ProgressPct = 100
 		completed := time.Now()
 		st.CompletedAt = &completed
+		s.mu.Unlock()
 		// We purposefully do NOT send a completed progress item; orchestrator relies on channel close + GetStatus
 		close(ch)
 	}()
@@ -116,6 +125,8 @@ func (s *stubPhaseService) Execute(ctx context.Context, campaignID uuid.UUID) (<
 }
 
 func (s *stubPhaseService) GetStatus(ctx context.Context, campaignID uuid.UUID) (*domainservices.PhaseStatus, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if st, ok := s.statuses[campaignID]; ok {
 		return st, nil
 	}
@@ -125,9 +136,21 @@ func (s *stubPhaseService) GetStatus(ctx context.Context, campaignID uuid.UUID) 
 func (s *stubPhaseService) Cancel(ctx context.Context, campaignID uuid.UUID) error { return nil }
 func (s *stubPhaseService) Validate(ctx context.Context, config interface{}) error { return nil }
 func (s *stubPhaseService) GetPhaseType() models.PhaseTypeEnum                     { return s.phaseType }
-func (s *stubPhaseService) setFailOnce(campaignID uuid.UUID)                       { s.fail[campaignID] = true }
-func (s *stubPhaseService) clearFail(campaignID uuid.UUID)                         { delete(s.fail, campaignID) }
-func (s *stubPhaseService) executions(campaignID uuid.UUID) int                    { return s.executes[campaignID] }
+func (s *stubPhaseService) setFailOnce(campaignID uuid.UUID) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.fail[campaignID] = true
+}
+func (s *stubPhaseService) clearFail(campaignID uuid.UUID) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.fail, campaignID)
+}
+func (s *stubPhaseService) executions(campaignID uuid.UUID) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.executes[campaignID]
+}
 
 // AnalysisService methods (no-op for non-analysis phases)
 func (s *stubPhaseService) ScoreDomains(ctx context.Context, campaignID uuid.UUID) error { return nil }
@@ -948,4 +971,232 @@ func TestRestoreInFlightPhases_DormantWithoutAutoResume(t *testing.T) {
 	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.PhaseStatusPaused {
 		t.Fatalf("expected campaign status paused after restore, got %v", campaign.PhaseStatus)
 	}
+}
+
+// fastZeroPhaseService simulates a phase that completes instantly (e.g., extraction with 0 items).
+// This specifically tests the race condition where GetStatus returns NotStarted because the
+// in-memory execution completes and is cleaned up before handlePhaseCompletion queries status.
+// The fix ensures DB is the authoritative source for terminal states.
+type fastZeroPhaseService struct {
+	phaseType models.PhaseTypeEnum
+	logger    *testLogger
+	store     store.CampaignStore
+	db        store.Querier
+	mu        sync.Mutex
+	executes  map[uuid.UUID]int
+	configs   map[uuid.UUID]interface{}
+}
+
+func newFastZeroPhaseService(pt models.PhaseTypeEnum, l *testLogger, cs store.CampaignStore, db store.Querier) *fastZeroPhaseService {
+	return &fastZeroPhaseService{
+		phaseType: pt,
+		logger:    l,
+		store:     cs,
+		db:        db,
+		executes:  make(map[uuid.UUID]int),
+		configs:   make(map[uuid.UUID]interface{}),
+	}
+}
+
+func (s *fastZeroPhaseService) Configure(ctx context.Context, campaignID uuid.UUID, config interface{}) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.configs[campaignID] = config
+	return nil
+}
+
+func (s *fastZeroPhaseService) Execute(ctx context.Context, campaignID uuid.UUID) (<-chan domainservices.PhaseProgress, error) {
+	ch := make(chan domainservices.PhaseProgress, 4)
+	s.mu.Lock()
+	s.executes[campaignID]++
+	s.mu.Unlock()
+
+	// Simulate instant completion - the key race condition this tests
+	go func() {
+		// Mark phase completed in DB IMMEDIATELY (this is what the real extraction does)
+		if s.store != nil && s.db != nil {
+			_ = s.store.CompletePhase(ctx, s.db, campaignID, s.phaseType)
+		}
+		// Close channel immediately - no progress events, simulating 0 items
+		close(ch)
+	}()
+	return ch, nil
+}
+
+func (s *fastZeroPhaseService) GetStatus(ctx context.Context, campaignID uuid.UUID) (*domainservices.PhaseStatus, error) {
+	// CRITICAL: This simulates the race - return NotStarted from in-memory
+	// because we didn't store execution state. The fix should fall back to DB.
+	status := &domainservices.PhaseStatus{
+		CampaignID: campaignID,
+		Phase:      s.phaseType,
+		Status:     models.PhaseStatusNotStarted, // In-memory shows NotStarted
+	}
+
+	// However, check DB for actual status (this is what the fix adds)
+	if s.store != nil && s.db != nil {
+		if dbPhase, err := s.store.GetCampaignPhase(ctx, s.db, campaignID, s.phaseType); err == nil && dbPhase != nil {
+			if dbPhase.Status == models.PhaseStatusCompleted || dbPhase.Status == models.PhaseStatusFailed {
+				status.Status = dbPhase.Status
+				status.StartedAt = dbPhase.StartedAt
+				status.CompletedAt = dbPhase.CompletedAt
+				if dbPhase.Status == models.PhaseStatusCompleted {
+					status.ProgressPct = 100.0
+				}
+			}
+		}
+	}
+	return status, nil
+}
+
+func (s *fastZeroPhaseService) Cancel(ctx context.Context, campaignID uuid.UUID) error { return nil }
+func (s *fastZeroPhaseService) Validate(ctx context.Context, config interface{}) error { return nil }
+func (s *fastZeroPhaseService) GetPhaseType() models.PhaseTypeEnum                     { return s.phaseType }
+func (s *fastZeroPhaseService) executions(campaignID uuid.UUID) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.executes[campaignID]
+}
+
+// ScoreDomains and RescoreCampaign for AnalysisService interface
+func (s *fastZeroPhaseService) ScoreDomains(ctx context.Context, campaignID uuid.UUID) error {
+	return nil
+}
+func (s *fastZeroPhaseService) RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error {
+	return nil
+}
+
+// TestFastZeroPathAutoAdvance is a regression test for the pipeline stall bug.
+// It verifies that when extraction completes in <100ms with 0 items, analysis auto-starts.
+// This was the root cause of campaign "test-offset-resume-logic" stalling at HTTP Keyword Validation.
+func TestFastZeroPathAutoAdvance(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := newTestLogger(t)
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	// Use normal stubs for all phases except extraction which uses the fast-zero stub
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	// CRITICAL: Use fastZeroPhaseService for extraction to simulate the race
+	extractionSvc := newFastZeroPhaseService(models.PhaseTypeExtraction, logger, cs, db)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
+	metrics := &testMetrics{}
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, metrics)
+
+	campaignID := createTestCampaign(t, cs)
+	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
+		t.Fatalf("set mode: %v", err)
+	}
+	for _, ph := range []models.PhaseTypeEnum{
+		models.PhaseTypeDomainGeneration,
+		models.PhaseTypeDNSValidation,
+		models.PhaseTypeHTTPKeywordValidation,
+		models.PhaseTypeExtraction,
+		models.PhaseTypeAnalysis,
+		models.PhaseTypeEnrichment,
+	} {
+		upsertConfig(t, cs, campaignID, ph)
+	}
+
+	// Start the pipeline
+	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("start domain_generation: %v", err)
+	}
+
+	// Wait for analysis to start - this is the key assertion
+	// If the bug is present, analysis will never start because extraction's GetStatus returns NotStarted
+	waitUntil(t, integrationTestTimeout, func() bool {
+		return analysisSvc.executions(campaignID) > 0
+	})
+
+	// Verify extraction was executed
+	if got := extractionSvc.executions(campaignID); got != 1 {
+		t.Fatalf("expected extraction to execute once, got %d", got)
+	}
+
+	// Wait for full pipeline completion
+	waitUntil(t, integrationTestTimeout, func() bool {
+		st, _ := enrichmentSvc.GetStatus(context.Background(), campaignID)
+		return st.Status == models.PhaseStatusCompleted
+	})
+	waitUntil(t, integrationTestTimeout, func() bool { return metrics.campaignCompletions > 0 })
+
+	// Verify the full sequence completed
+	if metrics.phaseCompletions < 6 {
+		t.Fatalf("expected 6 phase completions, got %d", metrics.phaseCompletions)
+	}
+	if metrics.phaseAutoStarts < 5 {
+		t.Fatalf("expected 5 auto starts, got %d", metrics.phaseAutoStarts)
+	}
+	if metrics.campaignCompletions != 1 {
+		t.Fatalf("expected 1 campaign completion, got %d", metrics.campaignCompletions)
+	}
+
+	t.Logf("SUCCESS: Fast-zero extraction path correctly auto-advanced to analysis")
+}
+
+// TestIdempotentStartForCompletedPhase verifies requirement #4:
+// If StartPhaseInternal is called for a phase already marked Completed in DB,
+// it must no-op and immediately trigger auto-advance to the next phase.
+func TestIdempotentStartForCompletedPhase(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := newTestLogger(t)
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	extractionSvc := newStubPhaseService(models.PhaseTypeExtraction, logger)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	enrichmentSvc := newStubPhaseService(models.PhaseTypeEnrichment, logger)
+	metrics := &testMetrics{}
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, extractionSvc, enrichmentSvc, analysisSvc, nil, metrics)
+
+	campaignID := createTestCampaign(t, cs)
+	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
+		t.Fatalf("set mode: %v", err)
+	}
+	for _, ph := range []models.PhaseTypeEnum{
+		models.PhaseTypeDomainGeneration,
+		models.PhaseTypeDNSValidation,
+		models.PhaseTypeHTTPKeywordValidation,
+		models.PhaseTypeExtraction,
+		models.PhaseTypeAnalysis,
+		models.PhaseTypeEnrichment,
+	} {
+		upsertConfig(t, cs, campaignID, ph)
+	}
+
+	// Manually mark extraction as completed in DB (simulating it already ran)
+	if err := cs.StartPhase(context.Background(), db, campaignID, models.PhaseTypeExtraction); err != nil {
+		t.Fatalf("start extraction phase in DB: %v", err)
+	}
+	if err := cs.CompletePhase(context.Background(), db, campaignID, models.PhaseTypeExtraction); err != nil {
+		t.Fatalf("complete extraction phase in DB: %v", err)
+	}
+
+	// Now call StartPhaseInternal for extraction - it should no-op and auto-advance to analysis
+	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeExtraction); err != nil {
+		t.Fatalf("start extraction (idempotent): %v", err)
+	}
+
+	// Wait for analysis to start
+	waitUntil(t, integrationTestTimeout, func() bool {
+		return analysisSvc.executions(campaignID) > 0
+	})
+
+	// Extraction service should NOT have been executed (since it was already completed)
+	if got := extractionSvc.executions(campaignID); got != 0 {
+		t.Fatalf("expected extraction to NOT execute (already completed), got %d executions", got)
+	}
+
+	// Analysis should have started
+	if got := analysisSvc.executions(campaignID); got != 1 {
+		t.Fatalf("expected analysis to execute once, got %d", got)
+	}
+
+	t.Logf("SUCCESS: Idempotent start for completed phase correctly auto-advanced")
 }

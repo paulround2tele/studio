@@ -385,6 +385,11 @@ type LeadGenerationCampaign struct {
 	// State management fields (new in refactor)
 	StateVersion *int32           `db:"state_version" json:"stateVersion,omitempty"`
 	StateData    *json.RawMessage `db:"state_data" json:"stateData,omitempty"`
+
+	// Discovery lineage tracking (for config fingerprint and offset range transparency)
+	DiscoveryConfigHash  *string `db:"discovery_config_hash" json:"discoveryConfigHash,omitempty"`
+	DiscoveryOffsetStart *int64  `db:"discovery_offset_start" json:"discoveryOffsetStart,omitempty"`
+	DiscoveryOffsetEnd   *int64  `db:"discovery_offset_end" json:"discoveryOffsetEnd,omitempty"`
 }
 
 // ======================================================================

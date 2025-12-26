@@ -63,26 +63,107 @@ func (s *extractionPhaseService) GetStatus(ctx context.Context, campaignID uuid.
 			"runtime_controls": s.Capabilities(),
 		},
 	}
-	if s.batchSvc == nil {
+
+	// REQUIREMENT #1: DB is the SOURCE OF TRUTH for terminal states.
+	// In-memory execution state is only an optimization for progress tracking.
+	// For completion decisions, DB status MUST dominate.
+
+	// Step 1: First check database - this is authoritative for terminal states
+	var dbStatus models.PhaseStatusEnum
+	var dbPhase *models.CampaignPhase
+	hasDBStatus := false
+	if s.store != nil && s.deps.DB != nil {
+		if querier, ok := s.deps.DB.(store.Querier); ok {
+			var err error
+			dbPhase, err = s.store.GetCampaignPhase(ctx, querier, campaignID, models.PhaseTypeExtraction)
+			if err == nil && dbPhase != nil {
+				dbStatus = dbPhase.Status
+				hasDBStatus = true
+			}
+		}
+	}
+
+	// Step 2: If DB says Completed/Failed, that's final - don't trust in-memory
+	if hasDBStatus && (dbStatus == models.PhaseStatusCompleted || dbStatus == models.PhaseStatusFailed) {
+		status.Status = dbStatus
+		if dbPhase.StartedAt != nil {
+			status.StartedAt = dbPhase.StartedAt
+		}
+		if dbPhase.CompletedAt != nil {
+			status.CompletedAt = dbPhase.CompletedAt
+		}
+		if dbStatus == models.PhaseStatusCompleted {
+			status.ProgressPct = 100.0
+		}
+		if s.deps.Logger != nil {
+			s.deps.Logger.Debug(ctx, "extraction.GetStatus.db_authoritative", map[string]interface{}{
+				"campaign_id": campaignID,
+				"db_status":   string(dbStatus),
+			})
+		}
 		return status, nil
 	}
 
-	s.batchSvc.mu.RLock()
-	if exec, ok := s.batchSvc.executions[campaignID]; ok && exec != nil {
-		status.Status = exec.Status
-		status.ProgressPct = exec.Progress
-		status.ItemsTotal = int64(exec.ItemsTotal)
-		status.ItemsProcessed = int64(exec.ItemsProcessed)
-		if !exec.StartedAt.IsZero() {
-			started := exec.StartedAt
-			status.StartedAt = &started
+	// Step 3: For non-terminal states, in-memory provides progress details
+	foundInMemory := false
+	if s.batchSvc != nil {
+		s.batchSvc.mu.RLock()
+		exec, ok := s.batchSvc.executions[campaignID]
+		if ok && exec != nil {
+			status.Status = exec.Status
+			status.ProgressPct = exec.Progress
+			status.ItemsTotal = int64(exec.ItemsTotal)
+			status.ItemsProcessed = int64(exec.ItemsProcessed)
+			if !exec.StartedAt.IsZero() {
+				started := exec.StartedAt
+				status.StartedAt = &started
+			}
+			if exec.CompletedAt != nil {
+				status.CompletedAt = exec.CompletedAt
+			}
+			status.LastError = exec.LastError
+			foundInMemory = true
+			if s.deps.Logger != nil {
+				s.deps.Logger.Debug(ctx, "extraction.GetStatus.in_memory", map[string]interface{}{
+					"campaign_id":      campaignID,
+					"exec_status":      string(exec.Status),
+					"exec_items_total": exec.ItemsTotal,
+				})
+			}
 		}
-		if exec.CompletedAt != nil {
-			status.CompletedAt = exec.CompletedAt
-		}
-		status.LastError = exec.LastError
+		s.batchSvc.mu.RUnlock()
 	}
-	s.batchSvc.mu.RUnlock()
+
+	// Step 4: If in-memory not found or NotStarted, use DB as fallback
+	if !foundInMemory || status.Status == models.PhaseStatusNotStarted {
+		if hasDBStatus && dbStatus != status.Status {
+			if s.deps.Logger != nil {
+				s.deps.Logger.Info(ctx, "extraction.GetStatus.db_fallback", map[string]interface{}{
+					"campaign_id":      campaignID,
+					"in_memory_status": string(status.Status),
+					"db_status":        string(dbStatus),
+					"found_in_memory":  foundInMemory,
+				})
+			}
+			status.Status = dbStatus
+			if dbPhase != nil {
+				if dbPhase.StartedAt != nil {
+					status.StartedAt = dbPhase.StartedAt
+				}
+				if dbPhase.CompletedAt != nil {
+					status.CompletedAt = dbPhase.CompletedAt
+				}
+			}
+			if status.Status == models.PhaseStatusCompleted {
+				status.ProgressPct = 100.0
+			}
+		} else if !hasDBStatus && !foundInMemory && s.deps.Logger != nil {
+			s.deps.Logger.Warn(ctx, "extraction.GetStatus.no_state_found", map[string]interface{}{
+				"campaign_id": campaignID,
+				"reason":      "neither_db_nor_memory_has_status",
+			})
+		}
+	}
 
 	return status, nil
 }

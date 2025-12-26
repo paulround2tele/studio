@@ -1,10 +1,11 @@
 import React from 'react';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 import { cn } from '@/lib/utils';
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import type { CampaignDomainsListResponseAggregatesLead } from '@/lib/api-client/models/campaign-domains-list-response-aggregates-lead';
+import { DomainDetailDrawer } from './DomainDetailDrawer';
 
 const STATUS_ORDER = ['match', 'pending', 'noMatch', 'error', 'timeout'] as const;
 type LeadStatusKey = typeof STATUS_ORDER[number];
@@ -81,7 +82,7 @@ function deriveCounts(domains: DomainListItem[], aggregates?: CampaignDomainsLis
   };
 }
 
-function formatRelativeTime(value?: string | null): string {
+function _formatRelativeTime(value?: string | null): string {
   if (!value) return 'N/A';
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
@@ -119,7 +120,12 @@ interface LeadResultsPanelProps {
   loadedCount?: number;
   canLoadMore?: boolean;
   onLoadMore?: () => void;
+  /** Campaign ID required for score breakdown drawer */
+  campaignId?: string;
 }
+
+type SortField = 'domainScore' | 'richness' | 'createdAt' | null;
+type SortDir = 'asc' | 'desc';
 
 export function LeadResultsPanel({
   domains = [],
@@ -130,43 +136,88 @@ export function LeadResultsPanel({
   totalAvailable,
   loadedCount,
   canLoadMore = false,
-  onLoadMore
+  onLoadMore,
+  campaignId,
 }: LeadResultsPanelProps) {
   const domainList = React.useMemo(() => (Array.isArray(domains) ? domains : []), [domains]);
   const counts = React.useMemo(() => deriveCounts(domainList, aggregates), [domainList, aggregates]);
   const totalTracked = React.useMemo(() => STATUS_ORDER.reduce((sum, key) => sum + counts[key], 0), [counts]);
   const [rowLimit, setRowLimit] = React.useState(TABLE_ROW_LIMIT);
+  const [sortField, setSortField] = React.useState<SortField>('domainScore');
+  const [sortDir, setSortDir] = React.useState<SortDir>('desc');
+  const [selectedDomain, setSelectedDomain] = React.useState<DomainListItem | null>(null);
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   const leadMatches = React.useMemo(
     () =>
-      domainList
-        .filter((domain) => normalizeLeadStatus(domain.leadStatus) === 'match')
-        .sort((a, b) => getRichnessScore(b) - getRichnessScore(a)),
+      domainList.filter((domain) => normalizeLeadStatus(domain.leadStatus) === 'match'),
     [domainList]
   );
 
   const validatedFallback = React.useMemo(
     () =>
-      domainList
-        .filter((domain) => {
-          const status = normalizeLeadStatus(domain.leadStatus);
-          if (status === 'match') return false;
-          const httpOk = (domain.httpStatus ?? '').toLowerCase() === 'ok';
-          const dnsOk = (domain.dnsStatus ?? '').toLowerCase() === 'ok';
-          return httpOk || dnsOk;
-        })
-        .sort((a, b) => getRichnessScore(b) - getRichnessScore(a)),
+      domainList.filter((domain) => {
+        const status = normalizeLeadStatus(domain.leadStatus);
+        if (status === 'match') return false;
+        const httpOk = (domain.httpStatus ?? '').toLowerCase() === 'ok';
+        const dnsOk = (domain.dnsStatus ?? '').toLowerCase() === 'ok';
+        return httpOk || dnsOk;
+      }),
     [domainList]
   );
 
   const prioritizedKey = leadMatches.length > 0 ? 'match' : 'validated';
   const prioritizedSource = leadMatches.length > 0 ? leadMatches : validatedFallback;
 
+  // Apply sorting to prioritized source
+  const sortedSource = React.useMemo(() => {
+    if (!sortField) return prioritizedSource;
+
+    return [...prioritizedSource].sort((a, b) => {
+      let aVal: number;
+      let bVal: number;
+
+      switch (sortField) {
+        case 'domainScore':
+          aVal = a.domainScore ?? 0;
+          bVal = b.domainScore ?? 0;
+          break;
+        case 'richness':
+          aVal = getRichnessScore(a);
+          bVal = getRichnessScore(b);
+          break;
+        case 'createdAt':
+          aVal = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          bVal = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      const diff = aVal - bVal;
+      return sortDir === 'asc' ? diff : -diff;
+    });
+  }, [prioritizedSource, sortField, sortDir]);
+
   React.useEffect(() => {
     setRowLimit(TABLE_ROW_LIMIT);
   }, [prioritizedKey, domainList.length]);
 
-  const rows = React.useMemo(() => prioritizedSource.slice(0, rowLimit), [prioritizedSource, rowLimit]);
+  const rows = React.useMemo(() => sortedSource.slice(0, rowLimit), [sortedSource, rowLimit]);
+
+  const handleSort = React.useCallback((field: SortField) => {
+    if (sortField === field) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir('desc');
+    }
+  }, [sortField]);
+
+  const handleRowClick = React.useCallback((domain: DomainListItem) => {
+    setSelectedDomain(domain);
+    setDrawerOpen(true);
+  }, []);
 
   const showingFallback = leadMatches.length === 0 && validatedFallback.length > 0;
   const hasAnyRows = rows.length > 0;
@@ -234,35 +285,69 @@ export function LeadResultsPanel({
               <thead className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 <tr className="border-b border-gray-200 dark:border-gray-800">
                   <th scope="col" className="py-2 pr-3 text-left font-medium">Domain</th>
+                  <th 
+                    scope="col" 
+                    className="py-2 pr-3 text-left font-medium cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+                    onClick={() => handleSort('domainScore')}
+                    role="columnheader"
+                    aria-sort={sortField === 'domainScore' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      Score
+                      {sortField === 'domainScore' && (
+                        sortDir === 'desc' ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />
+                      )}
+                    </span>
+                  </th>
                   <th scope="col" className="py-2 pr-3 text-left font-medium">Keywords</th>
-                  <th scope="col" className="py-2 pr-3 text-left font-medium">Validation</th>
                   <th scope="col" className="py-2 pr-3 text-left font-medium">Lead Status</th>
-                  <th scope="col" className="py-2 text-left font-medium">Last Seen</th>
+                  <th scope="col" className="py-2 text-left font-medium">Validation</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {rows.map((domain) => {
                   const statusKey = normalizeLeadStatus(domain.leadStatus);
                   const keywords = getKeywordPreview(domain);
-                  const richness = getRichnessScore(domain);
+                  const domainScore = domain.domainScore;
                   const dnsStatus = formatStatus(domain.dnsStatus);
                   const httpStatus = formatStatus(domain.httpStatus);
-                  const lastSeen = domain.createdAt;
                   const rowKey = domain.id || domain.domain || `${domain.offset ?? 'row'}`;
 
+                  // Score color coding
+                  const scoreColor = domainScore !== undefined && domainScore !== null
+                    ? domainScore >= 80
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : domainScore >= 50
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                    : 'text-gray-400 dark:text-gray-500';
+
                   return (
-                    <tr key={rowKey} className="bg-white/60 transition hover:bg-gray-50 dark:bg-gray-900/20 dark:hover:bg-gray-900/40">
+                    <tr 
+                      key={rowKey} 
+                      className="bg-white/60 transition hover:bg-blue-50 dark:bg-gray-900/20 dark:hover:bg-blue-900/20 cursor-pointer"
+                      onClick={() => handleRowClick(domain)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleRowClick(domain);
+                        }
+                      }}
+                      aria-label={`View details for ${domain.domain ?? 'domain'}`}
+                    >
                       <td className="py-3 pr-3 align-top">
-                        <div className="flex flex-col gap-1">
-                          <span className="font-medium text-gray-900 dark:text-gray-100">
-                            {domain.domain ?? 'Unknown domain'}
-                          </span>
-                          {richness > 0 && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              Richness score: {richness.toFixed(0)}
-                            </span>
-                          )}
-                        </div>
+                        <span className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">
+                          {domain.domain ?? 'Unknown domain'}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-3 align-top">
+                        <span className={cn('font-mono text-sm font-semibold', scoreColor)}>
+                          {domainScore !== undefined && domainScore !== null
+                            ? Math.round(domainScore)
+                            : '—'}
+                        </span>
                       </td>
                       <td className="py-3 pr-3 align-top">
                         {keywords ? (
@@ -270,14 +355,8 @@ export function LeadResultsPanel({
                             {keywords}
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-400 dark:text-gray-500">No keywords detected</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
                         )}
-                      </td>
-                      <td className="py-3 pr-3 align-top text-sm text-gray-600 dark:text-gray-300">
-                        <div className="space-y-1">
-                          <span>DNS: {dnsStatus}</span>
-                          <span>HTTP: {httpStatus}</span>
-                        </div>
                       </td>
                       <td className="py-3 pr-3 align-top">
                         <span
@@ -289,8 +368,11 @@ export function LeadResultsPanel({
                           {STATUS_LABELS[statusKey]}
                         </span>
                       </td>
-                      <td className="py-3 align-top text-sm text-gray-600 dark:text-gray-300">
-                        {formatRelativeTime(lastSeen)}
+                      <td className="py-3 align-top text-xs text-gray-500 dark:text-gray-400">
+                        <div className="flex flex-col gap-0.5">
+                          <span>DNS: {dnsStatus}</span>
+                          <span>HTTP: {httpStatus}</span>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -301,8 +383,8 @@ export function LeadResultsPanel({
 
           <div className="flex flex-col gap-2 text-xs text-gray-500 dark:text-gray-400">
             <div>
-              Showing {rows.length} of {prioritizedSource.length} {prioritizedKey === 'match' ? 'confirmed leads' : 'validated candidates'} ranked for review.
-              {totalKnown && totalKnown > prioritizedSource.length && (
+              Showing {rows.length} of {sortedSource.length} {prioritizedKey === 'match' ? 'confirmed leads' : 'validated candidates'} ranked by {sortField === 'domainScore' ? 'score' : sortField ?? 'default'}.
+              {totalKnown && totalKnown > sortedSource.length && (
                 <span className="ml-1">Loaded {appliedLoadedCount.toLocaleString()} of {totalKnown.toLocaleString()} campaign domains.</span>
               )}
             </div>
@@ -310,7 +392,7 @@ export function LeadResultsPanel({
               {canShowMoreRows && (
                 <button
                   type="button"
-                  onClick={() => setRowLimit((prev) => Math.min(prev + TABLE_ROW_INCREMENT, prioritizedSource.length))}
+                  onClick={() => setRowLimit((prev) => Math.min(prev + TABLE_ROW_INCREMENT, sortedSource.length))}
                   className="inline-flex items-center rounded border border-blue-200 px-2 py-1 font-medium text-blue-700 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-blue-500/40 dark:text-blue-200 dark:hover:bg-blue-900/30"
                 >
                   Show more rows
@@ -339,6 +421,14 @@ export function LeadResultsPanel({
           </div>
         </>
       )}
+
+      {/* Domain Detail Drawer */}
+      <DomainDetailDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        campaignId={campaignId ?? ''}
+        domain={selectedDomain}
+      />
     </div>
   );
 }

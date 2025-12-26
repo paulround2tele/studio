@@ -1075,6 +1075,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
                 canLoadMore={canLoadMoreLeadData}
                 onLoadMore={canLoadMoreLeadData ? handleLoadMoreLeads : undefined}
                 error={leadPanelError}
+                campaignId={campaignId}
               />
             </LeadsGate>
           </div>

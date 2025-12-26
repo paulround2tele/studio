@@ -1,0 +1,28 @@
+get:
+  tags: [campaigns]
+  summary: Get discovery lineage for a campaign
+  description: |
+    Returns the discovery lineage for an existing campaign, including
+    the config hash, offset range used, and other campaigns sharing
+    the same discovery configuration.
+    
+    This enables:
+    - Understanding which offset range this campaign covers
+    - Comparing yield across campaigns using the same pattern
+    - Analyzing pattern effectiveness over time
+  operationId: campaigns_discovery_lineage
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: Discovery lineage information
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/all.yaml#/DiscoveryLineageResponse'
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

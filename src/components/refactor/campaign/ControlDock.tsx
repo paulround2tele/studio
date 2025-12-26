@@ -55,6 +55,7 @@ interface ButtonConfig {
   id: string;
   label: string;
   loadingLabel: string;
+  description?: string; // Optional descriptive text shown below label
   icon: React.ReactNode;
   show: (c: ControlState) => boolean;
   variant: 'default' | 'outline' | 'destructive' | 'secondary';
@@ -91,8 +92,9 @@ const BUTTON_CONFIGS: ButtonConfig[] = [
   },
   {
     id: 'restart',
-    label: 'Restart Campaign',
-    loadingLabel: 'Restarting…',
+    label: 'Re-run Validations',
+    loadingLabel: 'Re-running…',
+    description: 'Discovery is preserved.',
     icon: <RotateCcw className="w-4 h-4" />,
     show: (c) => c.canRestart && c.isIdle,
     variant: 'secondary',
@@ -207,14 +209,19 @@ export function ControlDock({
                   key={btn.id}
                   onClick={handler}
                   disabled={isLoading || !handler}
-                  className="gap-2"
+                  className="gap-2 flex-col items-start"
                 >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    btn.icon
+                  <div className="flex items-center gap-2">
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      btn.icon
+                    )}
+                    {isLoading ? btn.loadingLabel : btn.label}
+                  </div>
+                  {btn.description && !isLoading && (
+                    <span className="text-xs text-muted-foreground ml-6">{btn.description}</span>
                   )}
-                  {isLoading ? btn.loadingLabel : btn.label}
                 </DropdownMenuItem>
               );
             })}

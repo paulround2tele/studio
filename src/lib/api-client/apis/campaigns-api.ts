@@ -84,6 +84,12 @@ import type { CancelBulkOperation200Response } from '../models';
 // @ts-ignore
 import type { CreateCampaignRequest } from '../models';
 // @ts-ignore
+import type { DiscoveryLineageResponse } from '../models';
+// @ts-ignore
+import type { DiscoveryPreviewRequest } from '../models';
+// @ts-ignore
+import type { DiscoveryPreviewResponse } from '../models';
+// @ts-ignore
 import type { DomainScoreBreakdownResponse } from '../models';
 // @ts-ignore
 import type { EnrichedCampaignResponse } from '../models';
@@ -465,6 +471,46 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
 
             const localVarRequestOptions: RawAxiosRequestConfig = { method: 'DELETE', ...baseOptions, ...options };
+            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
+            const localVarQueryParameter: Record<string, unknown> = {};
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
+            if (baseOptions.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            
+            if (options.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            localVarRequestOptions.headers = headerParams.toJSON();
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Returns the discovery lineage for an existing campaign, including the config hash, offset range used, and other campaigns sharing the same discovery configuration.  This enables: - Understanding which offset range this campaign covers - Comparing yield across campaigns using the same pattern - Analyzing pattern effectiveness over time 
+         * @summary Get discovery lineage for a campaign
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsDiscoveryLineage: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsDiscoveryLineage', 'campaignId', campaignId)
+            const localVarPath = `/campaigns/{campaignId}/discovery-lineage`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+
+            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
             const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
             const localVarQueryParameter: Record<string, unknown> = {};
 
@@ -1942,6 +1988,48 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
+         * Previews a discovery configuration before campaign creation. Returns the config hash, next available offset, total combinations, and prior campaigns that share this configuration.  Use this endpoint to understand: - Where generation will start (next_offset) - How many combinations remain for this pattern - Historical yield from campaigns using the same pattern 
+         * @summary Preview discovery configuration
+         * @param {DiscoveryPreviewRequest} discoveryPreviewRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        discoveryPreview: async (discoveryPreviewRequest: DiscoveryPreviewRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'discoveryPreviewRequest' is not null or undefined
+            assertParamExists('discoveryPreview', 'discoveryPreviewRequest', discoveryPreviewRequest)
+            const localVarPath = `/discovery/preview`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+
+            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
+            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
+            const localVarQueryParameter: Record<string, unknown> = {};
+
+            // authentication cookieAuth required
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
+            if (baseOptions.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            
+            if (options.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            localVarRequestOptions.headers = headerParams.toJSON();
+            localVarRequestOptions.data = serializeDataIfNeeded(discoveryPreviewRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * 
          * @summary Get bulk operation status
          * @param {string} operationId Bulk operation ID
@@ -2146,6 +2234,19 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsDelete(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Returns the discovery lineage for an existing campaign, including the config hash, offset range used, and other campaigns sharing the same discovery configuration.  This enables: - Understanding which offset range this campaign covers - Comparing yield across campaigns using the same pattern - Analyzing pattern effectiveness over time 
+         * @summary Get discovery lineage for a campaign
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsDiscoveryLineage(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DiscoveryLineageResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsDiscoveryLineage(campaignId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsDiscoveryLineage']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -2601,6 +2702,19 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Previews a discovery configuration before campaign creation. Returns the config hash, next available offset, total combinations, and prior campaigns that share this configuration.  Use this endpoint to understand: - Where generation will start (next_offset) - How many combinations remain for this pattern - Historical yield from campaigns using the same pattern 
+         * @summary Preview discovery configuration
+         * @param {DiscoveryPreviewRequest} discoveryPreviewRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async discoveryPreview(discoveryPreviewRequest: DiscoveryPreviewRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DiscoveryPreviewResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.discoveryPreview(discoveryPreviewRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.discoveryPreview']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * 
          * @summary Get bulk operation status
          * @param {string} operationId Bulk operation ID
@@ -2725,6 +2839,16 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          */
         campaignsDelete(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.campaignsDelete(campaignId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Returns the discovery lineage for an existing campaign, including the config hash, offset range used, and other campaigns sharing the same discovery configuration.  This enables: - Understanding which offset range this campaign covers - Comparing yield across campaigns using the same pattern - Analyzing pattern effectiveness over time 
+         * @summary Get discovery lineage for a campaign
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsDiscoveryLineage(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<DiscoveryLineageResponse> {
+            return localVarFp.campaignsDiscoveryLineage(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3083,6 +3207,16 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.cancelBulkOperation(operationId, options).then((request) => request(axios, basePath));
         },
         /**
+         * Previews a discovery configuration before campaign creation. Returns the config hash, next available offset, total combinations, and prior campaigns that share this configuration.  Use this endpoint to understand: - Where generation will start (next_offset) - How many combinations remain for this pattern - Historical yield from campaigns using the same pattern 
+         * @summary Preview discovery configuration
+         * @param {DiscoveryPreviewRequest} discoveryPreviewRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        discoveryPreview(discoveryPreviewRequest: DiscoveryPreviewRequest, options?: RawAxiosRequestConfig): AxiosPromise<DiscoveryPreviewResponse> {
+            return localVarFp.discoveryPreview(discoveryPreviewRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
          * 
          * @summary Get bulk operation status
          * @param {string} operationId Bulk operation ID
@@ -3200,6 +3334,16 @@ export interface CampaignsApiInterface {
      * @memberof CampaignsApiInterface
      */
     campaignsDelete(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * Returns the discovery lineage for an existing campaign, including the config hash, offset range used, and other campaigns sharing the same discovery configuration.  This enables: - Understanding which offset range this campaign covers - Comparing yield across campaigns using the same pattern - Analyzing pattern effectiveness over time 
+     * @summary Get discovery lineage for a campaign
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsDiscoveryLineage(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<DiscoveryLineageResponse>;
 
     /**
      * 
@@ -3558,6 +3702,16 @@ export interface CampaignsApiInterface {
     cancelBulkOperation(operationId: string, options?: RawAxiosRequestConfig): AxiosPromise<CancelBulkOperation200Response>;
 
     /**
+     * Previews a discovery configuration before campaign creation. Returns the config hash, next available offset, total combinations, and prior campaigns that share this configuration.  Use this endpoint to understand: - Where generation will start (next_offset) - How many combinations remain for this pattern - Historical yield from campaigns using the same pattern 
+     * @summary Preview discovery configuration
+     * @param {DiscoveryPreviewRequest} discoveryPreviewRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    discoveryPreview(discoveryPreviewRequest: DiscoveryPreviewRequest, options?: RawAxiosRequestConfig): AxiosPromise<DiscoveryPreviewResponse>;
+
+    /**
      * 
      * @summary Get bulk operation status
      * @param {string} operationId Bulk operation ID
@@ -3692,6 +3846,18 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      */
     public campaignsDelete(campaignId: string, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).campaignsDelete(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Returns the discovery lineage for an existing campaign, including the config hash, offset range used, and other campaigns sharing the same discovery configuration.  This enables: - Understanding which offset range this campaign covers - Comparing yield across campaigns using the same pattern - Analyzing pattern effectiveness over time 
+     * @summary Get discovery lineage for a campaign
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsDiscoveryLineage(campaignId: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsDiscoveryLineage(campaignId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4112,6 +4278,18 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      */
     public cancelBulkOperation(operationId: string, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).cancelBulkOperation(operationId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Previews a discovery configuration before campaign creation. Returns the config hash, next available offset, total combinations, and prior campaigns that share this configuration.  Use this endpoint to understand: - Where generation will start (next_offset) - How many combinations remain for this pattern - Historical yield from campaigns using the same pattern 
+     * @summary Preview discovery configuration
+     * @param {DiscoveryPreviewRequest} discoveryPreviewRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public discoveryPreview(discoveryPreviewRequest: DiscoveryPreviewRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).discoveryPreview(discoveryPreviewRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

@@ -439,6 +439,18 @@ func (s *domainGenerationService) Execute(ctx context.Context, campaignID uuid.U
 		return nil, fmt.Errorf("domain generation already started for campaign %s", campaignID)
 	}
 
+	// Guard: Discovery phase is immutable - reject re-execution if domains already exist
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		existingCount, countErr := s.store.CountGeneratedDomainsByCampaign(ctx, exec, campaignID)
+		if countErr == nil && existingCount > 0 {
+			return nil, fmt.Errorf("discovery phase is immutable: campaign %s already has %d domains generated", campaignID, existingCount)
+		}
+	}
+
 	// Create cancellable context for execution
 	execution.cancelCtx, execution.cancelFunc = context.WithCancel(ctx)
 	execution.progressCh = make(chan PhaseProgress, 100)
@@ -548,6 +560,9 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 		s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, errMsg)
 		return
 	}
+
+	// Capture the starting offset for lineage tracking
+	discoveryOffsetStart := offset
 
 	config.NumDomains = effectiveTotal
 
@@ -751,6 +766,33 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 	completionMessage := "Domain generation completed successfully"
 	if truncated {
 		completionMessage = fmt.Sprintf("Domain generation completed with %d domains (requested %d; limited by available combinations)", finalProcessed, requestedTotal)
+	}
+
+	// Persist discovery lineage to campaign (config_hash, offset_start, offset_end)
+	// offset at this point is the next offset (exclusive), so offset-1 is the last generated
+	discoveryOffsetEnd := offset - 1
+	if discoveryOffsetEnd < discoveryOffsetStart {
+		discoveryOffsetEnd = discoveryOffsetStart // Edge case: single domain or no generation
+	}
+	if s.store != nil {
+		if err := s.store.UpdateCampaignDiscoveryLineage(ctx, exec, campaignID, execution.configHash, discoveryOffsetStart, discoveryOffsetEnd); err != nil {
+			if s.deps.Logger != nil {
+				s.deps.Logger.Warn(ctx, "Failed to persist discovery lineage", map[string]interface{}{
+					"campaign_id":  campaignID,
+					"config_hash":  execution.configHash,
+					"offset_start": discoveryOffsetStart,
+					"offset_end":   discoveryOffsetEnd,
+					"error":        err.Error(),
+				})
+			}
+		} else if s.deps.Logger != nil {
+			s.deps.Logger.Info(ctx, "Discovery lineage persisted", map[string]interface{}{
+				"campaign_id":  campaignID,
+				"config_hash":  execution.configHash,
+				"offset_start": discoveryOffsetStart,
+				"offset_end":   discoveryOffsetEnd,
+			})
+		}
 	}
 
 	// Mark as completed

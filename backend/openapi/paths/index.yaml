@@ -191,6 +191,11 @@
   $ref: "./campaigns/stop.yaml"
 "/campaigns/{campaignId}/restart":
   $ref: "./campaigns/restart.yaml"
+"/campaigns/{campaignId}/discovery-lineage":
+  $ref: "./campaigns/discovery-lineage.yaml"
+
+"/discovery/preview":
+  $ref: "./campaigns/discovery-preview.yaml"
 
 "/campaigns/{campaignId}/status":
   $ref: "./campaigns/status.yaml"

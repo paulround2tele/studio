@@ -13,6 +13,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsClassificationsGet**](#campaignsclassificationsget) | **GET** /campaigns/{campaignId}/classifications | Get campaign classification buckets|
 |[**campaignsCreate**](#campaignscreate) | **POST** /campaigns | Create campaign|
 |[**campaignsDelete**](#campaignsdelete) | **DELETE** /campaigns/{campaignId} | Delete campaign|
+|[**campaignsDiscoveryLineage**](#campaignsdiscoverylineage) | **GET** /campaigns/{campaignId}/discovery-lineage | Get discovery lineage for a campaign|
 |[**campaignsDomainGenerationPatternOffset**](#campaignsdomaingenerationpatternoffset) | **POST** /campaigns/domain-generation/pattern-offset | Get current global pattern offset for domain generation config|
 |[**campaignsDomainScoreBreakdown**](#campaignsdomainscorebreakdown) | **GET** /campaigns/{campaignId}/domains/{domain}/score-breakdown | Get detailed score breakdown for a specific domain in a campaign|
 |[**campaignsDomainsList**](#campaignsdomainslist) | **GET** /campaigns/{campaignId}/domains | List generated domains for a campaign|
@@ -45,6 +46,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsStop**](#campaignsstop) | **POST** /campaigns/{campaignId}/stop | Stop the currently running campaign phase|
 |[**campaignsUpdate**](#campaignsupdate) | **PUT** /campaigns/{campaignId} | Update campaign|
 |[**cancelBulkOperation**](#cancelbulkoperation) | **POST** /campaigns/bulk/operations/{operationId}/cancel | Cancel a bulk operation|
+|[**discoveryPreview**](#discoverypreview) | **POST** /discovery/preview | Preview discovery configuration|
 |[**getBulkOperationStatus**](#getbulkoperationstatus) | **GET** /campaigns/bulk/operations/{operationId}/status | Get bulk operation status|
 |[**getBulkResourceStatus**](#getbulkresourcestatus) | **GET** /campaigns/bulk/resources/status/{allocationId} | Get status of bulk resource allocation|
 
@@ -529,6 +531,60 @@ void (empty response body)
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**204** | No Content |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsDiscoveryLineage**
+> DiscoveryLineageResponse campaignsDiscoveryLineage()
+
+Returns the discovery lineage for an existing campaign, including the config hash, offset range used, and other campaigns sharing the same discovery configuration.  This enables: - Understanding which offset range this campaign covers - Comparing yield across campaigns using the same pattern - Analyzing pattern effectiveness over time 
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsDiscoveryLineage(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**DiscoveryLineageResponse**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Discovery lineage information |  -  |
 |**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
@@ -2350,6 +2406,61 @@ const { status, data } = await apiInstance.cancelBulkOperation(
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **discoveryPreview**
+> DiscoveryPreviewResponse discoveryPreview(discoveryPreviewRequest)
+
+Previews a discovery configuration before campaign creation. Returns the config hash, next available offset, total combinations, and prior campaigns that share this configuration.  Use this endpoint to understand: - Where generation will start (next_offset) - How many combinations remain for this pattern - Historical yield from campaigns using the same pattern 
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    DiscoveryPreviewRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let discoveryPreviewRequest: DiscoveryPreviewRequest; //
+
+const { status, data } = await apiInstance.discoveryPreview(
+    discoveryPreviewRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **discoveryPreviewRequest** | **DiscoveryPreviewRequest**|  | |
+
+
+### Return type
+
+**DiscoveryPreviewResponse**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Discovery configuration preview |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

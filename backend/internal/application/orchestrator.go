@@ -1144,6 +1144,54 @@ func (o *CampaignOrchestrator) startPhaseInternalImpl(ctx context.Context, campa
 		"phase":       phase,
 	})
 
+	// REQUIREMENT #4: Idempotency for already-completed phases.
+	// If StartPhaseInternal is called for a phase already marked Completed in DB,
+	// we must no-op and immediately trigger auto-advance to the next phase.
+	// This ensures we never rely on timing - DB is authoritative.
+	if querier, ok := o.deps.DB.(store.Querier); ok {
+		if dbPhase, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase); err == nil && dbPhase != nil {
+			if dbPhase.Status == models.PhaseStatusCompleted {
+				o.deps.Logger.Info(ctx, "startPhaseInternal.phase_already_completed", map[string]interface{}{
+					"campaign_id": campaignID,
+					"phase":       phase,
+					"action":      "triggering_auto_advance",
+				})
+				// Trigger auto-advance to the next phase asynchronously
+				go func() {
+					advCtx := context.Background()
+					mode, _ := o.store.GetCampaignMode(advCtx, querier, campaignID)
+					if mode != "full_sequence" {
+						o.deps.Logger.Debug(advCtx, "startPhaseInternal.skip_auto_advance_not_full_sequence", map[string]interface{}{
+							"campaign_id": campaignID,
+							"phase":       phase,
+							"mode":        mode,
+						})
+						return
+					}
+					if o.isLastPhase(phase) {
+						_ = o.HandleCampaignCompletion(advCtx, campaignID)
+						return
+					}
+					if next, ok := o.nextPhase(phase); ok {
+						o.deps.Logger.Info(advCtx, "startPhaseInternal.auto_advancing_from_completed", map[string]interface{}{
+							"campaign_id": campaignID,
+							"from_phase":  phase,
+							"to_phase":    next,
+						})
+						if err := o.StartPhaseInternal(advCtx, campaignID, next); err != nil {
+							o.deps.Logger.Error(advCtx, "startPhaseInternal.auto_advance_failed", err, map[string]interface{}{
+								"campaign_id": campaignID,
+								"from_phase":  phase,
+								"to_phase":    next,
+							})
+						}
+					}
+				}()
+				return nil // No-op for the already completed phase
+			}
+		}
+	}
+
 	// P1 Fix: Unified phase start guard to prevent auto-advance vs manual race.
 	// This check+set must be atomic to prevent both callers from proceeding.
 	startKey := campaignID.String() + ":" + string(phase)
@@ -3347,6 +3395,50 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 		return
 	}
 
+	// Debug: Log the final status returned by the phase service for auto-advance decision
+	if o.deps.Logger != nil {
+		statusStr := "nil"
+		if finalStatus != nil {
+			statusStr = string(finalStatus.Status)
+		}
+		o.deps.Logger.Info(ctx, "handlePhaseCompletion.finalStatus", map[string]interface{}{
+			"campaign_id":     campaignID,
+			"phase":           phase,
+			"final_status":    statusStr,
+			"items_total":     finalStatus.ItemsTotal,
+			"items_processed": finalStatus.ItemsProcessed,
+			"progress_pct":    finalStatus.ProgressPct,
+		})
+	}
+
+	// DEFENSIVE FIX: If service.GetStatus() returns NotStarted or InProgress but the
+	// channel has closed (meaning the phase goroutine exited), cross-check with DB.
+	// This handles edge cases where in-memory state is stale after fast completion.
+	if finalStatus != nil && (finalStatus.Status == models.PhaseStatusNotStarted || finalStatus.Status == models.PhaseStatusInProgress) {
+		if querier, ok := o.deps.DB.(store.Querier); ok {
+			if dbPhase, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase); err == nil && dbPhase != nil {
+				if dbPhase.Status == models.PhaseStatusCompleted || dbPhase.Status == models.PhaseStatusFailed {
+					o.deps.Logger.Warn(ctx, "handlePhaseCompletion.status_mismatch_corrected", map[string]interface{}{
+						"campaign_id":    campaignID,
+						"phase":          phase,
+						"service_status": string(finalStatus.Status),
+						"db_status":      string(dbPhase.Status),
+					})
+					finalStatus.Status = dbPhase.Status
+					if dbPhase.Status == models.PhaseStatusCompleted {
+						finalStatus.ProgressPct = 100.0
+					}
+					if dbPhase.StartedAt != nil {
+						finalStatus.StartedAt = dbPhase.StartedAt
+					}
+					if dbPhase.CompletedAt != nil {
+						finalStatus.CompletedAt = dbPhase.CompletedAt
+					}
+				}
+			}
+		}
+	}
+
 	// Ensure the canonical campaign row never stays stuck in "in_progress" once a phase finishes.
 	if finalStatus != nil {
 		if querier, ok := o.deps.DB.(store.Querier); ok {
@@ -3462,11 +3554,51 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 			o.sseService.BroadcastToCampaign(campaignID, evt)
 		}
 		if err := o.StartPhaseInternal(ctx, campaignID, next); err != nil {
-			o.deps.Logger.Error(ctx, "Failed to auto-advance to next phase", err, map[string]interface{}{"campaign_id": campaignID, "from_phase": phase, "to_phase": next})
+			// REQUIREMENT #3: Orchestrator contract - "completion ⇒ next or fail"
+			// If a phase reaches Completed and auto-advance does not start the next phase,
+			// log ERROR with campaignId, phase, and status sources (mem vs DB).
+			// Silent stalls are UNACCEPTABLE.
+			o.deps.Logger.Error(ctx, "PIPELINE_STALL_RISK: Failed to auto-advance after completion", err, map[string]interface{}{
+				"campaign_id":    campaignID,
+				"from_phase":     phase,
+				"to_phase":       next,
+				"service_status": string(finalStatus.Status),
+				"invariant":      "completion_must_advance_or_fail",
+			})
+			// Metrics: track this critical failure
+			o.metrics.IncPhaseFailures()
 		} else {
 			// Metrics: auto-start only on success
 			o.metrics.IncPhaseAutoStarts()
 		}
+	} else if finalStatus != nil {
+		// REQUIREMENT #3 (continued): Log when auto-advance is skipped and why.
+		// If status is not Completed but phase channel closed, this is a potential stall.
+		// Cross-check with DB to verify we're not silently stalling.
+		var dbStatusStr string
+		if querier, ok := o.deps.DB.(store.Querier); ok {
+			if dbPhase, err := o.store.GetCampaignPhase(ctx, querier, campaignID, phase); err == nil && dbPhase != nil {
+				dbStatusStr = string(dbPhase.Status)
+				// CRITICAL: If DB says completed but service said otherwise, we have a stall
+				if dbPhase.Status == models.PhaseStatusCompleted && finalStatus.Status != models.PhaseStatusCompleted {
+					o.deps.Logger.Error(ctx, "PIPELINE_STALL_DETECTED: Service/DB status mismatch prevented auto-advance", nil, map[string]interface{}{
+						"campaign_id":    campaignID,
+						"phase":          phase,
+						"service_status": string(finalStatus.Status),
+						"db_status":      dbStatusStr,
+						"invariant":      "db_completed_but_service_not",
+					})
+				}
+			}
+		}
+		// Always log when auto-advance is skipped for observability
+		o.deps.Logger.Warn(ctx, "handlePhaseCompletion.auto_advance_skipped", map[string]interface{}{
+			"campaign_id":    campaignID,
+			"phase":          phase,
+			"service_status": string(finalStatus.Status),
+			"db_status":      dbStatusStr,
+			"reason":         "status_not_completed",
+		})
 	}
 	// NOTE: Runtime metrics extraction currently not wired; function stub removed to avoid confusion.
 }

@@ -1615,6 +1615,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/{campaignId}/discovery-lineage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get discovery lineage for a campaign
+         * @description Returns the discovery lineage for an existing campaign, including
+         *     the config hash, offset range used, and other campaigns sharing
+         *     the same discovery configuration.
+         *
+         *     This enables:
+         *     - Understanding which offset range this campaign covers
+         *     - Comparing yield across campaigns using the same pattern
+         *     - Analyzing pattern effectiveness over time
+         *
+         */
+        get: operations["campaigns_discovery_lineage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/discovery/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview discovery configuration
+         * @description Previews a discovery configuration before campaign creation.
+         *     Returns the config hash, next available offset, total combinations,
+         *     and prior campaigns that share this configuration.
+         *
+         *     Use this endpoint to understand:
+         *     - Where generation will start (next_offset)
+         *     - How many combinations remain for this pattern
+         *     - Historical yield from campaigns using the same pattern
+         *
+         */
+        post: operations["discovery_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/{campaignId}/status": {
         parameters: {
             query?: never;
@@ -3034,6 +3090,16 @@ export interface components {
             dnsReason?: string | null;
             /** @description Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH) */
             httpReason?: string | null;
+            /**
+             * Format: float
+             * @description Composite domain quality score (0-100) from Analysis & Scoring phase
+             */
+            domainScore?: number | null;
+            /**
+             * Format: float
+             * @description Lead qualification score from Lead Enrichment phase
+             */
+            leadScore?: number | null;
             features?: components["schemas"]["DomainAnalysisFeatures"];
         };
         /** @description Cursor-based pagination metadata */
@@ -3338,6 +3404,79 @@ export interface components {
             }[];
             /** @description Latest status snapshot for each restartable phase after enqueueing. */
             phaseStatuses?: components["schemas"]["PhaseStatusResponse"][];
+        };
+        /** @description Campaign in the discovery lineage with stats */
+        DiscoveryLineageCampaign: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: date-time */
+            createdAt: string;
+            offsetRange?: {
+                /** Format: int64 */
+                start?: number;
+                /** Format: int64 */
+                end?: number;
+            };
+            stats: {
+                /** Format: int64 */
+                domainsGenerated: number;
+                /** Format: int64 */
+                dnsValid: number;
+                /** Format: int64 */
+                keywordMatches: number;
+                /** Format: int64 */
+                leads: number;
+            };
+        };
+        /** @description Discovery lineage for an existing campaign */
+        DiscoveryLineageResponse: {
+            /** @default true */
+            success: boolean;
+            requestId?: string;
+            data: {
+                /** @description SHA-256 hash of discovery configuration */
+                configHash: string;
+                thisCampaign: {
+                    /**
+                     * Format: int64
+                     * @description First offset generated for this campaign
+                     */
+                    offsetStart: number;
+                    /**
+                     * Format: int64
+                     * @description Last offset generated for this campaign
+                     */
+                    offsetEnd: number;
+                };
+                priorCampaigns?: components["schemas"]["DiscoveryLineageCampaign"][];
+            };
+        };
+        /** @description Preview of discovery configuration with lineage information */
+        DiscoveryPreviewResponse: {
+            /** @default true */
+            success: boolean;
+            requestId?: string;
+            data: {
+                /**
+                 * @description SHA-256 hash of normalized discovery configuration
+                 * @example 5cf00a920956840d6bcbd68cf1da88d93d6840c09084016337dc3fd6536c0845
+                 */
+                configHash: string;
+                /**
+                 * Format: int64
+                 * @description Total possible domain combinations for this pattern
+                 */
+                totalCombinations: number;
+                /**
+                 * Format: int64
+                 * @description Next available offset (last_offset + 1). Generation will start here.
+                 */
+                nextOffset: number;
+                /** @description True if nextOffset + typical batch would exceed totalCombinations */
+                exhaustionWarning?: boolean;
+                priorCampaigns?: components["schemas"]["DiscoveryLineageCampaign"][];
+            };
         };
         /** @description Consolidated phase status list plus overall progress */
         CampaignPhasesStatusResponse: {
@@ -7369,6 +7508,89 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_discovery_lineage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Discovery lineage information */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscoveryLineageResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    discovery_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Domain name generation pattern type
+                     * @enum {string}
+                     */
+                    patternType: "prefix_variable" | "suffix_variable" | "both_variable";
+                    /**
+                     * @description Fixed portion of the domain name
+                     * @example telecom
+                     */
+                    constantString?: string;
+                    /**
+                     * @description Length of variable prefix
+                     * @default 0
+                     */
+                    prefixVariableLength?: number;
+                    /**
+                     * @description Length of variable suffix
+                     * @default 0
+                     */
+                    suffixVariableLength?: number;
+                    /**
+                     * @description Characters to use for variable portions
+                     * @example abcdefghijklmnopqrstuvwxyz
+                     */
+                    characterSet: string;
+                    /**
+                     * @description Top-level domain
+                     * @example .com
+                     */
+                    tld: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Discovery configuration preview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscoveryPreviewResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
             500: components["responses"]["InternalServerError"];
         };
     };

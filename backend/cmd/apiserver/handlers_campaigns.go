@@ -2541,6 +2541,15 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 			if gd.HTTPReason.Valid {
 				httpReasonPtr = &gd.HTTPReason.String
 			}
+			var domainScorePtr, leadScorePtr *float32
+			if gd.DomainScore.Valid {
+				v := float32(gd.DomainScore.Float64)
+				domainScorePtr = &v
+			}
+			if gd.LeadScore.Valid {
+				v := float32(gd.LeadScore.Float64)
+				leadScorePtr = &v
+			}
 			id := openapi_types.UUID(gd.ID)
 			createdAt := gd.CreatedAt
 			domainCopy := gd.DomainName
@@ -2548,7 +2557,7 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 			if fv, ok := featureMap[domainCopy]; ok {
 				features = mapRawToDomainAnalysisFeatures(fv)
 			}
-			items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr, Features: features})
+			items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr, DomainScore: domainScorePtr, LeadScore: leadScorePtr, Features: features})
 		}
 		resp := gen.CampaignDomainsListResponse{CampaignId: openapi_types.UUID(r.CampaignId), Items: items}
 		if counters != nil {
@@ -2641,6 +2650,15 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 			if gd.HTTPReason.Valid {
 				httpReasonPtr = &gd.HTTPReason.String
 			}
+			var domainScorePtr, leadScorePtr *float32
+			if gd.DomainScore.Valid {
+				v := float32(gd.DomainScore.Float64)
+				domainScorePtr = &v
+			}
+			if gd.LeadScore.Valid {
+				v := float32(gd.LeadScore.Float64)
+				leadScorePtr = &v
+			}
 			id := openapi_types.UUID(gd.ID)
 			createdAt := gd.CreatedAt
 			domainCopy := gd.DomainName
@@ -2648,7 +2666,7 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 			if fv, ok := featureMap[domainCopy]; ok {
 				features = mapRawToDomainAnalysisFeatures(fv)
 			}
-			items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr, Features: features})
+			items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr, DomainScore: domainScorePtr, LeadScore: leadScorePtr, Features: features})
 		}
 		return items
 	}
@@ -3667,4 +3685,264 @@ func (h *strictHandlers) rebuildCampaignDomainCounters(ctx context.Context, camp
 		return nil, err
 	}
 	return &stored, nil
+}
+
+// DiscoveryPreview implements POST /discovery/preview
+// Returns config_hash, next_offset, total_combinations, and prior campaigns for a discovery config
+func (h *strictHandlers) DiscoveryPreview(ctx context.Context, r gen.DiscoveryPreviewRequestObject) (gen.DiscoveryPreviewResponseObject, error) {
+	if h.deps == nil || h.deps.DB == nil || h.deps.Stores.Campaign == nil {
+		return gen.DiscoveryPreview500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{
+			Error:     gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()},
+			RequestId: reqID(), Success: boolPtr(false),
+		}}, nil
+	}
+
+	body := r.Body
+	if body == nil {
+		return gen.DiscoveryPreview400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{
+			Error:     gen.ApiError{Message: "request body required", Code: gen.BADREQUEST, Timestamp: time.Now()},
+			RequestId: reqID(), Success: boolPtr(false),
+		}}, nil
+	}
+
+	// Build domain generation params for hash calculation
+	prefixLen := 0
+	if body.PrefixVariableLength != nil {
+		prefixLen = *body.PrefixVariableLength
+	}
+	suffixLen := 0
+	if body.SuffixVariableLength != nil {
+		suffixLen = *body.SuffixVariableLength
+	}
+	constStr := ""
+	if body.ConstantString != nil {
+		constStr = *body.ConstantString
+	}
+
+	params := models.DomainGenerationCampaignParams{
+		PatternType:          string(body.PatternType),
+		PrefixVariableLength: sql.NullInt32{Int32: int32(prefixLen), Valid: prefixLen > 0},
+		SuffixVariableLength: sql.NullInt32{Int32: int32(suffixLen), Valid: suffixLen > 0},
+		CharacterSet:         body.CharacterSet,
+		ConstantString:       &constStr,
+		TLD:                  body.Tld,
+	}
+
+	// Calculate config hash
+	hashResult, err := domainexpert.GenerateDomainGenerationPhaseConfigHash(params)
+	if err != nil {
+		return gen.DiscoveryPreview500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{
+			Error:     gen.ApiError{Message: "failed to compute config hash: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()},
+			RequestId: reqID(), Success: boolPtr(false),
+		}}, nil
+	}
+
+	// Calculate total combinations using domain generator
+	generator, err := domainexpert.NewDomainGenerator(
+		domainexpert.CampaignPatternType(body.PatternType),
+		prefixLen,
+		suffixLen,
+		body.CharacterSet,
+		constStr,
+		body.Tld,
+	)
+	if err != nil {
+		return gen.DiscoveryPreview400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{
+			Error:     gen.ApiError{Message: "invalid pattern configuration: " + err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()},
+			RequestId: reqID(), Success: boolPtr(false),
+		}}, nil
+	}
+	totalCombinations := generator.GetTotalCombinations()
+
+	// Get global config state to determine next_offset
+	var nextOffset int64 = 0
+	configState, stateErr := h.deps.Stores.Campaign.GetDomainGenerationPhaseConfigStateByHash(ctx, h.deps.DB, hashResult.HashString)
+	if stateErr == nil && configState != nil {
+		nextOffset = configState.LastOffset + 1 // next_offset = last_offset + 1
+	}
+
+	// Get user ID from context for auth scope (optional - preview may be called unauthenticated)
+	var userIDPtr *string
+	if userID, ok := ctx.Value("user_id").(string); ok && userID != "" {
+		userIDPtr = &userID
+	}
+
+	// Get prior campaigns with this config hash (limit 10, auth-scoped to user)
+	priorCampaigns, lineageErr := h.deps.Stores.Campaign.GetDiscoveryLineage(ctx, h.deps.DB, hashResult.HashString, nil, userIDPtr, 10)
+	if lineageErr != nil {
+		// Log but don't fail - lineage is informational
+		if h.deps.Logger != nil {
+			h.deps.Logger.Warn(ctx, "discovery.preview.lineage_fetch_failed", map[string]interface{}{"error": lineageErr.Error()})
+		}
+		priorCampaigns = []*store.DiscoveryLineageCampaign{}
+	}
+
+	// Check exhaustion warning (if next_offset + 10000 > total_combinations)
+	typicalBatch := int64(10000)
+	exhaustionWarning := nextOffset+typicalBatch > totalCombinations
+
+	// Build response
+	apiPriorCampaigns := make([]gen.DiscoveryLineageCampaign, 0, len(priorCampaigns))
+	for _, pc := range priorCampaigns {
+		apiCampaign := gen.DiscoveryLineageCampaign{
+			Id:        openapi_types.UUID(pc.ID),
+			Name:      pc.Name,
+			CreatedAt: pc.CreatedAt,
+			Stats: struct {
+				DnsValid         int64 `json:"dnsValid"`
+				DomainsGenerated int64 `json:"domainsGenerated"`
+				KeywordMatches   int64 `json:"keywordMatches"`
+				Leads            int64 `json:"leads"`
+			}{
+				DomainsGenerated: pc.DomainsCount,
+				DnsValid:         pc.DNSValidCount,
+				KeywordMatches:   pc.KeywordMatches,
+				Leads:            pc.LeadCount,
+			},
+		}
+		if pc.OffsetStart != nil && pc.OffsetEnd != nil {
+			apiCampaign.OffsetRange = &struct {
+				End   *int64 `json:"end,omitempty"`
+				Start *int64 `json:"start,omitempty"`
+			}{
+				Start: pc.OffsetStart,
+				End:   pc.OffsetEnd,
+			}
+		}
+		apiPriorCampaigns = append(apiPriorCampaigns, apiCampaign)
+	}
+
+	return gen.DiscoveryPreview200JSONResponse{
+		Success:   true,
+		RequestId: strPtr(reqID()),
+		Data: struct {
+			ConfigHash        string                          `json:"configHash"`
+			ExhaustionWarning *bool                           `json:"exhaustionWarning,omitempty"`
+			NextOffset        int64                           `json:"nextOffset"`
+			PriorCampaigns    *[]gen.DiscoveryLineageCampaign `json:"priorCampaigns,omitempty"`
+			TotalCombinations int64                           `json:"totalCombinations"`
+		}{
+			ConfigHash:        hashResult.HashString,
+			TotalCombinations: totalCombinations,
+			NextOffset:        nextOffset,
+			ExhaustionWarning: &exhaustionWarning,
+			PriorCampaigns:    &apiPriorCampaigns,
+		},
+	}, nil
+}
+
+// CampaignsDiscoveryLineage implements GET /campaigns/{campaignId}/discovery-lineage
+// Returns the discovery lineage for an existing campaign
+func (h *strictHandlers) CampaignsDiscoveryLineage(ctx context.Context, r gen.CampaignsDiscoveryLineageRequestObject) (gen.CampaignsDiscoveryLineageResponseObject, error) {
+	if h.deps == nil || h.deps.DB == nil || h.deps.Stores.Campaign == nil {
+		return gen.CampaignsDiscoveryLineage500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{
+			Error:     gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()},
+			RequestId: reqID(), Success: boolPtr(false),
+		}}, nil
+	}
+
+	campaignID := uuid.UUID(r.CampaignId)
+
+	// Get campaign to retrieve discovery config hash
+	campaign, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, campaignID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return gen.CampaignsDiscoveryLineage404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{
+				Error:     gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()},
+				RequestId: reqID(), Success: boolPtr(false),
+			}}, nil
+		}
+		return gen.CampaignsDiscoveryLineage500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{
+			Error:     gen.ApiError{Message: "failed to fetch campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()},
+			RequestId: reqID(), Success: boolPtr(false),
+		}}, nil
+	}
+
+	// Check if campaign has discovery config hash
+	if campaign.DiscoveryConfigHash == nil || *campaign.DiscoveryConfigHash == "" {
+		return gen.CampaignsDiscoveryLineage404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{
+			Error:     gen.ApiError{Message: "campaign has no discovery configuration", Code: gen.NOTFOUND, Timestamp: time.Now()},
+			RequestId: reqID(), Success: boolPtr(false),
+		}}, nil
+	}
+
+	configHash := *campaign.DiscoveryConfigHash
+
+	// Get user ID from context for auth scope
+	var userIDPtr *string
+	if userID, ok := ctx.Value("user_id").(string); ok && userID != "" {
+		userIDPtr = &userID
+	}
+
+	// Get prior campaigns with same config hash (excluding this one, auth-scoped to user)
+	priorCampaigns, lineageErr := h.deps.Stores.Campaign.GetDiscoveryLineage(ctx, h.deps.DB, configHash, &campaignID, userIDPtr, 10)
+	if lineageErr != nil {
+		if h.deps.Logger != nil {
+			h.deps.Logger.Warn(ctx, "discovery.lineage.fetch_failed", map[string]interface{}{"error": lineageErr.Error()})
+		}
+		priorCampaigns = []*store.DiscoveryLineageCampaign{}
+	}
+
+	// Build response - use inline struct types matching generated code
+	apiPriorCampaigns := make([]gen.DiscoveryLineageCampaign, 0, len(priorCampaigns))
+	for _, pc := range priorCampaigns {
+		apiCampaign := gen.DiscoveryLineageCampaign{
+			Id:        openapi_types.UUID(pc.ID),
+			Name:      pc.Name,
+			CreatedAt: pc.CreatedAt,
+			Stats: struct {
+				DnsValid         int64 `json:"dnsValid"`
+				DomainsGenerated int64 `json:"domainsGenerated"`
+				KeywordMatches   int64 `json:"keywordMatches"`
+				Leads            int64 `json:"leads"`
+			}{
+				DomainsGenerated: pc.DomainsCount,
+				DnsValid:         pc.DNSValidCount,
+				KeywordMatches:   pc.KeywordMatches,
+				Leads:            pc.LeadCount,
+			},
+		}
+		if pc.OffsetStart != nil && pc.OffsetEnd != nil {
+			apiCampaign.OffsetRange = &struct {
+				End   *int64 `json:"end,omitempty"`
+				Start *int64 `json:"start,omitempty"`
+			}{
+				Start: pc.OffsetStart,
+				End:   pc.OffsetEnd,
+			}
+		}
+		apiPriorCampaigns = append(apiPriorCampaigns, apiCampaign)
+	}
+
+	// Build this campaign's offset info - inline struct type
+	var offsetStart, offsetEnd int64
+	if campaign.DiscoveryOffsetStart != nil {
+		offsetStart = *campaign.DiscoveryOffsetStart
+	}
+	if campaign.DiscoveryOffsetEnd != nil {
+		offsetEnd = *campaign.DiscoveryOffsetEnd
+	}
+
+	return gen.CampaignsDiscoveryLineage200JSONResponse{
+		Success:   true,
+		RequestId: strPtr(reqID()),
+		Data: struct {
+			ConfigHash     string                          `json:"configHash"`
+			PriorCampaigns *[]gen.DiscoveryLineageCampaign `json:"priorCampaigns,omitempty"`
+			ThisCampaign   struct {
+				OffsetEnd   int64 `json:"offsetEnd"`
+				OffsetStart int64 `json:"offsetStart"`
+			} `json:"thisCampaign"`
+		}{
+			ConfigHash:     configHash,
+			PriorCampaigns: &apiPriorCampaigns,
+			ThisCampaign: struct {
+				OffsetEnd   int64 `json:"offsetEnd"`
+				OffsetStart int64 `json:"offsetStart"`
+			}{
+				OffsetStart: offsetStart,
+				OffsetEnd:   offsetEnd,
+			},
+		},
+	}, nil
 }
