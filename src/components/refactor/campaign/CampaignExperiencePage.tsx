@@ -19,6 +19,8 @@ import type { PipelinePhase } from './PipelineTimeline';
 import { FunnelSnapshot } from './FunnelSnapshot';
 import { RecommendationPanel } from './RecommendationPanel';
 import { LeadResultsPanel } from './LeadResultsPanel';
+import { AnalysisSummary } from './AnalysisSummary';
+import { CampaignCompletionBanner } from './CampaignCompletionBanner';
 // Phase 4: Progressive Disclosure Gates
 import { FunnelGate, LeadsGate, KpiGate, MomentumGate, RecommendationsGate, WarningsGate } from './gates';
 import { 
@@ -940,6 +942,19 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
   return (
     <div className={_className}>
       {/* ═══════════════════════════════════════════════════════════════════════
+          CAMPAIGN COMPLETION BANNER (P0)
+          Shows prominently when campaign is complete - makes completion feel
+          like an outcome, not a dead end.
+          ═══════════════════════════════════════════════════════════════════════ */}
+      {executionControlState.status === 'completed' && funnelData && (
+        <CampaignCompletionBanner
+          leadsCount={funnelData.leads}
+          analyzedCount={funnelData.analyzed}
+          className="mb-6"
+        />
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════
           EXECUTION HEADER (Phase 2 Refactor)
           Primary execution surface - "What's happening now?" + "What can I do?"
           Source of truth: controlPhase from statusSnapshot
@@ -1054,7 +1069,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
               Lead Results Panel (Phase 4 Gated)
               Shows only when httpValid > 0 to avoid empty lead tables
               ═══════════════════════════════════════════════════════════════════════ */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border">
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border space-y-6">
             <LeadsGate 
               funnelData={funnelData} 
               currentPhase={executionControlState.controlPhase ?? undefined}
@@ -1065,6 +1080,24 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
                 />
               }
             >
+              {/* Analysis Summary - Shows what Analysis & Enrichment achieved */}
+              {funnelData && (funnelData.keywordHits > 0 || funnelData.analyzed > 0 || funnelData.leads > 0) && (
+                <AnalysisSummary
+                  data={{
+                    keywordHits: funnelData.keywordHits,
+                    analyzed: funnelData.analyzed,
+                    leads: funnelData.leads,
+                    highPotential: funnelData.highPotential,
+                    httpValid: funnelData.httpValid,
+                    dnsValid: funnelData.dnsValid,
+                    generated: funnelData.generated,
+                  }}
+                  isRunning={executionControlState.status === 'running'}
+                  sticky={true}
+                  className="mb-6"
+                />
+              )}
+              
               <LeadResultsPanel
                 domains={domainItems}
                 aggregates={leadAggregates}

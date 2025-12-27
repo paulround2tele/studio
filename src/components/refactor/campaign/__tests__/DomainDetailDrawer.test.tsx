@@ -207,7 +207,8 @@ describe('DomainDetailDrawer', () => {
       renderWithProviders(<DomainDetailDrawer {...defaultProps} />);
       
       expect(screen.getByText('Why Qualified')).toBeInTheDocument();
-      expect(screen.getByText(/High score/i)).toBeInTheDocument();
+      // The text now says "High-quality lead" instead of "High score"
+      expect(screen.getByText(/High-quality lead/i)).toBeInTheDocument();
     });
 
     it('shows classification reason for non-matched domains', () => {

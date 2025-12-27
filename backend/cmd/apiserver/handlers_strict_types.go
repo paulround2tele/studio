@@ -98,12 +98,12 @@ func (h *strictHandlers) CampaignsDomainScoreBreakdown(ctx context.Context, r ge
 
 	// Include weights and penalty factor if available (from DefaultScoringWeights)
 	weights := map[string]float32{
-		"keyword_density_weight":          2.5,
-		"unique_keyword_coverage_weight":  2.0,
-		"non_parked_weight":               1.5,
-		"content_length_quality_weight":   1.0,
-		"title_keyword_weight":            1.5,
-		"freshness_weight":                0.5,
+		"keyword_density_weight":         2.5,
+		"unique_keyword_coverage_weight": 2.0,
+		"non_parked_weight":              1.5,
+		"content_length_quality_weight":  1.0,
+		"title_keyword_weight":           1.5,
+		"freshness_weight":               0.5,
 	}
 	resp.Weights = &weights
 

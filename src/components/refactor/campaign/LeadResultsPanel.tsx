@@ -1,11 +1,12 @@
 import React from 'react';
-import { Loader2, AlertCircle, ChevronUp, ChevronDown } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronUp, ChevronDown, ChevronRight, Info, Filter } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 import { cn } from '@/lib/utils';
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import type { CampaignDomainsListResponseAggregatesLead } from '@/lib/api-client/models/campaign-domains-list-response-aggregates-lead';
 import { DomainDetailDrawer } from './DomainDetailDrawer';
+import { ExpandableDomainList } from './ExpandableDomainList';
 
 const STATUS_ORDER = ['match', 'pending', 'noMatch', 'error', 'timeout'] as const;
 type LeadStatusKey = typeof STATUS_ORDER[number];
@@ -147,10 +148,33 @@ export function LeadResultsPanel({
   const [sortDir, setSortDir] = React.useState<SortDir>('desc');
   const [selectedDomain, setSelectedDomain] = React.useState<DomainListItem | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  // Note: activeFilter state is prepared for future quick-filter feature
+  const [_activeFilter, _setActiveFilter] = React.useState<'all' | 'matches' | 'rejected' | 'no_keywords'>('all');
 
   const leadMatches = React.useMemo(
     () =>
       domainList.filter((domain) => normalizeLeadStatus(domain.leadStatus) === 'match'),
+    [domainList]
+  );
+
+  // Rejected by scoring: has score but not a match (and not pending)
+  const rejectedDomains = React.useMemo(
+    () =>
+      domainList.filter((domain) => {
+        const status = normalizeLeadStatus(domain.leadStatus);
+        return status === 'noMatch' && domain.domainScore !== undefined && domain.domainScore !== null;
+      }),
+    [domainList]
+  );
+
+  // No keywords found: HTTP OK but no keyword data
+  const noKeywordDomains = React.useMemo(
+    () =>
+      domainList.filter((domain) => {
+        const httpOk = (domain.httpStatus ?? '').toLowerCase() === 'ok';
+        const hasKeywords = domain.features?.keywords?.top3?.some(k => k && k.length > 0);
+        return httpOk && !hasKeywords;
+      }),
     [domainList]
   );
 
@@ -280,10 +304,13 @@ export function LeadResultsPanel({
 
       {hasAnyRows && (
         <>
-          {/* UX hint for discoverability */}
-          <p className="text-xs text-gray-500 dark:text-gray-400 italic">
-            💡 Click a row to inspect score breakdown and keyword details.
-          </p>
+          {/* Prominent UX hint for discoverability */}
+          <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>Click any lead row</strong> to inspect score breakdown, keyword analysis, and qualification details.
+            </p>
+          </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
@@ -306,7 +333,8 @@ export function LeadResultsPanel({
                   </th>
                   <th scope="col" className="py-2 pr-3 text-left font-medium">Keywords</th>
                   <th scope="col" className="py-2 pr-3 text-left font-medium">Lead Status</th>
-                  <th scope="col" className="py-2 text-left font-medium">Validation</th>
+                  <th scope="col" className="py-2 pr-3 text-left font-medium">Validation</th>
+                  <th scope="col" className="py-2 text-center font-medium w-16">Inspect</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -348,11 +376,25 @@ export function LeadResultsPanel({
                         </span>
                       </td>
                       <td className="py-3 pr-3 align-top">
-                        <span className={cn('font-mono text-sm font-semibold', scoreColor)}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRowClick(domain);
+                          }}
+                          className={cn(
+                            'inline-flex items-center gap-1 px-2 py-1 rounded-md font-mono text-sm font-semibold transition-colors',
+                            'hover:bg-blue-100 dark:hover:bg-blue-900/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
+                            scoreColor
+                          )}
+                          title="Click to view score breakdown"
+                          aria-label={`View score breakdown for ${domain.domain ?? 'domain'}: ${domainScore !== undefined && domainScore !== null ? Math.round(domainScore) : 'Not scored'}`}
+                        >
                           {domainScore !== undefined && domainScore !== null
                             ? Math.round(domainScore)
                             : '—'}
-                        </span>
+                          <ChevronRight className="h-3 w-3 opacity-60" />
+                        </button>
                       </td>
                       <td className="py-3 pr-3 align-top">
                         {keywords ? (
@@ -373,11 +415,24 @@ export function LeadResultsPanel({
                           {STATUS_LABELS[statusKey]}
                         </span>
                       </td>
-                      <td className="py-3 align-top text-xs text-gray-500 dark:text-gray-400">
+                      <td className="py-3 pr-3 align-top text-xs text-gray-500 dark:text-gray-400">
                         <div className="flex flex-col gap-0.5">
                           <span>DNS: {dnsStatus}</span>
                           <span>HTTP: {httpStatus}</span>
                         </div>
+                      </td>
+                      <td className="py-3 align-top text-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRowClick(domain);
+                          }}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 transition-colors"
+                          aria-label={`Inspect score details for ${domain.domain ?? 'domain'}`}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
                       </td>
                     </tr>
                   );
@@ -425,6 +480,36 @@ export function LeadResultsPanel({
             </div>
           </div>
         </>
+      )}
+
+      {/* Expandable lists for rejected and no-keyword domains */}
+      {(rejectedDomains.length > 0 || noKeywordDomains.length > 0) && (
+        <div className="space-y-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-500" />
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Additional Results</h4>
+          </div>
+          
+          {rejectedDomains.length > 0 && (
+            <ExpandableDomainList
+              title="Rejected by Scoring"
+              count={rejectedDomains.length}
+              domains={rejectedDomains}
+              category="rejected"
+              onRowClick={handleRowClick}
+            />
+          )}
+
+          {noKeywordDomains.length > 0 && (
+            <ExpandableDomainList
+              title="No Keywords Found"
+              count={noKeywordDomains.length}
+              domains={noKeywordDomains}
+              category="no_keywords"
+              onRowClick={handleRowClick}
+            />
+          )}
+        </div>
       )}
 
       {/* Domain Detail Drawer */}

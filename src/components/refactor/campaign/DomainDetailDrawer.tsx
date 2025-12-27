@@ -157,21 +157,62 @@ export function DomainDetailDrawer({
   const keywords = domain?.features?.keywords?.top3?.filter(Boolean) ?? [];
   const uniqueKeywordCount = domain?.features?.keywords?.unique_count ?? 0;
 
-  // Determine match reason based on score and status
-  const getMatchReason = (): string => {
-    if (!displayData) return 'Score breakdown not available';
-    
-    const score = displayData.final ?? domain?.domainScore ?? 0;
-    if (isMatch) {
-      if (score >= 80) return `High score (${Math.round(score)}) exceeds threshold. Strong keyword signals and content quality.`;
-      if (score >= 60) return `Score (${Math.round(score)}) meets minimum threshold. Structural signals indicate potential lead.`;
-      return `Qualified based on combined structural and keyword signals.`;
-    } else if (leadStatusKey === 'no_match') {
-      if (score < 50) return `Score (${Math.round(score)}) below threshold. Insufficient keyword coverage or content quality.`;
-      return `Did not meet structural signal requirements despite adequate score.`;
+  // Generate dynamic, credible match reason from actual score components
+  const getMatchReason = (): { summary: string; strengths: string[]; weaknesses: string[] } => {
+    const components = displayData?.components;
+    if (!components) {
+      return {
+        summary: 'Scoring data loading...',
+        strengths: [],
+        weaknesses: [],
+      };
     }
-    return 'Lead evaluation pending or in progress.';
+
+    const score = displayData?.final ?? domain?.domainScore ?? 0;
+    
+    // Identify strengths (components >= 0.7 / 70%)
+    const strengths: string[] = [];
+    if (components.non_parked >= 0.9) strengths.push('Live, active site');
+    if (components.freshness >= 0.7) strengths.push('Fresh content');
+    if (components.content_length >= 0.7) strengths.push('Rich content depth');
+    if (components.density >= 0.5) strengths.push('Strong keyword density');
+    if (components.coverage >= 0.5) strengths.push('Good keyword variety');
+    if (components.title_keyword >= 0.7) strengths.push('Keyword in title');
+    
+    // Identify weaknesses (components < 0.4 / 40%)
+    const weaknesses: string[] = [];
+    if (components.non_parked < 0.5) weaknesses.push('Parked or inactive');
+    if (components.freshness < 0.3) weaknesses.push('Stale content');
+    if (components.content_length < 0.4) weaknesses.push('Limited content depth');
+    if (components.density < 0.2) weaknesses.push('Low keyword density');
+    if (components.coverage < 0.2) weaknesses.push('Narrow keyword coverage');
+    if (components.title_keyword < 0.3 && score < 60) weaknesses.push('No title keyword');
+    
+    // Build summary
+    let summary: string;
+    if (isMatch) {
+      if (score >= 80) {
+        summary = `High-quality lead (score ${Math.round(score)}). ${strengths.slice(0, 2).join(' and ').toLowerCase() || 'Strong signals'} make this a top candidate.`;
+      } else if (score >= 60) {
+        summary = `Qualified lead (score ${Math.round(score)}). ${strengths.length > 0 ? strengths[0] : 'Adequate signals'}, though ${weaknesses.length > 0 ? weaknesses[0]?.toLowerCase() : 'some areas could improve'}.`;
+      } else {
+        summary = `Borderline lead (score ${Math.round(score)}). Met minimum thresholds based on combined structural signals.`;
+      }
+    } else if (leadStatusKey === 'no_match') {
+      if (score < 40) {
+        summary = `Did not qualify (score ${Math.round(score)}). ${weaknesses.slice(0, 2).join(', ').toLowerCase() || 'Insufficient signals'}.`;
+      } else {
+        summary = `Score ${Math.round(score)} was not sufficient. ${weaknesses.length > 0 ? weaknesses[0] : 'Did not meet all requirements'}.`;
+      }
+    } else {
+      summary = 'Lead evaluation pending or in progress.';
+    }
+    
+    return { summary, strengths, weaknesses };
   };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const matchAnalysis = React.useMemo(() => getMatchReason(), [displayData, domain?.domainScore, domain?.leadStatus, isMatch, leadStatusKey]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -323,18 +364,47 @@ export function DomainDetailDrawer({
             )}
           </div>
 
-          {/* Match Reason */}
+          {/* Match Reason - Enhanced with strengths/weaknesses */}
           <div className="space-y-3">
             <h4 className="font-semibold text-gray-900 dark:text-gray-100">
               {isMatch ? 'Why Qualified' : 'Classification Reason'}
             </h4>
             <div className={cn(
-              'rounded-lg p-3 text-sm',
+              'rounded-lg p-4 text-sm space-y-3',
               isMatch
                 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200'
                 : 'bg-gray-50 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300'
             )}>
-              {getMatchReason()}
+              <p className="font-medium">{matchAnalysis.summary}</p>
+              
+              {(matchAnalysis.strengths.length > 0 || matchAnalysis.weaknesses.length > 0) && (
+                <div className="grid grid-cols-2 gap-3 mt-2 pt-2 border-t border-current/10">
+                  {matchAnalysis.strengths.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-300">
+                        ✓ Strengths
+                      </p>
+                      <ul className="text-xs space-y-0.5">
+                        {matchAnalysis.strengths.slice(0, 3).map((s, i) => (
+                          <li key={i}>{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {matchAnalysis.weaknesses.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold mb-1 text-rose-700 dark:text-rose-300">
+                        ✗ Weaknesses
+                      </p>
+                      <ul className="text-xs space-y-0.5">
+                        {matchAnalysis.weaknesses.slice(0, 3).map((w, i) => (
+                          <li key={i}>{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

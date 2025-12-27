@@ -216,7 +216,8 @@ describe('LeadResultsPanel', () => {
         />
       );
 
-      const rows = screen.getAllByRole('button');
+      // Each row has an aria-label "View details for <domain>"
+      const rows = screen.getAllByRole('button', { name: /View details for/i });
       expect(rows.length).toBe(mockDomains.length);
     });
 
@@ -301,6 +302,123 @@ describe('LeadResultsPanel', () => {
       // Should display the counts - use getAllByText since "Matches" appears in header and content
       const matchesElements = screen.getAllByText('Matches');
       expect(matchesElements.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Clickable Score Column', () => {
+    it('renders score as a clickable button', () => {
+      renderWithProviders(
+        <LeadResultsPanel
+          domains={mockDomains}
+          campaignId="test-campaign"
+        />
+      );
+
+      // Each score should be clickable (except dashes)
+      const scoreButtons = screen.getAllByRole('button', { name: /View score breakdown/i });
+      expect(scoreButtons.length).toBeGreaterThan(0);
+    });
+
+    it('has tooltip explaining score click behavior', () => {
+      renderWithProviders(
+        <LeadResultsPanel
+          domains={mockDomains}
+          campaignId="test-campaign"
+        />
+      );
+
+      // Score buttons should have title attribute
+      const scoreButton = screen.getByRole('button', { name: /View score breakdown for high-score.com/i });
+      expect(scoreButton).toHaveAttribute('title', 'Click to view score breakdown');
+    });
+  });
+
+  describe('Expandable Domain Lists', () => {
+    const domainsWithRejected: DomainListItem[] = [
+      ...mockDomains,
+      {
+        id: '5',
+        domain: 'rejected-domain.com',
+        domainScore: 30,
+        leadStatus: 'no_match',  // Use underscore format to match backend
+        dnsStatus: 'ok',
+        httpStatus: 'ok',
+        createdAt: new Date().toISOString(),
+        features: {
+          keywords: { top3: ['test'], unique_count: 1 },
+        },
+      },
+      {
+        id: '6',
+        domain: 'no-keywords-domain.com',
+        domainScore: undefined,
+        leadStatus: 'pending',
+        dnsStatus: 'ok',
+        httpStatus: 'ok',
+        createdAt: new Date().toISOString(),
+        // No keywords data
+      },
+    ];
+
+    it('shows Additional Results section when rejected domains exist', () => {
+      renderWithProviders(
+        <LeadResultsPanel
+          domains={domainsWithRejected}
+          campaignId="test-campaign"
+        />
+      );
+
+      expect(screen.getByText('Additional Results')).toBeInTheDocument();
+    });
+
+    it('shows Rejected by Scoring expandable list when rejected domains exist', () => {
+      renderWithProviders(
+        <LeadResultsPanel
+          domains={domainsWithRejected}
+          campaignId="test-campaign"
+        />
+      );
+
+      // Should show the rejected header with expandable list
+      const rejectedHeader = screen.getByRole('button', { name: /rejected by scoring/i });
+      expect(rejectedHeader).toBeInTheDocument();
+    });
+
+    it('expandable list is collapsed by default', () => {
+      renderWithProviders(
+        <LeadResultsPanel
+          domains={domainsWithRejected}
+          campaignId="test-campaign"
+        />
+      );
+
+      // The rejected domain should not be visible until expanded
+      const rejectedHeader = screen.getByRole('button', { name: /rejected by scoring/i });
+      expect(rejectedHeader).toBeInTheDocument();
+      
+      // Check aria-expanded is false (collapsed)
+      expect(rejectedHeader).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('clicking expandable header toggles visibility', async () => {
+      const user = userEvent.setup();
+      
+      renderWithProviders(
+        <LeadResultsPanel
+          domains={domainsWithRejected}
+          campaignId="test-campaign"
+        />
+      );
+
+      const rejectedHeader = screen.getByRole('button', { name: /rejected by scoring/i });
+      
+      // Click to expand
+      await user.click(rejectedHeader);
+      
+      // After expanding, the rejected domain should be visible
+      await waitFor(() => {
+        expect(screen.getByText('rejected-domain.com')).toBeInTheDocument();
+      });
     });
   });
 });
