@@ -1615,6 +1615,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/{campaignId}/phases/analysis/restart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restart analysis phase only
+         * @description Re-runs the analysis and scoring phase without re-running discovery, DNS, or HTTP phases.
+         *     Preserves the existing domain set and does not modify offsets.
+         *
+         *     Prerequisites:
+         *     - Campaign must exist
+         *     - Analysis phase must not be currently running
+         *     - HTTP validation phase must be completed (upstream dependency)
+         *
+         *     The endpoint is idempotent when X-Idempotency-Key is provided.
+         *
+         */
+        post: operations["campaigns_analysis_restart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/{campaignId}/discovery-lineage": {
         parameters: {
             query?: never;
@@ -1697,6 +1726,29 @@ export interface paths {
         };
         /** Get campaign funnel snapshot */
         get: operations["campaigns_funnel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/rejection-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get rejection summary for a campaign
+         * @description Returns counts by rejection_reason for a campaign, with audit equation validation.
+         *     The audit equation is: analyzed = qualified + rejected
+         *     where rejected = lowScore + noKeywords + parked + dnsError + dnsTimeout + httpError + httpTimeout
+         *
+         */
+        get: operations["campaigns_rejection_summary_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2198,6 +2250,12 @@ export interface components {
              */
             type: "CampaignSseProgressEvent";
         };
+        /**
+         * @description Terminal outcome classification for every domain. Set deterministically by each phase handler. No silent defaults - every terminal domain must have a reason.
+         *
+         * @enum {string}
+         */
+        DomainRejectionReasonEnum: "qualified" | "low_score" | "no_keywords" | "parked" | "dns_error" | "dns_timeout" | "http_error" | "http_timeout" | "pending";
         /** @description Canonical nested analysis feature vector for a discovered domain. */
         DomainAnalysisFeatures: {
             keywords?: {
@@ -2246,6 +2304,8 @@ export interface components {
             dnsStatus?: string | null;
             httpStatus?: string | null;
             leadStatus?: string | null;
+            /** @description Terminal outcome classification for this domain */
+            rejectionReason?: components["schemas"]["DomainRejectionReasonEnum"];
             dnsReason?: string | null;
             httpReason?: string | null;
             features?: components["schemas"]["DomainAnalysisFeatures"];
@@ -3086,6 +3146,8 @@ export interface components {
             httpStatus?: string;
             /** @description Lead extraction status if available */
             leadStatus?: string;
+            /** @description Terminal outcome classification for this domain. Always set for terminal states. */
+            rejectionReason?: components["schemas"]["DomainRejectionReasonEnum"];
             /** @description Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE) */
             dnsReason?: string | null;
             /** @description Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH) */
@@ -3150,45 +3212,76 @@ export interface components {
             };
             pageInfo?: components["schemas"]["ExtendedPageInfo"];
         };
-        /** @description Component scores contributing to the final relevance score for a domain. */
+        /** @description Individual component score with state and optional reason */
+        ScoreComponent: {
+            /**
+             * Format: float
+             * @description Normalized score (0-1), null if unavailable
+             */
+            value?: number | null;
+            /**
+             * @description Component availability state
+             * @enum {string}
+             */
+            state: "ok" | "unavailable" | "error";
+            /**
+             * @description Reason if state is not ok
+             * @enum {string|null}
+             */
+            reason?: "field_missing" | "computation_failed" | "data_pending" | null;
+        };
+        /** @description Structured score breakdown with explicit state for graceful degradation.
+         *     Never returns 500 - always returns structured state indicating data availability.
+         *      */
         DomainScoreBreakdownResponse: {
             /** Format: uuid */
             campaignId: string;
             domain: string;
-            /** @description Raw component scores normalized to 0-1 prior to weighting. */
-            components: {
-                /** Format: float */
-                density: number;
-                /** Format: float */
-                coverage: number;
-                /** Format: float */
-                non_parked: number;
-                /** Format: float */
-                content_length: number;
-                /** Format: float */
-                title_keyword: number;
-                /** Format: float */
-                freshness: number;
-                /**
-                 * Format: float
-                 * @description Experimental TF-lite component (0 if disabled)
-                 */
-                tf_lite: number;
-            };
+            /**
+             * @description Overall availability state of the breakdown
+             * @enum {string}
+             */
+            state: "complete" | "partial" | "degraded";
+            /**
+             * @description Reason for non-complete state
+             * @enum {string|null}
+             */
+            reason?: "feature_vector_missing" | "profile_not_found" | "analysis_pending" | "domain_not_found" | "internal_error" | null;
             /**
              * Format: float
-             * @description Weighted final relevance score after penalties
+             * @description Final weighted score (0-100), null if unavailable
              */
-            final: number;
-            /** @description Active scoring profile weights used for combination. */
+            overallScore?: number | null;
+            /** @description Component scores with individual state tracking */
+            components: {
+                density: components["schemas"]["ScoreComponent"];
+                coverage: components["schemas"]["ScoreComponent"];
+                nonParked: components["schemas"]["ScoreComponent"];
+                contentLength: components["schemas"]["ScoreComponent"];
+                titleKeyword: components["schemas"]["ScoreComponent"];
+                freshness: components["schemas"]["ScoreComponent"];
+                tfLite: components["schemas"]["ScoreComponent"];
+            };
+            /** @description Evidence supporting the score (keyword hits, penalties, etc.) */
+            evidence?: {
+                /** @description Keywords that matched in the domain content */
+                keywordHits?: string[];
+                /** @description Whether the parked domain penalty was applied */
+                parkedPenaltyApplied?: boolean;
+                /**
+                 * Format: float
+                 * @description Penalty multiplier if applied (e.g., 0.5)
+                 */
+                parkedPenaltyFactor?: number | null;
+                /** @description Raw content length in bytes */
+                contentLengthBytes?: number | null;
+                /** @description Days since content was last modified */
+                freshnessDaysOld?: number | null;
+            } | null;
+            /** @description Active scoring profile weights used for combination */
             weights?: {
                 [key: string]: number;
             };
-            /**
-             * Format: float
-             * @description Penalty factor applied when domain considered parked with low confidence (<0.9)
-             */
-            parkedPenaltyFactor?: number;
         };
         /** @enum {string} */
         CampaignStateEnum: "draft" | "running" | "paused" | "completed" | "failed" | "cancelled" | "archived";
@@ -3405,6 +3498,28 @@ export interface components {
             /** @description Latest status snapshot for each restartable phase after enqueueing. */
             phaseStatuses?: components["schemas"]["PhaseStatusResponse"][];
         };
+        /** @description Response for analysis-only restart. Re-runs scoring without affecting discovery/DNS/HTTP. */
+        AnalysisRestartResponse: {
+            /** Format: uuid */
+            campaignId: string;
+            /** @description Human-readable status message. */
+            message: string;
+            /**
+             * @description State of analysis phase before restart.
+             * @enum {string}
+             */
+            previousState?: "not_started" | "configured" | "completed" | "failed" | "paused";
+            /**
+             * @description State of analysis phase after restart initiated.
+             * @enum {string}
+             */
+            currentState: "running" | "queued";
+            phaseStatus: components["schemas"]["PhaseStatusResponse"];
+            /** @description True if this was a cached response from a previous identical request. */
+            idempotent?: boolean;
+            /** Format: date-time */
+            timestamp: string;
+        };
         /** @description Campaign in the discovery lineage with stats */
         DiscoveryLineageCampaign: {
             /** Format: uuid */
@@ -3427,6 +3542,11 @@ export interface components {
                 keywordMatches: number;
                 /** Format: int64 */
                 leads: number;
+                /**
+                 * @description Data completeness state of the campaign
+                 * @enum {string}
+                 */
+                completeness: "pending" | "partial" | "complete" | "degraded";
             };
         };
         /** @description Discovery lineage for an existing campaign */
@@ -3528,6 +3648,51 @@ export interface components {
             analyzed: number;
             highPotential: number;
             leads: number;
+        };
+        /** @description Breakdown of domain outcomes by rejection_reason. Enables audit equation: analyzed = qualified + rejected_total (low_score + no_keywords + parked + dns errors + http errors)
+         *      */
+        RejectionSummaryResponse: {
+            /** Format: uuid */
+            campaignId: string;
+            /** @description Count of domains by rejection reason */
+            counts: {
+                /** @description Domains that passed validation and scoring thresholds */
+                qualified: number;
+                /** @description Domains with keywords but score below threshold */
+                lowScore: number;
+                /** @description HTTP OK but no keyword matches found */
+                noKeywords: number;
+                /** @description Detected as parked/placeholder pages */
+                parked: number;
+                /** @description DNS validation errors (NXDOMAIN, SERVFAIL, etc.) */
+                dnsError: number;
+                /** @description DNS validation timed out */
+                dnsTimeout: number;
+                /** @description HTTP validation errors (connection, TLS, non-2xx) */
+                httpError: number;
+                /** @description HTTP validation timed out */
+                httpTimeout: number;
+                /** @description Validation not yet complete */
+                pending: number;
+            };
+            /** @description Aggregate totals for audit equation */
+            totals: {
+                /** @description Total domains that completed processing (excludes pending) */
+                analyzed: number;
+                /** @description Domains that became leads (same as counts.qualified) */
+                qualified: number;
+                /** @description Sum of all rejection reasons (lowScore + noKeywords + parked + errors) */
+                rejected: number;
+                /** @description Sum of dns_error + dns_timeout + http_error + http_timeout */
+                errors: number;
+                /** @description Domains still being processed */
+                pending: number;
+            };
+            /** @description True if audit equation balances: analyzed == qualified + rejected. False indicates data inconsistency requiring investigation.
+             *      */
+            balanced: boolean;
+            /** @description Human-readable explanation if balanced is false */
+            auditNote?: string | null;
         };
         /** @description KPI and warning component metrics for a campaign */
         CampaignMetricsResponse: {
@@ -6923,6 +7088,8 @@ export interface operations {
                 dir?: "asc" | "desc";
                 /** @description Warning filter applied before sorting (has = only domains with penalties; none = only clean domains) */
                 warnings?: "has" | "none";
+                /** @description Filter by rejection reason. Supports single value or comma-separated list for multi-value filtering. Valid values: qualified, low_score, no_keywords, parked, dns_error, dns_timeout, http_error, http_timeout, pending */
+                rejectionReason?: components["schemas"]["DomainRejectionReasonEnum"][];
                 /** @description Page size for cursor pagination (overrides limit when present) */
                 first?: number;
                 /** @description Cursor token to continue listing after */
@@ -7511,6 +7678,55 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    campaigns_analysis_restart: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for duplicate request detection. If a request with this key was already
+                 *     processed within 5 minutes, the cached result is returned without re-executing.
+                 *      */
+                "X-Idempotency-Key"?: string;
+            };
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Analysis restart initiated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisRestartResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            /** @description Conflict - analysis cannot be restarted in current state.
+             *     Possible reasons:
+             *     - Analysis phase is currently running
+             *     - HTTP validation phase not completed
+             *      */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"] & {
+                        /** @description Current state of the analysis phase */
+                        currentState?: string;
+                        /** @description Required state to allow restart */
+                        requiredState?: string;
+                    };
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     campaigns_discovery_lineage: {
         parameters: {
             query?: never;
@@ -7636,6 +7852,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CampaignFunnelResponse"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_rejection_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectionSummaryResponse"];
                 };
             };
             404: components["responses"]["NotFound"];

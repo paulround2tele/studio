@@ -1,0 +1,21 @@
+get:
+  tags: [campaigns]
+  summary: Get rejection summary for a campaign
+  description: |
+    Returns counts by rejection_reason for a campaign, with audit equation validation.
+    The audit equation is: analyzed = qualified + rejected
+    where rejected = lowScore + noKeywords + parked + dnsError + dnsTimeout + httpError + httpTimeout
+  operationId: campaigns_rejection_summary_get
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema: { $ref: '../../components/schemas/all.yaml#/RejectionSummaryResponse' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

@@ -605,7 +605,7 @@ func (s *campaignStorePostgres) GetGeneratedDomainsByCampaign(ctx context.Contex
 	if exec == nil {
 		exec = s.db
 	}
-	base := `SELECT id, campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, dns_ip, http_status, http_status_code, http_title, http_keywords, lead_score, lead_status, last_validated_at, dns_reason, http_reason FROM generated_domains`
+	base := `SELECT id, campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, dns_ip, http_status, http_status_code, http_title, http_keywords, lead_score, lead_status, last_validated_at, dns_reason, http_reason, rejection_reason FROM generated_domains`
 	conditions := []string{"campaign_id = $1", "offset_index >= $2"}
 	args := []interface{}{campaignID, lastOffsetIndex}
 	argPos := 3
@@ -633,6 +633,21 @@ func (s *campaignStorePostgres) GetGeneratedDomainsByCampaign(ctx context.Contex
 		if filter.LeadStatus != nil {
 			conditions = append(conditions, fmt.Sprintf("lead_status = $%d", argPos))
 			args = append(args, *filter.LeadStatus)
+			argPos++
+		}
+		// P0-8: Multi-value rejection reason filter (IN clause)
+		if len(filter.RejectionReasons) > 0 {
+			placeholders := make([]string, len(filter.RejectionReasons))
+			for i, reason := range filter.RejectionReasons {
+				placeholders[i] = fmt.Sprintf("$%d", argPos)
+				args = append(args, reason)
+				argPos++
+			}
+			conditions = append(conditions, fmt.Sprintf("rejection_reason IN (%s)", strings.Join(placeholders, ", ")))
+		} else if filter.RejectionReason != nil {
+			// Legacy single-value filter (backwards compatibility)
+			conditions = append(conditions, fmt.Sprintf("rejection_reason = $%d", argPos))
+			args = append(args, *filter.RejectionReason)
 			argPos++
 		}
 	}
@@ -1270,7 +1285,8 @@ func (s *campaignStorePostgres) UpdateDomainHTTPStatus(ctx context.Context, exec
 	return nil
 }
 
-func (s *campaignStorePostgres) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64) error {
+// UpdateDomainLeadStatus updates lead status and rejection reason for a domain (P0-3)
+func (s *campaignStorePostgres) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64, rejectionReason models.DomainRejectionReasonEnum) error {
 	if exec == nil {
 		exec = s.db
 	}
@@ -1282,10 +1298,11 @@ func (s *campaignStorePostgres) UpdateDomainLeadStatus(ctx context.Context, exec
 
 	updateQuery := `UPDATE generated_domains
 		SET lead_status = $1,
-		    lead_score = COALESCE($2, lead_score)
-		WHERE id = $3`
+		    lead_score = COALESCE($2, lead_score),
+		    rejection_reason = $3
+		WHERE id = $4`
 
-	result, err := exec.ExecContext(ctx, updateQuery, status, scoreParam, domainID)
+	result, err := exec.ExecContext(ctx, updateQuery, status, scoreParam, rejectionReason, domainID)
 	if err != nil {
 		return fmt.Errorf("failed to update domain lead status: %w", err)
 	}
@@ -1295,7 +1312,7 @@ func (s *campaignStorePostgres) UpdateDomainLeadStatus(ctx context.Context, exec
 		return store.ErrNotFound
 	}
 
-	log.Printf("DEBUG [UpdateDomainLeadStatus]: Updated domain %s lead_status=%s score=%v", domainID, status, scoreParam)
+	log.Printf("DEBUG [UpdateDomainLeadStatus]: Updated domain %s lead_status=%s score=%v rejection_reason=%s", domainID, status, scoreParam, rejectionReason)
 	return nil
 }
 
@@ -1699,6 +1716,7 @@ func (s *campaignStorePostgres) CreateCampaignPhases(ctx context.Context, exec s
 }
 
 // UpdateDomainsBulkDNSStatus performs bulk updates of DNS status for generated_domains using COPY-like VALUES
+// Also sets rejection_reason deterministically based on validation outcome (P0-3)
 func (s *campaignStorePostgres) UpdateDomainsBulkDNSStatus(ctx context.Context, exec store.Querier, results []models.DNSValidationResult) error {
 	if len(results) == 0 {
 		return nil
@@ -1717,6 +1735,8 @@ func (s *campaignStorePostgres) UpdateDomainsBulkDNSStatus(ctx context.Context, 
 	}
 	tmp := strings.Join(valueStrings, ",")
 	// NOTE: Cast validation_status (text) to domain_dns_status_enum to satisfy PostgreSQL enum type
+	// P0-3: Set rejection_reason ONLY for terminal DNS errors (dns_error, dns_timeout)
+	// Do NOT overwrite existing non-pending rejection_reason on other paths
 	q := fmt.Sprintf(`UPDATE generated_domains gd
 		SET dns_status = v.validation_status::domain_dns_status_enum,
 		    last_validated_at = v.last_checked_at::timestamptz,
@@ -1724,7 +1744,12 @@ func (s *campaignStorePostgres) UpdateDomainsBulkDNSStatus(ctx context.Context, 
 		        WHEN v.validation_status NOT IN ('ok','pending') THEN 'no_match'::domain_lead_status_enum
 		        ELSE gd.lead_status
 		    END,
-		    dns_reason = CASE WHEN v.validation_status = 'ok' THEN NULL ELSE COALESCE(v.reason, gd.dns_reason) END
+		    dns_reason = CASE WHEN v.validation_status = 'ok' THEN NULL ELSE COALESCE(v.reason, gd.dns_reason) END,
+		    rejection_reason = CASE
+		        WHEN v.validation_status = 'timeout' THEN 'dns_timeout'::domain_rejection_reason_enum
+		        WHEN v.validation_status = 'error' THEN 'dns_error'::domain_rejection_reason_enum
+		        ELSE gd.rejection_reason
+		    END
 		FROM (VALUES %s) AS v(domain_name,validation_status,last_checked_at,reason)
 		WHERE gd.domain_name = v.domain_name`, tmp)
 	if _, err := exec.ExecContext(ctx, q, valueArgs...); err != nil {
@@ -1751,6 +1776,7 @@ func (s *campaignStorePostgres) UpdateDomainsBulkHTTPStatus(ctx context.Context,
 	}
 	tmp := strings.Join(valueStrings, ",")
 	// Cast validation_status to enum and timestamp; only set http_reason when status not 'ok'
+	// P0-3: Set rejection_reason deterministically based on HTTP validation outcome
 	q := fmt.Sprintf(`UPDATE generated_domains gd
 		SET http_status = v.validation_status::domain_http_status_enum,
 			http_status_code = CASE
@@ -1763,7 +1789,12 @@ func (s *campaignStorePostgres) UpdateDomainsBulkHTTPStatus(ctx context.Context,
 				WHEN v.validation_status NOT IN ('ok','pending') THEN 'no_match'::domain_lead_status_enum
 				ELSE gd.lead_status
 			END,
-			http_reason = CASE WHEN v.validation_status = 'ok' THEN NULL ELSE COALESCE(v.reason, gd.http_reason) END
+			http_reason = CASE WHEN v.validation_status = 'ok' THEN NULL ELSE COALESCE(v.reason, gd.http_reason) END,
+			rejection_reason = CASE
+				WHEN v.validation_status = 'timeout' THEN 'http_timeout'::domain_rejection_reason_enum
+				WHEN v.validation_status = 'error' THEN 'http_error'::domain_rejection_reason_enum
+				ELSE gd.rejection_reason
+			END
 		FROM (VALUES %s) AS v(domain_name,validation_status,http_status_code,last_checked_at,reason)
 		WHERE gd.domain_name = v.domain_name`, tmp)
 	if _, err := exec.ExecContext(ctx, q, valueArgs...); err != nil {
@@ -2940,8 +2971,13 @@ func (s *campaignStorePostgres) GetDiscoveryLineage(ctx context.Context, exec st
 		limit = 10
 	}
 
-	// Query campaigns with the same config hash and aggregate domain stats
+	// Query campaigns with the same config hash and aggregate domain stats + completeness
 	// Auth scope: filter by user_id if provided
+	// Completeness logic:
+	//   - pending: all phases are not_started, ready, or configured
+	//   - partial: at least one phase is in_progress/paused, or some completed but not all
+	//   - complete: all phases are completed or skipped
+	//   - degraded: at least one phase has failed
 	query := `
 		SELECT 
 			c.id,
@@ -2952,7 +2988,8 @@ func (s *campaignStorePostgres) GetDiscoveryLineage(ctx context.Context, exec st
 			COALESCE(stats.domains_count, 0) as domains_count,
 			COALESCE(stats.dns_valid_count, 0) as dns_valid_count,
 			COALESCE(stats.keyword_matches, 0) as keyword_matches,
-			COALESCE(stats.lead_count, 0) as lead_count
+			COALESCE(stats.lead_count, 0) as lead_count,
+			COALESCE(phase_status.completeness, 'pending') as completeness
 		FROM lead_generation_campaigns c
 		LEFT JOIN LATERAL (
 			SELECT 
@@ -2963,6 +3000,21 @@ func (s *campaignStorePostgres) GetDiscoveryLineage(ctx context.Context, exec st
 			FROM generated_domains
 			WHERE campaign_id = c.id
 		) stats ON true
+		LEFT JOIN LATERAL (
+			SELECT 
+				CASE
+					-- degraded: at least one phase failed
+					WHEN COUNT(*) FILTER (WHERE status = 'failed') > 0 THEN 'degraded'
+					-- complete: all phases are completed or skipped (no in_progress, no pending states)
+					WHEN COUNT(*) = COUNT(*) FILTER (WHERE status IN ('completed', 'skipped')) THEN 'complete'
+					-- partial: has some completed/in_progress phases
+					WHEN COUNT(*) FILTER (WHERE status IN ('in_progress', 'paused', 'completed')) > 0 THEN 'partial'
+					-- pending: not started yet (all phases are not_started, ready, or configured)
+					ELSE 'pending'
+				END as completeness
+			FROM campaign_phases
+			WHERE campaign_id = c.id
+		) phase_status ON true
 		WHERE c.discovery_config_hash = $1
 		  AND ($2::uuid IS NULL OR c.id != $2)
 		  AND ($4::varchar IS NULL OR c.user_id::text = $4)
@@ -2978,3 +3030,88 @@ func (s *campaignStorePostgres) GetDiscoveryLineage(ctx context.Context, exec st
 }
 
 var _ store.CampaignStore = (*campaignStorePostgres)(nil)
+
+// P0-4: GetRejectionSummary returns counts by rejection_reason for audit equation validation
+func (s *campaignStorePostgres) GetRejectionSummary(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*store.RejectionSummary, error) {
+	if exec == nil {
+		exec = s.db
+	}
+
+	// Aggregate counts by rejection_reason using efficient COUNT FILTER pattern
+	query := `
+		SELECT 
+			COALESCE(COUNT(*) FILTER (WHERE rejection_reason = 'qualified'), 0) as qualified,
+			COALESCE(COUNT(*) FILTER (WHERE rejection_reason = 'low_score'), 0) as low_score,
+			COALESCE(COUNT(*) FILTER (WHERE rejection_reason = 'no_keywords'), 0) as no_keywords,
+			COALESCE(COUNT(*) FILTER (WHERE rejection_reason = 'parked'), 0) as parked,
+			COALESCE(COUNT(*) FILTER (WHERE rejection_reason = 'dns_error'), 0) as dns_error,
+			COALESCE(COUNT(*) FILTER (WHERE rejection_reason = 'dns_timeout'), 0) as dns_timeout,
+			COALESCE(COUNT(*) FILTER (WHERE rejection_reason = 'http_error'), 0) as http_error,
+			COALESCE(COUNT(*) FILTER (WHERE rejection_reason = 'http_timeout'), 0) as http_timeout,
+			COALESCE(COUNT(*) FILTER (WHERE rejection_reason = 'pending'), 0) as pending,
+			COALESCE(COUNT(*) FILTER (WHERE rejection_reason IS NULL), 0) as null_count
+		FROM generated_domains
+		WHERE campaign_id = $1`
+
+	type countsRow struct {
+		Qualified   int64 `db:"qualified"`
+		LowScore    int64 `db:"low_score"`
+		NoKeywords  int64 `db:"no_keywords"`
+		Parked      int64 `db:"parked"`
+		DNSError    int64 `db:"dns_error"`
+		DNSTimeout  int64 `db:"dns_timeout"`
+		HTTPError   int64 `db:"http_error"`
+		HTTPTimeout int64 `db:"http_timeout"`
+		Pending     int64 `db:"pending"`
+		NullCount   int64 `db:"null_count"`
+	}
+
+	var row countsRow
+	if err := exec.GetContext(ctx, &row, query, campaignID); err != nil {
+		return nil, fmt.Errorf("GetRejectionSummary failed: %w", err)
+	}
+
+	// Build the summary
+	summary := &store.RejectionSummary{
+		CampaignID: campaignID,
+	}
+	summary.Counts.Qualified = row.Qualified
+	summary.Counts.LowScore = row.LowScore
+	summary.Counts.NoKeywords = row.NoKeywords
+	summary.Counts.Parked = row.Parked
+	summary.Counts.DNSError = row.DNSError
+	summary.Counts.DNSTimeout = row.DNSTimeout
+	summary.Counts.HTTPError = row.HTTPError
+	summary.Counts.HTTPTimeout = row.HTTPTimeout
+	summary.Counts.Pending = row.Pending
+
+	// Calculate totals
+	// errors = dns_error + dns_timeout + http_error + http_timeout
+	errors := row.DNSError + row.DNSTimeout + row.HTTPError + row.HTTPTimeout
+	// rejected = low_score + no_keywords + parked + errors
+	rejected := row.LowScore + row.NoKeywords + row.Parked + errors
+	// analyzed = all non-pending domains (those that have completed processing)
+	analyzed := row.Qualified + rejected
+
+	summary.Totals.Qualified = row.Qualified
+	summary.Totals.Rejected = rejected
+	summary.Totals.Errors = errors
+	summary.Totals.Pending = row.Pending
+	summary.Totals.Analyzed = analyzed
+
+	// Audit equation check: analyzed == qualified + rejected
+	// balanced = true if equation holds
+	summary.Balanced = (analyzed == row.Qualified+rejected)
+
+	// Add audit note if there are issues
+	if row.NullCount > 0 {
+		note := fmt.Sprintf("Warning: %d domains have NULL rejection_reason (awaiting classification)", row.NullCount)
+		summary.AuditNote = &note
+		// If there are null values, the equation may not balance
+		if row.NullCount > 0 {
+			summary.Balanced = false
+		}
+	}
+
+	return summary, nil
+}

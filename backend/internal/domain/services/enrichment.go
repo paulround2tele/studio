@@ -105,6 +105,7 @@ type enrichmentCandidate struct {
 
 type evaluationResult struct {
 	status          models.DomainLeadStatusEnum
+	rejectionReason models.DomainRejectionReasonEnum // P0-3: Terminal outcome classification
 	leadScore       *float64
 	skipPersistence bool
 }
@@ -449,7 +450,8 @@ func (s *enrichmentService) runEnrichment(ctx context.Context, campaignID uuid.U
 				continue
 			}
 
-			if err := s.store.UpdateDomainLeadStatus(ctx, nil, candidate.ID, result.status, result.leadScore); err != nil {
+			// P0-3: Pass rejection_reason to store
+			if err := s.store.UpdateDomainLeadStatus(ctx, nil, candidate.ID, result.status, result.leadScore, result.rejectionReason); err != nil {
 				runErr = fmt.Errorf("update lead status for domain %s: %w", candidate.DomainName, err)
 				break
 			}
@@ -652,6 +654,8 @@ func (s *enrichmentService) fetchEnrichmentBatch(ctx context.Context, exec store
 	return batch, nil
 }
 
+// evaluateCandidate determines lead status and rejection reason for a domain (P0-3)
+// Returns deterministic rejection_reason for every terminal path - no silent defaults
 func (s *enrichmentService) evaluateCandidate(cfg enrichmentConfig, candidate enrichmentCandidate) evaluationResult {
 	scorePtr := func() *float64 {
 		if candidate.DomainScore.Valid {
@@ -660,17 +664,18 @@ func (s *enrichmentService) evaluateCandidate(cfg enrichmentConfig, candidate en
 		}
 		return nil
 	}
+	// HTTP status-based rejections (should already be set by HTTP phase, but be consistent)
 	switch candidate.HTTPStatus {
 	case models.DomainHTTPStatusTimeout:
-		return evaluationResult{status: models.DomainLeadStatusTimeout}
+		return evaluationResult{status: models.DomainLeadStatusTimeout, rejectionReason: models.DomainRejectionReasonHTTPTimeout}
 	case models.DomainHTTPStatusError:
-		return evaluationResult{status: models.DomainLeadStatusError}
+		return evaluationResult{status: models.DomainLeadStatusError, rejectionReason: models.DomainRejectionReasonHTTPError}
 	case models.DomainHTTPStatusPending:
-		return evaluationResult{status: models.DomainLeadStatusPending, skipPersistence: true}
+		return evaluationResult{status: models.DomainLeadStatusPending, rejectionReason: models.DomainRejectionReasonPending, skipPersistence: true}
 	case models.DomainHTTPStatusOK:
-		// continue
+		// continue to content evaluation
 	default:
-		return evaluationResult{status: models.DomainLeadStatusPending, skipPersistence: true}
+		return evaluationResult{status: models.DomainLeadStatusPending, rejectionReason: models.DomainRejectionReasonPending, skipPersistence: true}
 	}
 
 	metrics := featureVectorMetrics{}
@@ -678,41 +683,51 @@ func (s *enrichmentService) evaluateCandidate(cfg enrichmentConfig, candidate en
 		metrics = parseFeatureVector(candidate.FeatureVector.Raw)
 	}
 
+	// Parked domain detection
 	parkedConfidence := metrics.ParkedConfidence
 	if candidate.ParkedConfidence.Valid {
 		parkedConfidence = candidate.ParkedConfidence.Float64
 	}
 	if (candidate.IsParked.Valid && candidate.IsParked.Bool) || parkedConfidence >= cfg.ParkedConfidenceFloor {
-		return evaluationResult{status: models.DomainLeadStatusNoMatch, leadScore: scorePtr()}
+		return evaluationResult{status: models.DomainLeadStatusNoMatch, rejectionReason: models.DomainRejectionReasonParked, leadScore: scorePtr()}
 	}
 
+	// No structural signals (low quality content)
 	if cfg.RequireStructuralSignals && !metrics.HasStructuralSignals {
-		return evaluationResult{status: models.DomainLeadStatusNoMatch, leadScore: scorePtr()}
+		return evaluationResult{status: models.DomainLeadStatusNoMatch, rejectionReason: models.DomainRejectionReasonNoKeywords, leadScore: scorePtr()}
 	}
 
+	// No keyword matches found
 	if metrics.KeywordSignalsSeen && metrics.KeywordUnique <= 0 && metrics.KeywordHitsTotal <= 0 {
-		return evaluationResult{status: models.DomainLeadStatusNoMatch, leadScore: scorePtr()}
+		return evaluationResult{status: models.DomainLeadStatusNoMatch, rejectionReason: models.DomainRejectionReasonNoKeywords, leadScore: scorePtr()}
 	}
 
+	// No score available
 	if !candidate.DomainScore.Valid {
-		return evaluationResult{status: models.DomainLeadStatusNoMatch}
+		return evaluationResult{status: models.DomainLeadStatusNoMatch, rejectionReason: models.DomainRejectionReasonNoKeywords}
 	}
 
 	scoreVal := candidate.DomainScore.Float64
-	result := evaluationResult{status: models.DomainLeadStatusNoMatch}
+	result := evaluationResult{status: models.DomainLeadStatusNoMatch, rejectionReason: models.DomainRejectionReasonLowScore}
 	result.leadScore = &scoreVal
 
+	// High score - qualified lead
 	if scoreVal >= cfg.MatchScoreThreshold {
 		result.status = models.DomainLeadStatusMatch
+		result.rejectionReason = models.DomainRejectionReasonQualified
 		return result
 	}
 
+	// Low content bytes - insufficient content
 	if metrics.ContentBytes < float64(cfg.MinContentBytes) {
+		result.rejectionReason = models.DomainRejectionReasonLowScore
 		return result
 	}
 
+	// Grace threshold - still qualified
 	if scoreVal >= cfg.LowScoreGraceThreshold {
 		result.status = models.DomainLeadStatusMatch
+		result.rejectionReason = models.DomainRejectionReasonQualified
 	}
 	return result
 }

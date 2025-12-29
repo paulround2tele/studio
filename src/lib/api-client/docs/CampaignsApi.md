@@ -9,6 +9,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**bulkGenerateDomains**](#bulkgeneratedomains) | **POST** /campaigns/bulk/domains/generate | Bulk domain generation|
 |[**bulkValidateDNS**](#bulkvalidatedns) | **POST** /campaigns/bulk/domains/validate-dns | Bulk DNS validation|
 |[**bulkValidateHTTP**](#bulkvalidatehttp) | **POST** /campaigns/bulk/domains/validate-http | Bulk HTTP validation|
+|[**campaignsAnalysisRestart**](#campaignsanalysisrestart) | **POST** /campaigns/{campaignId}/phases/analysis/restart | Restart analysis phase only|
 |[**campaignsBulkOperationsList**](#campaignsbulkoperationslist) | **GET** /campaigns/bulk/operations | List bulk operations|
 |[**campaignsClassificationsGet**](#campaignsclassificationsget) | **GET** /campaigns/{campaignId}/classifications | Get campaign classification buckets|
 |[**campaignsCreate**](#campaignscreate) | **POST** /campaigns | Create campaign|
@@ -38,6 +39,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsPhaseStop**](#campaignsphasestop) | **POST** /campaigns/{campaignId}/phases/{phase}/stop | Stop campaign phase|
 |[**campaignsProgress**](#campaignsprogress) | **GET** /campaigns/{campaignId}/progress | Get campaign progress|
 |[**campaignsRecommendationsGet**](#campaignsrecommendationsget) | **GET** /campaigns/{campaignId}/insights/recommendations | Get campaign recommendations|
+|[**campaignsRejectionSummaryGet**](#campaignsrejectionsummaryget) | **GET** /campaigns/{campaignId}/rejection-summary | Get rejection summary for a campaign|
 |[**campaignsRestart**](#campaignsrestart) | **POST** /campaigns/{campaignId}/restart | Restart campaign pipeline (excludes discovery)|
 |[**campaignsStateDelete**](#campaignsstatedelete) | **DELETE** /campaigns/{campaignId}/state | Delete campaign state|
 |[**campaignsStateGet**](#campaignsstateget) | **GET** /campaigns/{campaignId}/state | Get campaign state|
@@ -321,6 +323,65 @@ const { status, data } = await apiInstance.bulkValidateHTTP(
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |
 |**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsAnalysisRestart**
+> AnalysisRestartResponse campaignsAnalysisRestart()
+
+Re-runs the analysis and scoring phase without re-running discovery, DNS, or HTTP phases. Preserves the existing domain set and does not modify offsets.  Prerequisites: - Campaign must exist - Analysis phase must not be currently running - HTTP validation phase must be completed (upstream dependency)  The endpoint is idempotent when X-Idempotency-Key is provided. 
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let xIdempotencyKey: string; //Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without re-executing.  (optional) (default to undefined)
+
+const { status, data } = await apiInstance.campaignsAnalysisRestart(
+    campaignId,
+    xIdempotencyKey
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+| **xIdempotencyKey** | [**string**] | Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without re-executing.  | (optional) defaults to undefined|
+
+
+### Return type
+
+**AnalysisRestartResponse**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Analysis restart initiated |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**409** | Conflict - analysis cannot be restarted in current state. Possible reasons: - Analysis phase is currently running - HTTP validation phase not completed  |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -732,6 +793,7 @@ let keyword: string; //Require at least one keyword match (any) (optional) (defa
 let sort: 'richness_score' | 'microcrawl_gain' | 'keywords_unique'; //Richness-based sort field (defaults to richness_score when omitted) (optional) (default to undefined)
 let dir: 'asc' | 'desc'; //Sort direction (defaults to desc) (optional) (default to undefined)
 let warnings: 'has' | 'none'; //Warning filter applied before sorting (has = only domains with penalties; none = only clean domains) (optional) (default to undefined)
+let rejectionReason: Array<DomainRejectionReasonEnum>; //Filter by rejection reason. Supports single value or comma-separated list for multi-value filtering. Valid values: qualified, low_score, no_keywords, parked, dns_error, dns_timeout, http_error, http_timeout, pending (optional) (default to undefined)
 let first: number; //Page size for cursor pagination (overrides limit when present) (optional) (default to undefined)
 let after: string; //Cursor token to continue listing after (optional) (default to undefined)
 
@@ -750,6 +812,7 @@ const { status, data } = await apiInstance.campaignsDomainsList(
     sort,
     dir,
     warnings,
+    rejectionReason,
     first,
     after
 );
@@ -773,6 +836,7 @@ const { status, data } = await apiInstance.campaignsDomainsList(
 | **sort** | [**&#39;richness_score&#39; | &#39;microcrawl_gain&#39; | &#39;keywords_unique&#39;**]**Array<&#39;richness_score&#39; &#124; &#39;microcrawl_gain&#39; &#124; &#39;keywords_unique&#39;>** | Richness-based sort field (defaults to richness_score when omitted) | (optional) defaults to undefined|
 | **dir** | [**&#39;asc&#39; | &#39;desc&#39;**]**Array<&#39;asc&#39; &#124; &#39;desc&#39;>** | Sort direction (defaults to desc) | (optional) defaults to undefined|
 | **warnings** | [**&#39;has&#39; | &#39;none&#39;**]**Array<&#39;has&#39; &#124; &#39;none&#39;>** | Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains) | (optional) defaults to undefined|
+| **rejectionReason** | **Array&lt;DomainRejectionReasonEnum&gt;** | Filter by rejection reason. Supports single value or comma-separated list for multi-value filtering. Valid values: qualified, low_score, no_keywords, parked, dns_error, dns_timeout, http_error, http_timeout, pending | (optional) defaults to undefined|
 | **first** | [**number**] | Page size for cursor pagination (overrides limit when present) | (optional) defaults to undefined|
 | **after** | [**string**] | Cursor token to continue listing after | (optional) defaults to undefined|
 
@@ -1951,6 +2015,59 @@ const { status, data } = await apiInstance.campaignsRecommendationsGet(
 ### Return type
 
 **CampaignRecommendationsResponse**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsRejectionSummaryGet**
+> RejectionSummaryResponse campaignsRejectionSummaryGet()
+
+Returns counts by rejection_reason for a campaign, with audit equation validation. The audit equation is: analyzed = qualified + rejected where rejected = lowScore + noKeywords + parked + dnsError + dnsTimeout + httpError + httpTimeout 
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsRejectionSummaryGet(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**RejectionSummaryResponse**
 
 ### Authorization
 

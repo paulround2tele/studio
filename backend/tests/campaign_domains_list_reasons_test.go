@@ -58,7 +58,7 @@ func TestCampaignDomainsListReasons(t *testing.T) {
 		t.Fatalf("introspect http_reason: %v", err)
 	}
 	if hasDNSReason && hasHTTPReason {
-		if _, err := db.Exec(`INSERT INTO generated_domains (id, campaign_id, domain_name, offset_index, generated_at, created_at, dns_status, http_status, lead_status, dns_reason, http_reason) VALUES ($1,$2,$3,0,NOW(),NOW(),'error','timeout','pending','NXDOMAIN','TIMEOUT')`, domainID, campaignID, "example-reason.test"); err != nil {
+		if _, err := db.Exec(`INSERT INTO generated_domains (id, campaign_id, domain_name, offset_index, generated_at, created_at, dns_status, http_status, lead_status, dns_reason, http_reason, rejection_reason) VALUES ($1,$2,$3,0,NOW(),NOW(),'error','timeout','pending','NXDOMAIN','TIMEOUT','dns_error')`, domainID, campaignID, "example-reason.test"); err != nil {
 			t.Fatalf("insert domain: %v", err)
 		}
 		var dnsReason, httpReason sql.NullString

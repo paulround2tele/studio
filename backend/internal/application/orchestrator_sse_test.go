@@ -88,6 +88,9 @@ func (s *sseStubPhaseService) ScoreDomains(ctx context.Context, campaignID uuid.
 func (s *sseStubPhaseService) RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error {
 	return nil
 }
+func (s *sseStubPhaseService) ScoreBreakdown(ctx context.Context, campaignID uuid.UUID, domain string) (map[string]float64, error) {
+	return nil, nil
+}
 
 // helper to create campaign with user id for SSE emission
 func createCampaignWithUser(t *testing.T, db *sqlx.DB, cs store.CampaignStore) uuid.UUID {

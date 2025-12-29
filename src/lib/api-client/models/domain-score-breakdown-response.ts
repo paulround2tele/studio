@@ -16,9 +16,12 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { DomainScoreBreakdownResponseComponents } from './domain-score-breakdown-response-components';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { DomainScoreBreakdownResponseEvidence } from './domain-score-breakdown-response-evidence';
 
 /**
- * Component scores contributing to the final relevance score for a domain.
+ * Structured score breakdown with explicit state for graceful degradation. Never returns 500 - always returns structured state indicating data availability. 
  * @export
  * @interface DomainScoreBreakdownResponse
  */
@@ -42,6 +45,29 @@ export interface DomainScoreBreakdownResponse {
           string
     ;
   /**
+   * Overall availability state of the breakdown
+   * @memberof DomainScoreBreakdownResponse
+   */
+  'state': 
+      'complete' | 'partial' | 'degraded'
+;
+  /**
+   * Reason for non-complete state
+   * @memberof DomainScoreBreakdownResponse
+   */
+  'reason'?: 
+      'feature_vector_missing' | 'profile_not_found' | 'analysis_pending' | 'domain_not_found' | 'internal_error'
+;
+  /**
+   * Final weighted score (0-100), null if unavailable
+   * @memberof DomainScoreBreakdownResponse
+   */
+  'overallScore'?: 
+        
+          
+          number
+    ;
+  /**
    * 
    * @memberof DomainScoreBreakdownResponse
    */
@@ -51,29 +77,20 @@ export interface DomainScoreBreakdownResponse {
           DomainScoreBreakdownResponseComponents
     ;
   /**
-   * Weighted final relevance score after penalties
+   * 
    * @memberof DomainScoreBreakdownResponse
    */
-  'final': 
+  'evidence'?: 
         
           
-          number
+          DomainScoreBreakdownResponseEvidence
     ;
   /**
-   * Active scoring profile weights used for combination.
+   * Active scoring profile weights used for combination
    * @memberof DomainScoreBreakdownResponse
    */
   'weights'?: 
         Record<string, unknown>
-    ;
-  /**
-   * Penalty factor applied when domain considered parked with low confidence (<0.9)
-   * @memberof DomainScoreBreakdownResponse
-   */
-  'parkedPenaltyFactor'?: 
-        
-          
-          number
     ;
 }
 

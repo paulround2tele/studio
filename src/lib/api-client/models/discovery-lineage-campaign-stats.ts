@@ -56,6 +56,13 @@ export interface DiscoveryLineageCampaignStats {
           
           number
     ;
+  /**
+   * Data completeness state of the campaign
+   * @memberof DiscoveryLineageCampaignStats
+   */
+  'completeness': 
+      'pending' | 'partial' | 'complete' | 'degraded'
+;
 }
 
 

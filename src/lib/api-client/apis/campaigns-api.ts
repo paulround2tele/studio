@@ -22,6 +22,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { AnalysisRestartResponse } from '../models';
+// @ts-ignore
 import type { BulkAnalyticsRequest } from '../models';
 // @ts-ignore
 import type { BulkAnalyticsResponse } from '../models';
@@ -72,6 +74,8 @@ import type { CampaignStateWithExecutions } from '../models';
 // @ts-ignore
 import type { CampaignStopResponse } from '../models';
 // @ts-ignore
+import type { CampaignsAnalysisRestart409Response } from '../models';
+// @ts-ignore
 import type { CampaignsBulkOperationsList200ResponseInner } from '../models';
 // @ts-ignore
 import type { CampaignsModeUpdateRequest } from '../models';
@@ -89,6 +93,8 @@ import type { DiscoveryLineageResponse } from '../models';
 import type { DiscoveryPreviewRequest } from '../models';
 // @ts-ignore
 import type { DiscoveryPreviewResponse } from '../models';
+// @ts-ignore
+import type { DomainRejectionReasonEnum } from '../models';
 // @ts-ignore
 import type { DomainScoreBreakdownResponse } from '../models';
 // @ts-ignore
@@ -113,6 +119,8 @@ import type { PhaseExecutionUpdate } from '../models';
 import type { PhaseStatusEnum } from '../models';
 // @ts-ignore
 import type { PhaseStatusResponse } from '../models';
+// @ts-ignore
+import type { RejectionSummaryResponse } from '../models';
 // @ts-ignore
 import type { UpdateCampaignRequest } from '../models';
 /**
@@ -325,6 +333,50 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             }
             localVarRequestOptions.headers = headerParams.toJSON();
             localVarRequestOptions.data = serializeDataIfNeeded(bulkHTTPValidationRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Re-runs the analysis and scoring phase without re-running discovery, DNS, or HTTP phases. Preserves the existing domain set and does not modify offsets.  Prerequisites: - Campaign must exist - Analysis phase must not be currently running - HTTP validation phase must be completed (upstream dependency)  The endpoint is idempotent when X-Idempotency-Key is provided. 
+         * @summary Restart analysis phase only
+         * @param {string} campaignId 
+         * @param {string} [xIdempotencyKey] Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without re-executing. 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsAnalysisRestart: async (campaignId: string, xIdempotencyKey?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsAnalysisRestart', 'campaignId', campaignId)
+            const localVarPath = `/campaigns/{campaignId}/phases/analysis/restart`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+
+            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'POST', ...baseOptions, ...options };
+            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
+            const localVarQueryParameter: Record<string, unknown> = {};
+
+            // authentication cookieAuth required
+
+
+    
+            if (xIdempotencyKey != null) {
+                localVarHeaderParameter['X-Idempotency-Key'] = String(xIdempotencyKey);
+            }
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
+            if (baseOptions.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            
+            if (options.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            localVarRequestOptions.headers = headerParams.toJSON();
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -637,12 +689,13 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
          * @param {CampaignsDomainsListSortEnum} [sort] Richness-based sort field (defaults to richness_score when omitted)
          * @param {CampaignsDomainsListDirEnum} [dir] Sort direction (defaults to desc)
          * @param {CampaignsDomainsListWarningsEnum} [warnings] Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains)
+         * @param {Array<DomainRejectionReasonEnum>} [rejectionReason] Filter by rejection reason. Supports single value or comma-separated list for multi-value filtering. Valid values: qualified, low_score, no_keywords, parked, dns_error, dns_timeout, http_error, http_timeout, pending
          * @param {number} [first] Page size for cursor pagination (overrides limit when present)
          * @param {string} [after] Cursor token to continue listing after
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsDomainsList: async (campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, first?: number, after?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsDomainsList: async (campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, rejectionReason?: Array<DomainRejectionReasonEnum>, first?: number, after?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsDomainsList', 'campaignId', campaignId)
             const localVarPath = `/campaigns/{campaignId}/domains`
@@ -707,6 +760,10 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
             if (warnings !== undefined) {
                 localVarQueryParameter['warnings'] = warnings;
+            }
+
+            if (rejectionReason) {
+                localVarQueryParameter['rejectionReason'] = rejectionReason.join(COLLECTION_FORMATS.csv);
             }
 
             if (first !== undefined) {
@@ -1652,6 +1709,46 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
+         * Returns counts by rejection_reason for a campaign, with audit equation validation. The audit equation is: analyzed = qualified + rejected where rejected = lowScore + noKeywords + parked + dnsError + dnsTimeout + httpError + httpTimeout 
+         * @summary Get rejection summary for a campaign
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsRejectionSummaryGet: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsRejectionSummaryGet', 'campaignId', campaignId)
+            const localVarPath = `/campaigns/{campaignId}/rejection-summary`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            const baseOptions: RawAxiosRequestConfig = configuration?.baseOptions ?? {};
+
+            const localVarRequestOptions: RawAxiosRequestConfig = { method: 'GET', ...baseOptions, ...options };
+            const localVarHeaderParameter: Record<string, AxiosHeaderValue> = {};
+            const localVarQueryParameter: Record<string, unknown> = {};
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            const headerParams = globalAxios.AxiosHeaders.from(localVarHeaderParameter);
+            if (baseOptions.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(baseOptions.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            
+            if (options.headers) {
+                headerParams.set(globalAxios.AxiosHeaders.from(options.headers as AxiosHeaders | Record<string, AxiosHeaderValue> | string));
+            }
+            localVarRequestOptions.headers = headerParams.toJSON();
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
          * @summary Restart campaign pipeline (excludes discovery)
          * @param {string} campaignId 
@@ -2185,6 +2282,20 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Re-runs the analysis and scoring phase without re-running discovery, DNS, or HTTP phases. Preserves the existing domain set and does not modify offsets.  Prerequisites: - Campaign must exist - Analysis phase must not be currently running - HTTP validation phase must be completed (upstream dependency)  The endpoint is idempotent when X-Idempotency-Key is provided. 
+         * @summary Restart analysis phase only
+         * @param {string} campaignId 
+         * @param {string} [xIdempotencyKey] Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without re-executing. 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsAnalysisRestart(campaignId: string, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AnalysisRestartResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsAnalysisRestart(campaignId, xIdempotencyKey, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsAnalysisRestart']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * 
          * @summary List bulk operations
          * @param {*} [options] Override http request option.
@@ -2293,13 +2404,14 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {CampaignsDomainsListSortEnum} [sort] Richness-based sort field (defaults to richness_score when omitted)
          * @param {CampaignsDomainsListDirEnum} [dir] Sort direction (defaults to desc)
          * @param {CampaignsDomainsListWarningsEnum} [warnings] Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains)
+         * @param {Array<DomainRejectionReasonEnum>} [rejectionReason] Filter by rejection reason. Supports single value or comma-separated list for multi-value filtering. Valid values: qualified, low_score, no_keywords, parked, dns_error, dns_timeout, http_error, http_timeout, pending
          * @param {number} [first] Page size for cursor pagination (overrides limit when present)
          * @param {string} [after] Cursor token to continue listing after
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, first?: number, after?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignDomainsListResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, dir, warnings, first, after, options);
+        async campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, rejectionReason?: Array<DomainRejectionReasonEnum>, first?: number, after?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignDomainsListResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, dir, warnings, rejectionReason, first, after, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsDomainsList']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -2595,6 +2707,19 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Returns counts by rejection_reason for a campaign, with audit equation validation. The audit equation is: analyzed = qualified + rejected where rejected = lowScore + noKeywords + parked + dnsError + dnsTimeout + httpError + httpTimeout 
+         * @summary Get rejection summary for a campaign
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsRejectionSummaryGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<RejectionSummaryResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsRejectionSummaryGet(campaignId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsRejectionSummaryGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
          * @summary Restart campaign pipeline (excludes discovery)
          * @param {string} campaignId 
@@ -2801,6 +2926,17 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.bulkValidateHTTP(bulkHTTPValidationRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * Re-runs the analysis and scoring phase without re-running discovery, DNS, or HTTP phases. Preserves the existing domain set and does not modify offsets.  Prerequisites: - Campaign must exist - Analysis phase must not be currently running - HTTP validation phase must be completed (upstream dependency)  The endpoint is idempotent when X-Idempotency-Key is provided. 
+         * @summary Restart analysis phase only
+         * @param {string} campaignId 
+         * @param {string} [xIdempotencyKey] Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without re-executing. 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsAnalysisRestart(campaignId: string, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<AnalysisRestartResponse> {
+            return localVarFp.campaignsAnalysisRestart(campaignId, xIdempotencyKey, options).then((request) => request(axios, basePath));
+        },
+        /**
          * 
          * @summary List bulk operations
          * @param {*} [options] Override http request option.
@@ -2888,13 +3024,14 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {CampaignsDomainsListSortEnum} [sort] Richness-based sort field (defaults to richness_score when omitted)
          * @param {CampaignsDomainsListDirEnum} [dir] Sort direction (defaults to desc)
          * @param {CampaignsDomainsListWarningsEnum} [warnings] Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains)
+         * @param {Array<DomainRejectionReasonEnum>} [rejectionReason] Filter by rejection reason. Supports single value or comma-separated list for multi-value filtering. Valid values: qualified, low_score, no_keywords, parked, dns_error, dns_timeout, http_error, http_timeout, pending
          * @param {number} [first] Page size for cursor pagination (overrides limit when present)
          * @param {string} [after] Cursor token to continue listing after
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, first?: number, after?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignDomainsListResponse> {
-            return localVarFp.campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, dir, warnings, first, after, options).then((request) => request(axios, basePath));
+        campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, rejectionReason?: Array<DomainRejectionReasonEnum>, first?: number, after?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignDomainsListResponse> {
+            return localVarFp.campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, dir, warnings, rejectionReason, first, after, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3124,6 +3261,16 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.campaignsRecommendationsGet(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
+         * Returns counts by rejection_reason for a campaign, with audit equation validation. The audit equation is: analyzed = qualified + rejected where rejected = lowScore + noKeywords + parked + dnsError + dnsTimeout + httpError + httpTimeout 
+         * @summary Get rejection summary for a campaign
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsRejectionSummaryGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<RejectionSummaryResponse> {
+            return localVarFp.campaignsRejectionSummaryGet(campaignId, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
          * @summary Restart campaign pipeline (excludes discovery)
          * @param {string} campaignId 
@@ -3296,6 +3443,17 @@ export interface CampaignsApiInterface {
     bulkValidateHTTP(bulkHTTPValidationRequest: BulkHTTPValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidationResponse>;
 
     /**
+     * Re-runs the analysis and scoring phase without re-running discovery, DNS, or HTTP phases. Preserves the existing domain set and does not modify offsets.  Prerequisites: - Campaign must exist - Analysis phase must not be currently running - HTTP validation phase must be completed (upstream dependency)  The endpoint is idempotent when X-Idempotency-Key is provided. 
+     * @summary Restart analysis phase only
+     * @param {string} campaignId 
+     * @param {string} [xIdempotencyKey] Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without re-executing. 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsAnalysisRestart(campaignId: string, xIdempotencyKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<AnalysisRestartResponse>;
+
+    /**
      * 
      * @summary List bulk operations
      * @param {*} [options] Override http request option.
@@ -3383,13 +3541,14 @@ export interface CampaignsApiInterface {
      * @param {CampaignsDomainsListSortEnum} [sort] Richness-based sort field (defaults to richness_score when omitted)
      * @param {CampaignsDomainsListDirEnum} [dir] Sort direction (defaults to desc)
      * @param {CampaignsDomainsListWarningsEnum} [warnings] Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains)
+     * @param {Array<DomainRejectionReasonEnum>} [rejectionReason] Filter by rejection reason. Supports single value or comma-separated list for multi-value filtering. Valid values: qualified, low_score, no_keywords, parked, dns_error, dns_timeout, http_error, http_timeout, pending
      * @param {number} [first] Page size for cursor pagination (overrides limit when present)
      * @param {string} [after] Cursor token to continue listing after
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, first?: number, after?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignDomainsListResponse>;
+    campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, rejectionReason?: Array<DomainRejectionReasonEnum>, first?: number, after?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignDomainsListResponse>;
 
     /**
      * 
@@ -3619,6 +3778,16 @@ export interface CampaignsApiInterface {
     campaignsRecommendationsGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignRecommendationsResponse>;
 
     /**
+     * Returns counts by rejection_reason for a campaign, with audit equation validation. The audit equation is: analyzed = qualified + rejected where rejected = lowScore + noKeywords + parked + dnsError + dnsTimeout + httpError + httpTimeout 
+     * @summary Get rejection summary for a campaign
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsRejectionSummaryGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<RejectionSummaryResponse>;
+
+    /**
      * Sequentially restarts DNS validation, HTTP validation, analysis, and enrichment while skipping the discovery phase which runs offline.
      * @summary Restart campaign pipeline (excludes discovery)
      * @param {string} campaignId 
@@ -3801,6 +3970,19 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
     }
 
     /**
+     * Re-runs the analysis and scoring phase without re-running discovery, DNS, or HTTP phases. Preserves the existing domain set and does not modify offsets.  Prerequisites: - Campaign must exist - Analysis phase must not be currently running - HTTP validation phase must be completed (upstream dependency)  The endpoint is idempotent when X-Idempotency-Key is provided. 
+     * @summary Restart analysis phase only
+     * @param {string} campaignId 
+     * @param {string} [xIdempotencyKey] Unique key for duplicate request detection. If a request with this key was already processed within 5 minutes, the cached result is returned without re-executing. 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsAnalysisRestart(campaignId: string, xIdempotencyKey?: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsAnalysisRestart(campaignId, xIdempotencyKey, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * 
      * @summary List bulk operations
      * @param {*} [options] Override http request option.
@@ -3902,14 +4084,15 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      * @param {CampaignsDomainsListSortEnum} [sort] Richness-based sort field (defaults to richness_score when omitted)
      * @param {CampaignsDomainsListDirEnum} [dir] Sort direction (defaults to desc)
      * @param {CampaignsDomainsListWarningsEnum} [warnings] Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains)
+     * @param {Array<DomainRejectionReasonEnum>} [rejectionReason] Filter by rejection reason. Supports single value or comma-separated list for multi-value filtering. Valid values: qualified, low_score, no_keywords, parked, dns_error, dns_timeout, http_error, http_timeout, pending
      * @param {number} [first] Page size for cursor pagination (overrides limit when present)
      * @param {string} [after] Cursor token to continue listing after
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, first?: number, after?: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, dir, warnings, first, after, options).then((request) => request(this.axios, this.basePath));
+    public campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, rejectionReason?: Array<DomainRejectionReasonEnum>, first?: number, after?: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, dir, warnings, rejectionReason, first, after, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4179,6 +4362,18 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      */
     public campaignsRecommendationsGet(campaignId: string, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).campaignsRecommendationsGet(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Returns counts by rejection_reason for a campaign, with audit equation validation. The audit equation is: analyzed = qualified + rejected where rejected = lowScore + noKeywords + parked + dnsError + dnsTimeout + httpError + httpTimeout 
+     * @summary Get rejection summary for a campaign
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsRejectionSummaryGet(campaignId: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsRejectionSummaryGet(campaignId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

@@ -305,7 +305,7 @@ func (f *fakeCampaignStore) UpdateDomainsBulkDNSStatus(ctx context.Context, exec
 func (f *fakeCampaignStore) UpdateDomainsBulkHTTPStatus(ctx context.Context, exec store.Querier, results []models.HTTPKeywordResult) error {
 	return fmt.Errorf("not implemented")
 }
-func (f *fakeCampaignStore) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64) error {
+func (f *fakeCampaignStore) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64, rejectionReason models.DomainRejectionReasonEnum) error {
 	return fmt.Errorf("not implemented")
 }
 func (f *fakeCampaignStore) UpsertPhaseConfig(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, config json.RawMessage) error {
@@ -328,6 +328,18 @@ func (f *fakeCampaignStore) RecordLifecycleEvent(ctx context.Context, exec store
 }
 func (f *fakeCampaignStore) GetLastLifecycleSequence(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (int64, error) {
 	return 0, nil
+}
+
+func (f *fakeCampaignStore) UpdateCampaignDiscoveryLineage(ctx context.Context, exec store.Querier, campaignID uuid.UUID, configHash string, offsetStart, offsetEnd int64) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (f *fakeCampaignStore) GetDiscoveryLineage(ctx context.Context, exec store.Querier, configHash string, excludeCampaignID *uuid.UUID, userID *string, limit int) ([]*store.DiscoveryLineageCampaign, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeCampaignStore) GetRejectionSummary(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*store.RejectionSummary, error) {
+	return nil, fmt.Errorf("not implemented")
 }
 
 // Test verifying parity of filtered results between cursor path and legacy path for http_keyword_validation (filters by DNS OK).

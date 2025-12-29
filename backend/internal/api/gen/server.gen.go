@@ -22,6 +22,21 @@ const (
 	CookieAuthScopes = "cookieAuth.Scopes"
 )
 
+// Defines values for AnalysisRestartResponseCurrentState.
+const (
+	AnalysisRestartResponseCurrentStateQueued  AnalysisRestartResponseCurrentState = "queued"
+	AnalysisRestartResponseCurrentStateRunning AnalysisRestartResponseCurrentState = "running"
+)
+
+// Defines values for AnalysisRestartResponsePreviousState.
+const (
+	AnalysisRestartResponsePreviousStateCompleted  AnalysisRestartResponsePreviousState = "completed"
+	AnalysisRestartResponsePreviousStateConfigured AnalysisRestartResponsePreviousState = "configured"
+	AnalysisRestartResponsePreviousStateFailed     AnalysisRestartResponsePreviousState = "failed"
+	AnalysisRestartResponsePreviousStateNotStarted AnalysisRestartResponsePreviousState = "not_started"
+	AnalysisRestartResponsePreviousStatePaused     AnalysisRestartResponsePreviousState = "paused"
+)
+
 // Defines values for AuthConfigProvider.
 const (
 	AuthConfigProviderLocal  AuthConfigProvider = "local"
@@ -312,6 +327,43 @@ const (
 	Variable CreateCampaignRequestConfigurationPatternConfigType = "variable"
 )
 
+// Defines values for DiscoveryLineageCampaignStatsCompleteness.
+const (
+	DiscoveryLineageCampaignStatsCompletenessComplete DiscoveryLineageCampaignStatsCompleteness = "complete"
+	DiscoveryLineageCampaignStatsCompletenessDegraded DiscoveryLineageCampaignStatsCompleteness = "degraded"
+	DiscoveryLineageCampaignStatsCompletenessPartial  DiscoveryLineageCampaignStatsCompleteness = "partial"
+	DiscoveryLineageCampaignStatsCompletenessPending  DiscoveryLineageCampaignStatsCompleteness = "pending"
+)
+
+// Defines values for DomainRejectionReasonEnum.
+const (
+	DomainRejectionReasonEnumDnsError    DomainRejectionReasonEnum = "dns_error"
+	DomainRejectionReasonEnumDnsTimeout  DomainRejectionReasonEnum = "dns_timeout"
+	DomainRejectionReasonEnumHttpError   DomainRejectionReasonEnum = "http_error"
+	DomainRejectionReasonEnumHttpTimeout DomainRejectionReasonEnum = "http_timeout"
+	DomainRejectionReasonEnumLowScore    DomainRejectionReasonEnum = "low_score"
+	DomainRejectionReasonEnumNoKeywords  DomainRejectionReasonEnum = "no_keywords"
+	DomainRejectionReasonEnumParked      DomainRejectionReasonEnum = "parked"
+	DomainRejectionReasonEnumPending     DomainRejectionReasonEnum = "pending"
+	DomainRejectionReasonEnumQualified   DomainRejectionReasonEnum = "qualified"
+)
+
+// Defines values for DomainScoreBreakdownResponseReason.
+const (
+	AnalysisPending      DomainScoreBreakdownResponseReason = "analysis_pending"
+	DomainNotFound       DomainScoreBreakdownResponseReason = "domain_not_found"
+	FeatureVectorMissing DomainScoreBreakdownResponseReason = "feature_vector_missing"
+	InternalError        DomainScoreBreakdownResponseReason = "internal_error"
+	ProfileNotFound      DomainScoreBreakdownResponseReason = "profile_not_found"
+)
+
+// Defines values for DomainScoreBreakdownResponseState.
+const (
+	Complete DomainScoreBreakdownResponseState = "complete"
+	Degraded DomainScoreBreakdownResponseState = "degraded"
+	Partial  DomainScoreBreakdownResponseState = "partial"
+)
+
 // Defines values for ErrorCode.
 const (
 	BADREQUEST          ErrorCode = "BAD_REQUEST"
@@ -511,6 +563,20 @@ const (
 	RecommendationSeverityWarn   RecommendationSeverity = "warn"
 )
 
+// Defines values for ScoreComponentReason.
+const (
+	ComputationFailed ScoreComponentReason = "computation_failed"
+	DataPending       ScoreComponentReason = "data_pending"
+	FieldMissing      ScoreComponentReason = "field_missing"
+)
+
+// Defines values for ScoreComponentState.
+const (
+	ScoreComponentStateError       ScoreComponentState = "error"
+	ScoreComponentStateOk          ScoreComponentState = "ok"
+	ScoreComponentStateUnavailable ScoreComponentState = "unavailable"
+)
+
 // Defines values for TimelineEventStatus.
 const (
 	TimelineEventStatusCompleted TimelineEventStatus = "completed"
@@ -542,10 +608,10 @@ const (
 
 // Defines values for CampaignsDomainsListParamsHttpStatus.
 const (
-	CampaignsDomainsListParamsHttpStatusError   CampaignsDomainsListParamsHttpStatus = "error"
-	CampaignsDomainsListParamsHttpStatusOk      CampaignsDomainsListParamsHttpStatus = "ok"
-	CampaignsDomainsListParamsHttpStatusPending CampaignsDomainsListParamsHttpStatus = "pending"
-	CampaignsDomainsListParamsHttpStatusTimeout CampaignsDomainsListParamsHttpStatus = "timeout"
+	Error   CampaignsDomainsListParamsHttpStatus = "error"
+	Ok      CampaignsDomainsListParamsHttpStatus = "ok"
+	Pending CampaignsDomainsListParamsHttpStatus = "pending"
+	Timeout CampaignsDomainsListParamsHttpStatus = "timeout"
 )
 
 // Defines values for CampaignsDomainsListParamsSort.
@@ -616,6 +682,31 @@ type AnalysisFailedEvent struct {
 	Error     string  `json:"error"`
 	ErrorCode *string `json:"errorCode"`
 }
+
+// AnalysisRestartResponse Response for analysis-only restart. Re-runs scoring without affecting discovery/DNS/HTTP.
+type AnalysisRestartResponse struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+
+	// CurrentState State of analysis phase after restart initiated.
+	CurrentState AnalysisRestartResponseCurrentState `json:"currentState"`
+
+	// Idempotent True if this was a cached response from a previous identical request.
+	Idempotent *bool `json:"idempotent,omitempty"`
+
+	// Message Human-readable status message.
+	Message     string              `json:"message"`
+	PhaseStatus PhaseStatusResponse `json:"phaseStatus"`
+
+	// PreviousState State of analysis phase before restart.
+	PreviousState *AnalysisRestartResponsePreviousState `json:"previousState,omitempty"`
+	Timestamp     time.Time                             `json:"timestamp"`
+}
+
+// AnalysisRestartResponseCurrentState State of analysis phase after restart initiated.
+type AnalysisRestartResponseCurrentState string
+
+// AnalysisRestartResponsePreviousState State of analysis phase before restart.
+type AnalysisRestartResponsePreviousState string
 
 // AnalysisReuseEnrichmentEvent Analysis phase reused existing feature vectors.
 type AnalysisReuseEnrichmentEvent struct {
@@ -1625,12 +1716,17 @@ type DiscoveryLineageCampaign struct {
 		Start *int64 `json:"start,omitempty"`
 	} `json:"offsetRange,omitempty"`
 	Stats struct {
-		DnsValid         int64 `json:"dnsValid"`
-		DomainsGenerated int64 `json:"domainsGenerated"`
-		KeywordMatches   int64 `json:"keywordMatches"`
-		Leads            int64 `json:"leads"`
+		// Completeness Data completeness state of the campaign
+		Completeness     DiscoveryLineageCampaignStatsCompleteness `json:"completeness"`
+		DnsValid         int64                                     `json:"dnsValid"`
+		DomainsGenerated int64                                     `json:"domainsGenerated"`
+		KeywordMatches   int64                                     `json:"keywordMatches"`
+		Leads            int64                                     `json:"leads"`
 	} `json:"stats"`
 }
+
+// DiscoveryLineageCampaignStatsCompleteness Data completeness state of the campaign
+type DiscoveryLineageCampaignStatsCompleteness string
 
 // DiscoveryLineageResponse Discovery lineage for an existing campaign
 type DiscoveryLineageResponse struct {
@@ -1727,35 +1823,80 @@ type DomainListItem struct {
 	// LeadStatus Lead extraction status if available
 	LeadStatus *string `json:"leadStatus,omitempty"`
 	Offset     *int64  `json:"offset,omitempty"`
+
+	// RejectionReason Terminal outcome classification for every domain. Set deterministically by each phase handler. No silent defaults - every terminal domain must have a reason.
+	RejectionReason *DomainRejectionReasonEnum `json:"rejectionReason,omitempty"`
 }
 
-// DomainScoreBreakdownResponse Component scores contributing to the final relevance score for a domain.
+// DomainRejectionReasonEnum Terminal outcome classification for every domain. Set deterministically by each phase handler. No silent defaults - every terminal domain must have a reason.
+type DomainRejectionReasonEnum string
+
+// DomainScoreBreakdownResponse Structured score breakdown with explicit state for graceful degradation.
+// Never returns 500 - always returns structured state indicating data availability.
 type DomainScoreBreakdownResponse struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 
-	// Components Raw component scores normalized to 0-1 prior to weighting.
+	// Components Component scores with individual state tracking
 	Components struct {
-		ContentLength float32 `json:"content_length"`
-		Coverage      float32 `json:"coverage"`
-		Density       float32 `json:"density"`
-		Freshness     float32 `json:"freshness"`
-		NonParked     float32 `json:"non_parked"`
+		// ContentLength Individual component score with state and optional reason
+		ContentLength ScoreComponent `json:"contentLength"`
 
-		// TfLite Experimental TF-lite component (0 if disabled)
-		TfLite       float32 `json:"tf_lite"`
-		TitleKeyword float32 `json:"title_keyword"`
+		// Coverage Individual component score with state and optional reason
+		Coverage ScoreComponent `json:"coverage"`
+
+		// Density Individual component score with state and optional reason
+		Density ScoreComponent `json:"density"`
+
+		// Freshness Individual component score with state and optional reason
+		Freshness ScoreComponent `json:"freshness"`
+
+		// NonParked Individual component score with state and optional reason
+		NonParked ScoreComponent `json:"nonParked"`
+
+		// TfLite Individual component score with state and optional reason
+		TfLite ScoreComponent `json:"tfLite"`
+
+		// TitleKeyword Individual component score with state and optional reason
+		TitleKeyword ScoreComponent `json:"titleKeyword"`
 	} `json:"components"`
 	Domain string `json:"domain"`
 
-	// Final Weighted final relevance score after penalties
-	Final float32 `json:"final"`
+	// Evidence Evidence supporting the score (keyword hits, penalties, etc.)
+	Evidence *struct {
+		// ContentLengthBytes Raw content length in bytes
+		ContentLengthBytes *int `json:"contentLengthBytes"`
 
-	// ParkedPenaltyFactor Penalty factor applied when domain considered parked with low confidence (<0.9)
-	ParkedPenaltyFactor *float32 `json:"parkedPenaltyFactor,omitempty"`
+		// FreshnessDaysOld Days since content was last modified
+		FreshnessDaysOld *int `json:"freshnessDaysOld"`
 
-	// Weights Active scoring profile weights used for combination.
+		// KeywordHits Keywords that matched in the domain content
+		KeywordHits *[]string `json:"keywordHits,omitempty"`
+
+		// ParkedPenaltyApplied Whether the parked domain penalty was applied
+		ParkedPenaltyApplied *bool `json:"parkedPenaltyApplied,omitempty"`
+
+		// ParkedPenaltyFactor Penalty multiplier if applied (e.g., 0.5)
+		ParkedPenaltyFactor *float32 `json:"parkedPenaltyFactor"`
+	} `json:"evidence"`
+
+	// OverallScore Final weighted score (0-100), null if unavailable
+	OverallScore *float32 `json:"overallScore"`
+
+	// Reason Reason for non-complete state
+	Reason *DomainScoreBreakdownResponseReason `json:"reason"`
+
+	// State Overall availability state of the breakdown
+	State DomainScoreBreakdownResponseState `json:"state"`
+
+	// Weights Active scoring profile weights used for combination
 	Weights *map[string]float32 `json:"weights,omitempty"`
 }
+
+// DomainScoreBreakdownResponseReason Reason for non-complete state
+type DomainScoreBreakdownResponseReason string
+
+// DomainScoreBreakdownResponseState Overall availability state of the breakdown
+type DomainScoreBreakdownResponseState string
 
 // DomainStatusEvent Domain generation/validation status update (subset / partial DomainListItem fields may be present).
 type DomainStatusEvent struct {
@@ -1769,6 +1910,9 @@ type DomainStatusEvent struct {
 	HttpStatus *string                 `json:"httpStatus"`
 	Id         *openapi_types.UUID     `json:"id,omitempty"`
 	LeadStatus *string                 `json:"leadStatus"`
+
+	// RejectionReason Terminal outcome classification for every domain. Set deterministically by each phase handler. No silent defaults - every terminal domain must have a reason.
+	RejectionReason *DomainRejectionReasonEnum `json:"rejectionReason,omitempty"`
 }
 
 // EnrichedCampaignResponse Read-optimized composite model for campaign detail pages
@@ -2359,6 +2503,64 @@ type RateLimiterConfigStrategy string
 // RecommendationSeverity defines model for RecommendationSeverity.
 type RecommendationSeverity string
 
+// RejectionSummaryResponse Breakdown of domain outcomes by rejection_reason. Enables audit equation: analyzed = qualified + rejected_total (low_score + no_keywords + parked + dns errors + http errors)
+type RejectionSummaryResponse struct {
+	// AuditNote Human-readable explanation if balanced is false
+	AuditNote *string `json:"auditNote"`
+
+	// Balanced True if audit equation balances: analyzed == qualified + rejected. False indicates data inconsistency requiring investigation.
+	Balanced   bool               `json:"balanced"`
+	CampaignId openapi_types.UUID `json:"campaignId"`
+
+	// Counts Count of domains by rejection reason
+	Counts struct {
+		// DnsError DNS validation errors (NXDOMAIN, SERVFAIL, etc.)
+		DnsError int `json:"dnsError"`
+
+		// DnsTimeout DNS validation timed out
+		DnsTimeout int `json:"dnsTimeout"`
+
+		// HttpError HTTP validation errors (connection, TLS, non-2xx)
+		HttpError int `json:"httpError"`
+
+		// HttpTimeout HTTP validation timed out
+		HttpTimeout int `json:"httpTimeout"`
+
+		// LowScore Domains with keywords but score below threshold
+		LowScore int `json:"lowScore"`
+
+		// NoKeywords HTTP OK but no keyword matches found
+		NoKeywords int `json:"noKeywords"`
+
+		// Parked Detected as parked/placeholder pages
+		Parked int `json:"parked"`
+
+		// Pending Validation not yet complete
+		Pending int `json:"pending"`
+
+		// Qualified Domains that passed validation and scoring thresholds
+		Qualified int `json:"qualified"`
+	} `json:"counts"`
+
+	// Totals Aggregate totals for audit equation
+	Totals struct {
+		// Analyzed Total domains that completed processing (excludes pending)
+		Analyzed int `json:"analyzed"`
+
+		// Errors Sum of dns_error + dns_timeout + http_error + http_timeout
+		Errors int `json:"errors"`
+
+		// Pending Domains still being processed
+		Pending int `json:"pending"`
+
+		// Qualified Domains that became leads (same as counts.qualified)
+		Qualified int `json:"qualified"`
+
+		// Rejected Sum of all rejection reasons (lowScore + noKeywords + parked + errors)
+		Rejected int `json:"rejected"`
+	} `json:"totals"`
+}
+
 // RescoreCampaignRequest Optional body for future rescore parameters (currently unused)
 type RescoreCampaignRequest = map[string]interface{}
 
@@ -2369,6 +2571,24 @@ type SchemaStats struct {
 	TotalRows  *int    `json:"totalRows,omitempty"`
 	TotalSize  *string `json:"totalSize,omitempty"`
 }
+
+// ScoreComponent Individual component score with state and optional reason
+type ScoreComponent struct {
+	// Reason Reason if state is not ok
+	Reason *ScoreComponentReason `json:"reason"`
+
+	// State Component availability state
+	State ScoreComponentState `json:"state"`
+
+	// Value Normalized score (0-1), null if unavailable
+	Value *float32 `json:"value"`
+}
+
+// ScoreComponentReason Reason if state is not ok
+type ScoreComponentReason string
+
+// ScoreComponentState Component availability state
+type ScoreComponentState string
 
 // ScoringProfile defines model for ScoringProfile.
 type ScoringProfile struct {
@@ -2629,6 +2849,9 @@ type CampaignsDomainsListParams struct {
 	// Warnings Warning filter applied before sorting (has = only domains with penalties; none = only clean domains)
 	Warnings *CampaignsDomainsListParamsWarnings `form:"warnings,omitempty" json:"warnings,omitempty"`
 
+	// RejectionReason Filter by rejection reason. Supports single value or comma-separated list for multi-value filtering. Valid values: qualified, low_score, no_keywords, parked, dns_error, dns_timeout, http_error, http_timeout, pending
+	RejectionReason *[]DomainRejectionReasonEnum `form:"rejectionReason,omitempty" json:"rejectionReason,omitempty"`
+
 	// First Page size for cursor pagination (overrides limit when present)
 	First *int `form:"first,omitempty" json:"first,omitempty"`
 
@@ -2664,6 +2887,13 @@ type CampaignsPhaseExecutionGetParamsPhaseType string
 
 // CampaignsPhaseExecutionPutParamsPhaseType defines parameters for CampaignsPhaseExecutionPut.
 type CampaignsPhaseExecutionPutParamsPhaseType string
+
+// CampaignsAnalysisRestartParams defines parameters for CampaignsAnalysisRestart.
+type CampaignsAnalysisRestartParams struct {
+	// XIdempotencyKey Unique key for duplicate request detection. If a request with this key was already
+	// processed within 5 minutes, the cached result is returned without re-executing.
+	XIdempotencyKey *string `json:"X-Idempotency-Key,omitempty"`
+}
 
 // CampaignsPhasePauseParams defines parameters for CampaignsPhasePause.
 type CampaignsPhasePauseParams struct {
@@ -3841,6 +4071,9 @@ type ServerInterface interface {
 	// Update phase execution by phase type
 	// (PUT /campaigns/{campaignId}/phase-executions/{phaseType})
 	CampaignsPhaseExecutionPut(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phaseType CampaignsPhaseExecutionPutParamsPhaseType)
+	// Restart analysis phase only
+	// (POST /campaigns/{campaignId}/phases/analysis/restart)
+	CampaignsAnalysisRestart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsAnalysisRestartParams)
 	// Configure campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/configure)
 	CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
@@ -3862,6 +4095,9 @@ type ServerInterface interface {
 	// Get campaign progress
 	// (GET /campaigns/{campaignId}/progress)
 	CampaignsProgress(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Get rejection summary for a campaign
+	// (GET /campaigns/{campaignId}/rejection-summary)
+	CampaignsRejectionSummaryGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Trigger campaign rescore
 	// (POST /campaigns/{campaignId}/rescore)
 	CampaignsRescore(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
@@ -4378,6 +4614,12 @@ func (_ Unimplemented) CampaignsPhaseExecutionPut(w http.ResponseWriter, r *http
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// Restart analysis phase only
+// (POST /campaigns/{campaignId}/phases/analysis/restart)
+func (_ Unimplemented) CampaignsAnalysisRestart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsAnalysisRestartParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Configure campaign phase
 // (POST /campaigns/{campaignId}/phases/{phase}/configure)
 func (_ Unimplemented) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
@@ -4417,6 +4659,12 @@ func (_ Unimplemented) CampaignsPhaseStop(w http.ResponseWriter, r *http.Request
 // Get campaign progress
 // (GET /campaigns/{campaignId}/progress)
 func (_ Unimplemented) CampaignsProgress(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get rejection summary for a campaign
+// (GET /campaigns/{campaignId}/rejection-summary)
+func (_ Unimplemented) CampaignsRejectionSummaryGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5714,6 +5962,14 @@ func (siw *ServerInterfaceWrapper) CampaignsDomainsList(w http.ResponseWriter, r
 		return
 	}
 
+	// ------------- Optional query parameter "rejectionReason" -------------
+
+	err = runtime.BindQueryParameter("form", false, false, "rejectionReason", r.URL.Query(), &params.RejectionReason)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "rejectionReason", Err: err})
+		return
+	}
+
 	// ------------- Optional query parameter "first" -------------
 
 	err = runtime.BindQueryParameter("form", true, false, "first", r.URL.Query(), &params.First)
@@ -6149,6 +6405,61 @@ func (siw *ServerInterfaceWrapper) CampaignsPhaseExecutionPut(w http.ResponseWri
 	handler.ServeHTTP(w, r)
 }
 
+// CampaignsAnalysisRestart operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsAnalysisRestart(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CampaignsAnalysisRestartParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Idempotency-Key")]; found {
+		var XIdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Idempotency-Key", valueList[0], &XIdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-Idempotency-Key", Err: err})
+			return
+		}
+
+		params.XIdempotencyKey = &XIdempotencyKey
+
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsAnalysisRestart(w, r, campaignId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CampaignsPhaseConfigure operation middleware
 func (siw *ServerInterfaceWrapper) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request) {
 
@@ -6523,6 +6834,37 @@ func (siw *ServerInterfaceWrapper) CampaignsProgress(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CampaignsProgress(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsRejectionSummaryGet operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsRejectionSummaryGet(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsRejectionSummaryGet(w, r, campaignId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -9471,6 +9813,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Put(options.BaseURL+"/campaigns/{campaignId}/phase-executions/{phaseType}", wrapper.CampaignsPhaseExecutionPut)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/campaigns/{campaignId}/phases/analysis/restart", wrapper.CampaignsAnalysisRestart)
+	})
+	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/campaigns/{campaignId}/phases/{phase}/configure", wrapper.CampaignsPhaseConfigure)
 	})
 	r.Group(func(r chi.Router) {
@@ -9490,6 +9835,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/progress", wrapper.CampaignsProgress)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/campaigns/{campaignId}/rejection-summary", wrapper.CampaignsRejectionSummaryGet)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/campaigns/{campaignId}/rescore", wrapper.CampaignsRescore)
@@ -11567,6 +11915,82 @@ func (response CampaignsPhaseExecutionPut500JSONResponse) VisitCampaignsPhaseExe
 	return json.NewEncoder(w).Encode(response)
 }
 
+type CampaignsAnalysisRestartRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Params     CampaignsAnalysisRestartParams
+}
+
+type CampaignsAnalysisRestartResponseObject interface {
+	VisitCampaignsAnalysisRestartResponse(w http.ResponseWriter) error
+}
+
+type CampaignsAnalysisRestart200JSONResponse AnalysisRestartResponse
+
+func (response CampaignsAnalysisRestart200JSONResponse) VisitCampaignsAnalysisRestartResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsAnalysisRestart400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CampaignsAnalysisRestart400JSONResponse) VisitCampaignsAnalysisRestartResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsAnalysisRestart401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsAnalysisRestart401JSONResponse) VisitCampaignsAnalysisRestartResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsAnalysisRestart404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsAnalysisRestart404JSONResponse) VisitCampaignsAnalysisRestartResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsAnalysisRestart409JSONResponse struct {
+	// CurrentState Current state of the analysis phase
+	CurrentState *string  `json:"currentState,omitempty"`
+	Error        ApiError `json:"error"`
+	RequestId    string   `json:"requestId"`
+
+	// RequiredState Required state to allow restart
+	RequiredState *string `json:"requiredState,omitempty"`
+
+	// Success Always false for error envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsAnalysisRestart409JSONResponse) VisitCampaignsAnalysisRestartResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsAnalysisRestart500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsAnalysisRestart500JSONResponse) VisitCampaignsAnalysisRestartResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type CampaignsPhaseConfigureRequestObject struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 	Phase      CampaignPhaseEnum  `json:"phase"`
@@ -11975,6 +12399,43 @@ type CampaignsProgress500JSONResponse struct {
 }
 
 func (response CampaignsProgress500JSONResponse) VisitCampaignsProgressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsRejectionSummaryGetRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+}
+
+type CampaignsRejectionSummaryGetResponseObject interface {
+	VisitCampaignsRejectionSummaryGetResponse(w http.ResponseWriter) error
+}
+
+type CampaignsRejectionSummaryGet200JSONResponse RejectionSummaryResponse
+
+func (response CampaignsRejectionSummaryGet200JSONResponse) VisitCampaignsRejectionSummaryGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsRejectionSummaryGet404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsRejectionSummaryGet404JSONResponse) VisitCampaignsRejectionSummaryGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsRejectionSummaryGet500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsRejectionSummaryGet500JSONResponse) VisitCampaignsRejectionSummaryGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -17676,6 +18137,9 @@ type StrictServerInterface interface {
 	// Update phase execution by phase type
 	// (PUT /campaigns/{campaignId}/phase-executions/{phaseType})
 	CampaignsPhaseExecutionPut(ctx context.Context, request CampaignsPhaseExecutionPutRequestObject) (CampaignsPhaseExecutionPutResponseObject, error)
+	// Restart analysis phase only
+	// (POST /campaigns/{campaignId}/phases/analysis/restart)
+	CampaignsAnalysisRestart(ctx context.Context, request CampaignsAnalysisRestartRequestObject) (CampaignsAnalysisRestartResponseObject, error)
 	// Configure campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/configure)
 	CampaignsPhaseConfigure(ctx context.Context, request CampaignsPhaseConfigureRequestObject) (CampaignsPhaseConfigureResponseObject, error)
@@ -17697,6 +18161,9 @@ type StrictServerInterface interface {
 	// Get campaign progress
 	// (GET /campaigns/{campaignId}/progress)
 	CampaignsProgress(ctx context.Context, request CampaignsProgressRequestObject) (CampaignsProgressResponseObject, error)
+	// Get rejection summary for a campaign
+	// (GET /campaigns/{campaignId}/rejection-summary)
+	CampaignsRejectionSummaryGet(ctx context.Context, request CampaignsRejectionSummaryGetRequestObject) (CampaignsRejectionSummaryGetResponseObject, error)
 	// Trigger campaign rescore
 	// (POST /campaigns/{campaignId}/rescore)
 	CampaignsRescore(ctx context.Context, request CampaignsRescoreRequestObject) (CampaignsRescoreResponseObject, error)
@@ -19020,6 +19487,33 @@ func (sh *strictHandler) CampaignsPhaseExecutionPut(w http.ResponseWriter, r *ht
 	}
 }
 
+// CampaignsAnalysisRestart operation middleware
+func (sh *strictHandler) CampaignsAnalysisRestart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsAnalysisRestartParams) {
+	var request CampaignsAnalysisRestartRequestObject
+
+	request.CampaignId = campaignId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsAnalysisRestart(ctx, request.(CampaignsAnalysisRestartRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsAnalysisRestart")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsAnalysisRestartResponseObject); ok {
+		if err := validResponse.VisitCampaignsAnalysisRestartResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // CampaignsPhaseConfigure operation middleware
 func (sh *strictHandler) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
 	var request CampaignsPhaseConfigureRequestObject
@@ -19212,6 +19706,32 @@ func (sh *strictHandler) CampaignsProgress(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CampaignsProgressResponseObject); ok {
 		if err := validResponse.VisitCampaignsProgressResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsRejectionSummaryGet operation middleware
+func (sh *strictHandler) CampaignsRejectionSummaryGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsRejectionSummaryGetRequestObject
+
+	request.CampaignId = campaignId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsRejectionSummaryGet(ctx, request.(CampaignsRejectionSummaryGetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsRejectionSummaryGet")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsRejectionSummaryGetResponseObject); ok {
+		if err := validResponse.VisitCampaignsRejectionSummaryGetResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

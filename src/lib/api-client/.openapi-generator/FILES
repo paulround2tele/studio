@@ -20,6 +20,7 @@ common.ts
 configuration.ts
 docs/ActivityItem.md
 docs/AnalysisFailedEvent.md
+docs/AnalysisRestartResponse.md
 docs/AnalysisReuseEnrichmentEvent.md
 docs/AnomalyRecord.md
 docs/ApiError.md
@@ -126,6 +127,7 @@ docs/CampaignStateEnum.md
 docs/CampaignStateUpdate.md
 docs/CampaignStateWithExecutions.md
 docs/CampaignStopResponse.md
+docs/CampaignsAnalysisRestart409Response.md
 docs/CampaignsApi.md
 docs/CampaignsBulkOperationsList200ResponseInner.md
 docs/CampaignsModeUpdateRequest.md
@@ -166,8 +168,10 @@ docs/DomainAnalysisFeaturesKeywords.md
 docs/DomainAnalysisFeaturesMicrocrawl.md
 docs/DomainAnalysisFeaturesRichness.md
 docs/DomainListItem.md
+docs/DomainRejectionReasonEnum.md
 docs/DomainScoreBreakdownResponse.md
 docs/DomainScoreBreakdownResponseComponents.md
+docs/DomainScoreBreakdownResponseEvidence.md
 docs/DomainStatusEvent.md
 docs/EnrichedCampaignResponse.md
 docs/ErrorCode.md
@@ -251,10 +255,14 @@ docs/ProxyStatusResponse.md
 docs/ProxyTestResponse.md
 docs/RateLimiterConfig.md
 docs/RecommendationSeverity.md
+docs/RejectionSummaryResponse.md
+docs/RejectionSummaryResponseCounts.md
+docs/RejectionSummaryResponseTotals.md
 docs/RootCauseEvidence.md
 docs/RootCauseEvidenceValue.md
 docs/RootCauseEvidenceValueOneOf.md
 docs/SchemaStats.md
+docs/ScoreComponent.md
 docs/ScoringApi.md
 docs/ScoringProfile.md
 docs/ScoringProfileListResponse.md
@@ -280,6 +288,7 @@ git_push.sh
 index.ts
 models/activity-item.ts
 models/analysis-failed-event.ts
+models/analysis-restart-response.ts
 models/analysis-reuse-enrichment-event.ts
 models/anomaly-record.ts
 models/api-error-details-inner.ts
@@ -385,6 +394,7 @@ models/campaign-state-update.ts
 models/campaign-state-with-executions.ts
 models/campaign-state.ts
 models/campaign-stop-response.ts
+models/campaigns-analysis-restart409-response.ts
 models/campaigns-bulk-operations-list200-response-inner.ts
 models/campaigns-mode-update-request.ts
 models/campaigns-phase-configs-list200-response.ts
@@ -423,7 +433,9 @@ models/domain-analysis-features-microcrawl.ts
 models/domain-analysis-features-richness.ts
 models/domain-analysis-features.ts
 models/domain-list-item.ts
+models/domain-rejection-reason-enum.ts
 models/domain-score-breakdown-response-components.ts
+models/domain-score-breakdown-response-evidence.ts
 models/domain-score-breakdown-response.ts
 models/domain-status-event.ts
 models/enriched-campaign-response.ts
@@ -501,10 +513,14 @@ models/proxy-test-response.ts
 models/proxy.ts
 models/rate-limiter-config.ts
 models/recommendation-severity.ts
+models/rejection-summary-response-counts.ts
+models/rejection-summary-response-totals.ts
+models/rejection-summary-response.ts
 models/root-cause-evidence-value-one-of.ts
 models/root-cause-evidence-value.ts
 models/root-cause-evidence.ts
 models/schema-stats.ts
+models/score-component.ts
 models/scoring-profile-list-response-meta.ts
 models/scoring-profile-list-response.ts
 models/scoring-profile.ts

@@ -21,7 +21,8 @@ type strictHandlers struct {
 var _ gen.StrictServerInterface = (*strictHandlers)(nil)
 
 // CampaignsDomainScoreBreakdown implements GET /campaigns/{campaignId}/domains/{domain}/score-breakdown
-// It delegates to the analysis service ScoreBreakdown method and returns component scores.
+// Returns structured state with graceful degradation - never returns 500 for missing data.
+// P0-6: Refactored to return structured payload with state, components, and evidence.
 func (h *strictHandlers) CampaignsDomainScoreBreakdown(ctx context.Context, r gen.CampaignsDomainScoreBreakdownRequestObject) (gen.CampaignsDomainScoreBreakdownResponseObject, error) {
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil {
 		return gen.CampaignsDomainScoreBreakdown500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
@@ -36,13 +37,59 @@ func (h *strictHandlers) CampaignsDomainScoreBreakdown(ctx context.Context, r ge
 		return gen.CampaignsDomainScoreBreakdown404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
+	// Helper to build a component with state
+	buildComponent := func(val float64, hasData bool) gen.ScoreComponent {
+		if !hasData {
+			reason := gen.ScoreComponentReason("field_missing")
+			return gen.ScoreComponent{
+				State:  gen.ScoreComponentState("unavailable"),
+				Value:  nil,
+				Reason: &reason,
+			}
+		}
+		v := float32(val)
+		return gen.ScoreComponent{
+			State:  gen.ScoreComponentState("ok"),
+			Value:  &v,
+			Reason: nil,
+		}
+	}
+
 	// Call orchestrator to get score breakdown from analysis service
 	breakdown, err := h.deps.Orchestrator.ScoreBreakdown(ctx, campaignID, domain)
 	if err != nil {
 		// Check for domain not found (sql.ErrNoRows bubbles up as "no rows")
 		if strings.Contains(err.Error(), "no rows") {
-			return gen.CampaignsDomainScoreBreakdown404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "domain not found in campaign", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			// Return structured degraded state for domain not found
+			reason := gen.DomainScoreBreakdownResponseReason("domain_not_found")
+			unavailableReason := gen.ScoreComponentReason("field_missing")
+			return gen.CampaignsDomainScoreBreakdown200JSONResponse{
+				CampaignId:   r.CampaignId,
+				Domain:       domain,
+				State:        gen.DomainScoreBreakdownResponseState("degraded"),
+				Reason:       &reason,
+				OverallScore: nil,
+				Components: struct {
+					ContentLength gen.ScoreComponent `json:"contentLength"`
+					Coverage      gen.ScoreComponent `json:"coverage"`
+					Density       gen.ScoreComponent `json:"density"`
+					Freshness     gen.ScoreComponent `json:"freshness"`
+					NonParked     gen.ScoreComponent `json:"nonParked"`
+					TfLite        gen.ScoreComponent `json:"tfLite"`
+					TitleKeyword  gen.ScoreComponent `json:"titleKeyword"`
+				}{
+					Density:       gen.ScoreComponent{State: gen.ScoreComponentState("unavailable"), Reason: &unavailableReason},
+					Coverage:      gen.ScoreComponent{State: gen.ScoreComponentState("unavailable"), Reason: &unavailableReason},
+					NonParked:     gen.ScoreComponent{State: gen.ScoreComponentState("unavailable"), Reason: &unavailableReason},
+					ContentLength: gen.ScoreComponent{State: gen.ScoreComponentState("unavailable"), Reason: &unavailableReason},
+					TitleKeyword:  gen.ScoreComponent{State: gen.ScoreComponentState("unavailable"), Reason: &unavailableReason},
+					Freshness:     gen.ScoreComponent{State: gen.ScoreComponentState("unavailable"), Reason: &unavailableReason},
+					TfLite:        gen.ScoreComponent{State: gen.ScoreComponentState("unavailable"), Reason: &unavailableReason},
+				},
+				Evidence: nil,
+			}, nil
 		}
+
 		// Log error for debugging but return graceful degraded response
 		if h.deps.Logger != nil {
 			h.deps.Logger.Warn(ctx, "score breakdown error", map[string]interface{}{
@@ -51,52 +98,88 @@ func (h *strictHandlers) CampaignsDomainScoreBreakdown(ctx context.Context, r ge
 				"error":       err.Error(),
 			})
 		}
-		// Graceful degradation: return zero scores with explanation rather than 500
+
+		// Graceful degradation: return degraded state with explanation
+		reason := gen.DomainScoreBreakdownResponseReason("internal_error")
+		unavailableReason := gen.ScoreComponentReason("computation_failed")
 		return gen.CampaignsDomainScoreBreakdown200JSONResponse{
-			CampaignId: r.CampaignId,
-			Domain:     domain,
-			Final:      0,
+			CampaignId:   r.CampaignId,
+			Domain:       domain,
+			State:        gen.DomainScoreBreakdownResponseState("degraded"),
+			Reason:       &reason,
+			OverallScore: nil,
 			Components: struct {
-				ContentLength float32 `json:"content_length"`
-				Coverage      float32 `json:"coverage"`
-				Density       float32 `json:"density"`
-				Freshness     float32 `json:"freshness"`
-				NonParked     float32 `json:"non_parked"`
-				TfLite        float32 `json:"tf_lite"`
-				TitleKeyword  float32 `json:"title_keyword"`
-			}{},
+				ContentLength gen.ScoreComponent `json:"contentLength"`
+				Coverage      gen.ScoreComponent `json:"coverage"`
+				Density       gen.ScoreComponent `json:"density"`
+				Freshness     gen.ScoreComponent `json:"freshness"`
+				NonParked     gen.ScoreComponent `json:"nonParked"`
+				TfLite        gen.ScoreComponent `json:"tfLite"`
+				TitleKeyword  gen.ScoreComponent `json:"titleKeyword"`
+			}{
+				Density:       gen.ScoreComponent{State: gen.ScoreComponentState("error"), Reason: &unavailableReason},
+				Coverage:      gen.ScoreComponent{State: gen.ScoreComponentState("error"), Reason: &unavailableReason},
+				NonParked:     gen.ScoreComponent{State: gen.ScoreComponentState("error"), Reason: &unavailableReason},
+				ContentLength: gen.ScoreComponent{State: gen.ScoreComponentState("error"), Reason: &unavailableReason},
+				TitleKeyword:  gen.ScoreComponent{State: gen.ScoreComponentState("error"), Reason: &unavailableReason},
+				Freshness:     gen.ScoreComponent{State: gen.ScoreComponentState("error"), Reason: &unavailableReason},
+				TfLite:        gen.ScoreComponent{State: gen.ScoreComponentState("error"), Reason: &unavailableReason},
+			},
+			Evidence: nil,
 		}, nil
 	}
 
-	// Build response from breakdown map
-	// Note: Components are 0-1 normalized, but Final score is scaled to 0-100 for UI display
-	// The weighted sum naturally caps around 1.0 when all components are at max with normalized weights
-	finalScaled := breakdown["final"] * 100.0 // Scale to 0-100
+	// Determine state based on component availability
+	hasAllComponents := true
+	for _, key := range []string{"density", "coverage", "non_parked", "content_length", "title_keyword", "freshness"} {
+		if _, exists := breakdown[key]; !exists {
+			hasAllComponents = false
+			break
+		}
+	}
 
+	state := gen.DomainScoreBreakdownResponseState("complete")
+	var stateReason *gen.DomainScoreBreakdownResponseReason
+	if !hasAllComponents {
+		state = gen.DomainScoreBreakdownResponseState("partial")
+		reason := gen.DomainScoreBreakdownResponseReason("feature_vector_missing")
+		stateReason = &reason
+	}
+
+	// Build component scores - check if each one exists in breakdown
+	componentExists := func(key string) bool {
+		_, ok := breakdown[key]
+		return ok
+	}
+
+	// Build response with structured components
+	finalScore := float32(breakdown["final"] * 100.0) // Scale to 0-100
 	resp := gen.CampaignsDomainScoreBreakdown200JSONResponse{
-		CampaignId: r.CampaignId,
-		Domain:     domain,
-		Final:      float32(finalScaled),
+		CampaignId:   r.CampaignId,
+		Domain:       domain,
+		State:        state,
+		Reason:       stateReason,
+		OverallScore: &finalScore,
 		Components: struct {
-			ContentLength float32 `json:"content_length"`
-			Coverage      float32 `json:"coverage"`
-			Density       float32 `json:"density"`
-			Freshness     float32 `json:"freshness"`
-			NonParked     float32 `json:"non_parked"`
-			TfLite        float32 `json:"tf_lite"`
-			TitleKeyword  float32 `json:"title_keyword"`
+			ContentLength gen.ScoreComponent `json:"contentLength"`
+			Coverage      gen.ScoreComponent `json:"coverage"`
+			Density       gen.ScoreComponent `json:"density"`
+			Freshness     gen.ScoreComponent `json:"freshness"`
+			NonParked     gen.ScoreComponent `json:"nonParked"`
+			TfLite        gen.ScoreComponent `json:"tfLite"`
+			TitleKeyword  gen.ScoreComponent `json:"titleKeyword"`
 		}{
-			ContentLength: float32(breakdown["content_length"]),
-			Coverage:      float32(breakdown["coverage"]),
-			Density:       float32(breakdown["density"]),
-			Freshness:     float32(breakdown["freshness"]),
-			NonParked:     float32(breakdown["non_parked"]),
-			TfLite:        float32(breakdown["tf_lite"]),
-			TitleKeyword:  float32(breakdown["title_keyword"]),
+			Density:       buildComponent(breakdown["density"], componentExists("density")),
+			Coverage:      buildComponent(breakdown["coverage"], componentExists("coverage")),
+			NonParked:     buildComponent(breakdown["non_parked"], componentExists("non_parked")),
+			ContentLength: buildComponent(breakdown["content_length"], componentExists("content_length")),
+			TitleKeyword:  buildComponent(breakdown["title_keyword"], componentExists("title_keyword")),
+			Freshness:     buildComponent(breakdown["freshness"], componentExists("freshness")),
+			TfLite:        buildComponent(breakdown["tf_lite"], componentExists("tf_lite")),
 		},
 	}
 
-	// Include weights and penalty factor if available (from DefaultScoringWeights)
+	// Include weights (from DefaultScoringWeights)
 	weights := map[string]float32{
 		"keyword_density_weight":         2.5,
 		"unique_keyword_coverage_weight": 2.0,
@@ -107,11 +190,25 @@ func (h *strictHandlers) CampaignsDomainScoreBreakdown(ctx context.Context, r ge
 	}
 	resp.Weights = &weights
 
-	// parkedPenaltyFactor: 1.0 means no penalty, <1.0 means penalty applied
-	// We can infer if penalty was applied by checking non_parked component
-	if breakdown["non_parked"] < 1.0 {
-		penaltyFactor := float32(0.5) // Default penalty factor
-		resp.ParkedPenaltyFactor = &penaltyFactor
+	// Build evidence section
+	parkedPenaltyApplied := breakdown["non_parked"] < 1.0
+	var parkedPenaltyFactor *float32
+	if parkedPenaltyApplied {
+		factor := float32(0.5)
+		parkedPenaltyFactor = &factor
+	}
+
+	resp.Evidence = &struct {
+		ContentLengthBytes   *int      `json:"contentLengthBytes"`
+		FreshnessDaysOld     *int      `json:"freshnessDaysOld"`
+		KeywordHits          *[]string `json:"keywordHits,omitempty"`
+		ParkedPenaltyApplied *bool     `json:"parkedPenaltyApplied,omitempty"`
+		ParkedPenaltyFactor  *float32  `json:"parkedPenaltyFactor"`
+	}{
+		ParkedPenaltyApplied: &parkedPenaltyApplied,
+		ParkedPenaltyFactor:  parkedPenaltyFactor,
+		// ContentLengthBytes and FreshnessDaysOld would come from domain data if available
+		// KeywordHits would come from analysis results
 	}
 
 	return resp, nil

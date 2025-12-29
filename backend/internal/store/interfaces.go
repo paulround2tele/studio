@@ -138,7 +138,8 @@ type CampaignStore interface {
 	BulkDeleteCampaignsByIDs(ctx context.Context, exec Querier, campaignIDs []uuid.UUID) error
 	UpdateDomainsBulkDNSStatus(ctx context.Context, exec Querier, results []models.DNSValidationResult) error
 	UpdateDomainsBulkHTTPStatus(ctx context.Context, exec Querier, results []models.HTTPKeywordResult) error
-	UpdateDomainLeadStatus(ctx context.Context, exec Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64) error
+	// UpdateDomainLeadStatus updates lead status and rejection reason for a domain (P0-3)
+	UpdateDomainLeadStatus(ctx context.Context, exec Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64, rejectionReason models.DomainRejectionReasonEnum) error
 
 	// Phase configuration storage (explicit per-phase user config)
 	UpsertPhaseConfig(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, config json.RawMessage) error
@@ -156,17 +157,23 @@ type CampaignStore interface {
 	// GetDiscoveryLineage returns prior campaigns sharing the same config_hash with their stats
 	GetDiscoveryLineage(ctx context.Context, exec Querier, configHash string, excludeCampaignID *uuid.UUID, userID *string, limit int) ([]*DiscoveryLineageCampaign, error)
 
+	// P0-4: Rejection summary for audit equation compliance
+	GetRejectionSummary(ctx context.Context, exec Querier, campaignID uuid.UUID) (*RejectionSummary, error)
+
 	// Scoring profile operations (existing lightweight set) are implemented directly in postgres store via type assertion in handlers
 
 }
 
 // ListCampaignDomainsFilter holds optional filters for generated domains listing.
+// All enum fields use strong types - no raw strings for business states.
 type ListCampaignDomainsFilter struct {
-	DNSStatus  *string
-	HTTPStatus *string
-	DNSReason  *string
-	HTTPReason *string
-	LeadStatus *string
+	DNSStatus        *models.DomainDNSStatusEnum         // Filter by DNS status
+	HTTPStatus       *models.DomainHTTPStatusEnum        // Filter by HTTP status
+	DNSReason        *string                             // Filter by DNS reason text
+	HTTPReason       *string                             // Filter by HTTP reason text
+	LeadStatus       *models.DomainLeadStatusEnum        // Filter by lead status
+	RejectionReason  *models.DomainRejectionReasonEnum   // Filter by single rejection reason (P0-1)
+	RejectionReasons []models.DomainRejectionReasonEnum  // Filter by multiple rejection reasons (P0-8)
 }
 
 // ListCampaignsFilter and ListValidationResultsFilter remain the same
@@ -190,15 +197,41 @@ type ListValidationResultsFilter struct {
 
 // DiscoveryLineageCampaign represents a campaign in the discovery lineage with aggregated stats
 type DiscoveryLineageCampaign struct {
-	ID             uuid.UUID `db:"id" json:"id"`
-	Name           string    `db:"name" json:"name"`
-	CreatedAt      time.Time `db:"created_at" json:"createdAt"`
-	OffsetStart    *int64    `db:"discovery_offset_start" json:"offsetStart,omitempty"`
-	OffsetEnd      *int64    `db:"discovery_offset_end" json:"offsetEnd,omitempty"`
-	DomainsCount   int64     `db:"domains_count" json:"domainsCount"`
-	DNSValidCount  int64     `db:"dns_valid_count" json:"dnsValidCount"`
-	KeywordMatches int64     `db:"keyword_matches" json:"keywordMatches"`
-	LeadCount      int64     `db:"lead_count" json:"leadCount"`
+	ID             uuid.UUID                       `db:"id" json:"id"`
+	Name           string                          `db:"name" json:"name"`
+	CreatedAt      time.Time                       `db:"created_at" json:"createdAt"`
+	OffsetStart    *int64                          `db:"discovery_offset_start" json:"offsetStart,omitempty"`
+	OffsetEnd      *int64                          `db:"discovery_offset_end" json:"offsetEnd,omitempty"`
+	DomainsCount   int64                           `db:"domains_count" json:"domainsCount"`
+	DNSValidCount  int64                           `db:"dns_valid_count" json:"dnsValidCount"`
+	KeywordMatches int64                           `db:"keyword_matches" json:"keywordMatches"`
+	LeadCount      int64                           `db:"lead_count" json:"leadCount"`
+	Completeness   models.CampaignCompletenessEnum `db:"completeness" json:"completeness"`
+}
+
+// P0-4: RejectionSummary holds counts by rejection_reason for audit equation validation
+type RejectionSummary struct {
+	CampaignID uuid.UUID `json:"campaignId"`
+	Counts     struct {
+		Qualified   int64 `db:"qualified" json:"qualified"`
+		LowScore    int64 `db:"low_score" json:"lowScore"`
+		NoKeywords  int64 `db:"no_keywords" json:"noKeywords"`
+		Parked      int64 `db:"parked" json:"parked"`
+		DNSError    int64 `db:"dns_error" json:"dnsError"`
+		DNSTimeout  int64 `db:"dns_timeout" json:"dnsTimeout"`
+		HTTPError   int64 `db:"http_error" json:"httpError"`
+		HTTPTimeout int64 `db:"http_timeout" json:"httpTimeout"`
+		Pending     int64 `db:"pending" json:"pending"`
+	} `json:"counts"`
+	Totals struct {
+		Analyzed  int64 `json:"analyzed"`
+		Qualified int64 `json:"qualified"`
+		Rejected  int64 `json:"rejected"`
+		Errors    int64 `json:"errors"`
+		Pending   int64 `json:"pending"`
+	} `json:"totals"`
+	Balanced  bool    `json:"balanced"`
+	AuditNote *string `json:"auditNote,omitempty"`
 }
 
 // PersonaStore, ProxyStore, KeywordStore, AuditLogStore: methods will accept exec Querier where transactional execution is an option.

@@ -83,6 +83,18 @@ get:
       schema:
         type: string
         enum: [has, none]
+    - name: rejectionReason
+      in: query
+      required: false
+      description: >-
+        Filter by rejection reason. Supports single value or comma-separated list for multi-value filtering.
+        Valid values: qualified, low_score, no_keywords, parked, dns_error, dns_timeout, http_error, http_timeout, pending
+      schema:
+        type: array
+        items:
+          $ref: '../../components/schemas/all.yaml#/DomainRejectionReasonEnum'
+      style: form
+      explode: false
     - name: first
       in: query
       required: false

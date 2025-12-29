@@ -36,6 +36,9 @@ import type { CampaignProgressResponsePhases } from './campaign-progress-respons
 import type { DomainAnalysisFeatures } from './domain-analysis-features';
 // May contain unused imports in some cases
 // @ts-ignore
+import type { DomainRejectionReasonEnum } from './domain-rejection-reason-enum';
+// May contain unused imports in some cases
+// @ts-ignore
 import type { DomainStatusEvent } from './domain-status-event';
 // May contain unused imports in some cases
 // @ts-ignore

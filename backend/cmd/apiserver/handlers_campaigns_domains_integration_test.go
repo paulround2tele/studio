@@ -49,6 +49,9 @@ func (a *dualReadAnalysisStub) GetPhaseType() models.PhaseTypeEnum {
 func (a *dualReadAnalysisStub) ScoreDomains(ctx context.Context, campaignID uuid.UUID) error {
 	return nil
 }
+func (a *dualReadAnalysisStub) ScoreBreakdown(ctx context.Context, campaignID uuid.UUID, domain string) (map[string]float64, error) {
+	return nil, nil
+}
 
 // minimal fake campaign store implementing only methods we exercise
 type fakeCampaignStoreForDomains struct {
@@ -314,7 +317,7 @@ func (f *fakeCampaignStoreForDomains) UpdateDomainsBulkDNSStatus(ctx context.Con
 func (f *fakeCampaignStoreForDomains) UpdateDomainsBulkHTTPStatus(ctx context.Context, exec store.Querier, results []models.HTTPKeywordResult) error {
 	return nil
 }
-func (f *fakeCampaignStoreForDomains) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64) error {
+func (f *fakeCampaignStoreForDomains) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64, rejectionReason models.DomainRejectionReasonEnum) error {
 	return nil
 }
 func (f *fakeCampaignStoreForDomains) GetPhaseConfig(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) (*json.RawMessage, error) {
@@ -350,6 +353,25 @@ func (f *fakeCampaignStoreForDomains) BeginTxx(ctx context.Context, opts *sql.Tx
 	return nil, nil
 }
 func (f *fakeCampaignStoreForDomains) UnderlyingDB() *sqlx.DB { return nil }
+
+// Discovery lineage (stub)
+func (f *fakeCampaignStoreForDomains) GetDiscoveryLineage(ctx context.Context, exec store.Querier, configHash string, excludeCampaignID *uuid.UUID, userID *string, limit int) ([]*store.DiscoveryLineageCampaign, error) {
+	return nil, nil
+}
+func (f *fakeCampaignStoreForDomains) UpdateCampaignDiscoveryLineage(ctx context.Context, exec store.Querier, campaignID uuid.UUID, configHash string, offsetStart, offsetEnd int64) error {
+	return nil
+}
+
+// Lifecycle events (stub)
+func (f *fakeCampaignStoreForDomains) RecordLifecycleEvent(ctx context.Context, exec store.Querier, campaignID uuid.UUID, eventType string, phase models.PhaseTypeEnum, fromStatus, toStatus models.PhaseStatusEnum, metadata map[string]interface{}) (int64, error) {
+	return 0, nil
+}
+func (f *fakeCampaignStoreForDomains) GetLastLifecycleSequence(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (int64, error) {
+	return 0, nil
+}
+func (f *fakeCampaignStoreForDomains) GetRejectionSummary(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*store.RejectionSummary, error) {
+	return nil, nil
+}
 
 func TestCampaignsDomainsListRebuildsCountersWhenMissing(t *testing.T) {
 	mdb, mock, err := sqlmock.New()

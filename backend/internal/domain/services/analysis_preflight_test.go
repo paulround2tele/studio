@@ -242,7 +242,7 @@ func (s *stubCampaignStore) UpdateDomainsBulkDNSStatus(ctx context.Context, exec
 func (s *stubCampaignStore) UpdateDomainsBulkHTTPStatus(ctx context.Context, exec store.Querier, r []models.HTTPKeywordResult) error {
 	return nil
 }
-func (s *stubCampaignStore) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64) error {
+func (s *stubCampaignStore) UpdateDomainLeadStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainLeadStatusEnum, score *float64, rejectionReason models.DomainRejectionReasonEnum) error {
 	return nil
 }
 func (s *stubCampaignStore) UpsertPhaseConfig(ctx context.Context, exec store.Querier, id uuid.UUID, pt models.PhaseTypeEnum, cfg json.RawMessage) error {
@@ -265,6 +265,15 @@ func (s *stubCampaignStore) RecordLifecycleEvent(ctx context.Context, exec store
 }
 func (s *stubCampaignStore) GetLastLifecycleSequence(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (int64, error) {
 	return 0, nil
+}
+func (s *stubCampaignStore) GetDiscoveryLineage(ctx context.Context, exec store.Querier, configHash string, excludeCampaignID *uuid.UUID, userID *string, limit int) ([]*store.DiscoveryLineageCampaign, error) {
+	return nil, nil
+}
+func (s *stubCampaignStore) UpdateCampaignDiscoveryLineage(ctx context.Context, exec store.Querier, campaignID uuid.UUID, configHash string, offsetStart, offsetEnd int64) error {
+	return nil
+}
+func (s *stubCampaignStore) GetRejectionSummary(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*store.RejectionSummary, error) {
+	return nil, nil
 }
 
 // mockSSEPreflight for capturing events

@@ -1,0 +1,58 @@
+post:
+  tags: [campaigns]
+  summary: Restart analysis phase only
+  description: |
+    Re-runs the analysis and scoring phase without re-running discovery, DNS, or HTTP phases.
+    Preserves the existing domain set and does not modify offsets.
+    
+    Prerequisites:
+    - Campaign must exist
+    - Analysis phase must not be currently running
+    - HTTP validation phase must be completed (upstream dependency)
+    
+    The endpoint is idempotent when X-Idempotency-Key is provided.
+  operationId: campaigns_analysis_restart
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    - name: X-Idempotency-Key
+      in: header
+      required: false
+      description: |
+        Unique key for duplicate request detection. If a request with this key was already
+        processed within 5 minutes, the cached result is returned without re-executing.
+      schema:
+        type: string
+        maxLength: 64
+  responses:
+    '200':
+      description: Analysis restart initiated
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/all.yaml#/AnalysisRestartResponse'
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '409':
+      description: |
+        Conflict - analysis cannot be restarted in current state.
+        Possible reasons:
+        - Analysis phase is currently running
+        - HTTP validation phase not completed
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/ErrorEnvelope'
+              - type: object
+                properties:
+                  currentState:
+                    type: string
+                    description: Current state of the analysis phase
+                  requiredState:
+                    type: string
+                    description: Required state to allow restart
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

@@ -38,6 +38,10 @@ func TestEvaluateCandidateDemotesWithoutKeywordHits(t *testing.T) {
 	if result.leadScore == nil || *result.leadScore != 0.35 {
 		t.Fatalf("expected lead score pointer to 0.35, got %v", result.leadScore)
 	}
+	// P0-3: Verify rejection reason
+	if result.rejectionReason != models.DomainRejectionReasonNoKeywords {
+		t.Fatalf("expected no_keywords rejection reason, got %s", result.rejectionReason)
+	}
 }
 
 func TestEvaluateCandidateAllowsKeywordHits(t *testing.T) {
@@ -67,6 +71,10 @@ func TestEvaluateCandidateAllowsKeywordHits(t *testing.T) {
 	if result.status != models.DomainLeadStatusMatch {
 		t.Fatalf("expected match, got %s", result.status)
 	}
+	// P0-3: Verify rejection reason
+	if result.rejectionReason != models.DomainRejectionReasonQualified {
+		t.Fatalf("expected qualified rejection reason, got %s", result.rejectionReason)
+	}
 }
 
 func TestEvaluateCandidateSkipsKeywordGateWhenSignalsMissing(t *testing.T) {
@@ -93,5 +101,9 @@ func TestEvaluateCandidateSkipsKeywordGateWhenSignalsMissing(t *testing.T) {
 	result := svc.evaluateCandidate(cfg, candidate)
 	if result.status != models.DomainLeadStatusMatch {
 		t.Fatalf("expected match, got %s", result.status)
+	}
+	// P0-3: Verify rejection reason
+	if result.rejectionReason != models.DomainRejectionReasonQualified {
+		t.Fatalf("expected qualified rejection reason, got %s", result.rejectionReason)
 	}
 }

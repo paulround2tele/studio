@@ -1069,6 +1069,55 @@ func (o *CampaignOrchestrator) ScoreBreakdown(ctx context.Context, campaignID uu
 	return o.analysisSvc.ScoreBreakdown(ctx, campaignID, domain)
 }
 
+// HasIdempotencyKey checks if an idempotency key has already been processed.
+func (o *CampaignOrchestrator) HasIdempotencyKey(ctx context.Context, key string) bool {
+	if o == nil || o.idempotencyCache == nil || key == "" {
+		return false
+	}
+	return o.idempotencyCache.Get(key) != nil
+}
+
+// RegisterIdempotencyKey registers an idempotency key with the given value.
+func (o *CampaignOrchestrator) RegisterIdempotencyKey(ctx context.Context, key string, value string) {
+	if o == nil || o.idempotencyCache == nil || key == "" {
+		return
+	}
+	o.idempotencyCache.Set(key, value, nil)
+}
+
+// ResetPhaseForRestart resets a phase's state to allow it to be restarted.
+// This clears the completed/failed status and allows StartPhaseInternal to re-execute.
+func (o *CampaignOrchestrator) ResetPhaseForRestart(ctx context.Context, campaignID uuid.UUID, phase models.PhaseTypeEnum) error {
+	if o == nil || o.store == nil {
+		return fmt.Errorf("orchestrator not initialized")
+	}
+	querier, ok := o.deps.DB.(store.Querier)
+	if !ok {
+		return fmt.Errorf("invalid database interface")
+	}
+
+	// Update the phase status to not_started to allow restart
+	notStarted := models.PhaseStatusNotStarted
+	err := o.store.UpdateCampaignPhaseFields(ctx, querier, campaignID, &phase, &notStarted)
+	if err != nil {
+		return fmt.Errorf("failed to reset phase status: %w", err)
+	}
+
+	// Clear any in-memory execution state for this phase
+	o.mu.Lock()
+	if exec, ok := o.campaignExecutions[campaignID]; ok && exec.CurrentPhase == phase {
+		exec.OverallStatus = models.PhaseStatusNotStarted
+	}
+	o.mu.Unlock()
+
+	o.deps.Logger.Info(ctx, "Phase reset for restart", map[string]interface{}{
+		"campaign_id": campaignID,
+		"phase":       phase,
+	})
+
+	return nil
+}
+
 // FetchAnalysisReadyFeatures returns analysis-ready feature maps for domains in a campaign
 // when the underlying analysis service supports the optional DualReadFetch method. It is a
 // thin indirection that keeps the concrete analysis service unexported while giving HTTP
@@ -3575,8 +3624,9 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 				"service_status": string(finalStatus.Status),
 				"invariant":      "completion_must_advance_or_fail",
 			})
-			// Metrics: track this critical failure
-			o.metrics.IncPhaseFailures()
+			// NOTE: Do NOT call IncPhaseFailures() here - StartPhaseInternal already
+			// increments the failure metric when Execute() fails. Calling it again
+			// would result in double-counting the same failure event.
 		} else {
 			// Metrics: auto-start only on success
 			o.metrics.IncPhaseAutoStarts()

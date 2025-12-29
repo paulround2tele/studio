@@ -13,9 +13,12 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ScoreComponent } from './score-component';
 
 /**
- * Raw component scores normalized to 0-1 prior to weighting.
+ * Component scores with individual state tracking
  * @export
  * @interface DomainScoreBreakdownResponseComponents
  */
@@ -27,7 +30,7 @@ export interface DomainScoreBreakdownResponseComponents {
   'density': 
         
           
-          number
+          ScoreComponent
     ;
   /**
    * 
@@ -36,34 +39,34 @@ export interface DomainScoreBreakdownResponseComponents {
   'coverage': 
         
           
-          number
+          ScoreComponent
     ;
   /**
    * 
    * @memberof DomainScoreBreakdownResponseComponents
    */
-  'non_parked': 
+  'nonParked': 
         
           
-          number
+          ScoreComponent
     ;
   /**
    * 
    * @memberof DomainScoreBreakdownResponseComponents
    */
-  'content_length': 
+  'contentLength': 
         
           
-          number
+          ScoreComponent
     ;
   /**
    * 
    * @memberof DomainScoreBreakdownResponseComponents
    */
-  'title_keyword': 
+  'titleKeyword': 
         
           
-          number
+          ScoreComponent
     ;
   /**
    * 
@@ -72,16 +75,16 @@ export interface DomainScoreBreakdownResponseComponents {
   'freshness': 
         
           
-          number
+          ScoreComponent
     ;
   /**
-   * Experimental TF-lite component (0 if disabled)
+   * 
    * @memberof DomainScoreBreakdownResponseComponents
    */
-  'tf_lite': 
+  'tfLite': 
         
           
-          number
+          ScoreComponent
     ;
 }
 

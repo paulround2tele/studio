@@ -173,6 +173,46 @@ func (h *strictHandlers) CampaignsFunnelGet(ctx context.Context, r gen.Campaigns
 	return gen.CampaignsFunnelGet200JSONResponse(data), nil
 }
 
+// P0-4: CampaignsRejectionSummaryGet implements GET /campaigns/{campaignId}/rejection-summary
+func (h *strictHandlers) CampaignsRejectionSummaryGet(ctx context.Context, r gen.CampaignsRejectionSummaryGetRequestObject) (gen.CampaignsRejectionSummaryGetResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil {
+		return gen.CampaignsRejectionSummaryGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Campaign existence check
+	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsRejectionSummaryGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsRejectionSummaryGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Get rejection summary from store
+	summary, err := h.deps.Stores.Campaign.GetRejectionSummary(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
+	if err != nil {
+		return gen.CampaignsRejectionSummaryGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to get rejection summary", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Map store.RejectionSummary to gen.RejectionSummaryResponse
+	resp := gen.RejectionSummaryResponse{
+		CampaignId: r.CampaignId,
+		Balanced:   summary.Balanced,
+		AuditNote:  summary.AuditNote,
+	}
+	resp.Counts.Qualified = int(summary.Counts.Qualified)
+	resp.Counts.LowScore = int(summary.Counts.LowScore)
+	resp.Counts.NoKeywords = int(summary.Counts.NoKeywords)
+	resp.Counts.Parked = int(summary.Counts.Parked)
+	resp.Counts.DnsError = int(summary.Counts.DNSError)
+	resp.Counts.DnsTimeout = int(summary.Counts.DNSTimeout)
+	resp.Counts.HttpError = int(summary.Counts.HTTPError)
+	resp.Counts.HttpTimeout = int(summary.Counts.HTTPTimeout)
+	resp.Counts.Pending = int(summary.Counts.Pending)
+	resp.Totals.Analyzed = int(summary.Totals.Analyzed)
+	resp.Totals.Qualified = int(summary.Totals.Qualified)
+	resp.Totals.Rejected = int(summary.Totals.Rejected)
+	resp.Totals.Errors = int(summary.Totals.Errors)
+	resp.Totals.Pending = int(summary.Totals.Pending)
+	return gen.CampaignsRejectionSummaryGet200JSONResponse(resp), nil
+}
+
 // CampaignsClassificationsGet implements GET /campaigns/{campaignId}/classifications
 func (h *strictHandlers) CampaignsClassificationsGet(ctx context.Context, r gen.CampaignsClassificationsGetRequestObject) (gen.CampaignsClassificationsGetResponseObject, error) {
 	if h.deps == nil || h.deps.DB == nil || h.deps.AggregatesCache == nil {
@@ -2461,14 +2501,14 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 
 	// Build optional filter
 	var domainFilter *store.ListCampaignDomainsFilter
-	if r.Params.DnsStatus != nil || r.Params.HttpStatus != nil || r.Params.DnsReason != nil || r.Params.HttpReason != nil {
+	if r.Params.DnsStatus != nil || r.Params.HttpStatus != nil || r.Params.DnsReason != nil || r.Params.HttpReason != nil || r.Params.RejectionReason != nil {
 		f := &store.ListCampaignDomainsFilter{}
 		if r.Params.DnsStatus != nil {
-			v := string(*r.Params.DnsStatus)
+			v := models.DomainDNSStatusEnum(*r.Params.DnsStatus)
 			f.DNSStatus = &v
 		}
 		if r.Params.HttpStatus != nil {
-			v := string(*r.Params.HttpStatus)
+			v := models.DomainHTTPStatusEnum(*r.Params.HttpStatus)
 			f.HTTPStatus = &v
 		}
 		if r.Params.DnsReason != nil {
@@ -2476,6 +2516,14 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		}
 		if r.Params.HttpReason != nil {
 			f.HTTPReason = r.Params.HttpReason
+		}
+		// P0-8: Multi-value rejection reason filter
+		if r.Params.RejectionReason != nil && len(*r.Params.RejectionReason) > 0 {
+			reasons := make([]models.DomainRejectionReasonEnum, len(*r.Params.RejectionReason))
+			for i, apiReason := range *r.Params.RejectionReason {
+				reasons[i] = models.DomainRejectionReasonEnum(apiReason)
+			}
+			f.RejectionReasons = reasons
 		}
 		domainFilter = f
 	}
@@ -2671,10 +2719,11 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		return items
 	}
 
-	leadStatusMatch := string(models.DomainLeadStatusMatch)
+	leadStatusMatchStr := string(models.DomainLeadStatusMatch)
+	leadStatusMatchEnum := models.DomainLeadStatusMatch
 	hasLeadMatches := func(list []gen.DomainListItem) bool {
 		for _, it := range list {
-			if it.LeadStatus != nil && strings.EqualFold(*it.LeadStatus, leadStatusMatch) {
+			if it.LeadStatus != nil && strings.EqualFold(*it.LeadStatus, leadStatusMatchStr) {
 				return true
 			}
 		}
@@ -2684,7 +2733,7 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 	items := buildDomainItems(rows)
 	fallbackEligible := startOffset == 0 && domainFilter == nil && counters != nil && counters.LeadMatch > 0
 	if fallbackEligible && !hasLeadMatches(items) {
-		leadFilter := &store.ListCampaignDomainsFilter{LeadStatus: &leadStatusMatch}
+		leadFilter := &store.ListCampaignDomainsFilter{LeadStatus: &leadStatusMatchEnum}
 		if leadRows, err := h.deps.Stores.Campaign.GetGeneratedDomainsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId), limit, 0, leadFilter); err == nil && len(leadRows) > 0 {
 			items = buildDomainItems(leadRows)
 		}
@@ -3789,11 +3838,13 @@ func (h *strictHandlers) DiscoveryPreview(ctx context.Context, r gen.DiscoveryPr
 			Name:      pc.Name,
 			CreatedAt: pc.CreatedAt,
 			Stats: struct {
-				DnsValid         int64 `json:"dnsValid"`
-				DomainsGenerated int64 `json:"domainsGenerated"`
-				KeywordMatches   int64 `json:"keywordMatches"`
-				Leads            int64 `json:"leads"`
+				Completeness     gen.DiscoveryLineageCampaignStatsCompleteness `json:"completeness"`
+				DnsValid         int64                                     `json:"dnsValid"`
+				DomainsGenerated int64                                     `json:"domainsGenerated"`
+				KeywordMatches   int64                                     `json:"keywordMatches"`
+				Leads            int64                                     `json:"leads"`
 			}{
+				Completeness:     gen.DiscoveryLineageCampaignStatsCompleteness(pc.Completeness),
 				DomainsGenerated: pc.DomainsCount,
 				DnsValid:         pc.DNSValidCount,
 				KeywordMatches:   pc.KeywordMatches,
@@ -3891,11 +3942,13 @@ func (h *strictHandlers) CampaignsDiscoveryLineage(ctx context.Context, r gen.Ca
 			Name:      pc.Name,
 			CreatedAt: pc.CreatedAt,
 			Stats: struct {
-				DnsValid         int64 `json:"dnsValid"`
-				DomainsGenerated int64 `json:"domainsGenerated"`
-				KeywordMatches   int64 `json:"keywordMatches"`
-				Leads            int64 `json:"leads"`
+				Completeness     gen.DiscoveryLineageCampaignStatsCompleteness `json:"completeness"`
+				DnsValid         int64                                     `json:"dnsValid"`
+				DomainsGenerated int64                                     `json:"domainsGenerated"`
+				KeywordMatches   int64                                     `json:"keywordMatches"`
+				Leads            int64                                     `json:"leads"`
 			}{
+				Completeness:     gen.DiscoveryLineageCampaignStatsCompleteness(pc.Completeness),
 				DomainsGenerated: pc.DomainsCount,
 				DnsValid:         pc.DNSValidCount,
 				KeywordMatches:   pc.KeywordMatches,
@@ -3944,5 +3997,146 @@ func (h *strictHandlers) CampaignsDiscoveryLineage(ctx context.Context, r gen.Ca
 				OffsetEnd:   offsetEnd,
 			},
 		},
+	}, nil
+}
+
+// CampaignsAnalysisRestart implements POST /campaigns/{campaignId}/phases/analysis/restart
+// Re-runs analysis + scoring only without re-running discovery, DNS, or HTTP phases.
+func (h *strictHandlers) CampaignsAnalysisRestart(ctx context.Context, r gen.CampaignsAnalysisRestartRequestObject) (gen.CampaignsAnalysisRestartResponseObject, error) {
+	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsAnalysisRestart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{
+			Error:     gen.ApiError{Message: "dependencies not ready", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()},
+			RequestId: reqID(),
+			Success:   boolPtr(false),
+		}}, nil
+	}
+
+	campaignID := uuid.UUID(r.CampaignId)
+
+	// Check campaign exists
+	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, campaignID); err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsAnalysisRestart404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{
+				Error:     gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()},
+				RequestId: reqID(),
+				Success:   boolPtr(false),
+			}}, nil
+		}
+		return gen.CampaignsAnalysisRestart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{
+			Error:     gen.ApiError{Message: "failed to fetch campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()},
+			RequestId: reqID(),
+			Success:   boolPtr(false),
+		}}, nil
+	}
+
+	// Get current analysis phase status
+	analysisStatus, err := h.deps.Orchestrator.GetPhaseStatus(ctx, campaignID, models.PhaseTypeAnalysis)
+	if err != nil {
+		return gen.CampaignsAnalysisRestart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{
+			Error:     gen.ApiError{Message: "failed to get phase status", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()},
+			RequestId: reqID(),
+			Success:   boolPtr(false),
+		}}, nil
+	}
+
+	previousState := "not_started"
+	if analysisStatus != nil {
+		previousState = string(analysisStatus.Status)
+	}
+
+	// Check idempotency key FIRST - if we've already processed this request, return immediately
+	// This must happen before the running check since a restarted phase will be "in_progress"
+	var isIdempotent bool
+	if r.Params.XIdempotencyKey != nil && *r.Params.XIdempotencyKey != "" {
+		idempotencyKey := *r.Params.XIdempotencyKey
+		// Check if we've already processed this request
+		if h.deps.Orchestrator.HasIdempotencyKey(ctx, idempotencyKey) {
+			isIdempotent = true
+			// Return cached-like response without re-executing
+			status, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, campaignID, models.PhaseTypeAnalysis)
+			currentState := gen.AnalysisRestartResponseCurrentState("running")
+			if status != nil && status.Status == models.PhaseStatusCompleted {
+				currentState = gen.AnalysisRestartResponseCurrentState("queued")
+			}
+			prevState := gen.AnalysisRestartResponsePreviousState(previousState)
+			return gen.CampaignsAnalysisRestart200JSONResponse{
+				CampaignId:    r.CampaignId,
+				Message:       "Analysis restart already processed (idempotent)",
+				PreviousState: &prevState,
+				CurrentState:  currentState,
+				PhaseStatus:   buildPhaseStatusResponse(models.PhaseTypeAnalysis, status),
+				Idempotent:    &isIdempotent,
+				Timestamp:     time.Now(),
+			}, nil
+		}
+	}
+
+	// Check if analysis is currently running - cannot restart while running
+	if analysisStatus != nil && analysisStatus.Status == models.PhaseStatusInProgress {
+		currentState := "running"
+		requiredState := "completed, failed, paused, or not_started"
+		return gen.CampaignsAnalysisRestart409JSONResponse{
+			Error:         gen.ApiError{Message: "cannot restart analysis while running", Code: gen.CONFLICT, Timestamp: time.Now()},
+			RequestId:     reqID(),
+			Success:       boolPtr(false),
+			CurrentState:  &currentState,
+			RequiredState: &requiredState,
+		}, nil
+	}
+
+	// Check upstream dependency: HTTP validation must be completed
+	httpStatus, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, campaignID, models.PhaseTypeHTTPKeywordValidation)
+	if httpStatus == nil || httpStatus.Status != models.PhaseStatusCompleted {
+		httpState := "not_started"
+		if httpStatus != nil {
+			httpState = string(httpStatus.Status)
+		}
+		currentState := "http_validation: " + httpState
+		requiredState := "http_validation must be completed"
+		return gen.CampaignsAnalysisRestart409JSONResponse{
+			Error:         gen.ApiError{Message: "HTTP validation must be completed before restarting analysis", Code: gen.CONFLICT, Timestamp: time.Now()},
+			RequestId:     reqID(),
+			Success:       boolPtr(false),
+			CurrentState:  &currentState,
+			RequiredState: &requiredState,
+		}, nil
+	}
+
+	// Register the idempotency key before executing
+	if r.Params.XIdempotencyKey != nil && *r.Params.XIdempotencyKey != "" {
+		h.deps.Orchestrator.RegisterIdempotencyKey(ctx, *r.Params.XIdempotencyKey, campaignID.String()+":analysis_restart")
+	}
+
+	// Reset analysis phase state to allow restart
+	if err := h.deps.Orchestrator.ResetPhaseForRestart(ctx, campaignID, models.PhaseTypeAnalysis); err != nil {
+		return gen.CampaignsAnalysisRestart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{
+			Error:     gen.ApiError{Message: "failed to reset analysis phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()},
+			RequestId: reqID(),
+			Success:   boolPtr(false),
+		}}, nil
+	}
+
+	// Start the analysis phase
+	if err := h.deps.Orchestrator.StartPhaseInternal(ctx, campaignID, models.PhaseTypeAnalysis); err != nil {
+		return gen.CampaignsAnalysisRestart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{
+			Error:     gen.ApiError{Message: "failed to start analysis phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()},
+			RequestId: reqID(),
+			Success:   boolPtr(false),
+		}}, nil
+	}
+
+	// Get updated status after restart
+	newStatus, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, campaignID, models.PhaseTypeAnalysis)
+	currentState := gen.AnalysisRestartResponseCurrentState("running")
+	prevState := gen.AnalysisRestartResponsePreviousState(previousState)
+
+	return gen.CampaignsAnalysisRestart200JSONResponse{
+		CampaignId:    r.CampaignId,
+		Message:       "Analysis phase restart initiated",
+		PreviousState: &prevState,
+		CurrentState:  currentState,
+		PhaseStatus:   buildPhaseStatusResponse(models.PhaseTypeAnalysis, newStatus),
+		Idempotent:    &isIdempotent,
+		Timestamp:     time.Now(),
 	}, nil
 }

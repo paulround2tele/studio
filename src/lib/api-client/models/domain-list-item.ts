@@ -16,6 +16,9 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { DomainAnalysisFeatures } from './domain-analysis-features';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { DomainRejectionReasonEnum } from './domain-rejection-reason-enum';
 
 /**
  * 
@@ -85,6 +88,15 @@ export interface DomainListItem {
         
           
           string
+    ;
+  /**
+   * Terminal outcome classification for this domain. Always set for terminal states.
+   * @memberof DomainListItem
+   */
+  'rejectionReason'?: 
+        
+          
+          DomainRejectionReasonEnum
     ;
   /**
    * Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE)

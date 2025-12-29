@@ -16,6 +16,9 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { DomainAnalysisFeatures } from './domain-analysis-features';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { DomainRejectionReasonEnum } from './domain-rejection-reason-enum';
 
 /**
  * Domain generation/validation status update (subset / partial DomainListItem fields may be present).
@@ -67,6 +70,15 @@ export interface DomainStatusEvent {
         
           
           string
+    ;
+  /**
+   * Terminal outcome classification for this domain
+   * @memberof DomainStatusEvent
+   */
+  'rejectionReason'?: 
+        
+          
+          DomainRejectionReasonEnum
     ;
   /**
    * 

@@ -305,6 +305,23 @@ EnrichedCampaignResponse:
       items: { $ref: '#/PhaseExecution' }
   required: [campaign]
 
+# --- Domain Status Enums ---
+DomainRejectionReasonEnum:
+  type: string
+  description: >
+    Terminal outcome classification for every domain. Set deterministically by each phase handler.
+    No silent defaults - every terminal domain must have a reason.
+  enum:
+    - qualified    # Domain passed all validation and met scoring thresholds - became a lead
+    - low_score    # Keywords found but final score below threshold
+    - no_keywords  # HTTP OK but no keyword matches found
+    - parked       # Domain detected as parked/placeholder page
+    - dns_error    # DNS validation returned an error (NXDOMAIN, SERVFAIL, etc.)
+    - dns_timeout  # DNS validation timed out
+    - http_error   # HTTP validation returned an error (connection error, TLS error, non-2xx response)
+    - http_timeout # HTTP validation timed out
+    - pending      # Validation not yet complete (intermediate state)
+
 # --- Campaign Domains Listing & Pattern Offset Schemas ---
 DomainListItem:
   type: object
@@ -316,6 +333,9 @@ DomainListItem:
     dnsStatus: { type: string, description: "DNS validation status (authoritative)" }
     httpStatus: { type: string, description: "HTTP validation status (authoritative)" }
     leadStatus: { type: string, description: "Lead extraction status if available" }
+    rejectionReason: 
+      $ref: '#/DomainRejectionReasonEnum'
+      description: "Terminal outcome classification for this domain. Always set for terminal states."
     dnsReason: { type: string, nullable: true, description: "Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE)" }
     httpReason: { type: string, nullable: true, description: "Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)" }
     domainScore: { type: number, format: float, nullable: true, description: "Composite domain quality score (0-100) from Analysis & Scoring phase" }
@@ -408,32 +428,96 @@ PageInfo:
   required: [hasNextPage]
 DomainScoreBreakdownResponse:
   type: object
-  description: Component scores contributing to the final relevance score for a domain.
+  description: |
+    Structured score breakdown with explicit state for graceful degradation.
+    Never returns 500 - always returns structured state indicating data availability.
   properties:
     campaignId: { type: string, format: uuid }
     domain: { type: string }
-    components:
-      type: object
-      description: Raw component scores normalized to 0-1 prior to weighting.
-      properties:
-        density: { type: number, format: float }
-        coverage: { type: number, format: float }
-        non_parked: { type: number, format: float }
-        content_length: { type: number, format: float }
-        title_keyword: { type: number, format: float }
-        freshness: { type: number, format: float }
-        tf_lite: { type: number, format: float, description: Experimental TF-lite component (0 if disabled) }
-      required: [density, coverage, non_parked, content_length, title_keyword, freshness, tf_lite]
-    final: { type: number, format: float, description: Weighted final relevance score after penalties }
-    weights:
-      type: object
-      description: Active scoring profile weights used for combination.
-      additionalProperties: { type: number, format: float }
-    parkedPenaltyFactor:
+    state:
+      type: string
+      description: Overall availability state of the breakdown
+      enum: [complete, partial, degraded]
+    reason:
+      type: string
+      nullable: true
+      description: Reason for non-complete state
+      enum: [feature_vector_missing, profile_not_found, analysis_pending, domain_not_found, internal_error]
+    overallScore:
       type: number
       format: float
-      description: Penalty factor applied when domain considered parked with low confidence (<0.9)
-  required: [campaignId, domain, components, final]
+      nullable: true
+      description: Final weighted score (0-100), null if unavailable
+    components:
+      type: object
+      description: Component scores with individual state tracking
+      properties:
+        density:
+          $ref: '#/ScoreComponent'
+        coverage:
+          $ref: '#/ScoreComponent'
+        nonParked:
+          $ref: '#/ScoreComponent'
+        contentLength:
+          $ref: '#/ScoreComponent'
+        titleKeyword:
+          $ref: '#/ScoreComponent'
+        freshness:
+          $ref: '#/ScoreComponent'
+        tfLite:
+          $ref: '#/ScoreComponent'
+      required: [density, coverage, nonParked, contentLength, titleKeyword, freshness, tfLite]
+    evidence:
+      type: object
+      nullable: true
+      description: Evidence supporting the score (keyword hits, penalties, etc.)
+      properties:
+        keywordHits:
+          type: array
+          items: { type: string }
+          description: Keywords that matched in the domain content
+        parkedPenaltyApplied:
+          type: boolean
+          description: Whether the parked domain penalty was applied
+        parkedPenaltyFactor:
+          type: number
+          format: float
+          nullable: true
+          description: Penalty multiplier if applied (e.g., 0.5)
+        contentLengthBytes:
+          type: integer
+          nullable: true
+          description: Raw content length in bytes
+        freshnessDaysOld:
+          type: integer
+          nullable: true
+          description: Days since content was last modified
+    weights:
+      type: object
+      description: Active scoring profile weights used for combination
+      additionalProperties: { type: number, format: float }
+  required: [campaignId, domain, state, components]
+
+ScoreComponent:
+  type: object
+  description: Individual component score with state and optional reason
+  properties:
+    value:
+      type: number
+      format: float
+      nullable: true
+      description: Normalized score (0-1), null if unavailable
+    state:
+      type: string
+      description: Component availability state
+      enum: [ok, unavailable, error]
+    reason:
+      type: string
+      nullable: true
+      description: Reason if state is not ok
+      enum: [field_missing, computation_failed, data_pending]
+  required: [state]
+
 PatternOffsetRequest:
   type: object
   properties:
@@ -1179,6 +1263,10 @@ DomainStatusEvent:
     dnsStatus: { type: string, nullable: true }
     httpStatus: { type: string, nullable: true }
     leadStatus: { type: string, nullable: true }
+    rejectionReason: 
+      $ref: '#/DomainRejectionReasonEnum'
+      nullable: true
+      description: "Terminal outcome classification for this domain"
     dnsReason: { type: string, nullable: true }
     httpReason: { type: string, nullable: true }
     features:
@@ -1937,6 +2025,35 @@ CampaignRestartResponse:
       description: Latest status snapshot for each restartable phase after enqueueing.
       items: { $ref: '#/PhaseStatusResponse' }
   required: [campaignId, phasesRestarted]
+
+AnalysisRestartResponse:
+  type: object
+  description: Response for analysis-only restart. Re-runs scoring without affecting discovery/DNS/HTTP.
+  properties:
+    campaignId:
+      type: string
+      format: uuid
+    message:
+      type: string
+      description: Human-readable status message.
+    previousState:
+      type: string
+      description: State of analysis phase before restart.
+      enum: [not_started, configured, completed, failed, paused]
+    currentState:
+      type: string
+      description: State of analysis phase after restart initiated.
+      enum: [running, queued]
+    phaseStatus:
+      $ref: '#/PhaseStatusResponse'
+    idempotent:
+      type: boolean
+      description: True if this was a cached response from a previous identical request.
+    timestamp:
+      type: string
+      format: date-time
+  required: [campaignId, message, currentState, phaseStatus, timestamp]
+
 CampaignStopResponse:
   type: object
   description: Summary payload returned after stopping the active campaign phase.
@@ -2063,6 +2180,49 @@ CampaignFunnelResponse:
     highPotential: { type: integer }
     leads: { type: integer }
   required: [generated, dnsValid, httpValid, keywordHits, analyzed, highPotential, leads]
+
+# P0-4: Rejection summary for audit equation compliance
+RejectionSummaryResponse:
+  type: object
+  description: >
+    Breakdown of domain outcomes by rejection_reason. Enables audit equation:
+    analyzed = qualified + rejected_total (low_score + no_keywords + parked + dns errors + http errors)
+  properties:
+    campaignId: { type: string, format: uuid }
+    counts:
+      type: object
+      description: Count of domains by rejection reason
+      properties:
+        qualified: { type: integer, description: "Domains that passed validation and scoring thresholds" }
+        lowScore: { type: integer, description: "Domains with keywords but score below threshold" }
+        noKeywords: { type: integer, description: "HTTP OK but no keyword matches found" }
+        parked: { type: integer, description: "Detected as parked/placeholder pages" }
+        dnsError: { type: integer, description: "DNS validation errors (NXDOMAIN, SERVFAIL, etc.)" }
+        dnsTimeout: { type: integer, description: "DNS validation timed out" }
+        httpError: { type: integer, description: "HTTP validation errors (connection, TLS, non-2xx)" }
+        httpTimeout: { type: integer, description: "HTTP validation timed out" }
+        pending: { type: integer, description: "Validation not yet complete" }
+      required: [qualified, lowScore, noKeywords, parked, dnsError, dnsTimeout, httpError, httpTimeout, pending]
+    totals:
+      type: object
+      description: Aggregate totals for audit equation
+      properties:
+        analyzed: { type: integer, description: "Total domains that completed processing (excludes pending)" }
+        qualified: { type: integer, description: "Domains that became leads (same as counts.qualified)" }
+        rejected: { type: integer, description: "Sum of all rejection reasons (lowScore + noKeywords + parked + errors)" }
+        errors: { type: integer, description: "Sum of dns_error + dns_timeout + http_error + http_timeout" }
+        pending: { type: integer, description: "Domains still being processed" }
+      required: [analyzed, qualified, rejected, errors, pending]
+    balanced:
+      type: boolean
+      description: >
+        True if audit equation balances: analyzed == qualified + rejected.
+        False indicates data inconsistency requiring investigation.
+    auditNote:
+      type: string
+      nullable: true
+      description: Human-readable explanation if balanced is false
+  required: [campaignId, counts, totals, balanced]
 
 CampaignMetricsResponse:
   type: object
@@ -2777,6 +2937,10 @@ DiscoveryLineageCampaign:
         leads:
           type: integer
           format: int64
-      required: [domainsGenerated, dnsValid, keywordMatches, leads]
+        completeness:
+          type: string
+          description: "Data completeness state of the campaign"
+          enum: [pending, partial, complete, degraded]
+      required: [domainsGenerated, dnsValid, keywordMatches, leads, completeness]
   required: [id, name, createdAt, stats]
 
