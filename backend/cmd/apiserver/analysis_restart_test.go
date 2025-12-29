@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/fntelecomllc/studio/backend/internal/application"
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
+	"github.com/fntelecomllc/studio/backend/internal/application"
 	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
@@ -34,8 +34,10 @@ func (s *stubAnalysisForRestart) Validate(ctx context.Context, cfg interface{}) 
 func (s *stubAnalysisForRestart) GetPhaseType() models.PhaseTypeEnum {
 	return models.PhaseTypeAnalysis
 }
-func (s *stubAnalysisForRestart) ScoreDomains(ctx context.Context, cID uuid.UUID) error    { return nil }
-func (s *stubAnalysisForRestart) RescoreCampaign(ctx context.Context, cID uuid.UUID) error { return nil }
+func (s *stubAnalysisForRestart) ScoreDomains(ctx context.Context, cID uuid.UUID) error { return nil }
+func (s *stubAnalysisForRestart) RescoreCampaign(ctx context.Context, cID uuid.UUID) error {
+	return nil
+}
 func (s *stubAnalysisForRestart) ScoreBreakdown(ctx context.Context, cID uuid.UUID, domain string) (map[string]float64, error) {
 	return nil, nil
 }

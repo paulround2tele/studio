@@ -121,66 +121,66 @@ func TestParseCompleteness(t *testing.T) {
 func TestCompletenessStateDeterminism(t *testing.T) {
 	// These test cases document the expected business logic for completeness
 	type phaseScenario struct {
-		description      string
-		hasNotStarted    bool
-		hasInProgress    bool
-		hasCompleted     bool
-		hasFailed        bool
-		expectedState    CampaignCompletenessEnum
+		description   string
+		hasNotStarted bool
+		hasInProgress bool
+		hasCompleted  bool
+		hasFailed     bool
+		expectedState CampaignCompletenessEnum
 	}
 
 	scenarios := []phaseScenario{
 		// pending scenarios
 		{
-			description:      "all phases not started = pending",
-			hasNotStarted:    true,
-			hasInProgress:    false,
-			hasCompleted:     false,
-			hasFailed:        false,
-			expectedState:    CampaignCompletenessPending,
+			description:   "all phases not started = pending",
+			hasNotStarted: true,
+			hasInProgress: false,
+			hasCompleted:  false,
+			hasFailed:     false,
+			expectedState: CampaignCompletenessPending,
 		},
 		// partial scenarios
 		{
-			description:      "some phases in progress = partial",
-			hasNotStarted:    true,
-			hasInProgress:    true,
-			hasCompleted:     false,
-			hasFailed:        false,
-			expectedState:    CampaignCompletenessPartial,
+			description:   "some phases in progress = partial",
+			hasNotStarted: true,
+			hasInProgress: true,
+			hasCompleted:  false,
+			hasFailed:     false,
+			expectedState: CampaignCompletenessPartial,
 		},
 		{
-			description:      "some phases completed but not all = partial",
-			hasNotStarted:    true,
-			hasInProgress:    false,
-			hasCompleted:     true,
-			hasFailed:        false,
-			expectedState:    CampaignCompletenessPartial,
+			description:   "some phases completed but not all = partial",
+			hasNotStarted: true,
+			hasInProgress: false,
+			hasCompleted:  true,
+			hasFailed:     false,
+			expectedState: CampaignCompletenessPartial,
 		},
 		// complete scenarios
 		{
-			description:      "all phases completed = complete",
-			hasNotStarted:    false,
-			hasInProgress:    false,
-			hasCompleted:     true,
-			hasFailed:        false,
-			expectedState:    CampaignCompletenessComplete,
+			description:   "all phases completed = complete",
+			hasNotStarted: false,
+			hasInProgress: false,
+			hasCompleted:  true,
+			hasFailed:     false,
+			expectedState: CampaignCompletenessComplete,
 		},
 		// degraded scenarios
 		{
-			description:      "any phase failed = degraded",
-			hasNotStarted:    false,
-			hasInProgress:    false,
-			hasCompleted:     true,
-			hasFailed:        true,
-			expectedState:    CampaignCompletenessDegraded,
+			description:   "any phase failed = degraded",
+			hasNotStarted: false,
+			hasInProgress: false,
+			hasCompleted:  true,
+			hasFailed:     true,
+			expectedState: CampaignCompletenessDegraded,
 		},
 		{
-			description:      "failed even with in-progress = degraded",
-			hasNotStarted:    false,
-			hasInProgress:    true,
-			hasCompleted:     false,
-			hasFailed:        true,
-			expectedState:    CampaignCompletenessDegraded,
+			description:   "failed even with in-progress = degraded",
+			hasNotStarted: false,
+			hasInProgress: true,
+			hasCompleted:  false,
+			hasFailed:     true,
+			expectedState: CampaignCompletenessDegraded,
 		},
 	}
 

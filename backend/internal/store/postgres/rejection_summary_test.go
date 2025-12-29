@@ -21,7 +21,7 @@ func TestGetRejectionSummary_BalancedCase(t *testing.T) {
 	s := &campaignStorePostgres{db: sqlxDB}
 	campaignID := uuid.New()
 
-	// Mock a balanced scenario: 10 qualified, 5 low_score, 3 no_keywords, 2 parked, 
+	// Mock a balanced scenario: 10 qualified, 5 low_score, 3 no_keywords, 2 parked,
 	// 1 dns_error, 1 dns_timeout, 1 http_error, 1 http_timeout, 2 pending, 0 null
 	// analyzed = 10 + 5 + 3 + 2 + 1 + 1 + 1 + 1 = 24
 	// rejected = 5 + 3 + 2 + 4 = 14

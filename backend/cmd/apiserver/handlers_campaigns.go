@@ -3839,10 +3839,10 @@ func (h *strictHandlers) DiscoveryPreview(ctx context.Context, r gen.DiscoveryPr
 			CreatedAt: pc.CreatedAt,
 			Stats: struct {
 				Completeness     gen.DiscoveryLineageCampaignStatsCompleteness `json:"completeness"`
-				DnsValid         int64                                     `json:"dnsValid"`
-				DomainsGenerated int64                                     `json:"domainsGenerated"`
-				KeywordMatches   int64                                     `json:"keywordMatches"`
-				Leads            int64                                     `json:"leads"`
+				DnsValid         int64                                         `json:"dnsValid"`
+				DomainsGenerated int64                                         `json:"domainsGenerated"`
+				KeywordMatches   int64                                         `json:"keywordMatches"`
+				Leads            int64                                         `json:"leads"`
 			}{
 				Completeness:     gen.DiscoveryLineageCampaignStatsCompleteness(pc.Completeness),
 				DomainsGenerated: pc.DomainsCount,
@@ -3943,10 +3943,10 @@ func (h *strictHandlers) CampaignsDiscoveryLineage(ctx context.Context, r gen.Ca
 			CreatedAt: pc.CreatedAt,
 			Stats: struct {
 				Completeness     gen.DiscoveryLineageCampaignStatsCompleteness `json:"completeness"`
-				DnsValid         int64                                     `json:"dnsValid"`
-				DomainsGenerated int64                                     `json:"domainsGenerated"`
-				KeywordMatches   int64                                     `json:"keywordMatches"`
-				Leads            int64                                     `json:"leads"`
+				DnsValid         int64                                         `json:"dnsValid"`
+				DomainsGenerated int64                                         `json:"domainsGenerated"`
+				KeywordMatches   int64                                         `json:"keywordMatches"`
+				Leads            int64                                         `json:"leads"`
 			}{
 				Completeness:     gen.DiscoveryLineageCampaignStatsCompleteness(pc.Completeness),
 				DomainsGenerated: pc.DomainsCount,

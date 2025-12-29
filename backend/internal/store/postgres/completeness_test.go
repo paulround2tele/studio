@@ -30,7 +30,7 @@ func TestDiscoveryLineageCampaign_CompletenessField(t *testing.T) {
 // TestDiscoveryLineageCampaign_CompletenessValues tests all valid completeness values
 func TestDiscoveryLineageCampaign_CompletenessValues(t *testing.T) {
 	tests := []struct {
-		name        string
+		name         string
 		completeness models.CampaignCompletenessEnum
 	}{
 		{"pending", models.CampaignCompletenessPending},
@@ -75,8 +75,8 @@ func TestCompletenessSQL_Logic(t *testing.T) {
 
 	cases := []testCase{
 		{
-			description: "No phases means pending",
-			phaseCounts: map[string]int{},
+			description:    "No phases means pending",
+			phaseCounts:    map[string]int{},
 			expectedResult: models.CampaignCompletenessPending,
 		},
 		{

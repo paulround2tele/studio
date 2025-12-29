@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/fntelecomllc/studio/backend/internal/application"
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
+	"github.com/fntelecomllc/studio/backend/internal/application"
 	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
@@ -29,13 +29,19 @@ func (s *stubAnalysisForScoreBreakdown) Execute(ctx context.Context, cID uuid.UU
 func (s *stubAnalysisForScoreBreakdown) GetStatus(ctx context.Context, cID uuid.UUID) (*domainservices.PhaseStatus, error) {
 	return &domainservices.PhaseStatus{Status: models.PhaseStatusNotStarted}, nil
 }
-func (s *stubAnalysisForScoreBreakdown) Cancel(ctx context.Context, cID uuid.UUID) error     { return nil }
-func (s *stubAnalysisForScoreBreakdown) Validate(ctx context.Context, cfg interface{}) error { return nil }
+func (s *stubAnalysisForScoreBreakdown) Cancel(ctx context.Context, cID uuid.UUID) error { return nil }
+func (s *stubAnalysisForScoreBreakdown) Validate(ctx context.Context, cfg interface{}) error {
+	return nil
+}
 func (s *stubAnalysisForScoreBreakdown) GetPhaseType() models.PhaseTypeEnum {
 	return models.PhaseTypeAnalysis
 }
-func (s *stubAnalysisForScoreBreakdown) ScoreDomains(ctx context.Context, cID uuid.UUID) error    { return nil }
-func (s *stubAnalysisForScoreBreakdown) RescoreCampaign(ctx context.Context, cID uuid.UUID) error { return nil }
+func (s *stubAnalysisForScoreBreakdown) ScoreDomains(ctx context.Context, cID uuid.UUID) error {
+	return nil
+}
+func (s *stubAnalysisForScoreBreakdown) RescoreCampaign(ctx context.Context, cID uuid.UUID) error {
+	return nil
+}
 func (s *stubAnalysisForScoreBreakdown) ScoreBreakdown(ctx context.Context, cID uuid.UUID, domain string) (map[string]float64, error) {
 	return s.breakdown, s.err
 }

@@ -167,13 +167,13 @@ type CampaignStore interface {
 // ListCampaignDomainsFilter holds optional filters for generated domains listing.
 // All enum fields use strong types - no raw strings for business states.
 type ListCampaignDomainsFilter struct {
-	DNSStatus        *models.DomainDNSStatusEnum         // Filter by DNS status
-	HTTPStatus       *models.DomainHTTPStatusEnum        // Filter by HTTP status
-	DNSReason        *string                             // Filter by DNS reason text
-	HTTPReason       *string                             // Filter by HTTP reason text
-	LeadStatus       *models.DomainLeadStatusEnum        // Filter by lead status
-	RejectionReason  *models.DomainRejectionReasonEnum   // Filter by single rejection reason (P0-1)
-	RejectionReasons []models.DomainRejectionReasonEnum  // Filter by multiple rejection reasons (P0-8)
+	DNSStatus        *models.DomainDNSStatusEnum        // Filter by DNS status
+	HTTPStatus       *models.DomainHTTPStatusEnum       // Filter by HTTP status
+	DNSReason        *string                            // Filter by DNS reason text
+	HTTPReason       *string                            // Filter by HTTP reason text
+	LeadStatus       *models.DomainLeadStatusEnum       // Filter by lead status
+	RejectionReason  *models.DomainRejectionReasonEnum  // Filter by single rejection reason (P0-1)
+	RejectionReasons []models.DomainRejectionReasonEnum // Filter by multiple rejection reasons (P0-8)
 }
 
 // ListCampaignsFilter and ListValidationResultsFilter remain the same

@@ -33,7 +33,7 @@ func TestUpdateDomainsBulkDNSStatus_OnlySetsRejectionForTerminalErrors(t *testin
 
 	// Verify query uses correct CASE logic:
 	// - timeout -> dns_timeout
-	// - error -> dns_error  
+	// - error -> dns_error
 	// - ok/pending -> preserve existing (gd.rejection_reason)
 	mock.ExpectExec(`UPDATE generated_domains gd.*rejection_reason = CASE.*WHEN v.validation_status = 'timeout' THEN 'dns_timeout'.*WHEN v.validation_status = 'error' THEN 'dns_error'.*ELSE gd.rejection_reason.*END`).
 		WithArgs(
