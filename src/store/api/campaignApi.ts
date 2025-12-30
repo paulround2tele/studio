@@ -32,6 +32,8 @@ import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campa
 import type { CampaignRestartResponse } from '@/lib/api-client/models/campaign-restart-response';
 import type { CampaignStopResponse } from '@/lib/api-client/models/campaign-stop-response';
 import type { CampaignsPhaseConfigsList200Response } from '@/lib/api-client/models/campaigns-phase-configs-list200-response';
+import type { RejectionSummaryResponse } from '@/lib/api-client/models/rejection-summary-response';
+import { DomainRejectionReasonEnum } from '@/lib/api-client/models/domain-rejection-reason-enum';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 import type { PhaseStatusEnum } from '@/lib/api-client/models/phase-status-enum';
@@ -159,6 +161,48 @@ export const campaignApi = createApi({
       },
       providesTags: (result, error, { campaignId }) => [
         { type: 'CampaignDomains', id: campaignId },
+      ],
+    }),
+
+    // Phase 3: Domains list with filtering by rejection reason
+    getCampaignDomainsFiltered: builder.query<
+      CampaignDomainsListResponse,
+      {
+        campaignId: string;
+        limit?: number;
+        offset?: number;
+        rejectionReason?: DomainRejectionReasonEnum[];
+      }
+    >({
+      queryFn: async ({ campaignId, limit, offset, rejectionReason }) => {
+        try {
+          const response = await campaignsApi.campaignsDomainsList(
+            campaignId,
+            limit,
+            offset,
+            undefined, // dnsStatus
+            undefined, // httpStatus
+            undefined, // dnsReason
+            undefined, // httpReason
+            undefined, // minScore
+            undefined, // notParked
+            undefined, // hasContact
+            undefined, // keyword
+            undefined, // sort
+            undefined, // dir
+            undefined, // warnings
+            rejectionReason // rejectionReason filter
+          );
+          const data = unwrap<CampaignDomainsListResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty domains list response' } } };
+          return { data };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
+        }
+      },
+      providesTags: (result, error, { campaignId, rejectionReason }) => [
+        { type: 'CampaignDomains', id: `${campaignId}:${rejectionReason?.join(',') ?? 'all'}` },
       ],
     }),
 
@@ -504,6 +548,24 @@ export const campaignApi = createApi({
       ],
     }),
 
+    // Rejection summary (Phase 0-3) - count by rejection reason
+    getCampaignRejectionSummary: builder.query<RejectionSummaryResponse, string>({
+      queryFn: async (campaignId) => {
+        try {
+          const response = await campaignsApi.campaignsRejectionSummaryGet(campaignId);
+          const data = unwrap<RejectionSummaryResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty rejection summary response' } } };
+          return { data };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
+        }
+      },
+      providesTags: (result, error, campaignId) => [
+        { type: 'Campaign', id: campaignId },
+      ],
+    }),
+
     // New UX Refactor endpoints (Phase A)
     getCampaignFunnel: builder.query<CampaignFunnelResponse, string>({
       queryFn: async (campaignId) => {
@@ -687,6 +749,7 @@ export const {
   useCreateCampaignMutation,
   useGetCampaignsStandaloneQuery,
   useGetCampaignDomainsQuery,
+  useGetCampaignDomainsFilteredQuery,
   useGetCampaignProgressStandaloneQuery,
   useConfigurePhaseStandaloneMutation,
   useStartPhaseStandaloneMutation,
@@ -699,6 +762,8 @@ export const {
   useExportCampaignDomainsMutation,
   useUpdateCampaignModeMutation,
   useGetCampaignDomainScoreBreakdownQuery,
+  // Phase 0 endpoints
+  useGetCampaignRejectionSummaryQuery,
   // New UX Refactor hooks
   useGetCampaignFunnelQuery,
   useGetCampaignMetricsQuery,

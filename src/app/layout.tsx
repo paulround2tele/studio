@@ -8,6 +8,7 @@ import './globals.css';
 import AdvancedConditionalLayout from '@/components/layout/AdvancedConditionalLayout';
 import { GlobalLoadingIndicator } from '@/components/ui/global-loading';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { TAThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ReduxProvider } from '@/components/providers/ReduxProvider';
 import { NuqsProvider } from '@/components/providers/NuqsProvider';
@@ -46,14 +47,16 @@ export default async function RootLayout({
             <ReduxProvider>
               <NuqsProvider>
                 <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
-                  <AuthProvider>
-                    <RTKCampaignDataProvider>
-                      <GlobalLoadingIndicator />
-                      <AdvancedConditionalLayout>
-                        {children}
-                      </AdvancedConditionalLayout>
-                    </RTKCampaignDataProvider>
-                  </AuthProvider>
+                  <TAThemeProvider>
+                    <AuthProvider>
+                      <RTKCampaignDataProvider>
+                        <GlobalLoadingIndicator />
+                        <AdvancedConditionalLayout>
+                          {children}
+                        </AdvancedConditionalLayout>
+                      </RTKCampaignDataProvider>
+                    </AuthProvider>
+                  </TAThemeProvider>
                 </ThemeProvider>
               </NuqsProvider>
             </ReduxProvider>

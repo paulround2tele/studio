@@ -190,20 +190,23 @@ export function createDrawerData(domain: DomainRow): DomainDrawerData {
 export function mapApiScoreBreakdown(
   response: DomainScoreBreakdownResponse
 ): DomainScoreBreakdown {
+  // Extract numeric values from ScoreComponent objects
+  const getVal = (comp: { value?: number; state: string } | undefined): number => comp?.value ?? 0;
+  
   return {
     campaignId: response.campaignId,
     domain: response.domain,
-    final: response.components?.density ?? 0, // TODO: Map actual final score when available
+    final: response.overallScore ?? 0,
     components: {
-      density: response.components?.density ?? 0,
-      coverage: response.components?.coverage ?? 0,
-      non_parked: response.components?.non_parked ?? 0,
-      content_length: response.components?.content_length ?? 0,
-      title_keyword: response.components?.title_keyword ?? 0,
-      freshness: response.components?.freshness ?? 0,
-      tf_lite: response.components?.tf_lite,
+      density: getVal(response.components?.density),
+      coverage: getVal(response.components?.coverage),
+      non_parked: getVal(response.components?.nonParked),
+      content_length: getVal(response.components?.contentLength),
+      title_keyword: getVal(response.components?.titleKeyword),
+      freshness: getVal(response.components?.freshness),
+      tf_lite: getVal(response.components?.tfLite),
     },
-    parkedPenaltyFactor: response.parkedPenaltyFactor,
+    parkedPenaltyFactor: response.evidence?.parkedPenaltyFactor,
   };
 }
 

@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useLayoutEffect, useRef } from 'react';
-import AppLayout from './AppLayout';
+import TailAdminLayout from '@/layout/TailAdminLayout';
 import { useAuth } from '@/components/providers/AuthProvider';
 
 interface AdvancedConditionalLayoutProps {
@@ -56,9 +56,9 @@ export default function AdvancedConditionalLayout({ children }: AdvancedConditio
   const _isPublicPath = publicPaths.includes(currentPath);
 
   // Do not gate here; middleware/server components handle redirects.
-  // Only wrap authenticated areas in AppLayout based on path heuristics.
-  const appPaths = ['/dashboard', '/campaigns', '/personas', '/keyword-sets', '/proxies'];
+  // Only wrap authenticated areas in TailAdminLayout based on path heuristics.
+  const appPaths = ['/dashboard', '/campaigns', '/personas', '/keyword-sets', '/proxies', '/dbgui'];
   const isAppPath = appPaths.some((p) => pathname?.startsWith(p));
-  if (isAppPath) return <AppLayout>{children}</AppLayout>;
+  if (isAppPath) return <TailAdminLayout>{children}</TailAdminLayout>;
   return <div className="min-h-screen bg-background">{children}</div>;
 }

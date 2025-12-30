@@ -24,39 +24,48 @@ import { useGetCampaignDomainScoreBreakdownQuery } from '@/store/api/campaignApi
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import type { DomainScoreBreakdownResponse } from '@/lib/api-client/models/domain-score-breakdown-response';
 
-// Score component configuration for display
+// Score component configuration for display (keys match API camelCase)
 const SCORE_COMPONENTS = [
   { key: 'density', label: 'Keyword Density', weight: 2.5, icon: Target, description: 'Frequency of target keywords in content' },
   { key: 'coverage', label: 'Keyword Coverage', weight: 2.0, icon: FileText, description: 'Variety of unique keywords found' },
-  { key: 'non_parked', label: 'Not Parked', weight: 1.5, icon: Shield, description: 'Domain is live and not parked' },
-  { key: 'content_length', label: 'Content Quality', weight: 1.0, icon: FileText, description: 'Sufficient meaningful content length' },
-  { key: 'title_keyword', label: 'Title Keyword', weight: 1.5, icon: Sparkles, description: 'Target keyword in page title' },
+  { key: 'nonParked', label: 'Not Parked', weight: 1.5, icon: Shield, description: 'Domain is live and not parked' },
+  { key: 'contentLength', label: 'Content Quality', weight: 1.0, icon: FileText, description: 'Sufficient meaningful content length' },
+  { key: 'titleKeyword', label: 'Title Keyword', weight: 1.5, icon: Sparkles, description: 'Target keyword in page title' },
   { key: 'freshness', label: 'Freshness', weight: 0.5, icon: Clock, description: 'Recent content updates detected' },
 ] as const;
+
+// Helper to extract numeric value from ScoreComponent
+function getComponentValue(component: { value?: number; state: string } | undefined): number {
+  return component?.value ?? 0;
+}
 
 // Mock fallback data for when backend not ready
 const MOCK_BREAKDOWN: DomainScoreBreakdownResponse = {
   campaignId: 'mock',
   domain: 'example.com',
+  state: 'complete',
+  overallScore: 78,
   components: {
-    density: 0.75,
-    coverage: 0.82,
-    non_parked: 1.0,
-    content_length: 0.65,
-    title_keyword: 0.9,
-    freshness: 0.45,
-    tf_lite: 0,
+    density: { value: 0.75, state: 'ok' },
+    coverage: { value: 0.82, state: 'ok' },
+    nonParked: { value: 1.0, state: 'ok' },
+    contentLength: { value: 0.65, state: 'ok' },
+    titleKeyword: { value: 0.9, state: 'ok' },
+    freshness: { value: 0.45, state: 'ok' },
+    tfLite: { value: 0, state: 'ok' },
   },
-  final: 78,
+  evidence: {
+    parkedPenaltyApplied: false,
+    parkedPenaltyFactor: 1.0,
+  },
   weights: {
     density: 2.5,
     coverage: 2.0,
-    non_parked: 1.5,
-    content_length: 1.0,
-    title_keyword: 1.5,
+    nonParked: 1.5,
+    contentLength: 1.0,
+    titleKeyword: 1.5,
     freshness: 0.5,
   },
-  parkedPenaltyFactor: 1.0,
 };
 
 interface ScoreBarProps {
@@ -168,25 +177,25 @@ export function DomainDetailDrawer({
       };
     }
 
-    const score = displayData?.final ?? domain?.domainScore ?? 0;
+    const score = displayData?.overallScore ?? domain?.domainScore ?? 0;
     
     // Identify strengths (components >= 0.7 / 70%)
     const strengths: string[] = [];
-    if (components.non_parked >= 0.9) strengths.push('Live, active site');
-    if (components.freshness >= 0.7) strengths.push('Fresh content');
-    if (components.content_length >= 0.7) strengths.push('Rich content depth');
-    if (components.density >= 0.5) strengths.push('Strong keyword density');
-    if (components.coverage >= 0.5) strengths.push('Good keyword variety');
-    if (components.title_keyword >= 0.7) strengths.push('Keyword in title');
+    if (getComponentValue(components.nonParked) >= 0.9) strengths.push('Live, active site');
+    if (getComponentValue(components.freshness) >= 0.7) strengths.push('Fresh content');
+    if (getComponentValue(components.contentLength) >= 0.7) strengths.push('Rich content depth');
+    if (getComponentValue(components.density) >= 0.5) strengths.push('Strong keyword density');
+    if (getComponentValue(components.coverage) >= 0.5) strengths.push('Good keyword variety');
+    if (getComponentValue(components.titleKeyword) >= 0.7) strengths.push('Keyword in title');
     
     // Identify weaknesses (components < 0.4 / 40%)
     const weaknesses: string[] = [];
-    if (components.non_parked < 0.5) weaknesses.push('Parked or inactive');
-    if (components.freshness < 0.3) weaknesses.push('Stale content');
-    if (components.content_length < 0.4) weaknesses.push('Limited content depth');
-    if (components.density < 0.2) weaknesses.push('Low keyword density');
-    if (components.coverage < 0.2) weaknesses.push('Narrow keyword coverage');
-    if (components.title_keyword < 0.3 && score < 60) weaknesses.push('No title keyword');
+    if (getComponentValue(components.nonParked) < 0.5) weaknesses.push('Parked or inactive');
+    if (getComponentValue(components.freshness) < 0.3) weaknesses.push('Stale content');
+    if (getComponentValue(components.contentLength) < 0.4) weaknesses.push('Limited content depth');
+    if (getComponentValue(components.density) < 0.2) weaknesses.push('Low keyword density');
+    if (getComponentValue(components.coverage) < 0.2) weaknesses.push('Narrow keyword coverage');
+    if (getComponentValue(components.titleKeyword) < 0.3 && score < 60) weaknesses.push('No title keyword');
     
     // Build summary
     let summary: string;
@@ -282,13 +291,13 @@ export function DomainDetailDrawer({
                 {isLoading ? (
                   <Loader2 className="h-8 w-8 animate-spin" />
                 ) : (
-                  `${Math.round(displayData?.final ?? domain?.domainScore ?? 0)}/100`
+                  `${Math.round(displayData?.overallScore ?? domain?.domainScore ?? 0)}/100`
                 )}
               </div>
             </div>
-            {displayData?.parkedPenaltyFactor !== undefined && displayData.parkedPenaltyFactor < 1 && (
+            {displayData?.evidence?.parkedPenaltyApplied && displayData.evidence.parkedPenaltyFactor !== undefined && displayData.evidence.parkedPenaltyFactor < 1 && (
               <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                ⚠️ Parked penalty applied: {Math.round((1 - displayData.parkedPenaltyFactor) * 100)}% reduction
+                ⚠️ Parked penalty applied: {Math.round((1 - displayData.evidence.parkedPenaltyFactor) * 100)}% reduction
               </p>
             )}
           </div>
@@ -331,7 +340,7 @@ export function DomainDetailDrawer({
                   <ScoreBar
                     key={key}
                     label={label}
-                    value={displayData.components?.[key as keyof typeof displayData.components] ?? 0}
+                    value={getComponentValue(displayData.components?.[key as keyof typeof displayData.components])}
                     weight={weight}
                     icon={icon}
                     description={description}
