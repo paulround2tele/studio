@@ -282,8 +282,9 @@ export function TargetingStep({
       </section>
 
       <section className="space-y-2">
-        <Label>Include Keywords</Label>
+        <Label htmlFor="includeKeywords">Include Keywords</Label>
         <Input
+          id="includeKeywords"
           type="text"
           placeholder="keyword1, keyword2, keyword3"
           defaultValue={includeKeywords.join(', ')}
@@ -295,9 +296,10 @@ export function TargetingStep({
       </section>
 
       <section className="space-y-2">
-        <Label>Custom Keywords</Label>
+        <Label htmlFor="customKeyword">Custom Keywords</Label>
         <div className="flex gap-2">
           <input
+            id="customKeyword"
             type="text"
             placeholder="Add a single keyword and press Enter"
             value={pendingAdHocKeyword}

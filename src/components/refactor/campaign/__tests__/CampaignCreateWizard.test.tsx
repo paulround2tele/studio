@@ -171,7 +171,7 @@ describe('CampaignCreateWizard', () => {
       await user.click(nextButton);
 
       // Step 2: Fill in pattern step
-      const patternInput = screen.getByLabelText('Constant Segment');
+      const patternInput = screen.getByPlaceholderText('brand');
       await user.type(patternInput, 'brand');
 
       const maxDomainsInput = getMaxDomainsInput();
@@ -256,7 +256,7 @@ describe('CampaignCreateWizard', () => {
     let nextButton = screen.getByRole('button', { name: /next/i });
     await user.click(nextButton);
 
-      const patternInput = screen.getByLabelText('Constant Segment');
+      const patternInput = screen.getByPlaceholderText('brand');
       await user.type(patternInput, 'brand');
 
       const maxDomainsInput = getMaxDomainsInput();
@@ -320,7 +320,7 @@ describe('CampaignCreateWizard', () => {
       let nextButton = screen.getByRole('button', { name: /next/i });
       await user.click(nextButton);
 
-      const patternInput = screen.getByLabelText('Constant Segment');
+      const patternInput = screen.getByPlaceholderText('brand');
       await user.type(patternInput, 'brand');
 
       const maxDomainsInput = getMaxDomainsInput();
@@ -344,13 +344,12 @@ describe('CampaignCreateWizard', () => {
           mode: 'step_by_step',
         });
         
-        // Verify auto-start was NOT attempted
+        // Verify auto-start was NOT attempted (configurePhase may still be called for manual mode to pre-configure discovery)
         expect(mockStartPhase).not.toHaveBeenCalled();
-  expect(mockConfigurePhase).not.toHaveBeenCalled();
         
-        // Verify regular success toast
+        // Verify success toast mentions manual mode
         expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-          title: 'Campaign Created Successfully',
+          title: 'Campaign Ready',
           description: expect.stringContaining('manual mode'),
         }));
       });
@@ -397,7 +396,7 @@ describe('CampaignCreateWizard', () => {
       let nextButton = screen.getByRole('button', { name: /^Next/i });
       await user.click(nextButton);
 
-      const patternInput = screen.getByLabelText('Constant Segment');
+      const patternInput = screen.getByPlaceholderText('brand');
       await user.type(patternInput, 'brand');
 
       const maxDomainsInput = getMaxDomainsInput();

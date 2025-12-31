@@ -514,8 +514,9 @@ describe('CampaignCreateWizard Component', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByLabelText('Campaign Name *')).toBeInTheDocument();
-      expect(screen.getByLabelText('Description (Optional)')).toBeInTheDocument();
+      // Use getByRole for input accessibility - labels are associated via htmlFor/id
+      expect(screen.getByRole('textbox', { name: /campaign name/i })).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: /description/i })).toBeInTheDocument();
     });
   });
 });

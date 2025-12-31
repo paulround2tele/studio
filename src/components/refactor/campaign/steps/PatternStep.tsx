@@ -151,8 +151,9 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
 
       {/* Base / Constant Pattern */}
       <div className="space-y-2">
-        <Label>{usingVariationsMode ? 'Base Pattern (with {variation})' : 'Constant Segment'}</Label>
+        <Label htmlFor="basePattern">{usingVariationsMode ? 'Base Pattern (with {variation})' : 'Constant Segment'}</Label>
         <Input
+          id="basePattern"
           type="text"
           placeholder={usingVariationsMode ? 'brand-{variation}' : 'brand'}
           defaultValue={data.basePattern || ''}
@@ -166,8 +167,9 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
       {/* Variations Input (manual mode) */}
       {usingVariationsMode && (
         <div className="space-y-2">
-          <Label>Pattern Variations</Label>
+          <Label htmlFor="variations">Pattern Variations</Label>
           <Input
+            id="variations"
             type="text"
             placeholder="alpha, beta, gamma"
             defaultValue={data.variations?.join(', ') || ''}

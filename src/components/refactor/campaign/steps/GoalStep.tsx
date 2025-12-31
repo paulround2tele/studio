@@ -25,10 +25,11 @@ export function GoalStep({ data, onChange }: GoalStepProps) {
     <div className="space-y-6">
       {/* Campaign Name */}
       <div className="space-y-2">
-        <Label>
+        <Label htmlFor="campaignName">
           Campaign Name <span className="text-error-500">*</span>
         </Label>
         <Input
+          id="campaignName"
           type="text"
           placeholder="Enter a descriptive name for your campaign"
           defaultValue={data.campaignName || ''}
@@ -41,10 +42,11 @@ export function GoalStep({ data, onChange }: GoalStepProps) {
 
       {/* Description */}
       <div className="space-y-2">
-        <Label>
+        <Label htmlFor="description">
           Description (Optional)
         </Label>
         <textarea
+          id="description"
           className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-gray-500"
           placeholder="Describe your campaign goals and target audience"
           value={data.description || ''}
