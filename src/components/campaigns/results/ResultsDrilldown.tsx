@@ -17,16 +17,7 @@
  */
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+/* TailAdmin migration: Badge/Button/Skeleton/Alert/DropdownMenu replaced with inline Tailwind patterns */
 import { cn } from '@/lib/utils';
 import {
   useGetCampaignDomainsFilteredQuery,
@@ -51,7 +42,6 @@ import {
   ShieldCheck,
   ShieldAlert,
   Calculator,
-  Download,
   FileJson,
   FileSpreadsheet,
   AlertCircle,
@@ -329,16 +319,17 @@ const AuditEquation: React.FC<AuditEquationProps> = ({ totals, balanced }) => {
             </>
           )}
         </div>
+        {/* TailAdmin migration: Badge -> inline span */}
         {balanced ? (
-          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] h-5 ml-auto">
+          <span className="inline-flex items-center rounded border bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] h-5 px-1.5 ml-auto">
             <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
             OK
-          </Badge>
+          </span>
         ) : (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] h-5 ml-auto">
+          <span className="inline-flex items-center rounded border bg-amber-50 text-amber-700 border-amber-200 text-[10px] h-5 px-1.5 ml-auto">
             <ShieldAlert className="h-2.5 w-2.5 mr-0.5" />
             Mismatch
-          </Badge>
+          </span>
         )}
       </div>
       {errors > 0 && (
@@ -368,14 +359,21 @@ const AuditStatusBanner: React.FC<AuditStatusBannerProps> = ({ balanced, auditNo
     return null;
   }
 
+  /* TailAdmin migration: Alert -> inline Tailwind pattern */
   return (
-    <Alert variant="destructive" className="bg-amber-50 border-amber-300 text-amber-900">
-      <ShieldAlert className="h-4 w-4 text-amber-600" />
-      <AlertTitle className="text-amber-800">Audit Equation Mismatch</AlertTitle>
-      <AlertDescription className="text-amber-700">
-        {auditNote ?? 'The domain counts do not balance. This may indicate data inconsistency requiring investigation.'}
-      </AlertDescription>
-    </Alert>
+    <div className="relative w-full rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900" role="alert">
+      <div className="flex items-start gap-3">
+        <ShieldAlert className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+        <div className="flex-1">
+          <h5 className="font-medium leading-none tracking-tight text-amber-800 mb-1">
+            Audit Equation Mismatch
+          </h5>
+          <p className="text-sm text-amber-700">
+            {auditNote ?? 'The domain counts do not balance. This may indicate data inconsistency requiring investigation.'}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -521,9 +519,10 @@ const DomainSection: React.FC<DomainSectionProps> = ({
             {config.label}
           </span>
         </div>
-        <Badge variant="secondary" className="tabular-nums text-[10px] h-4 px-1.5">
+        {/* TailAdmin migration: Badge -> inline span */}
+        <span className="inline-flex items-center rounded border border-gray-200 bg-gray-100 text-gray-700 tabular-nums text-[10px] h-4 px-1.5">
           {count}
-        </Badge>
+        </span>
       </button>
       {isOpen && (
         <div className="border rounded overflow-hidden bg-white ml-4">
@@ -531,35 +530,35 @@ const DomainSection: React.FC<DomainSectionProps> = ({
           <div className="px-2 py-1 bg-slate-50 border-b flex items-center justify-between gap-2">
             <span className="text-[10px] text-slate-500 truncate">{config.description}</span>
             {domains.length > 0 && !isLoading && !isFetching && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-5 px-1.5 text-[10px]"
-                  >
-                    <Download className="h-2.5 w-2.5 mr-0.5" />
-                    Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleExportCSV}>
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportJSON}>
-                    <FileJson className="h-4 w-4 mr-2" />
-                    JSON
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              /* TailAdmin migration: DropdownMenu -> inline buttons */
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={handleExportCSV}
+                  className="inline-flex items-center h-5 px-1.5 text-[10px] text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                  title="Export CSV"
+                >
+                  <FileSpreadsheet className="h-2.5 w-2.5 mr-0.5" />
+                  CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportJSON}
+                  className="inline-flex items-center h-5 px-1.5 text-[10px] text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                  title="Export JSON"
+                >
+                  <FileJson className="h-2.5 w-2.5 mr-0.5" />
+                  JSON
+                </button>
+              </div>
             )}
           </div>
           {isLoading || isFetching ? (
             <div className="p-2 space-y-1">
-              <Skeleton className="h-5 w-full" />
-              <Skeleton className="h-5 w-full" />
-              <Skeleton className="h-5 w-full" />
+              {/* TailAdmin migration: Skeleton -> animate-pulse div */}
+              <div className="h-5 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+              <div className="h-5 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+              <div className="h-5 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
             </div>
           ) : domains.length === 0 ? (
             <div className="p-2 text-center text-xs text-muted-foreground">
@@ -663,9 +662,10 @@ const ScoreBreakdownPanel: React.FC<ScoreBreakdownPanelProps> = ({
   if (isLoading) {
     return (
       <div className="h-full border rounded p-2 space-y-2">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-        <Skeleton className="h-4 w-2/3" />
+        {/* TailAdmin migration: Skeleton -> animate-pulse div */}
+        <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+        <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
       </div>
     );
   }
@@ -692,11 +692,11 @@ const ScoreBreakdownPanel: React.FC<ScoreBreakdownPanelProps> = ({
           <span className="text-xs font-medium text-gray-700 truncate">Details</span>
           <code className="text-[10px] text-muted-foreground truncate">{breakdown?.domain}</code>
         </div>
+        {/* TailAdmin migration: Badge -> inline span */}
         {breakdown?.state && (
-          <Badge
-            variant="outline"
+          <span
             className={cn(
-              'text-[10px] h-4 px-1 flex items-center gap-0.5 flex-shrink-0',
+              'inline-flex items-center rounded border text-[10px] h-4 px-1 gap-0.5 flex-shrink-0',
               stateConfig.bgColor,
               stateConfig.textColor,
               stateConfig.borderColor
@@ -704,7 +704,7 @@ const ScoreBreakdownPanel: React.FC<ScoreBreakdownPanelProps> = ({
           >
             <StateIcon className="h-2.5 w-2.5" />
             {stateConfig.label}
-          </Badge>
+          </span>
         )}
       </div>
 
@@ -854,12 +854,13 @@ export const ResultsDrilldown: React.FC<ResultsDrilldownProps> = ({
     return (
       <div className={cn('flex gap-2 h-full', className)}>
         <div className="w-1/2 border rounded p-2 space-y-2">
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
+          {/* TailAdmin migration: Skeleton -> animate-pulse div */}
+          <div className="h-8 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="h-8 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="h-8 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
         </div>
         <div className="w-1/2">
-          <Skeleton className="h-full" />
+          <div className="h-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
         </div>
       </div>
     );
@@ -890,16 +891,17 @@ export const ResultsDrilldown: React.FC<ResultsDrilldownProps> = ({
           <div className="px-2 py-1.5 border-b bg-slate-50 flex-shrink-0">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-semibold text-gray-700">Results</span>
+              {/* TailAdmin migration: Badge -> inline span */}
               {balanced ? (
-                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 h-4 text-[10px] px-1">
+                <span className="inline-flex items-center rounded border bg-emerald-50 text-emerald-700 border-emerald-200 h-4 text-[10px] px-1">
                   <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
                   OK
-                </Badge>
+                </span>
               ) : (
-                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 h-4 text-[10px] px-1">
+                <span className="inline-flex items-center rounded border bg-amber-50 text-amber-700 border-amber-200 h-4 text-[10px] px-1">
                   <ShieldAlert className="h-2.5 w-2.5 mr-0.5" />
                   Mismatch
-                </Badge>
+                </span>
               )}
             </div>
             <AuditEquation totals={totals} balanced={balanced} />

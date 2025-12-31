@@ -17,9 +17,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
+/* TailAdmin migration: Badge/Skeleton/Progress replaced with inline Tailwind patterns */
 import { cn } from '@/lib/utils';
 import {
   useGetCampaignStatusQuery,
@@ -210,14 +208,18 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
 
   const Icon = config.icon;
 
+  /* TailAdmin migration: Badge -> inline Tailwind span */
   return (
-    <Badge
-      variant={config.variant}
-      className={cn('flex items-center gap-1 font-medium h-4 px-1 text-[10px]', config.className, className)}
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 font-medium h-4 px-1 text-[10px] rounded border',
+        config.className,
+        className
+      )}
     >
       <Icon className={cn('h-2.5 w-2.5', (config as { iconClassName?: string }).iconClassName)} />
       {config.label}
-    </Badge>
+    </span>
   );
 };
 
@@ -288,12 +290,14 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, isActive }) => {
         </div>
       </div>
 
-      {/* Progress Bar (only for running phases) */}
+      {/* Progress Bar (only for running phases) - Tailwind pattern */}
       {phase.status === 'in_progress' && phase.progressPercentage > 0 && (
-        <Progress
-          value={phase.progressPercentage}
-          className="h-1 mt-1"
-        />
+        <div className="h-1 mt-1 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+          <div
+            className="h-1 rounded-full bg-brand-500 transition-all duration-300"
+            style={{ width: `${phase.progressPercentage}%` }}
+          />
+        </div>
       )}
 
       {/* Error Message - compact */}
@@ -341,23 +345,24 @@ const ProgressHeader: React.FC<ProgressHeaderProps> = ({ status }) => {
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-2">
         <span className="text-xs font-semibold text-gray-700">Execution</span>
+        {/* TailAdmin migration: Badge -> inline Tailwind span */}
         {overallState === 'running' && (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 h-4 px-1 text-[10px]">
+          <span className="inline-flex items-center rounded border bg-amber-50 text-amber-700 border-amber-200 h-4 px-1 text-[10px]">
             <Loader2 className="h-2.5 w-2.5 mr-0.5 animate-spin" />
             Running
-          </Badge>
+          </span>
         )}
         {overallState === 'completed' && (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 h-4 px-1 text-[10px]">
+          <span className="inline-flex items-center rounded border bg-green-50 text-green-700 border-green-200 h-4 px-1 text-[10px]">
             <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
             Done
-          </Badge>
+          </span>
         )}
         {overallState === 'failed' && (
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 h-4 px-1 text-[10px]">
+          <span className="inline-flex items-center rounded border bg-red-50 text-red-700 border-red-200 h-4 px-1 text-[10px]">
             <XCircle className="h-2.5 w-2.5 mr-0.5" />
             Failed
-          </Badge>
+          </span>
         )}
       </div>
       <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
@@ -447,9 +452,10 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
   if (isLoading) {
     return (
       <div className={cn('border rounded p-2 space-y-1', className)}>
-        <Skeleton className="h-6 w-full" />
-        <Skeleton className="h-6 w-full" />
-        <Skeleton className="h-6 w-full" />
+        {/* TailAdmin migration: Skeleton -> animate-pulse div */}
+        <div className="h-6 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+        <div className="h-6 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+        <div className="h-6 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
       </div>
     );
   }

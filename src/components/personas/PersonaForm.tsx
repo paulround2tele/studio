@@ -4,13 +4,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Checkbox from "@/components/ta/form/input/Checkbox";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PersonasApi } from '@/lib/api-client';
@@ -224,146 +218,219 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: PersonaResp
   }
 
   return (
-    <Card className="max-w-3xl mx-auto shadow-xl" data-testid="persona-http-card">
-      <CardHeader data-testid="persona-http-header">
-        <CardTitle data-testid="persona-http-title">{isEditing ? "Edit" : "Create New"} HTTP Persona</CardTitle>
-        <CardDescription data-testid="persona-http-description">
+    /* TailAdmin migration: Card replaced with Tailwind card pattern */
+    <div className="max-w-3xl mx-auto rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-white/[0.03]" data-testid="persona-http-card">
+      <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-800" data-testid="persona-http-header">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white" data-testid="persona-http-title">
+          {isEditing ? "Edit" : "Create New"} HTTP Persona
+        </h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400" data-testid="persona-http-description">
           {isEditing ? "Update details for this HTTP persona." : "Define a new HTTP persona for network operations."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form data-testid="persona-http-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField control={form.control} name="name" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-name">
-                <FormLabel>Persona Name</FormLabel>
-                <FormControl><Input data-testid="persona-http-input-name" placeholder="e.g., Stealth Chrome US" {...field} /></FormControl>
-                <FormDescription>A unique and descriptive name for this persona.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="description" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-description">
-                <FormLabel>Description (Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-http-input-description" placeholder="Describe the purpose or key characteristics of this persona." {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="userAgent" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-user-agent">
-                <FormLabel>User-Agent String</FormLabel>
-                <FormControl><Input data-testid="persona-http-input-user-agent" placeholder="Mozilla/5.0 (Windows NT 10.0; Win64; x64)..." {...field} /></FormControl>
-                <FormDescription>The User-Agent string this persona will use.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="headersJson" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-headers-json">
-                <FormLabel>HTTP Headers (JSON)</FormLabel>
-                <FormControl><Textarea data-testid="persona-http-input-headers-json" placeholder='{ &quot;Accept-Language&quot;: &quot;en-US,en;q=0.9&quot;, &quot;X-Custom-Header&quot;: &quot;Value&quot; }' className="font-mono min-h-[120px]" {...field} /></FormControl>
-                <FormDescription>Enter custom HTTP headers as a JSON object string.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="headerOrderInput" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-header-order">
-                <FormLabel>Header Order (comma-separated, Optional)</FormLabel>
-                <FormControl><Input data-testid="persona-http-input-header-order" placeholder="user-agent,accept-language,accept-encoding" {...field} /></FormControl>
-                <FormDescription>Specify the order of headers if needed by the target.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="tlsClientHelloJson" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-tls-client-hello">
-                <FormLabel>TLS ClientHello Config (JSON, Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-http-input-tls-client-hello" placeholder='{ &quot;minVersion&quot;: &quot;TLS12&quot;, &quot;cipherSuites&quot;: [...] }' className="font-mono min-h-[100px]" {...field} /></FormControl>
-                <FormDescription>Define TLS handshake parameters (e.g., JA3/JA4 related).</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="http2SettingsJson" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-http2-settings">
-                <FormLabel>HTTP/2 Settings (JSON, Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-http-input-http2-settings" placeholder='{ &quot;headerTableSize&quot;: 4096, &quot;enablePush&quot;: false }' className="font-mono min-h-[80px]" {...field} /></FormControl>
-                <FormDescription>Configure HTTP/2 protocol parameters.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="cookieHandlingJson" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-cookie-handling">
-                <FormLabel>Cookie Handling Config (JSON, Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-http-input-cookie-handling" placeholder='{ &quot;mode&quot;: &quot;session&quot; }' className="font-mono min-h-[60px]" {...field} /></FormControl>
-                <FormDescription>Define how cookies are handled (e.g., &quot;none&quot;, &quot;session&quot;, &quot;file&quot;).</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="requestTimeoutSeconds" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-request-timeout">
-                <FormLabel>Request Timeout (seconds)</FormLabel>
-                <FormControl><Input data-testid="persona-http-input-request-timeout" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="followRedirects" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-follow-redirects">
-                <div className="space-y-0.5">
-                  <FormLabel>Follow Redirects</FormLabel>
-                </div>
-                <FormControl><Switch data-testid="persona-http-input-follow-redirects" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="allowedStatusCodesInput" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-allowed-status-codes">
-                <FormLabel>Allowed Status Codes (comma-separated)</FormLabel>
-                <FormControl><Input data-testid="persona-http-input-allowed-status-codes" placeholder="200, 301, 302" {...field} /></FormControl>
-                <FormDescription>Leave blank to allow any successful status code.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <div className="grid grid-cols-2 gap-4" data-testid="persona-http-rate-limits">
-              <FormField control={form.control} name="rateLimitDps" render={({ field }) => (
-                <FormItem data-testid="persona-http-field-rate-limit-dps">
-                  <FormLabel>Rate Limit (DPS)</FormLabel>
-                  <FormControl><Input data-testid="persona-http-input-rate-limit-dps" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="rateLimitBurst" render={({ field }) => (
-                <FormItem data-testid="persona-http-field-rate-limit-burst">
-                  <FormLabel>Rate Limit Burst</FormLabel>
-                  <FormControl><Input data-testid="persona-http-input-rate-limit-burst" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+        </p>
+      </div>
+      <div className="p-6">
+        {/* TailAdmin migration: Form components replaced with inline Tailwind + react-hook-form register */}
+        <form data-testid="persona-http-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Persona Name */}
+          <div data-testid="persona-http-field-name">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Persona Name</label>
+            <input
+              data-testid="persona-http-input-name"
+              placeholder="e.g., Stealth Chrome US"
+              {...form.register("name")}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">A unique and descriptive name for this persona.</p>
+            {form.formState.errors.name && <p className="mt-1 text-xs text-error-500">{form.formState.errors.name.message}</p>}
+          </div>
+
+          {/* Description */}
+          <div data-testid="persona-http-field-description">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+            <textarea
+              data-testid="persona-http-input-description"
+              placeholder="Describe the purpose or key characteristics of this persona."
+              {...form.register("description")}
+              className="dark:bg-dark-900 min-h-[80px] w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            {form.formState.errors.description && <p className="mt-1 text-xs text-error-500">{form.formState.errors.description.message}</p>}
+          </div>
+
+          {/* User-Agent */}
+          <div data-testid="persona-http-field-user-agent">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">User-Agent String</label>
+            <input
+              data-testid="persona-http-input-user-agent"
+              placeholder="Mozilla/5.0 (Windows NT 10.0; Win64; x64)..."
+              {...form.register("userAgent")}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">The User-Agent string this persona will use.</p>
+            {form.formState.errors.userAgent && <p className="mt-1 text-xs text-error-500">{form.formState.errors.userAgent.message}</p>}
+          </div>
+
+          {/* Headers JSON */}
+          <div data-testid="persona-http-field-headers-json">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">HTTP Headers (JSON)</label>
+            <textarea
+              data-testid="persona-http-input-headers-json"
+              placeholder='{ "Accept-Language": "en-US,en;q=0.9", "X-Custom-Header": "Value" }'
+              {...form.register("headersJson")}
+              className="dark:bg-dark-900 min-h-[120px] w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 font-mono text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter custom HTTP headers as a JSON object string.</p>
+            {form.formState.errors.headersJson && <p className="mt-1 text-xs text-error-500">{form.formState.errors.headersJson.message}</p>}
+          </div>
+
+          {/* Header Order */}
+          <div data-testid="persona-http-field-header-order">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Header Order (comma-separated, Optional)</label>
+            <input
+              data-testid="persona-http-input-header-order"
+              placeholder="user-agent,accept-language,accept-encoding"
+              {...form.register("headerOrderInput")}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Specify the order of headers if needed by the target.</p>
+          </div>
+
+          {/* TLS ClientHello JSON */}
+          <div data-testid="persona-http-field-tls-client-hello">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">TLS ClientHello Config (JSON, Optional)</label>
+            <textarea
+              data-testid="persona-http-input-tls-client-hello"
+              placeholder='{ "minVersion": "TLS12", "cipherSuites": [...] }'
+              {...form.register("tlsClientHelloJson")}
+              className="dark:bg-dark-900 min-h-[100px] w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 font-mono text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Define TLS handshake parameters (e.g., JA3/JA4 related).</p>
+          </div>
+
+          {/* HTTP/2 Settings JSON */}
+          <div data-testid="persona-http-field-http2-settings">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">HTTP/2 Settings (JSON, Optional)</label>
+            <textarea
+              data-testid="persona-http-input-http2-settings"
+              placeholder='{ "headerTableSize": 4096, "enablePush": false }'
+              {...form.register("http2SettingsJson")}
+              className="dark:bg-dark-900 min-h-[80px] w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 font-mono text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Configure HTTP/2 protocol parameters.</p>
+          </div>
+
+          {/* Cookie Handling JSON */}
+          <div data-testid="persona-http-field-cookie-handling">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Cookie Handling Config (JSON, Optional)</label>
+            <textarea
+              data-testid="persona-http-input-cookie-handling"
+              placeholder='{ "mode": "session" }'
+              {...form.register("cookieHandlingJson")}
+              className="dark:bg-dark-900 min-h-[60px] w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 font-mono text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Define how cookies are handled (e.g., &quot;none&quot;, &quot;session&quot;, &quot;file&quot;).</p>
+          </div>
+
+          {/* Request Timeout */}
+          <div data-testid="persona-http-field-request-timeout">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Request Timeout (seconds)</label>
+            <input
+              data-testid="persona-http-input-request-timeout"
+              type="number"
+              {...form.register("requestTimeoutSeconds", { valueAsNumber: true })}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            {form.formState.errors.requestTimeoutSeconds && <p className="mt-1 text-xs text-error-500">{form.formState.errors.requestTimeoutSeconds.message}</p>}
+          </div>
+
+          {/* Follow Redirects - TailAdmin Checkbox */}
+          <div className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-700" data-testid="persona-http-field-follow-redirects">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Follow Redirects</span>
+            <Checkbox
+              data-testid="persona-http-input-follow-redirects"
+              checked={form.watch("followRedirects") ?? false}
+              onChange={(checked) => form.setValue("followRedirects", checked)}
+            />
+          </div>
+
+          {/* Allowed Status Codes */}
+          <div data-testid="persona-http-field-allowed-status-codes">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Allowed Status Codes (comma-separated)</label>
+            <input
+              data-testid="persona-http-input-allowed-status-codes"
+              placeholder="200, 301, 302"
+              {...form.register("allowedStatusCodesInput")}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Leave blank to allow any successful status code.</p>
+          </div>
+
+          {/* Rate Limits */}
+          <div className="grid grid-cols-2 gap-4" data-testid="persona-http-rate-limits">
+            <div data-testid="persona-http-field-rate-limit-dps">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Rate Limit (DPS)</label>
+              <input
+                data-testid="persona-http-input-rate-limit-dps"
+                type="number"
+                {...form.register("rateLimitDps", { valueAsNumber: true })}
+                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+              />
             </div>
-            <FormField control={form.control} name="notes" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-notes">
-                <FormLabel>Notes (Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-http-input-notes" placeholder="Internal notes about this HTTP persona." {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="isEnabled" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-is-enabled">
-                <div className="space-y-0.5">
-                  <FormLabel>Enabled</FormLabel>
-                </div>
-                <FormControl><Switch data-testid="persona-http-input-is-enabled" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <div className="flex justify-end gap-2 pt-4" data-testid="persona-http-actions">
-              <Button data-testid="persona-http-cancel" type="button" variant="outline" onClick={() => router.push("/personas")} disabled={form.formState.isSubmitting}>Cancel</Button>
-              <Button data-testid="persona-http-submit" type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {form.formState.isSubmitting ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Persona")}
-              </Button>
+            <div data-testid="persona-http-field-rate-limit-burst">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Rate Limit Burst</label>
+              <input
+                data-testid="persona-http-input-rate-limit-burst"
+                type="number"
+                {...form.register("rateLimitBurst", { valueAsNumber: true })}
+                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+              />
             </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+          </div>
+
+          {/* Notes */}
+          <div data-testid="persona-http-field-notes">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Notes (Optional)</label>
+            <textarea
+              data-testid="persona-http-input-notes"
+              placeholder="Internal notes about this HTTP persona."
+              {...form.register("notes")}
+              className="dark:bg-dark-900 min-h-[80px] w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+          </div>
+
+          {/* Enabled - TailAdmin Checkbox */}
+          <div className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-700" data-testid="persona-http-field-is-enabled">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Enabled</span>
+            <Checkbox
+              data-testid="persona-http-input-is-enabled"
+              checked={form.watch("isEnabled") ?? true}
+              onChange={(checked) => form.setValue("isEnabled", checked)}
+            />
+          </div>
+
+          {/* Actions - inline Tailwind buttons since TailAdmin Button lacks type prop */}
+          <div className="flex justify-end gap-2 pt-4" data-testid="persona-http-actions">
+            <button
+              data-testid="persona-http-cancel"
+              type="button"
+              onClick={() => router.push("/personas")}
+              disabled={form.formState.isSubmitting}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs transition-colors hover:bg-gray-50 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              data-testid="persona-http-submit"
+              type="submit"
+              disabled={form.formState.isSubmitting}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {form.formState.isSubmitting ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Persona")}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -478,163 +545,245 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: PersonaRespo
   }
 
   return (
-    <Card className="max-w-3xl mx-auto shadow-xl" data-testid="persona-dns-card">
-      <CardHeader data-testid="persona-dns-header">
-        <CardTitle data-testid="persona-dns-title">{isEditing ? "Edit" : "Create New"} DNS Persona</CardTitle>
-        <CardDescription data-testid="persona-dns-description">
+    /* TailAdmin migration: Card replaced with Tailwind card pattern */
+    <div className="max-w-3xl mx-auto rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-white/[0.03]" data-testid="persona-dns-card">
+      <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-800" data-testid="persona-dns-header">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white" data-testid="persona-dns-title">
+          {isEditing ? "Edit" : "Create New"} DNS Persona
+        </h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400" data-testid="persona-dns-description">
           {isEditing ? "Update details for this DNS persona." : "Define a new DNS persona for network operations."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form data-testid="persona-dns-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField control={form.control} name="name" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-name">
-                <FormLabel>Persona Name</FormLabel>
-                <FormControl><Input data-testid="persona-dns-input-name" placeholder="e.g., Quad9 Secure DNS" {...field} /></FormControl>
-                <FormDescription>A unique and descriptive name for this persona.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="description" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-description">
-                <FormLabel>Description (Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-dns-input-description" placeholder="Describe the purpose or key characteristics of this persona." {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_resolverStrategy" render={({ field }) => ( 
-              <FormItem data-testid="persona-dns-field-resolver-strategy">
-                <FormLabel>Resolver Strategy</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger data-testid="persona-dns-input-resolver-strategy"><SelectValue placeholder="Select a strategy" /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {DNS_RESOLVER_STRATEGIES.map(s => (
-                      <SelectItem key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_resolversInput" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-resolvers">
-                <FormLabel>Resolvers (comma-separated)</FormLabel>
-                <FormControl><Textarea data-testid="persona-dns-input-resolvers" placeholder="8.8.8.8, 1.1.1.1, https://dns.google/dns-query" {...field} /></FormControl>
-                <FormDescription>List of DNS resolver IP addresses or DoH/DoT URLs.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_useSystemResolvers" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-dns-field-use-system-resolvers">
-                <div className="space-y-0.5">
-                  <FormLabel>Use System Resolvers</FormLabel>
-                  <FormDescription>Fallback to system&apos;s DNS if custom resolvers fail or are not set.</FormDescription>
-                </div>
-                <FormControl><Switch data-testid="persona-dns-input-use-system-resolvers" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_queryTimeoutSeconds" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-query-timeout">
-                <FormLabel>Query Timeout (seconds)</FormLabel>
-                <FormControl><Input data-testid="persona-dns-input-query-timeout" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_maxDomainsPerRequest" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-max-domains-per-request">
-                <FormLabel>Max Domains Per Request (Optional)</FormLabel>
-                <FormControl><Input data-testid="persona-dns-input-max-domains-per-request" type="number" placeholder="e.g., 10 (for DoH batching)" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
-                <FormDescription>Relevant for protocols like DoH that support batch queries.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_resolversWeightedJson" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-resolvers-weighted-json">
-                <FormLabel>Weighted Resolvers (JSON Object - Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-dns-input-resolvers-weighted-json" placeholder='{&quot;8.8.8.8&quot;: 10, &quot;1.1.1.1&quot;: 5}' className="font-mono min-h-[80px]" {...field} /></FormControl>
-                <FormDescription>For &apos;Weighted Rotation&apos; strategy. Object with resolver as key and weight as value.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_resolversPreferredOrderInput" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-resolvers-preferred-order">
-                <FormLabel>Preferred Order (comma-separated - Optional)</FormLabel>
-                <FormControl><Textarea data-testid="persona-dns-input-resolvers-preferred-order" placeholder="1.1.1.1, 8.8.8.8" {...field} /></FormControl>
-                <FormDescription>For &apos;Sequential Failover&apos; strategy. Order of resolvers to try.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_concurrentQueriesPerDomain" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-concurrent-queries-per-domain">
-                <FormLabel>Concurrent Queries Per Domain</FormLabel>
-                <FormControl><Input data-testid="persona-dns-input-concurrent-queries-per-domain" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_queryDelayMinMs" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-query-delay-min-ms">
-                <FormLabel>Query Delay Min (ms - Optional)</FormLabel>
-                <FormControl><Input data-testid="persona-dns-input-query-delay-min-ms" type="number" placeholder="e.g., 0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
-                <FormDescription>Minimum random delay before a query.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_queryDelayMaxMs" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-query-delay-max-ms">
-                <FormLabel>Query Delay Max (ms - Optional)</FormLabel>
-                <FormControl><Input data-testid="persona-dns-input-query-delay-max-ms" type="number" placeholder="e.g., 100" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
-                <FormDescription>Maximum random delay before a query. Must be &gt;= Min Delay.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_maxConcurrentGoroutines" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-max-concurrent-goroutines">
-                <FormLabel>Max Concurrent Operations</FormLabel>
-                <FormControl><Input data-testid="persona-dns-input-max-concurrent-goroutines" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
-                <FormDescription>Overall concurrency limit for DNS operations using this persona.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_rateLimitDps" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-rate-limit-dps">
-                <FormLabel>Rate Limit (DPS - Optional)</FormLabel>
-                <FormControl><Input data-testid="persona-dns-input-rate-limit-dps" type="number" placeholder="e.g., 100 (Domains Per Second)" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
-                <FormDescription>Max domains to process per second.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="config_rateLimitBurst" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-rate-limit-burst">
-                <FormLabel>Rate Limit Burst (Optional)</FormLabel>
-                <FormControl><Input data-testid="persona-dns-input-rate-limit-burst" type="number" placeholder="e.g., 10" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
-                <FormDescription>Allowed burst size for rate limiting.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="isEnabled" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-dns-field-is-enabled">
-                <div className="space-y-0.5">
-                  <FormLabel>Enabled</FormLabel>
-                </div>
-                <FormControl><Switch data-testid="persona-dns-input-is-enabled" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <div className="flex justify-end gap-2 pt-4" data-testid="persona-dns-actions">
-              <Button data-testid="persona-dns-cancel" type="button" variant="outline" onClick={() => router.push("/personas")} disabled={form.formState.isSubmitting}>Cancel</Button>
-              <Button data-testid="persona-dns-submit" type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {form.formState.isSubmitting ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Persona")}
-              </Button>
+        </p>
+      </div>
+      <div className="p-6">
+        {/* TailAdmin migration: Form components replaced with inline Tailwind + react-hook-form register */}
+        <form data-testid="persona-dns-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Persona Name */}
+          <div data-testid="persona-dns-field-name">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Persona Name</label>
+            <input
+              data-testid="persona-dns-input-name"
+              placeholder="e.g., Quad9 Secure DNS"
+              {...form.register("name")}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">A unique and descriptive name for this persona.</p>
+            {form.formState.errors.name && <p className="mt-1 text-xs text-error-500">{form.formState.errors.name.message}</p>}
+          </div>
+
+          {/* Description */}
+          <div data-testid="persona-dns-field-description">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+            <textarea
+              data-testid="persona-dns-input-description"
+              placeholder="Describe the purpose or key characteristics of this persona."
+              {...form.register("description")}
+              className="dark:bg-dark-900 min-h-[80px] w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            {form.formState.errors.description && <p className="mt-1 text-xs text-error-500">{form.formState.errors.description.message}</p>}
+          </div>
+
+          {/* Resolver Strategy - inline Tailwind select */}
+          <div data-testid="persona-dns-field-resolver-strategy">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Resolver Strategy</label>
+            <select
+              data-testid="persona-dns-input-resolver-strategy"
+              {...form.register("config_resolverStrategy")}
+              className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-10 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+            >
+              {DNS_RESOLVER_STRATEGIES.map(s => (
+                <option key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</option>
+              ))}
+            </select>
+            {form.formState.errors.config_resolverStrategy && <p className="mt-1 text-xs text-error-500">{form.formState.errors.config_resolverStrategy.message}</p>}
+          </div>
+
+          {/* Resolvers */}
+          <div data-testid="persona-dns-field-resolvers">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Resolvers (comma-separated)</label>
+            <textarea
+              data-testid="persona-dns-input-resolvers"
+              placeholder="8.8.8.8, 1.1.1.1, https://dns.google/dns-query"
+              {...form.register("config_resolversInput")}
+              className="dark:bg-dark-900 min-h-[80px] w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">List of DNS resolver IP addresses or DoH/DoT URLs.</p>
+            {form.formState.errors.config_resolversInput && <p className="mt-1 text-xs text-error-500">{form.formState.errors.config_resolversInput.message}</p>}
+          </div>
+
+          {/* Use System Resolvers - TailAdmin Checkbox */}
+          <div className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-700" data-testid="persona-dns-field-use-system-resolvers">
+            <div className="space-y-0.5">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Use System Resolvers</span>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Fallback to system&apos;s DNS if custom resolvers fail or are not set.</p>
             </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+            <Checkbox
+              data-testid="persona-dns-input-use-system-resolvers"
+              checked={form.watch("config_useSystemResolvers") ?? false}
+              onChange={(checked) => form.setValue("config_useSystemResolvers", checked)}
+            />
+          </div>
+
+          {/* Query Timeout */}
+          <div data-testid="persona-dns-field-query-timeout">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Query Timeout (seconds)</label>
+            <input
+              data-testid="persona-dns-input-query-timeout"
+              type="number"
+              {...form.register("config_queryTimeoutSeconds", { valueAsNumber: true })}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            {form.formState.errors.config_queryTimeoutSeconds && <p className="mt-1 text-xs text-error-500">{form.formState.errors.config_queryTimeoutSeconds.message}</p>}
+          </div>
+
+          {/* Max Domains Per Request */}
+          <div data-testid="persona-dns-field-max-domains-per-request">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Max Domains Per Request (Optional)</label>
+            <input
+              data-testid="persona-dns-input-max-domains-per-request"
+              type="number"
+              placeholder="e.g., 10 (for DoH batching)"
+              {...form.register("config_maxDomainsPerRequest", { valueAsNumber: true })}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Relevant for protocols like DoH that support batch queries.</p>
+          </div>
+
+          {/* Weighted Resolvers JSON */}
+          <div data-testid="persona-dns-field-resolvers-weighted-json">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Weighted Resolvers (JSON Object - Optional)</label>
+            <textarea
+              data-testid="persona-dns-input-resolvers-weighted-json"
+              placeholder='{"8.8.8.8": 10, "1.1.1.1": 5}'
+              {...form.register("config_resolversWeightedJson")}
+              className="dark:bg-dark-900 min-h-[80px] w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 font-mono text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">For &apos;Weighted Rotation&apos; strategy. Object with resolver as key and weight as value.</p>
+          </div>
+
+          {/* Preferred Order */}
+          <div data-testid="persona-dns-field-resolvers-preferred-order">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Preferred Order (comma-separated - Optional)</label>
+            <textarea
+              data-testid="persona-dns-input-resolvers-preferred-order"
+              placeholder="1.1.1.1, 8.8.8.8"
+              {...form.register("config_resolversPreferredOrderInput")}
+              className="dark:bg-dark-900 min-h-[60px] w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">For &apos;Sequential Failover&apos; strategy. Order of resolvers to try.</p>
+          </div>
+
+          {/* Concurrent Queries Per Domain */}
+          <div data-testid="persona-dns-field-concurrent-queries-per-domain">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Concurrent Queries Per Domain</label>
+            <input
+              data-testid="persona-dns-input-concurrent-queries-per-domain"
+              type="number"
+              {...form.register("config_concurrentQueriesPerDomain", { valueAsNumber: true })}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            {form.formState.errors.config_concurrentQueriesPerDomain && <p className="mt-1 text-xs text-error-500">{form.formState.errors.config_concurrentQueriesPerDomain.message}</p>}
+          </div>
+
+          {/* Query Delay Min */}
+          <div data-testid="persona-dns-field-query-delay-min-ms">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Query Delay Min (ms - Optional)</label>
+            <input
+              data-testid="persona-dns-input-query-delay-min-ms"
+              type="number"
+              placeholder="e.g., 0"
+              {...form.register("config_queryDelayMinMs", { valueAsNumber: true })}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Minimum random delay before a query.</p>
+          </div>
+
+          {/* Query Delay Max */}
+          <div data-testid="persona-dns-field-query-delay-max-ms">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Query Delay Max (ms - Optional)</label>
+            <input
+              data-testid="persona-dns-input-query-delay-max-ms"
+              type="number"
+              placeholder="e.g., 100"
+              {...form.register("config_queryDelayMaxMs", { valueAsNumber: true })}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Maximum random delay before a query. Must be &gt;= Min Delay.</p>
+          </div>
+
+          {/* Max Concurrent Goroutines */}
+          <div data-testid="persona-dns-field-max-concurrent-goroutines">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Max Concurrent Operations</label>
+            <input
+              data-testid="persona-dns-input-max-concurrent-goroutines"
+              type="number"
+              {...form.register("config_maxConcurrentGoroutines", { valueAsNumber: true })}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Overall concurrency limit for DNS operations using this persona.</p>
+            {form.formState.errors.config_maxConcurrentGoroutines && <p className="mt-1 text-xs text-error-500">{form.formState.errors.config_maxConcurrentGoroutines.message}</p>}
+          </div>
+
+          {/* Rate Limit DPS */}
+          <div data-testid="persona-dns-field-rate-limit-dps">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Rate Limit (DPS - Optional)</label>
+            <input
+              data-testid="persona-dns-input-rate-limit-dps"
+              type="number"
+              placeholder="e.g., 100 (Domains Per Second)"
+              {...form.register("config_rateLimitDps", { valueAsNumber: true })}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Max domains to process per second.</p>
+          </div>
+
+          {/* Rate Limit Burst */}
+          <div data-testid="persona-dns-field-rate-limit-burst">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Rate Limit Burst (Optional)</label>
+            <input
+              data-testid="persona-dns-input-rate-limit-burst"
+              type="number"
+              placeholder="e.g., 10"
+              {...form.register("config_rateLimitBurst", { valueAsNumber: true })}
+              className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Allowed burst size for rate limiting.</p>
+          </div>
+
+          {/* Enabled - TailAdmin Checkbox */}
+          <div className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-700" data-testid="persona-dns-field-is-enabled">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Enabled</span>
+            <Checkbox
+              data-testid="persona-dns-input-is-enabled"
+              checked={form.watch("isEnabled") ?? true}
+              onChange={(checked) => form.setValue("isEnabled", checked)}
+            />
+          </div>
+
+          {/* Actions - inline Tailwind buttons since TailAdmin Button lacks type prop */}
+          <div className="flex justify-end gap-2 pt-4" data-testid="persona-dns-actions">
+            <button
+              data-testid="persona-dns-cancel"
+              type="button"
+              onClick={() => router.push("/personas")}
+              disabled={form.formState.isSubmitting}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs transition-colors hover:bg-gray-50 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              data-testid="persona-dns-submit"
+              type="submit"
+              disabled={form.formState.isSubmitting}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {form.formState.isSubmitting ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Persona")}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 
