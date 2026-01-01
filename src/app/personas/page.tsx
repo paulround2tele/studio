@@ -509,20 +509,18 @@ function PersonasPageContent() {
             </div>
           </CardHeader>
           <CardBody>
-            {/* Tab Navigation */}
-            <div className="mb-6">
+            {/* Tab Navigation + Search aligned on same row */}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <TabNav activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
-            </div>
-
-            {/* Search Input */}
-            <div className="mb-6 relative max-w-md">
-              <TaSearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
-              <Input
-                placeholder={`Search ${activeTab.toUpperCase()} personas...`}
-                defaultValue={currentSearchTerm}
-                onChange={(e) => setCurrentSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+              <div className="relative w-full sm:w-72">
+                <TaSearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+                <Input
+                  placeholder={`Search ${activeTab.toUpperCase()} personas...`}
+                  defaultValue={currentSearchTerm}
+                  onChange={(e) => setCurrentSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
 
             {/* Content */}

@@ -86,6 +86,20 @@ export function CardBody({ children, className = "", noPadding = false }: CardBo
   );
 }
 
+// Card Footer - with visual separation (border-t + subtle bg)
+interface CardFooterProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function CardFooter({ children, className = "" }: CardFooterProps) {
+  return (
+    <div className={`px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 ${className}`}>
+      {children}
+    </div>
+  );
+}
+
 // Empty State for cards
 interface CardEmptyStateProps {
   icon?: React.ReactNode;
