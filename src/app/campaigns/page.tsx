@@ -125,7 +125,7 @@ const getMutationErrorMessage = (error: unknown): string => {
 };
 
 // ============================================================================
-// METRIC CARD (TailAdmin eCommerce pattern)
+// METRIC CARD (TailAdmin eCommerce pattern - exact match to metric-group-01.html)
 // ============================================================================
 interface MetricCardProps {
   label: string;
@@ -136,24 +136,29 @@ interface MetricCardProps {
 
 function MetricCard({ label, value, icon, trend }: MetricCardProps) {
   return (
-    <Card>
-      <CardBody>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</p>
-            <h4 className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{value}</h4>
-            {trend && (
-              <p className={`mt-1 text-sm font-medium ${trend.positive ? 'text-success-600' : 'text-error-600'}`}>
-                {trend.positive ? '↑' : '↓'} {trend.value}
-              </p>
-            )}
-          </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
-            {icon}
-          </div>
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
+      {/* Icon container - TailAdmin exact: h-12 w-12 rounded-xl bg-gray-100 */}
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
+        <span className="text-gray-800 dark:text-white/90">{icon}</span>
+      </div>
+
+      {/* Value section with mt-5 gap like TailAdmin */}
+      <div className="mt-5 flex items-end justify-between">
+        <div>
+          <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
+          <h4 className="mt-2 text-2xl font-bold text-gray-800 dark:text-white/90">{value}</h4>
         </div>
-      </CardBody>
-    </Card>
+        {trend && (
+          <span className={`flex items-center gap-1 rounded-full py-0.5 pl-2 pr-2.5 text-sm font-medium ${
+            trend.positive 
+              ? 'bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500' 
+              : 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500'
+          }`}>
+            {trend.positive ? '↑' : '↓'} {trend.value}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -477,14 +482,15 @@ export default function CampaignsPage() {
                           </span>
                         </TableCell>
                         <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-center`}>
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="w-16 h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                          {/* Progress bar - TailAdmin exact from map-01.html: h-2 rounded-sm, gap-3 to text */}
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="relative block h-2 w-full max-w-[100px] rounded-sm bg-gray-200 dark:bg-gray-800">
                               <div 
-                                className="h-full bg-brand-500 rounded-full transition-all"
+                                className="absolute left-0 top-0 h-full rounded-sm bg-brand-500"
                                 style={{ width: `${Math.min(campaign.progressPercent, 100)}%` }}
                               />
                             </div>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 w-10">
+                            <span className="text-sm font-medium text-gray-800 dark:text-white/90">
                               {Math.round(campaign.progressPercent)}%
                             </span>
                           </div>
