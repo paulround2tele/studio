@@ -18,7 +18,17 @@ import { Modal } from '@/components/ta/ui/modal';
 import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components/ta/ui/table';
 
 // Shared layout components (TailAdmin-compliant)
-import { Card, CardHeader, CardTitle, CardDescription, CardBody, CardEmptyState } from '@/components/shared/Card';
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardBody, 
+  CardEmptyState,
+  TABLE_HEADER_CLASSES,
+  TABLE_HEADER_CELL_CLASSES,
+  TABLE_BODY_CLASSES
+} from '@/components/shared/Card';
 
 // Domain components
 import ProxyListItem from '@/components/proxies/ProxyListItem';
@@ -445,20 +455,20 @@ function ProxiesPageContent() {
               {activeTab === 'allProxies' && (
                 <div className="-mx-6 -mb-6 overflow-x-auto">
                   <Table className="w-full">
-                    <TableHeader className="border-t border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
+                    <TableHeader className={TABLE_HEADER_CLASSES}>
                       <TableRow>
-                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Name</TableCell>
-                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Address</TableCell>
-                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Protocol</TableCell>
-                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Country</TableCell>
-                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Status</TableCell>
-                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Last Tested</TableCell>
-                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Success/Fail</TableCell>
-                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Last Error</TableCell>
-                        <TableCell isHeader className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Actions</TableCell>
+                        <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Name</TableCell>
+                        <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Address</TableCell>
+                        <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Protocol</TableCell>
+                        <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Country</TableCell>
+                        <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Status</TableCell>
+                        <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Last Tested</TableCell>
+                        <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Success/Fail</TableCell>
+                        <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Last Error</TableCell>
+                        <TableCell isHeader className={`${TABLE_HEADER_CELL_CLASSES} text-right`}>Actions</TableCell>
                       </TableRow>
                     </TableHeader>
-                      <TableBody>
+                      <TableBody className={TABLE_BODY_CLASSES}>
                         {proxies.map((proxy: ProxyItem) => {
                           if (!proxy?.id) return null;
                           return (

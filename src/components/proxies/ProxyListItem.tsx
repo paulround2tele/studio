@@ -6,6 +6,7 @@ import { useState } from 'react';
 // Define proxy status type based on common proxy states
 type ProxyStatus = 'Active' | 'Disabled' | 'Failed';
 import { TableCell, TableRow } from '@/components/ta/ui/table';
+import { TABLE_BODY_CELL_CLASSES } from '@/components/shared/Card';
 import Badge from '@/components/ta/ui/badge/Badge';
 import Button from '@/components/ta/ui/button/Button';
 import { Dropdown } from '@/components/ta/ui/dropdown/Dropdown';
@@ -52,33 +53,33 @@ export default function ProxyListItem({ proxy, onEdit, onDelete, onTest, onToggl
 
   return (
     <TableRow className={isLoading ? "opacity-50 pointer-events-none" : ""}>
-      <TableCell className="px-6 py-4">
+      <TableCell className={TABLE_BODY_CELL_CLASSES}>
         <div className="font-medium text-gray-800 dark:text-white/90 truncate max-w-xs" title={proxy.name}>{proxy.name}</div>
         {proxy.description && <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs" title={proxy.description}>{proxy.description}</div>}
       </TableCell>
-      <TableCell className="px-6 py-4">
+      <TableCell className={TABLE_BODY_CELL_CLASSES}>
         <div className="font-medium text-gray-700 dark:text-gray-300 truncate max-w-xs" title={proxy.address}>{proxy.address}</div>
         {proxy.username && <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs"><span className="font-medium text-gray-500 dark:text-gray-400">User:</span> {proxy.username}</div>}
         {proxy.notes && <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs" title={proxy.notes}>{proxy.notes}</div>}
       </TableCell>
-      <TableCell className="px-6 py-4"><Badge color="light" size="sm">{proxy.protocol}</Badge></TableCell>
-      <TableCell className="px-6 py-4 text-xs text-gray-700 dark:text-gray-300">{proxy.countryCode || '-'}</TableCell>
-      <TableCell className="px-6 py-4">
+      <TableCell className={TABLE_BODY_CELL_CLASSES}><Badge color="light" size="sm">{proxy.protocol}</Badge></TableCell>
+      <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-xs text-gray-700 dark:text-gray-300`}>{proxy.countryCode || '-'}</TableCell>
+      <TableCell className={TABLE_BODY_CELL_CLASSES}>
         <Badge color={statusInfo.color} size="sm">
           {statusInfo.icon}
           <span className="ml-1">{statusInfo.text}</span>
         </Badge>
       </TableCell>
-      <TableCell className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400">
+      <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-xs text-gray-500 dark:text-gray-400`}>
         {proxy.lastTested ? format(new Date(proxy.lastTested), 'PPp') : 'Never'}
       </TableCell>
-      <TableCell className="px-6 py-4 text-xs">
+      <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-xs`}>
         <span className="text-green-600 dark:text-green-500">{proxy.successCount}</span> / <span className="text-red-600 dark:text-red-500">{proxy.failureCount}</span>
       </TableCell>
-      <TableCell className="px-6 py-4 text-xs text-red-500 dark:text-red-400 truncate max-w-[150px]">
+      <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-xs text-red-500 dark:text-red-400 truncate max-w-[150px]`}>
         <span title={proxy.lastError}>{proxy.lastError || 'None'}</span>
       </TableCell>
-      <TableCell className="px-6 py-4 text-right">
+      <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-right`}>
         <div className="flex items-center justify-end gap-2">
           {/* Toggle button instead of Switch */}
           <button

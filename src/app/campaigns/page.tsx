@@ -26,6 +26,7 @@ import {
   CardEmptyState,
   TABLE_HEADER_CLASSES,
   TABLE_HEADER_CELL_CLASSES,
+  TABLE_BODY_CLASSES,
   TABLE_BODY_CELL_CLASSES,
   TABLE_ROW_CLASSES,
   TableActionButton
@@ -452,7 +453,7 @@ export default function CampaignsPage() {
                       </TableCell>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className={TABLE_BODY_CLASSES}>
                     {campaigns.map((campaign) => (
                       <TableRow key={campaign.campaignId} className={TABLE_ROW_CLASSES}>
                         <TableCell className={TABLE_BODY_CELL_CLASSES}>

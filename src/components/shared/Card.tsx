@@ -131,12 +131,15 @@ export function CardEmptyState({ icon, title, description, action }: CardEmptySt
 }
 
 // ============================================================================
-// TABLE HEADER CONSTANTS - Use these in all table implementations
+// TABLE CONSTANTS - TailAdmin table-06.html EXACT TOKENS
+// Source: tailadmin/.../partials/table/table-06.html
+// DO NOT MODIFY without explicit Product approval (Carlo)
 // ============================================================================
 export const TABLE_HEADER_CLASSES = "bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700";
-export const TABLE_HEADER_CELL_CLASSES = "px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300";
-export const TABLE_BODY_CELL_CLASSES = "px-6 py-4";
-export const TABLE_ROW_CLASSES = "border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors";
+export const TABLE_HEADER_CELL_CLASSES = "px-5 py-3 sm:px-6 text-left font-medium text-gray-500 text-theme-xs dark:text-gray-400";
+export const TABLE_BODY_CLASSES = "divide-y divide-gray-100 dark:divide-gray-800";
+export const TABLE_BODY_CELL_CLASSES = "px-5 py-4 sm:px-6";
+export const TABLE_ROW_CLASSES = "hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors";
 
 // Action button for tables - icon-only with hover emphasis
 interface TableActionButtonProps {
