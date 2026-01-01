@@ -10,8 +10,21 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components
 import Alert from '@/components/ta/ui/alert/Alert';
 import { Modal } from '@/components/ta/ui/modal';
 
-// Shared layout components (TailAdmin-compliant)
-import { Card, CardHeader, CardTitle, CardDescription, CardBody, CardEmptyState } from '@/components/shared/Card';
+// Shared layout components (TailAdmin-compliant FROZEN PRIMITIVES)
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardBody, 
+  CardFooter,
+  CardEmptyState,
+  TABLE_HEADER_CLASSES,
+  TABLE_HEADER_CELL_CLASSES,
+  TABLE_BODY_CELL_CLASSES,
+  TABLE_ROW_CLASSES,
+  TableActionButton
+} from '@/components/shared/Card';
 
 // TailAdmin Icons
 import { PlusIcon, PencilIcon, TrashBinIcon, TagIcon } from '@/icons';
@@ -162,33 +175,32 @@ export default function KeywordSetsPage() {
         ) : (
           <Card>
             <CardHeader>
-              <div>
-                <CardTitle icon={<TagIcon className="h-5 w-5 text-brand-500" />}>
-                  Existing Sets
-                </CardTitle>
-                <CardDescription>
-                  Keyword matching rules used by campaigns for domain generation.
-                </CardDescription>
-              </div>
+              <CardTitle icon={<TagIcon className="h-5 w-5" />}>
+                Existing Sets
+              </CardTitle>
+              <CardDescription>
+                Keyword matching rules used by campaigns for domain generation.
+              </CardDescription>
             </CardHeader>
             <CardBody noPadding>
               <div className="overflow-x-auto">
                 <Table className="w-full">
-                  <TableHeader className="border-t border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
+                  {/* Table Header - Using frozen TABLE_HEADER_CLASSES for stronger contrast */}
+                  <TableHeader className={TABLE_HEADER_CLASSES}>
                     <TableRow>
-                      <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                      <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>
                         Name
                       </TableCell>
-                      <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                      <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>
                         Description
                       </TableCell>
-                      <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                      <TableCell isHeader className={`${TABLE_HEADER_CELL_CLASSES} text-center`}>
                         Rules
                       </TableCell>
-                      <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                      <TableCell isHeader className={`${TABLE_HEADER_CELL_CLASSES} text-center`}>
                         Enabled
                       </TableCell>
-                      <TableCell isHeader className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
+                      <TableCell isHeader className={`${TABLE_HEADER_CELL_CLASSES} text-right`}>
                         Actions
                       </TableCell>
                     </TableRow>
@@ -201,45 +213,42 @@ export default function KeywordSetsPage() {
                           ? s.rules.length
                           : 0;
                       return (
-                        <TableRow key={s.id} className="border-b border-gray-50 dark:border-gray-800 last:border-0">
-                          <TableCell className="px-6 py-4">
-                            <span className="font-medium text-gray-800 dark:text-white/90">{s.name}</span>
+                        <TableRow key={s.id} className={TABLE_ROW_CLASSES}>
+                          <TableCell className={TABLE_BODY_CELL_CLASSES}>
+                            <span className="font-medium text-gray-900 dark:text-white">{s.name}</span>
                           </TableCell>
-                          <TableCell className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                          <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-gray-500 dark:text-gray-400`}>
                             {s.description || '—'}
                           </TableCell>
-                          <TableCell className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                            {ruleCount}
-                          </TableCell>
-                          <TableCell className="px-6 py-4">
-                            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                              s.isEnabled 
-                                ? 'bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500' 
-                                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                            }`}>
-                              {s.isEnabled ? 'Yes' : 'No'}
+                          <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-center`}>
+                            <span className="inline-flex items-center justify-center min-w-[2rem] rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {ruleCount}
                             </span>
                           </TableCell>
-                          <TableCell className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-2">
+                          <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-center`}>
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                              s.isEnabled 
+                                ? 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400' 
+                                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                            }`}>
+                              {s.isEnabled ? 'Active' : 'Inactive'}
+                            </span>
+                          </TableCell>
+                          <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-right`}>
+                            <div className="flex justify-end items-center gap-1">
                               <Link href={`/keyword-sets/${s.id}/edit`}>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <PencilIcon className="h-4 w-4" />
-                                </Button>
+                                <TableActionButton 
+                                  icon={<PencilIcon className="h-4 w-4" />}
+                                  title="Edit"
+                                />
                               </Link>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-error-500 hover:text-error-600 hover:bg-error-50 dark:hover:bg-error-500/15"
+                              <TableActionButton
+                                icon={<TrashBinIcon className="h-4 w-4" />}
+                                variant="danger"
                                 onClick={() => setDeleteTarget(s)}
                                 disabled={isDeleting && deleteTarget?.id === s.id}
-                              >
-                                <TrashBinIcon className="h-4 w-4" />
-                              </Button>
+                                title="Delete"
+                              />
                             </div>
                           </TableCell>
                         </TableRow>
@@ -249,6 +258,12 @@ export default function KeywordSetsPage() {
                 </Table>
               </div>
             </CardBody>
+            {/* Footer provides visual "end" to the card - reduces dead space */}
+            <CardFooter>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                {sets.length} keyword {sets.length === 1 ? 'set' : 'sets'} configured
+              </p>
+            </CardFooter>
           </Card>
         )}
 

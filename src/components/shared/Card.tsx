@@ -1,11 +1,16 @@
 import React from "react";
 
 /**
- * TailAdmin Card Component
- * Follows TailAdmin patterns exactly:
- * - rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]
- * - Header: px-6 py-5 with border-b
- * - Body: p-4 sm:p-6
+ * TailAdmin Card Component - FROZEN LAYOUT PRIMITIVE
+ * 
+ * ⚠️ UI CONTRACT: This is the ONLY allowed way to build card-based layouts.
+ * Do not create ad-hoc card styling on pages. Match TailAdmin demo exactly.
+ * 
+ * Patterns from https://demo.tailadmin.com/basic-tables:
+ * - Card: rounded-2xl border shadow-sm
+ * - Header: px-6 py-5 border-b with clear visual separation
+ * - Body: No border-t when using header (header has border-b)
+ * - Table headers: bg-gray-100 for stronger contrast
  */
 
 interface CardProps {
@@ -36,57 +41,57 @@ interface CardBodyProps {
   noPadding?: boolean;
 }
 
-// Main Card container
+// Main Card container - TailAdmin uses subtle shadow
 export function Card({ children, className = "" }: CardProps) {
   return (
     <div
-      className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}
+      className={`rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-white/[0.03] ${className}`}
     >
       {children}
     </div>
   );
 }
 
-// Card Header - px-6 py-5 with optional border
+// Card Header - TailAdmin has strong border-b separation
 export function CardHeader({ children, className = "", actions }: CardHeaderProps) {
   return (
-    <div className={`px-6 py-5 flex items-center justify-between ${className}`}>
-      <div className="flex-1">{children}</div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+    <div className={`px-6 py-5 border-b border-gray-200 dark:border-gray-700 flex items-start justify-between ${className}`}>
+      <div className="flex-1 min-w-0">{children}</div>
+      {actions && <div className="flex items-center gap-2 ml-4 flex-shrink-0">{actions}</div>}
     </div>
   );
 }
 
-// Card Title - text-base font-medium
+// Card Title - TailAdmin uses tighter icon+text grouping
 export function CardTitle({ children, className = "", icon }: CardTitleProps) {
   return (
-    <h3 className={`text-base font-medium text-gray-800 dark:text-white/90 flex items-center gap-2 ${className}`}>
-      {icon}
+    <h3 className={`text-base font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2 ${className}`}>
+      {icon && <span className="text-brand-500 flex-shrink-0">{icon}</span>}
       {children}
     </h3>
   );
 }
 
-// Card Description - text-sm text-gray-500
+// Card Description - TailAdmin uses more muted subtitle
 export function CardDescription({ children, className = "" }: CardDescriptionProps) {
   return (
-    <p className={`mt-1 text-sm text-gray-500 dark:text-gray-400 ${className}`}>
+    <p className={`mt-1 text-sm text-gray-400 dark:text-gray-500 ${className}`}>
       {children}
     </p>
   );
 }
 
-// Card Body - p-4 sm:p-6 with border-t
+// Card Body - No border-t when header exists (header has border-b)
 export function CardBody({ children, className = "", noPadding = false }: CardBodyProps) {
   const paddingClass = noPadding ? "" : "p-4 sm:p-6";
   return (
-    <div className={`border-t border-gray-100 dark:border-gray-800 ${paddingClass} ${className}`}>
+    <div className={`${paddingClass} ${className}`}>
       {children}
     </div>
   );
 }
 
-// Card Footer - with visual separation (border-t + subtle bg)
+// Card Footer - Subtle background for visual "end" of card
 interface CardFooterProps {
   children: React.ReactNode;
   className?: string;
@@ -94,13 +99,13 @@ interface CardFooterProps {
 
 export function CardFooter({ children, className = "" }: CardFooterProps) {
   return (
-    <div className={`px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 ${className}`}>
+    <div className={`px-6 py-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/50 ${className}`}>
       {children}
     </div>
   );
 }
 
-// Empty State for cards
+// Empty State for cards - centered with proper spacing
 interface CardEmptyStateProps {
   icon?: React.ReactNode;
   title: string;
@@ -110,18 +115,67 @@ interface CardEmptyStateProps {
 
 export function CardEmptyState({ icon, title, description, action }: CardEmptyStateProps) {
   return (
-    <div className="text-center py-10">
+    <div className="text-center py-12 px-6">
       {icon && (
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center text-gray-400 dark:text-gray-500">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500">
           {icon}
         </div>
       )}
-      <h3 className="text-xl font-medium text-gray-800 dark:text-white/90">{title}</h3>
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">{title}</h3>
       {description && (
-        <p className="mt-2 text-gray-500 dark:text-gray-400">{description}</p>
+        <p className="mt-2 text-sm text-gray-400 dark:text-gray-500 max-w-sm mx-auto">{description}</p>
       )}
-      {action && <div className="mt-4">{action}</div>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
+  );
+}
+
+// ============================================================================
+// TABLE HEADER CONSTANTS - Use these in all table implementations
+// ============================================================================
+export const TABLE_HEADER_CLASSES = "bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700";
+export const TABLE_HEADER_CELL_CLASSES = "px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300";
+export const TABLE_BODY_CELL_CLASSES = "px-6 py-4";
+export const TABLE_ROW_CLASSES = "border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors";
+
+// Action button for tables - icon-only with hover emphasis
+interface TableActionButtonProps {
+  icon: React.ReactNode;
+  onClick?: () => void;
+  href?: string;
+  variant?: "default" | "danger";
+  disabled?: boolean;
+  title?: string;
+}
+
+export function TableActionButton({ icon, onClick, href, variant = "default", disabled, title }: TableActionButtonProps) {
+  const baseClasses = "inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1";
+  const variantClasses = variant === "danger"
+    ? "text-gray-400 hover:text-error-600 hover:bg-error-50 dark:hover:bg-error-500/15 focus:ring-error-500"
+    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-gray-700 focus:ring-brand-500";
+  const disabledClasses = disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : "";
+  
+  const className = `${baseClasses} ${variantClasses} ${disabledClasses}`;
+  
+  if (href) {
+    // Return just the className and icon for Link wrapper usage
+    return (
+      <span className={className} title={title}>
+        {icon}
+      </span>
+    );
+  }
+  
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={className}
+      title={title}
+    >
+      {icon}
+    </button>
   );
 }
 
