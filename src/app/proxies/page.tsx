@@ -435,30 +435,29 @@ function ProxiesPageContent() {
                 <CardDescription>List of all proxy servers available for campaigns.</CardDescription>
               </div>
             </CardHeader>
-            <CardBody noPadding>
-              <div className="p-4 sm:p-6">
-                {/* Tab Navigation */}
-                <div className="mb-6">
-                  <TabNav activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
-                </div>
+            <CardBody>
+              {/* Tab Navigation */}
+              <div className="mb-6">
+                <TabNav activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
+              </div>
 
-                {/* Tab Content */}
-                {activeTab === 'allProxies' && (
-                  <div className="overflow-x-auto">
-                    <Table className="w-full">
-                      <TableHeader className="border-b border-gray-100 dark:border-gray-800">
-                        <TableRow>
-                          <TableCell isHeader className="px-5 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Name</TableCell>
-                          <TableCell isHeader className="px-5 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Address</TableCell>
-                          <TableCell isHeader className="px-5 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Protocol</TableCell>
-                          <TableCell isHeader className="px-5 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Country</TableCell>
-                          <TableCell isHeader className="px-5 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Status</TableCell>
-                          <TableCell isHeader className="px-5 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Last Tested</TableCell>
-                          <TableCell isHeader className="px-5 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Success/Fail</TableCell>
-                          <TableCell isHeader className="px-5 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Last Error</TableCell>
-                          <TableCell isHeader className="px-5 py-3 text-right text-theme-xs font-medium text-gray-500 dark:text-gray-400">Actions</TableCell>
-                        </TableRow>
-                      </TableHeader>
+              {/* Tab Content */}
+              {activeTab === 'allProxies' && (
+                <div className="-mx-6 -mb-6 overflow-x-auto">
+                  <Table className="w-full">
+                    <TableHeader className="border-t border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
+                      <TableRow>
+                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Name</TableCell>
+                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Address</TableCell>
+                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Protocol</TableCell>
+                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Country</TableCell>
+                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Status</TableCell>
+                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Last Tested</TableCell>
+                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Success/Fail</TableCell>
+                        <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Last Error</TableCell>
+                        <TableCell isHeader className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Actions</TableCell>
+                      </TableRow>
+                    </TableHeader>
                       <TableBody>
                         {proxies.map((proxy: ProxyItem) => {
                           if (!proxy?.id) return null;
@@ -494,7 +493,6 @@ function ProxiesPageContent() {
                     disabled={pageActionLoading !== null}
                   />
                 )}
-              </div>
             </CardBody>
           </Card>
         )}
