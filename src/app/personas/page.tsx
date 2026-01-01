@@ -1,24 +1,35 @@
-
 "use client";
 
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import PageHeader from '@/components/shared/PageHeader';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { PlusCircleIcon, GlobeIcon, WifiIcon, SearchIcon as TaSearchIcon, UploadCloudIcon } from '@/icons';
+import { z } from 'zod';
+
+// TailAdmin components
+import PageBreadcrumb from '@/components/ta/common/PageBreadCrumb';
+import Button from '@/components/ta/ui/button/Button';
+import Input from '@/components/ta/form/input/InputField';
+
+// Shared layout components (TailAdmin-compliant)
+import { Card, CardHeader, CardTitle, CardDescription, CardBody, CardEmptyState } from '@/components/shared/Card';
+
+// Domain components & API
 import PersonaListItem from '@/components/personas/PersonaListItem';
+import { PersonasApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
+import { useToast } from '@/hooks/use-toast';
+
+// Types
 import type { PersonaResponse as ApiPersonaResponse } from '@/lib/api-client/models/persona-response';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
-// Adapt to actual generated request model (fallback to generic payload shape if missing)
-// The generated client may expose a CreatePersonaRequest; if not present we rely on PersonasCreateRequest type below.
-// Using type-only import inside try-catch pattern is unnecessary; adjust path if generator updates.
 import type { CreatePersonaRequest } from '@/lib/api-client/models/create-persona-request';
 import { PersonaType as PersonaTypeEnum } from '@/lib/api-client/models/persona-type';
 
-// OpenAPI persona type (personaType already 'http' | 'dns')
+// Local types
 type LocalPersona = ApiPersonaResponse & { status?: 'Active' | 'Disabled' | 'Testing' | 'Failed'; tags?: string[] };
 type HttpPersona = LocalPersona & { personaType: 'http' };
 type DnsPersona = LocalPersona & { personaType: 'dns' };
 
-// Define proper create persona payload types
 interface BaseCreatePersonaRequest {
   name: string;
   personaType: 'http' | 'dns';
@@ -30,24 +41,14 @@ interface BaseCreatePersonaRequest {
 type CreateHttpPersonaPayload = BaseCreatePersonaRequest & { personaType: 'http' };
 type CreateDnsPersonaPayload = BaseCreatePersonaRequest & { personaType: 'dns' };
 type PersonaStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
-import { PlusCircle, Users, Globe, Wifi, Search as SearchIcon, UploadCloud } from 'lucide-react';
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from '@/components/ui/input';
-import { PersonasApi } from '@/lib/api-client';
-import { apiConfiguration } from '@/lib/api/config';
-import { useToast } from '@/hooks/use-toast';
-import { z } from 'zod';
 
 // Professional API client initialization
 const config = apiConfiguration;
 const personasApi = new PersonasApi(config);
 
-// THIN CLIENT: Removed LoadingStore - backend handles loading state via SSE
-
-// Zod schemas for validating imported persona structures (remains the same)
+// ============================================================================
+// ZOD SCHEMAS (unchanged)
+// ============================================================================
 const HttpPersonaImportSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2),
@@ -64,7 +65,7 @@ const HttpPersonaImportSchema = z.object({
     curvePreferences: z.array(z.string()).optional(),
     ja3: z.string().optional(),
   }).optional().nullable(),
-  http2Settings: z.record(z.any()).optional().nullable(), 
+  http2Settings: z.record(z.any()).optional().nullable(),
   cookieHandling: z.object({
     mode: z.string().optional(),
   }).optional().nullable(),
@@ -86,7 +87,7 @@ const DnsPersonaConfigImportSchema = z.object({
   queryDelayMinMs: z.number().int().min(0).optional(),
   queryDelayMaxMs: z.number().int().min(0).optional(),
   maxConcurrentGoroutines: z.number().int().positive(),
-  rateLimitDps: z.number().positive().optional(), // Changed to positive
+  rateLimitDps: z.number().positive().optional(),
   rateLimitBurst: z.number().int().positive().optional(),
 });
 
@@ -99,38 +100,90 @@ const DnsPersonaImportSchema = z.object({
   config: DnsPersonaConfigImportSchema,
 });
 
-// const PersonaImportSchema = z.union([HttpPersonaImportSchema, DnsPersonaImportSchema]);
+// ============================================================================
+// TAB NAVIGATION COMPONENT (TailAdmin Pattern)
+// ============================================================================
+interface TabNavProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  tabs: { id: string; label: string; icon?: React.ReactNode; count?: number }[];
+}
 
+function TabNav({ activeTab, onTabChange, tabs }: TabNavProps) {
+  return (
+    <div className="flex rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-1 w-fit">
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => onTabChange(tab.id)}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            activeTab === tab.id
+              ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+        >
+          {tab.icon}
+          {tab.label}
+          {tab.count !== undefined && ` (${tab.count})`}
+        </button>
+      ))}
+    </div>
+  );
+}
 
+// ============================================================================
+// LOADING SKELETON (TailAdmin Pattern)
+// ============================================================================
+function PersonaGridSkeleton() {
+  return (
+    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03] animate-pulse">
+          <div className="mb-4">
+            <div className="h-6 w-3/4 mb-2 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+          <div className="space-y-3">
+            <div className="h-20 w-full bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className="h-10 w-2/3 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+          <div className="mt-4">
+            <div className="h-4 w-1/4 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN PAGE COMPONENT
+// ============================================================================
 function PersonasPageContent() {
+  // State
   const [httpPersonas, setHttpPersonas] = useState<HttpPersona[]>([]);
   const [dnsPersonas, setDnsPersonas] = useState<DnsPersona[]>([]);
-  const [activeTab, setActiveTab] = useState<'http' | 'dns'>('http');
+  const [activeTab, setActiveTab] = useState<string>('http');
   const [searchTermHttp, setSearchTermHttp] = useState("");
   const [searchTermDns, setSearchTermDns] = useState("");
-  const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [actionLoading, setActionLoading] = useState<Record<string, 'test' | 'toggle' | 'delete' | null>>({});
-
-  // Use centralized loading state
-  // THIN CLIENT: Removed LoadingStore - simple loading states only
   const [loadingHttp, setLoadingHttp] = useState(false);
   const [loadingDns, setLoadingDns] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const { toast } = useToast();
 
-
+  // Data fetching
   const fetchPersonasData = useCallback(async (type: 'http' | 'dns', showLoading = true) => {
-    const _operation = type === 'http' ? 'personas.fetch_http' : 'personas.fetch_dns';
     if (showLoading) {
       if (type === 'http') setLoadingHttp(true);
       else setLoadingDns(true);
     }
     
     try {
-    const response = await personasApi.personasList(undefined, undefined, undefined, type as PersonaType);
-      // Contract-migrated: response body is now an array of PersonaResponse
+      const response = await personasApi.personasList(undefined, undefined, undefined, type as PersonaType);
       if (response.data) {
         const personasData = Array.isArray(response.data) ? response.data : [];
-        // Add missing status property for compatibility
         const personasWithStatus = personasData.map(persona => ({
           ...persona,
           status: persona.isEnabled ? 'Active' : 'Disabled',
@@ -141,16 +194,9 @@ function PersonasPageContent() {
         
         if (type === 'http') setHttpPersonas(personasWithStatus as HttpPersona[]);
         else setDnsPersonas(personasWithStatus as DnsPersona[]);
-  } else {
-        // If no data returned, treat as empty result rather than error
+      } else {
         if (type === 'http') setHttpPersonas([]);
         else setDnsPersonas([]);
-        
-        toast({
-          title: `No ${type.toUpperCase()} Personas Found`,
-          description: `No ${type} personas available.`,
-          variant: "default"
-        });
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : `Failed to load ${type.toUpperCase()} personas.`;
@@ -168,15 +214,14 @@ function PersonasPageContent() {
   }, [toast]);
 
   useEffect(() => {
-    fetchPersonasData(activeTab);
-    
-  // Realtime via SSE: infrastructure switched from WebSocket to Server-Sent Events
+    fetchPersonasData(activeTab as 'http' | 'dns');
   }, [activeTab, fetchPersonasData]);
 
+  // Handlers
   const handleDeletePersona = async (personaId: string, personaType: 'http' | 'dns') => {
     setActionLoading(prev => ({ ...prev, [personaId]: 'delete' }));
     try {
-        const response = await personasApi.personasDelete(personaId);
+      const response = await personasApi.personasDelete(personaId);
       if (response.status >= 200) {
         toast({ title: "Persona Deleted", description: "Persona successfully deleted." });
         fetchPersonasData(personaType, false);
@@ -184,27 +229,26 @@ function PersonasPageContent() {
         toast({ title: "Error", description: "Failed to delete persona.", variant: "destructive" });
       }
     } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred while deleting persona.";
-        toast({ title: "Error", description: errorMessage, variant: "destructive"});
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred while deleting persona.";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     } finally {
-       setActionLoading(prev => ({ ...prev, [personaId]: null }));
+      setActionLoading(prev => ({ ...prev, [personaId]: null }));
     }
   };
 
   const handleTestPersona = async (personaId: string, personaType: 'http' | 'dns') => {
     setActionLoading(prev => ({ ...prev, [personaId]: 'test' }));
     try {
-  const response = await personasApi.personasTest(personaId);
+      const response = await personasApi.personasTest(personaId);
       if (response.status >= 200) {
-  // Some responses may return personaId only; name may not be present on PersonaTestResponse
-  const personaName = (response.data as { personaId?: string; name?: string } | undefined)?.personaId
-    || (response.data as { name?: string } | undefined)?.name
-    || 'Persona';
+        const personaName = (response.data as { personaId?: string; name?: string } | undefined)?.personaId
+          || (response.data as { name?: string } | undefined)?.name
+          || 'Persona';
         toast({ title: "Persona Test Complete", description: `Test for ${personaName} completed.` });
         fetchPersonasData(personaType, false);
       } else {
-        toast({ title: "Persona Test Failed", description: "Could not complete persona test.", variant: "destructive"});
-        fetchPersonasData(personaType, false); // Re-fetch even on failure to update potential status changes
+        toast({ title: "Persona Test Failed", description: "Could not complete persona test.", variant: "destructive" });
+        fetchPersonasData(personaType, false);
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to test persona";
@@ -216,28 +260,26 @@ function PersonasPageContent() {
   };
 
   const handleTogglePersonaStatus = async (personaId: string, personaType: 'http' | 'dns', newStatus: PersonaStatus | undefined) => {
-    if (!newStatus) return; // Guard against undefined status
+    if (!newStatus) return;
     
     setActionLoading(prev => ({ ...prev, [personaId]: 'toggle' }));
     try {
-      // Map status to isEnabled field which is what the backend accepts
       const isEnabled = newStatus === 'Active';
-        const response = await personasApi.personasUpdate(personaId, { isEnabled });
+      const response = await personasApi.personasUpdate(personaId, { isEnabled });
       if (response.status >= 200) {
-  const updated = response.data;
-  toast({ title: `Persona Status Updated`, description: `${updated?.name ?? 'Persona'} is now ${newStatus}.` });
+        const updated = response.data;
+        toast({ title: `Persona Status Updated`, description: `${updated?.name ?? 'Persona'} is now ${newStatus}.` });
         fetchPersonasData(personaType, false);
       } else {
-        toast({ title: "Error Updating Status", description: "Could not update persona status.", variant: "destructive"});
+        toast({ title: "Error Updating Status", description: "Could not update persona status.", variant: "destructive" });
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update persona status";
       toast({ title: "Error Updating Status", description: errorMessage, variant: "destructive" });
     } finally {
-       setActionLoading(prev => ({ ...prev, [personaId]: null }));
+      setActionLoading(prev => ({ ...prev, [personaId]: null }));
     }
   };
-
 
   const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -253,136 +295,128 @@ function PersonasPageContent() {
         let errorCount = 0;
 
         for (const item of itemsToImport) {
-            const personaTypeForImport = item.personaType || activeTab;
-            if (item.personaType && personaTypeForImport !== activeTab) {
-                toast({ title: "Import Error", description: `Mismatched persona type in file for item: ${item.name || 'Unknown'}. Skipping. Active tab is ${activeTab}.`, variant: "destructive" });
-                errorCount++;
-                continue;
-            }
-            const itemWithExplicitType = { ...item, personaType: personaTypeForImport };
-            const schema = personaTypeForImport === 'http' ? HttpPersonaImportSchema : DnsPersonaImportSchema;
-            const validationResult = schema.safeParse(itemWithExplicitType);
+          const personaTypeForImport = item.personaType || activeTab;
+          if (item.personaType && personaTypeForImport !== activeTab) {
+            toast({ title: "Import Error", description: `Mismatched persona type in file for item: ${item.name || 'Unknown'}. Skipping. Active tab is ${activeTab}.`, variant: "destructive" });
+            errorCount++;
+            continue;
+          }
+          const itemWithExplicitType = { ...item, personaType: personaTypeForImport };
+          const schema = personaTypeForImport === 'http' ? HttpPersonaImportSchema : DnsPersonaImportSchema;
+          const validationResult = schema.safeParse(itemWithExplicitType);
 
-            if (!validationResult.success) {
-              console.error("Import validation error:", validationResult.error.flatten());
-              toast({ title: "Import Validation Error", description: `Invalid structure for persona: ${item.name || 'Unknown'}. Check console. Skipping.`, variant: "destructive" });
-              errorCount++;
-              continue;
-            }
+          if (!validationResult.success) {
+            console.error("Import validation error:", validationResult.error.flatten());
+            toast({ title: "Import Validation Error", description: `Invalid structure for persona: ${item.name || 'Unknown'}. Check console. Skipping.`, variant: "destructive" });
+            errorCount++;
+            continue;
+          }
 
-            let createPayload: CreateHttpPersonaPayload | CreateDnsPersonaPayload;
-            if (personaTypeForImport === 'http') {
-                const validatedData = validationResult.data as z.infer<typeof HttpPersonaImportSchema>;
-                createPayload = {
-                    name: validatedData.name,
-                    personaType: 'http' as const,
-                    isEnabled: true,
-                    description: validatedData.description,
-                    configDetails: {
-                        userAgent: validatedData.userAgent || "",
-                        headers: validatedData.headers,
-                        headerOrder: validatedData.headerOrder,
-                        allowInsecureTls: validatedData.allowInsecureTls,
-                        requestTimeoutSec: validatedData.requestTimeoutSec,
-                        maxRedirects: validatedData.maxRedirects
-                    }
-                };
-            } else {
-                const validatedData = validationResult.data as z.infer<typeof DnsPersonaImportSchema>;
-                // Map old resolver strategy values to new ones
-                const mapResolverStrategy = (oldStrategy: string): "round_robin" | "random" | "weighted" | "priority" => {
-                    switch (oldStrategy) {
-                        case "random_rotation": return "random";
-                        case "weighted_rotation": return "weighted";
-                        case "sequential_failover": return "priority";
-                        default: return "round_robin";
-                    }
-                };
-                
-                createPayload = {
-                    name: validatedData.name,
-                    personaType: 'dns' as const,
-                    isEnabled: true,
-                    description: validatedData.description,
-                    configDetails: {
-                        resolvers: validatedData.config.resolvers,
-                        useSystemResolvers: validatedData.config.useSystemResolvers ?? false,
-                        queryTimeoutSeconds: validatedData.config.queryTimeoutSeconds,
-                        maxDomainsPerRequest: validatedData.config.maxDomainsPerRequest ?? 100,
-                        resolverStrategy: mapResolverStrategy(validatedData.config.resolverStrategy),
-                        resolversWeighted: validatedData.config.resolversWeighted || undefined,
-                        resolversPreferredOrder: validatedData.config.resolversPreferredOrder || undefined,
-                        concurrentQueriesPerDomain: validatedData.config.concurrentQueriesPerDomain,
-                        queryDelayMinMs: validatedData.config.queryDelayMinMs ?? 100,
-                        queryDelayMaxMs: validatedData.config.queryDelayMaxMs ?? 1000,
-                        maxConcurrentGoroutines: validatedData.config.maxConcurrentGoroutines,
-                        rateLimitDps: validatedData.config.rateLimitDps ?? 100.0,
-                        rateLimitBurst: validatedData.config.rateLimitBurst ?? 10,
-                    },
-                };
-            }
-            try {
-              // Map flexible import payload to strict CreatePersonaRequest shape
-              const requestPayload: CreatePersonaRequest = {
-                name: createPayload.name,
-                personaType: createPayload.personaType === 'http' ? PersonaTypeEnum.http : PersonaTypeEnum.dns,
-                description: createPayload.description,
-                isEnabled: createPayload.isEnabled,
-                // Preserve all configDetails fields while ensuring personaType discriminant is present
-                configDetails: {
-                  personaType: createPayload.personaType,
-                  ...(createPayload.configDetails as Record<string, unknown>)
-                } as unknown as CreatePersonaRequest['configDetails']
-              };
-              const response = await personasApi.personasCreate(requestPayload);
-              if (response.data) {
+          let createPayload: CreateHttpPersonaPayload | CreateDnsPersonaPayload;
+          if (personaTypeForImport === 'http') {
+            const validatedData = validationResult.data as z.infer<typeof HttpPersonaImportSchema>;
+            createPayload = {
+              name: validatedData.name,
+              personaType: 'http' as const,
+              isEnabled: true,
+              description: validatedData.description,
+              configDetails: {
+                userAgent: validatedData.userAgent || "",
+                headers: validatedData.headers,
+                headerOrder: validatedData.headerOrder,
+                allowInsecureTls: validatedData.allowInsecureTls,
+                requestTimeoutSec: validatedData.requestTimeoutSec,
+                maxRedirects: validatedData.maxRedirects
+              }
+            };
+          } else {
+            const validatedData = validationResult.data as z.infer<typeof DnsPersonaImportSchema>;
+            const mapResolverStrategy = (oldStrategy: string): "round_robin" | "random" | "weighted" | "priority" => {
+              switch (oldStrategy) {
+                case "random_rotation": return "random";
+                case "weighted_rotation": return "weighted";
+                case "sequential_failover": return "priority";
+                default: return "round_robin";
+              }
+            };
+            
+            createPayload = {
+              name: validatedData.name,
+              personaType: 'dns' as const,
+              isEnabled: true,
+              description: validatedData.description,
+              configDetails: {
+                resolvers: validatedData.config.resolvers,
+                useSystemResolvers: validatedData.config.useSystemResolvers ?? false,
+                queryTimeoutSeconds: validatedData.config.queryTimeoutSeconds,
+                maxDomainsPerRequest: validatedData.config.maxDomainsPerRequest ?? 100,
+                resolverStrategy: mapResolverStrategy(validatedData.config.resolverStrategy),
+                resolversWeighted: validatedData.config.resolversWeighted || undefined,
+                resolversPreferredOrder: validatedData.config.resolversPreferredOrder || undefined,
+                concurrentQueriesPerDomain: validatedData.config.concurrentQueriesPerDomain,
+                queryDelayMinMs: validatedData.config.queryDelayMinMs ?? 100,
+                queryDelayMaxMs: validatedData.config.queryDelayMaxMs ?? 1000,
+                maxConcurrentGoroutines: validatedData.config.maxConcurrentGoroutines,
+                rateLimitDps: validatedData.config.rateLimitDps ?? 100.0,
+                rateLimitBurst: validatedData.config.rateLimitBurst ?? 10,
+              },
+            };
+          }
+          
+          try {
+            const requestPayload: CreatePersonaRequest = {
+              name: createPayload.name,
+              personaType: createPayload.personaType === 'http' ? PersonaTypeEnum.http : PersonaTypeEnum.dns,
+              description: createPayload.description,
+              isEnabled: createPayload.isEnabled,
+              configDetails: {
+                personaType: createPayload.personaType,
+                ...(createPayload.configDetails as Record<string, unknown>)
+              } as unknown as CreatePersonaRequest['configDetails']
+            };
+            const response = await personasApi.personasCreate(requestPayload);
+            if (response.data) {
               importedCount++;
-              } else {
-                errorCount++;
-                toast({ title: `Error Importing ${item.name || 'Persona'}` , description: "Failed to import persona.", variant: "destructive" });
-              }
-            } catch (e: unknown) {
-              // Treat HTTP 409 (Conflict) as already present and continue
-              let status: number | undefined;
-              if (e && typeof e === 'object' && 'response' in e) {
-                const response = e.response;
-                if (response && typeof response === 'object' && 'status' in response) {
-                  status = Number(response.status);
-                }
-              }
-              
-              if (status === 409) {
-                // Skip counting as error; it's already there
-                continue;
-              }
-              
+            } else {
               errorCount++;
-              
-              // Extract error message with proper type checking
-              let msg = 'Unknown error';
-              if (e && typeof e === 'object') {
-                if ('response' in e && e.response && typeof e.response === 'object' && 'data' in e.response) {
-                  const data = e.response.data;
-                  if (data && typeof data === 'object' && 'error' in data) {
-                    const error = data.error;
-                    if (error && typeof error === 'object' && 'message' in error) {
-                      msg = String(error.message);
-                    }
-                  }
-                } else if ('message' in e) {
-                  msg = String(e.message);
-                }
-              }
-              
-              toast({ title: `Error Importing ${item.name || 'Persona'}`, description: msg, variant: "destructive" });
+              toast({ title: `Error Importing ${item.name || 'Persona'}`, description: "Failed to import persona.", variant: "destructive" });
             }
+          } catch (importError: unknown) {
+            let status: number | undefined;
+            if (importError && typeof importError === 'object' && 'response' in importError) {
+              const response = importError.response;
+              if (response && typeof response === 'object' && 'status' in response) {
+                status = Number(response.status);
+              }
+            }
+            
+            if (status === 409) continue; // Already exists
+            
+            errorCount++;
+            let msg = 'Unknown error';
+            if (importError && typeof importError === 'object') {
+              if ('response' in importError && importError.response && typeof importError.response === 'object' && 'data' in importError.response) {
+                const data = importError.response.data;
+                if (data && typeof data === 'object' && 'error' in data) {
+                  const error = data.error;
+                  if (error && typeof error === 'object' && 'message' in error) {
+                    msg = String(error.message);
+                  }
+                }
+              } else if ('message' in importError) {
+                msg = String(importError.message);
+              }
+            }
+            toast({ title: `Error Importing ${item.name || 'Persona'}`, description: msg, variant: "destructive" });
+          }
         }
+        
         if (importedCount > 0) {
-            toast({ title: "Import Successful", description: `${importedCount} persona(s) imported successfully.` });
-            fetchPersonasData(activeTab, false);
+          toast({ title: "Import Successful", description: `${importedCount} persona(s) imported successfully.` });
+          fetchPersonasData(activeTab as 'http' | 'dns', false);
         }
         if (errorCount > 0 && importedCount === 0) {
-             toast({ title: "Import Failed", description: `No personas were imported due to errors.`, variant: "destructive" });
+          toast({ title: "Import Failed", description: `No personas were imported due to errors.`, variant: "destructive" });
         }
       } catch (error: unknown) {
         console.error("File import error:", error);
@@ -395,6 +429,7 @@ function PersonasPageContent() {
     reader.readAsText(file);
   };
 
+  // Filter logic
   const filterPersonas = (personas: LocalPersona[], searchTerm: string): LocalPersona[] => {
     if (!searchTerm.trim()) return personas;
     const lowerSearchTerm = searchTerm.toLowerCase();
@@ -407,71 +442,34 @@ function PersonasPageContent() {
   const filteredHttpPersonas = useMemo(() => filterPersonas(httpPersonas, searchTermHttp), [httpPersonas, searchTermHttp]);
   const filteredDnsPersonas = useMemo(() => filterPersonas(dnsPersonas, searchTermDns), [dnsPersonas, searchTermDns]);
 
-  const renderPersonaList = (personas: LocalPersona[], isLoading: boolean, type: 'http' | 'dns', searchTerm: string, setSearchTerm: (term: string) => void) => {
-    return (
-      <>
-        <div className="my-4 relative">
-          <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={`Search ${type.toUpperCase()} personas by name, description, or tag...`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md pl-10"
-          />
-        </div>
-        {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mt-2">
-            {[...Array(3)].map((_, i) => (
-              <Card key={i} className="shadow-md">
-                <CardHeader><Skeleton className="h-6 w-3/4 mb-2" /><Skeleton className="h-4 w-1/2" /></CardHeader>
-                <CardContent className="space-y-3"><Skeleton className="h-20 w-full" /><Skeleton className="h-10 w-2/3" /></CardContent>
-                <CardFooter><Skeleton className="h-4 w-1/4" /></CardFooter>
-              </Card>
-            ))}
-          </div>
-        ) : personas.length === 0 ? (
-          <div className="text-center py-10 border-2 border-dashed rounded-lg mt-6">
-            {type === 'http' ? <Globe className="mx-auto h-12 w-12 text-muted-foreground" /> : <Wifi className="mx-auto h-12 w-12 text-muted-foreground" />}
-            <h3 className="mt-2 text-lg font-medium">
-              {searchTerm ? `No ${type.toUpperCase()} personas found matching "${searchTerm}"` : `No ${type.toUpperCase()} personas found`}
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {searchTerm ? "Try a different search term or " : ""}
-              Get started by creating or importing your first {type.toUpperCase()} persona.
-            </p>
-            <div className="mt-6">
-              <Button asChild><Link href={`/personas/new?type=${type}`}><PlusCircle className="mr-2 h-4 w-4" /> Create {type.toUpperCase()} Persona</Link></Button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mt-2">
-            {personas.map(persona => {
-              const personaId = persona.id || '';
-              return (
-                <PersonaListItem
-                  key={personaId}
-                  persona={persona as ApiPersonaResponse}
-                  onDelete={handleDeletePersona}
-                  onTest={handleTestPersona}
-                  onToggleStatus={handleTogglePersonaStatus}
-                  isTesting={actionLoading[personaId] === 'test'}
-                  isTogglingStatus={actionLoading[personaId] === 'toggle'}
-                />
-              );
-            })}
-          </div>
-        )}
-      </>
-    );
-  };
+  // Tab configuration
+  const tabs = [
+    { id: 'http', label: 'HTTP Personas', icon: <GlobeIcon className="h-4 w-4" />, count: httpPersonas.length },
+    { id: 'dns', label: 'DNS Personas', icon: <WifiIcon className="h-4 w-4" />, count: dnsPersonas.length },
+  ];
 
+  // Current tab data
+  const currentPersonas = activeTab === 'http' ? filteredHttpPersonas : filteredDnsPersonas;
+  const currentLoading = activeTab === 'http' ? loadingHttp : loadingDns;
+  const currentSearchTerm = activeTab === 'http' ? searchTermHttp : searchTermDns;
+  const setCurrentSearchTerm = activeTab === 'http' ? setSearchTermHttp : setSearchTermDns;
+
+  // ===========================================================================
+  // RENDER - TailAdmin Layout Structure
+  // ===========================================================================
   return (
     <>
-      <PageHeader
-        title="Synthetic Personas"
-        description="Manage custom HTTP and DNS personas for advanced operations."
-        icon={Users}
-        actionButtons={
+      {/* ===== BREADCRUMB (TailAdmin Pattern) ===== */}
+      <PageBreadcrumb pageTitle="Synthetic Personas" />
+
+      {/* ===== MAIN CONTENT with space-y-6 ===== */}
+      <div className="space-y-6">
+
+        {/* ===== HEADER ACTIONS BAR ===== */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Manage custom HTTP and DNS personas for advanced operations.
+          </p>
           <div className="flex gap-2">
             <input
               type="file"
@@ -481,29 +479,98 @@ function PersonasPageContent() {
               className="hidden"
               aria-label={`Import ${activeTab.toUpperCase()} persona file`}
             />
-            <Button onClick={() => fileInputRef.current?.click()} variant="outline">
-                <UploadCloud className="mr-2 h-4 w-4" /> Import {activeTab.toUpperCase()} Persona(s)
+            <Button 
+              onClick={() => fileInputRef.current?.click()} 
+              variant="outline" 
+              startIcon={<UploadCloudIcon className="h-4 w-4" />}
+            >
+              Import {activeTab.toUpperCase()}
             </Button>
-            <Button asChild><Link href={`/personas/new?type=${activeTab}`}><PlusCircle className="mr-2 h-4 w-4" /> Create New {activeTab.toUpperCase()} Persona</Link></Button>
+            <Link href={`/personas/new?type=${activeTab}`}>
+              <Button startIcon={<PlusCircleIcon className="h-4 w-4" />}>
+                New {activeTab.toUpperCase()} Persona
+              </Button>
+            </Link>
           </div>
-        }
-      />
+        </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'http' | 'dns')} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="http"><Globe className="mr-2 h-4 w-4"/>HTTP Personas ({httpPersonas.length})</TabsTrigger>
-          <TabsTrigger value="dns"><Wifi className="mr-2 h-4 w-4"/>DNS Personas ({dnsPersonas.length})</TabsTrigger>
-        </TabsList>
-        <TabsContent value="http">
-          {renderPersonaList(filteredHttpPersonas, loadingHttp, 'http', searchTermHttp, setSearchTermHttp)}
-        </TabsContent>
-        <TabsContent value="dns">
-          {renderPersonaList(filteredDnsPersonas, loadingDns, 'dns', searchTermDns, setSearchTermDns)}
-        </TabsContent>
-      </Tabs>
+        {/* ===== MAIN CONTENT CARD (TailAdmin Pattern) ===== */}
+        <Card>
+          <CardHeader>
+            <div>
+              <CardTitle icon={activeTab === 'http' ? <GlobeIcon className="h-5 w-5 text-brand-500" /> : <WifiIcon className="h-5 w-5 text-brand-500" />}>
+                {activeTab === 'http' ? 'HTTP Personas' : 'DNS Personas'}
+              </CardTitle>
+              <CardDescription>
+                {activeTab === 'http' 
+                  ? 'Browser fingerprints and HTTP client configurations for web scraping.'
+                  : 'DNS resolver configurations for domain validation.'}
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardBody>
+            {/* Tab Navigation */}
+            <div className="mb-6">
+              <TabNav activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
+            </div>
+
+            {/* Search Input */}
+            <div className="mb-6 relative max-w-md">
+              <TaSearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+              <Input
+                placeholder={`Search ${activeTab.toUpperCase()} personas...`}
+                defaultValue={currentSearchTerm}
+                onChange={(e) => setCurrentSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Content */}
+            {currentLoading ? (
+              <PersonaGridSkeleton />
+            ) : currentPersonas.length === 0 ? (
+              <CardEmptyState
+                icon={activeTab === 'http' ? <GlobeIcon className="h-12 w-12" /> : <WifiIcon className="h-12 w-12" />}
+                title={currentSearchTerm 
+                  ? `No ${activeTab.toUpperCase()} personas found matching "${currentSearchTerm}"` 
+                  : `No ${activeTab.toUpperCase()} personas found`}
+                description={currentSearchTerm 
+                  ? "Try a different search term or create a new persona." 
+                  : `Get started by creating or importing your first ${activeTab.toUpperCase()} persona.`}
+                action={
+                  <Link href={`/personas/new?type=${activeTab}`}>
+                    <Button startIcon={<PlusCircleIcon className="h-4 w-4" />}>
+                      Create {activeTab.toUpperCase()} Persona
+                    </Button>
+                  </Link>
+                }
+              />
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {currentPersonas.map(persona => {
+                  const personaId = persona.id || '';
+                  return (
+                    <PersonaListItem
+                      key={personaId}
+                      persona={persona as ApiPersonaResponse}
+                      onDelete={handleDeletePersona}
+                      onTest={handleTestPersona}
+                      onToggleStatus={handleTogglePersonaStatus}
+                      isTesting={actionLoading[personaId] === 'test'}
+                      isTogglingStatus={actionLoading[personaId] === 'toggle'}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </CardBody>
+        </Card>
+
+      </div>
     </>
   );
 }
+
 export default function PersonasPage() {
   return <PersonasPageContent />;
 }
