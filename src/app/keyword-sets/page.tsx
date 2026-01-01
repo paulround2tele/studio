@@ -2,29 +2,46 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Plus, Edit, Trash2 } from 'lucide-react';
+
+// TailAdmin Components
+import Button from '@/components/ta/ui/button/Button';
+import PageBreadcrumb from '@/components/ta/common/PageBreadCrumb';
+import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components/ta/ui/table';
+import Alert from '@/components/ta/ui/alert/Alert';
+import { Modal } from '@/components/ta/ui/modal';
+
+// Shared layout components (TailAdmin-compliant)
+import { Card, CardHeader, CardTitle, CardDescription, CardBody, CardEmptyState } from '@/components/shared/Card';
+
+// TailAdmin Icons
+import { PlusIcon, PencilIcon, TrashBinIcon, TagIcon } from '@/icons';
+
+// API & Types
 import { KeywordSetsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import type { KeywordSetResponse } from '@/lib/api-client/models';
 import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
 import { useSSE } from '@/hooks/useSSE';
 import type { SSEEvent } from '@/hooks/useSSE';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+
 const keywordSetsApi = new KeywordSetsApi(apiConfiguration);
 
+// ============================================================================
+// LOADING SKELETON (TailAdmin Pattern)
+// ============================================================================
+function TableSkeleton() {
+  return (
+    <div className="space-y-4 p-6">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-12 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+      ))}
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN PAGE COMPONENT
+// ============================================================================
 export default function KeywordSetsPage() {
   const [sets, setSets] = useState<KeywordSetResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +51,7 @@ export default function KeywordSetsPage() {
 
   const loadSets = useCallback(async () => {
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       const resp = await keywordSetsApi.keywordSetsList();
       const body = unwrapApiResponse<KeywordSetResponse[]>(resp) ?? [];
@@ -85,96 +103,200 @@ export default function KeywordSetsPage() {
     }
   }, [deleteTarget, loadSets]);
 
+  // ===========================================================================
+  // RENDER - TailAdmin Layout Structure
+  // ===========================================================================
   return (
-    <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Keyword Sets</h1>
+    <>
+      {/* ===== BREADCRUMB (TailAdmin Pattern) ===== */}
+      <PageBreadcrumb pageTitle="Keyword Sets" />
+      
+      {/* ===== MAIN CONTENT with space-y-6 ===== */}
+      <div className="space-y-6">
+
+        {/* ===== HEADER ACTIONS BAR ===== */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Manage keyword matching rules for domain generation.
+          </p>
           <Link href="/keyword-sets/new">
-            <Button><Plus className="h-4 w-4 mr-2" /> New Set</Button>
+            <Button startIcon={<PlusIcon className="h-4 w-4" />}>
+              New Set
+            </Button>
           </Link>
         </div>
-        {errorMessage && (<Alert variant="destructive"><AlertDescription>{errorMessage}</AlertDescription></Alert>)}
-        <Card>
-          <CardHeader>
-            <CardTitle>Existing Sets</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center p-6"><Loader2 className="h-4 w-4 animate-spin" /></div>
-            ) : sets.length === 0 ? (
-              <div className="rounded border border-dashed p-6 text-center text-sm text-muted-foreground">
-                No keyword sets yet. Create one to get started.
+
+        {/* ===== ERROR ALERT ===== */}
+        {errorMessage && (
+          <Alert
+            variant="error"
+            title="Error"
+            message={errorMessage}
+          />
+        )}
+
+        {/* ===== MAIN CONTENT CARD (TailAdmin Pattern) ===== */}
+        {isLoading ? (
+          <Card>
+            <CardBody noPadding>
+              <TableSkeleton />
+            </CardBody>
+          </Card>
+        ) : sets.length === 0 ? (
+          <Card>
+            <CardBody>
+              <CardEmptyState
+                icon={<TagIcon className="h-12 w-12" />}
+                title="No Keyword Sets Yet"
+                description="Create your first keyword set to start generating domain patterns."
+                action={
+                  <Link href="/keyword-sets/new">
+                    <Button startIcon={<PlusIcon className="h-4 w-4" />}>
+                      Create First Set
+                    </Button>
+                  </Link>
+                }
+              />
+            </CardBody>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <div>
+                <CardTitle icon={<TagIcon className="h-5 w-5 text-brand-500" />}>
+                  Existing Sets
+                </CardTitle>
+                <CardDescription>
+                  Keyword matching rules used by campaigns for domain generation.
+                </CardDescription>
               </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Rules</TableHead>
-                    <TableHead>Enabled</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sets.map(s => {
-                    const ruleCount = typeof s.ruleCount === 'number'
-                      ? s.ruleCount
-                      : Array.isArray(s.rules)
-                        ? s.rules.length
-                        : 0;
-                    return (
-                      <TableRow key={s.id}>
-                        <TableCell>{s.name}</TableCell>
-                        <TableCell>{s.description || '—'}</TableCell>
-                        <TableCell>{ruleCount}</TableCell>
-                        <TableCell>{s.isEnabled ? 'Yes' : 'No'}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Link href={`/keyword-sets/${s.id}/edit`}>
-                              <Button variant="ghost" className="h-8 w-8 p-0" aria-label="Edit keyword set">
-                                <Edit className="h-4 w-4" />
+            </CardHeader>
+            <CardBody noPadding>
+              <div className="overflow-x-auto">
+                <Table className="w-full">
+                  <TableHeader className="border-t border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
+                    <TableRow>
+                      <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Name
+                      </TableCell>
+                      <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Description
+                      </TableCell>
+                      <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Rules
+                      </TableCell>
+                      <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Enabled
+                      </TableCell>
+                      <TableCell isHeader className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Actions
+                      </TableCell>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sets.map(s => {
+                      const ruleCount = typeof s.ruleCount === 'number'
+                        ? s.ruleCount
+                        : Array.isArray(s.rules)
+                          ? s.rules.length
+                          : 0;
+                      return (
+                        <TableRow key={s.id} className="border-b border-gray-50 dark:border-gray-800 last:border-0">
+                          <TableCell className="px-6 py-4">
+                            <span className="font-medium text-gray-800 dark:text-white/90">{s.name}</span>
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                            {s.description || '—'}
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                            {ruleCount}
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                              s.isEnabled 
+                                ? 'bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500' 
+                                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                            }`}>
+                              {s.isEnabled ? 'Yes' : 'No'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              <Link href={`/keyword-sets/${s.id}/edit`}>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <PencilIcon className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-error-500 hover:text-error-600 hover:bg-error-50 dark:hover:bg-error-500/15"
+                                onClick={() => setDeleteTarget(s)}
+                                disabled={isDeleting && deleteTarget?.id === s.id}
+                              >
+                                <TrashBinIcon className="h-4 w-4" />
                               </Button>
-                            </Link>
-                            <Button
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                              aria-label="Delete keyword set"
-                              onClick={() => setDeleteTarget(s)}
-                              disabled={isDeleting && deleteTarget?.id === s.id}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-        <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && !isDeleting && setDeleteTarget(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete keyword set?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. Campaigns using {deleteTarget?.name ?? 'this set'} will stop matching its rules.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={isDeleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={handleDelete}
-              >
-                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-    </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardBody>
+          </Card>
+        )}
+
+      </div>
+
+      {/* ===== DELETE CONFIRMATION MODAL (TailAdmin Pattern) ===== */}
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => !isDeleting && setDeleteTarget(null)}
+        className="max-w-md p-6 lg:p-8"
+      >
+        <div className="text-center">
+          {/* Icon */}
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-error-50 dark:bg-error-500/15">
+            <TrashBinIcon className="h-6 w-6 text-error-500" />
+          </div>
+          
+          {/* Title */}
+          <h3 className="mb-2 text-lg font-semibold text-gray-800 dark:text-white/90">
+            Delete keyword set?
+          </h3>
+          
+          {/* Description */}
+          <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+            This action cannot be undone. Campaigns using &ldquo;{deleteTarget?.name ?? 'this set'}&rdquo; will stop matching its rules.
+          </p>
+          
+          {/* Actions */}
+          <div className="flex justify-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteTarget(null)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-error-500 hover:bg-error-600 disabled:bg-error-300"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }
