@@ -1,41 +1,7 @@
 "use client";
 
 import React from "react";
-
-// TailAdmin inline SVG icons
-const CheckIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const ClockIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 18.3333C14.6024 18.3333 18.3334 14.6023 18.3334 9.99992C18.3334 5.39755 14.6024 1.66659 10 1.66659C5.39765 1.66659 1.66669 5.39755 1.66669 9.99992C1.66669 14.6023 5.39765 18.3333 10 18.3333Z" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M10 5V10L13.3333 11.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const PauseIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8.33331 3.33325H5.83331V16.6666H8.33331V3.33325Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M14.1667 3.33325H11.6667V16.6666H14.1667V3.33325Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const XCircleIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 18.3333C14.6024 18.3333 18.3334 14.6023 18.3334 9.99992C18.3334 5.39755 14.6024 1.66659 10 1.66659C5.39765 1.66659 1.66669 5.39755 1.66669 9.99992C1.66669 14.6023 5.39765 18.3333 10 18.3333Z" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M12.5 7.5L7.5 12.5M7.5 7.5L12.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const LoaderIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-  </svg>
-);
+import { CheckLineIcon, ClockIcon, PauseIcon, XCircleIcon, LoaderIcon } from "@/icons";
 
 type PhaseStatus = "pending" | "running" | "paused" | "completed" | "failed" | "skipped";
 
@@ -57,7 +23,7 @@ const STATUS_ICONS: Record<PhaseStatus, React.ReactNode> = {
   pending: <ClockIcon className="w-4 h-4" />,
   running: <LoaderIcon className="w-4 h-4 animate-spin" />,
   paused: <PauseIcon className="w-4 h-4" />,
-  completed: <CheckIcon className="w-4 h-4" />,
+  completed: <CheckLineIcon className="w-4 h-4" />,
   failed: <XCircleIcon className="w-4 h-4" />,
   skipped: <ClockIcon className="w-4 h-4" />,
 };

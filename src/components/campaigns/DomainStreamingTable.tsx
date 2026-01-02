@@ -4,7 +4,6 @@ import React, { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ta/ui/table';
 import { ExternalLinkIcon, RefreshIcon } from '@/icons';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
-import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
 import type { DomainRow as DomainRowType, LifecycleState as _LifecycleState } from '@/types/domain';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
@@ -329,7 +328,7 @@ export default function DomainStreamingTable({
         </Button>
       </div>
 
-      <ScrollArea className="h-[400px] rounded-md border border-gray-200 dark:border-gray-800">
+      <div className="h-[400px] overflow-auto rounded-md border border-gray-200 dark:border-gray-800">
         <Table>
           <TableHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10">
             <TableRow>
@@ -346,7 +345,7 @@ export default function DomainStreamingTable({
             ))}
           </TableBody>
         </Table>
-      </ScrollArea>
+      </div>
       
       <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
         <div>

@@ -3,44 +3,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Badge from '@/components/ta/ui/badge/Badge';
 import Button from '@/components/ta/ui/button/Button';
-import { CheckCircleIcon, AlertIcon, CloseLineIcon, LockIcon } from '@/icons';
+import { CheckCircleIcon, AlertIcon, CloseLineIcon, LockIcon, RefreshIcon, LoaderIcon, ShieldIcon, WifiIcon, DatabaseIcon } from '@/icons';
 import { cn } from '@/lib/utils';
 import healthService from '@/lib/services/healthService';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
-
-// TailAdmin inline SVG icons (matching TailAdmin style)
-const RefreshIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14.167 5.83325C13.0004 4.66659 11.3337 3.83325 9.50039 3.83325C5.91706 3.83325 3.00039 6.74992 3.00039 10.3333C3.00039 13.9166 5.91706 16.8333 9.50039 16.8333C12.5004 16.8333 15.0004 14.7499 15.7504 11.9166M14.167 5.83325H10.8337M14.167 5.83325V2.49992" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const LoaderIcon = ({ className }: { className?: string }) => (
-  <svg className={cn("animate-spin", className)} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-  </svg>
-);
-
-const ShieldIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 1.66675L3.33337 4.16675V9.16675C3.33337 13.5834 6.08337 17.6834 10 18.3334C13.9167 17.6834 16.6667 13.5834 16.6667 9.16675V4.16675L10 1.66675Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const WifiIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 15.8334H10.0083M3.33337 8.33341C5.08337 6.58341 7.41671 5.41675 10 5.41675C12.5834 5.41675 14.9167 6.58341 16.6667 8.33341M5.83337 11.2501C7 10.0834 8.41671 9.16675 10 9.16675C11.5834 9.16675 13 10.0834 14.1667 11.2501M8.33337 14.1667C8.83337 13.6667 9.41671 13.3334 10 13.3334C10.5834 13.3334 11.1667 13.6667 11.6667 14.1667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const DatabaseIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="10" cy="5" rx="6.66667" ry="2.5" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M3.33337 5V10C3.33337 11.3807 6.31814 12.5 10 12.5C13.6819 12.5 16.6667 11.3807 16.6667 10V5" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M3.33337 10V15C3.33337 16.3807 6.31814 17.5 10 17.5C13.6819 17.5 16.6667 16.3807 16.6667 15V10" stroke="currentColor" strokeWidth="1.5"/>
-  </svg>
-);
 
 // Enhanced error serialization utility for robust logging
 const serializeError = (obj: unknown): unknown => {

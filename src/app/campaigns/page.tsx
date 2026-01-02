@@ -6,7 +6,7 @@ import PageBreadcrumb from '@/components/ta/common/PageBreadCrumb';
 import Badge from '@/components/ta/ui/badge/Badge';
 import Button from "@/components/ta/ui/button/Button";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components/ta/ui/table';
-import { PlusIcon, BoltIcon, BoxCubeIcon } from "@/icons";
+import { PlusIcon, BoltIcon, BoxCubeIcon, RefreshIcon, LoaderIcon, PauseIcon, StopIcon, EyeIcon, PencilIcon } from "@/icons";
 import { useRTKCampaignsList } from "@/providers/RTKCampaignDataProvider";
 import type { CampaignLite } from "@/providers/RTKCampaignDataProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -31,47 +31,6 @@ import {
   TABLE_ROW_CLASSES,
   TableActionButton
 } from '@/components/shared/Card';
-
-// TailAdmin inline SVG icons
-const RefreshIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14.167 5.83325C13.0004 4.66659 11.3337 3.83325 9.50039 3.83325C5.91706 3.83325 3.00039 6.74992 3.00039 10.3333C3.00039 13.9166 5.91706 16.8333 9.50039 16.8333C12.5004 16.8333 15.0004 14.7499 15.7504 11.9166M14.167 5.83325H10.8337M14.167 5.83325V2.49992" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const LoaderIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-  </svg>
-);
-
-const PauseIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 18.3333C14.6024 18.3333 18.3334 14.6023 18.3334 9.99992C18.3334 5.39755 14.6024 1.66659 10 1.66659C5.39765 1.66659 1.66669 5.39755 1.66669 9.99992C1.66669 14.6023 5.39765 18.3333 10 18.3333Z" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M8.33331 7.5V12.5M11.6666 7.5V12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
-
-const StopIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M6.66669 6.66659H13.3334V13.3333H6.66669V6.66659Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M10 18.3333C14.6024 18.3333 18.3334 14.6023 18.3334 9.99992C18.3334 5.39755 14.6024 1.66659 10 1.66659C5.39765 1.66659 1.66669 5.39755 1.66669 9.99992C1.66669 14.6023 5.39765 18.3333 10 18.3333Z" stroke="currentColor" strokeWidth="1.5"/>
-  </svg>
-);
-
-const EyeIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 4.37502C3.75002 4.37502 1.25002 10 1.25002 10C1.25002 10 3.75002 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.37502 10 4.37502Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.87502 10 6.87502C8.27413 6.87502 6.87502 8.27411 6.87502 10C6.87502 11.7259 8.27413 13.125 10 13.125Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const PencilIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14.0517 2.94741L17.0525 5.94824M15.3017 1.69741C15.6989 1.30024 16.2342 1.07715 16.7921 1.07715C17.35 1.07715 17.8853 1.30024 18.2825 1.69741C18.6797 2.09458 18.9028 2.62993 18.9028 3.18783C18.9028 3.74572 18.6797 4.28107 18.2825 4.67824L5.00002 17.9608L1.25002 18.7499L2.03919 14.9999L15.3017 1.69741Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
 
 type CampaignStatus = CampaignLite['metadata']['status'];
 type CampaignPhase = ApiPhase;
