@@ -9,6 +9,7 @@ import {
   CampaignPipeline,
 } from "@/components/campaigns/detail";
 import type { CampaignResponse } from "@/lib/api-client/models";
+import Button from "@/components/ta/ui/button/Button";
 
 type CampaignStatus = "draft" | "running" | "paused" | "completed" | "failed" | "cancelled";
 
@@ -58,15 +59,18 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center max-w-md">
         {message}
       </p>
-      <button
+      <Button
         onClick={onRetry}
-        className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-blue-600 transition-colors"
+        variant="primary"
+        size="sm"
+        startIcon={
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        }
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
         Try Again
-      </button>
+      </Button>
     </div>
   );
 }
@@ -86,15 +90,18 @@ function NotFoundState({ campaignId, onBack }: { campaignId: string; onBack: () 
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center">
         The campaign with ID &quot;{campaignId}&quot; was not found.
       </p>
-      <button
+      <Button
         onClick={onBack}
-        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-theme-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        variant="outline"
+        size="sm"
+        startIcon={
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        }
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
         Back to Campaigns
-      </button>
+      </Button>
     </div>
   );
 }
