@@ -1,11 +1,10 @@
 
-import type { LucideIcon } from 'lucide-react';
 import React from 'react';
 
 interface PageHeaderProps {
   title: string;
   description?: string;
-  icon?: LucideIcon;
+  icon?: React.ComponentType<{ className?: string }>;
   actionButtons?: React.ReactNode;
   showBackButton?: boolean;
   onBack?: () => void;
@@ -25,16 +24,16 @@ export default function PageHeader({
         {showBackButton && onBack && (
           <button 
             onClick={onBack}
-            className="flex items-center justify-center h-8 w-8 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+            className="flex items-center justify-center h-8 w-8 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]"
             aria-label="Go back"
           >
             ←
           </button>
         )}
-        {Icon && <Icon className="h-7 w-7 text-primary" />}
+        {Icon && <Icon className="h-7 w-7 text-brand-500" />}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{title}</h1>
-          {description && <p className="text-muted-foreground mt-1">{description}</p>}
+          <h1 className="text-2xl font-semibold text-gray-800 dark:text-white/90 sm:text-3xl">{title}</h1>
+          {description && <p className="text-gray-500 dark:text-gray-400 mt-1">{description}</p>}
         </div>
       </div>
       {actionButtons && <div className="flex gap-2 self-end sm:self-auto">{actionButtons}</div>}

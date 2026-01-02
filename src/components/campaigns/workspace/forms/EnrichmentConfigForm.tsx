@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
+import InputAdapter from '@/components/ta/adapters/InputAdapter';
+import SwitchAdapter from '@/components/ta/adapters/SwitchAdapter';
 import { useToast } from '@/hooks/use-toast';
 import { useConfigurePhaseStandaloneMutation, campaignApi } from '@/store/api/campaignApi';
 import { useAppDispatch } from '@/store/hooks';
@@ -34,9 +34,9 @@ export const ENRICHMENT_DEFAULT_VALUES: EnrichmentConfigFormValues = {
 };
 
 const clamp = (value: number, min: number, max: number): number => {
-  if (!Number.isFinite(value)) return min;
-  if (value < min) return min;
-  if (value > max) return max;
+  if (Number.isNaN(value)) return min;
+  if (value === Number.NEGATIVE_INFINITY || value < min) return min;
+  if (value === Number.POSITIVE_INFINITY || value > max) return max;
   return value;
 };
 
@@ -157,7 +157,7 @@ export const EnrichmentConfigForm: React.FC<Props> = ({ campaignId, onConfigured
               <FormItem>
                 <FormLabel>Match Score Threshold</FormLabel>
                 <FormControl>
-                  <Input
+                  <InputAdapter
                     {...numberInputProps}
                     type="number"
                     min={MATCH_SCORE_RANGE.min}
@@ -180,7 +180,7 @@ export const EnrichmentConfigForm: React.FC<Props> = ({ campaignId, onConfigured
               <FormItem>
                 <FormLabel>Low-Score Grace Threshold</FormLabel>
                 <FormControl>
-                  <Input
+                  <InputAdapter
                     {...numberInputProps}
                     type="number"
                     min={GRACE_RANGE.min}
@@ -203,7 +203,7 @@ export const EnrichmentConfigForm: React.FC<Props> = ({ campaignId, onConfigured
               <FormItem>
                 <FormLabel>Minimum Content Bytes</FormLabel>
                 <FormControl>
-                  <Input
+                  <InputAdapter
                     type="number"
                     min={MIN_BYTES_RANGE.min}
                     max={MIN_BYTES_RANGE.max}
@@ -225,7 +225,7 @@ export const EnrichmentConfigForm: React.FC<Props> = ({ campaignId, onConfigured
               <FormItem>
                 <FormLabel>Parked Confidence Floor</FormLabel>
                 <FormControl>
-                  <Input
+                  <InputAdapter
                     {...numberInputProps}
                     type="number"
                     min={PARKED_RANGE.min}
@@ -254,7 +254,7 @@ export const EnrichmentConfigForm: React.FC<Props> = ({ campaignId, onConfigured
                 </div>
               </div>
               <FormControl>
-                <Switch checked={field.value} onCheckedChange={(checked) => field.onChange(!!checked)} />
+                <SwitchAdapter checked={field.value} onChange={(checked) => field.onChange(!!checked)} />
               </FormControl>
             </FormItem>
           )}

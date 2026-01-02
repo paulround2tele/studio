@@ -4,21 +4,36 @@ import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, ArrowLeft, Plus, Trash2 } from 'lucide-react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+
+// TailAdmin components
+import PageBreadcrumb from '@/components/ta/common/PageBreadCrumb';
+import Button from '@/components/ta/ui/button/Button';
+import Input from '@/components/ta/form/input/InputField';
+import Label from '@/components/ta/form/Label';
+import Checkbox from '@/components/ta/form/input/Checkbox';
+import Alert from '@/components/ta/ui/alert/Alert';
+import Select from '@/components/ta/form/Select';
+
+// Local form adapter
+import FormButton from '@/components/form/FormButton';
+
+// TailAdmin Icons
+import { ArrowLeftIcon, PlusIcon, TrashBinIcon, LoaderIcon } from '@/icons';
+
+// API
 import { KeywordSetsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import type { CreateKeywordSetRequest } from '@/lib/api-client/models/create-keyword-set-request';
 import { KeywordRuleType } from '@/lib/api-client/models/keyword-rule-type';
+
 const keywordSetsApi = new KeywordSetsApi(apiConfiguration);
 
 type CreateKeywordSetPayload = CreateKeywordSetRequest;
+
+const RULE_TYPE_OPTIONS = [
+  { value: KeywordRuleType.string, label: 'Contains string' },
+  { value: KeywordRuleType.regex, label: 'Regex' },
+];
 
 export default function NewKeywordSetPage() {
   const router = useRouter();
@@ -80,132 +95,215 @@ export default function NewKeywordSetPage() {
   }, [router]);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/keyword-sets"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Back</Button></Link>
-          <h1 className="text-3xl font-bold">New Keyword Set</h1>
-        </div>
-        {successMessage && (<Alert><AlertDescription>{successMessage}</AlertDescription></Alert>)}
-        {errorMessage && (<Alert variant="destructive"><AlertDescription>{errorMessage}</AlertDescription></Alert>)}
-        <Card className="max-w-xl">
-          <CardHeader>
-            <CardTitle>Keyword Set Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="e.g. SaaS Keywords" {...form.register('name', { required: true })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input id="description" placeholder="Short summary" {...form.register('description')} />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="enabled" checked={form.watch('isEnabled')} onCheckedChange={v => form.setValue('isEnabled', !!v)} />
-                <Label htmlFor="enabled">Enabled</Label>
-              </div>
-              <div className="space-y-4 pt-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-lg font-semibold">Keyword Rules</p>
-                    <p className="text-sm text-muted-foreground">Define the patterns that belong to this set.</p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() =>
-                      append({ pattern: '', ruleType: KeywordRuleType.string, isCaseSensitive: false, category: '', contextChars: 0 })
-                    }
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> Add Rule
-                  </Button>
-                </div>
-                {fields.length === 0 && (
-                  <div className="rounded border border-dashed p-4 text-sm text-muted-foreground">
-                    No rules yet. Add at least one pattern to match.
-                  </div>
+    <>
+      <PageBreadcrumb pageTitle="New Keyword Set" />
+      
+      <div className="space-y-6">
+        {/* Back link */}
+        <Link href="/keyword-sets">
+          <Button variant="outline" startIcon={<ArrowLeftIcon className="h-4 w-4" />}>
+            Back
+          </Button>
+        </Link>
+
+        {/* Alerts */}
+        {successMessage && (
+          <Alert variant="success" title="Success" message={successMessage} />
+        )}
+        {errorMessage && (
+          <Alert variant="error" title="Error" message={errorMessage} />
+        )}
+
+        {/* Main form card */}
+        <div className="max-w-3xl rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">
+            Keyword Set Information
+          </h3>
+          
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Name field */}
+            <div>
+              <Label>Name <span className="text-error-500">*</span></Label>
+              <Controller
+                control={form.control}
+                name="name"
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <Input
+                    type="text"
+                    placeholder="e.g. SaaS Keywords"
+                    defaultValue={field.value}
+                    onChange={field.onChange}
+                  />
                 )}
-                <div className="space-y-3">
-                  {fields.map((field, index) => {
-                    const patternId = `rule-${field.id}-pattern`;
-                    const categoryId = `rule-${field.id}-category`;
-                    const contextId = `rule-${field.id}-context`;
-                    return (
-                      <div key={field.id} className="rounded-md border p-4 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium">Rule {index + 1}</p>
-                          <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} aria-label="Remove rule">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <div className="space-y-2">
-                            <Label htmlFor={patternId}>Pattern</Label>
-                            <Input
-                              id={patternId}
-                              placeholder="Keyword or regex"
-                              {...form.register(`rules.${index}.pattern` as const, { required: true })}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Rule Type</Label>
-                            <Controller
-                              control={form.control}
-                              name={`rules.${index}.ruleType` as const}
-                              render={({ field: selectField }) => (
-                                <Select value={selectField.value} onValueChange={selectField.onChange}>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select type" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value={KeywordRuleType.string}>Contains string</SelectItem>
-                                    <SelectItem value={KeywordRuleType.regex}>Regex</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              )}
-                            />
-                          </div>
-                        </div>
-                        <div className="grid gap-4 sm:grid-cols-3">
-                          <div className="space-y-2">
-                            <Label htmlFor={categoryId}>Category</Label>
-                            <Input id={categoryId} placeholder="Optional category" {...form.register(`rules.${index}.category` as const)} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={contextId}>Context Characters</Label>
-                            <Input
-                              id={contextId}
-                              type="number"
-                              min={0}
-                              placeholder="0"
-                              {...form.register(`rules.${index}.contextChars` as const, { valueAsNumber: true, min: 0 })}
-                            />
-                          </div>
-                          <div className="flex items-center space-x-2 pt-6 sm:pt-0">
-                            <Controller
-                              control={form.control}
-                              name={`rules.${index}.isCaseSensitive` as const}
-                              render={({ field: checkboxField }) => (
-                                <Checkbox
-                                  checked={!!checkboxField.value}
-                                  onCheckedChange={val => checkboxField.onChange(!!val)}
-                                  id={`rule-${field.id}-case`}
-                                />
-                              )}
-                            />
-                            <Label htmlFor={`rule-${field.id}-case`}>Case sensitive</Label>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+              />
+            </div>
+
+            {/* Description field */}
+            <div>
+              <Label>Description</Label>
+              <Controller
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <Input
+                    type="text"
+                    placeholder="Short summary"
+                    defaultValue={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
+
+            {/* Enabled checkbox */}
+            <div className="flex items-center gap-3">
+              <Controller
+                control={form.control}
+                name="isEnabled"
+                render={({ field }) => (
+                  <Checkbox
+                    checked={!!field.value}
+                    onChange={(checked) => field.onChange(checked)}
+                    label="Enabled"
+                  />
+                )}
+              />
+            </div>
+
+            {/* Rules section */}
+            <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-lg font-semibold text-gray-800 dark:text-white/90">Keyword Rules</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Define the patterns that belong to this set.</p>
                 </div>
+                <FormButton
+                  type="button"
+                  variant="outline"
+                  onClick={() => append({ pattern: '', ruleType: KeywordRuleType.string, isCaseSensitive: false, category: '', contextChars: 0 })}
+                  startIcon={<PlusIcon className="h-4 w-4" />}
+                >
+                  Add Rule
+                </FormButton>
               </div>
-              <Button type="submit" disabled={isLoading}>{isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Create Set</Button>
-            </form>
-          </CardContent>
-        </Card>
-    </div>
+
+              {fields.length === 0 && (
+                <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 p-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                  No rules yet. Add at least one pattern to match.
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {fields.map((field, index) => (
+                  <div key={field.id} className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-gray-800 dark:text-white/90">Rule {index + 1}</p>
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="p-2 text-gray-400 hover:text-error-500 transition-colors"
+                        aria-label="Remove rule"
+                      >
+                        <TrashBinIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <Label>Pattern <span className="text-error-500">*</span></Label>
+                        <Controller
+                          control={form.control}
+                          name={`rules.${index}.pattern` as const}
+                          rules={{ required: true }}
+                          render={({ field: patternField }) => (
+                            <Input
+                              type="text"
+                              placeholder="Keyword or regex"
+                              defaultValue={patternField.value}
+                              onChange={patternField.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <Label>Rule Type</Label>
+                        <Controller
+                          control={form.control}
+                          name={`rules.${index}.ruleType` as const}
+                          render={({ field: selectField }) => (
+                            <Select
+                              options={RULE_TYPE_OPTIONS}
+                              defaultValue={selectField.value}
+                              onChange={selectField.onChange}
+                              placeholder="Select type"
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <Label>Category</Label>
+                        <Controller
+                          control={form.control}
+                          name={`rules.${index}.category` as const}
+                          render={({ field: categoryField }) => (
+                            <Input
+                              type="text"
+                              placeholder="Optional category"
+                              defaultValue={categoryField.value}
+                              onChange={categoryField.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <Label>Context Characters</Label>
+                        <Controller
+                          control={form.control}
+                          name={`rules.${index}.contextChars` as const}
+                          render={({ field: contextField }) => (
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              defaultValue={contextField.value}
+                              onChange={(e) => contextField.onChange(Number(e.target.value) || 0)}
+                              min="0"
+                            />
+                          )}
+                        />
+                      </div>
+                      <div className="flex items-end pb-2">
+                        <Controller
+                          control={form.control}
+                          name={`rules.${index}.isCaseSensitive` as const}
+                          render={({ field: checkboxField }) => (
+                            <Checkbox
+                              checked={!!checkboxField.value}
+                              onChange={(val) => checkboxField.onChange(val)}
+                              label="Case sensitive"
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Submit button */}
+            <div className="pt-4">
+              <FormButton type="submit" disabled={isLoading}>
+                {isLoading && <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />}
+                Create Set
+              </FormButton>
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
   );
 }

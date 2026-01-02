@@ -4,11 +4,10 @@
  */
 
 import React from 'react';
-import { AlertTriangle, RefreshCw, Settings, ExternalLink } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { WarningTriangleIcon, RefreshIcon, SettingsIcon, ExternalLinkIcon } from '@/icons';
+import Button from '@/components/ta/ui/button/Button';
+import Badge from '@/components/ta/ui/badge/Badge';
+// Card import removed - using inline TailAdmin card pattern
 import { cn } from '@/lib/utils';
 
 export interface RetryHintProps {
@@ -25,7 +24,7 @@ export interface RetryHintProps {
 
 const variantConfig = {
   'auto-start-failed': {
-    icon: AlertTriangle,
+    icon: WarningTriangleIcon,
     title: 'Auto-Start Failed',
     severity: 'warning' as const,
     bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
@@ -35,7 +34,7 @@ const variantConfig = {
     badgeVariant: 'destructive' as const
   },
   'phase-failed': {
-    icon: AlertTriangle,
+    icon: WarningTriangleIcon,
     title: 'Phase Failed',
     severity: 'error' as const,
     bgColor: 'bg-red-50 dark:bg-red-900/20',
@@ -45,7 +44,7 @@ const variantConfig = {
     badgeVariant: 'destructive' as const
   },
   'connection-failed': {
-    icon: RefreshCw,
+    icon: RefreshIcon,
     title: 'Connection Issues',
     severity: 'info' as const,
     bgColor: 'bg-blue-50 dark:bg-blue-900/20',
@@ -55,7 +54,7 @@ const variantConfig = {
     badgeVariant: 'secondary' as const
   },
   'manual-required': {
-    icon: Settings,
+    icon: SettingsIcon,
     title: 'Manual Action Required',
     severity: 'info' as const,
     bgColor: 'bg-gray-50 dark:bg-gray-900/20',
@@ -124,19 +123,19 @@ export function RetryHint({
   };
 
   return (
-    <Card className={cn(
-      "border transition-all duration-200",
+    <div className={cn(
+      "rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] transition-all duration-200",
       config.bgColor,
       config.borderColor,
       className
     )}>
-      <CardHeader className="pb-3">
+      <div className="p-6 pb-3">
         <div className="flex items-center gap-3">
           <Icon className={cn("h-5 w-5", config.iconColor)} />
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-base">{config.title}</CardTitle>
-              <Badge variant={config.badgeVariant} className="text-xs">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">{config.title}</h3>
+              <Badge color={config.badgeVariant === 'destructive' ? 'error' : config.badgeVariant === 'secondary' ? 'light' : 'light'} size="sm" className="text-xs">
                 {config.badge}
               </Badge>
             </div>
@@ -147,46 +146,42 @@ export function RetryHint({
             )}
           </div>
         </div>
-      </CardHeader>
+      </div>
       
-      <CardContent className="space-y-4">
-        <CardDescription className="text-sm">
+      <div className="px-6 pb-6 space-y-4">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           {getDescription()}
-        </CardDescription>
+        </p>
 
         {errorMessage && errorMessage !== getDescription() && (
-          <Alert className="border-gray-200 dark:border-gray-700">
-            <AlertDescription className="text-xs">
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3">
+            <p className="text-xs text-gray-600 dark:text-gray-400">
               <strong>Details:</strong> {errorMessage}
-            </AlertDescription>
-          </Alert>
+            </p>
+          </div>
         )}
 
         {/* Action buttons */}
         <div className="flex flex-wrap gap-2">
           {onRetry && (variant === 'auto-start-failed' || variant === 'phase-failed') && (
-            <Button onClick={onRetry} size="sm" variant="default">
-              <RefreshCw className="w-4 h-4 mr-2" />
+            <Button onClick={onRetry} size="sm" variant="primary" startIcon={<RefreshIcon className="w-4 h-4" />}>
               Retry {variant === 'auto-start-failed' ? 'Auto-Start' : 'Phase'}
             </Button>
           )}
           
           {onManualStart && (
-            <Button onClick={onManualStart} size="sm" variant="outline">
-              <Settings className="w-4 h-4 mr-2" />
+            <Button onClick={onManualStart} size="sm" variant="outline" startIcon={<SettingsIcon className="w-4 h-4" />}>
               Start Manually
             </Button>
           )}
           
           {onRefreshStatus && variant === 'connection-failed' && (
-            <Button onClick={onRefreshStatus} size="sm" variant="outline">
-              <RefreshCw className="w-4 h-4 mr-2" />
+            <Button onClick={onRefreshStatus} size="sm" variant="outline" startIcon={<RefreshIcon className="w-4 h-4" />}>
               Refresh Status
             </Button>
           )}
           
-          <Button size="sm" variant="ghost" onClick={() => window.open('/docs/troubleshooting', '_blank')}>
-            <ExternalLink className="w-4 h-4 mr-2" />
+          <Button size="sm" variant="outline" onClick={() => window.open('/docs/troubleshooting', '_blank')} startIcon={<ExternalLinkIcon className="w-4 h-4" />}>
             Troubleshooting Guide
           </Button>
         </div>
@@ -205,8 +200,8 @@ export function RetryHint({
             ))}
           </ul>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

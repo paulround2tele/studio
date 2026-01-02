@@ -4,8 +4,7 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 import type { ClassificationBucket } from '../types';
 
@@ -24,25 +23,25 @@ export function ClassificationBuckets({
   
   if (buckets.length === 0) {
     return (
-      <Card className={cn("", className)}>
-        <CardHeader>
-          <CardTitle className="text-lg">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold">{title}</h3>
+        </div>
+        <div className="px-6 pb-6">
           <div className="text-gray-500 dark:text-gray-400 text-center py-4">
             No classification data available
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className={cn("", className)}>
-      <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+      <div className="p-6">
+        <h3 className="text-lg font-semibold">{title}</h3>
+      </div>
+      <div className="px-6 pb-6">
         <div className="space-y-4">
           {/* Summary bar */}
           <div className="flex rounded-lg overflow-hidden h-3 bg-gray-200 dark:bg-gray-700">
@@ -76,7 +75,7 @@ export function ClassificationBuckets({
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge color="light" size="sm">
                     {bucket.count}
                   </Badge>
                   <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -95,8 +94,8 @@ export function ClassificationBuckets({
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

@@ -1,12 +1,12 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { X, AlertCircle } from 'lucide-react';
+import InputAdapter from '@/components/ta/adapters/InputAdapter';
+import Badge from '@/components/ta/ui/badge/Badge';
+import Alert from '@/components/ta/ui/alert/Alert';
+import { CloseIcon } from '@/icons';
 import { useToast } from '@/hooks/use-toast';
 import { PersonasApi, KeywordSetsApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
@@ -150,38 +150,38 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
   return (
     <Form {...form}>
       <form data-testid="phase-http-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="name" render={({field})=> <FormItem data-testid="phase-http-field-name"><FormLabel>Configuration Name</FormLabel><FormControl><Input data-testid="phase-http-input-name" {...field} /></FormControl><FormMessage/></FormItem>} />
+        <FormField control={form.control} name="name" render={({field})=> <FormItem data-testid="phase-http-field-name"><FormLabel>Configuration Name</FormLabel><FormControl><InputAdapter data-testid="phase-http-input-name" {...field} /></FormControl><FormMessage/></FormItem>} />
         <div className="space-y-2" data-testid="phase-http-personas">
           <div className="text-xs font-medium" data-testid="phase-http-personas-label">HTTP Personas</div>
-          {loadingData ? <div className="text-xs" data-testid="phase-http-personas-loading">Loading personas...</div> : httpPersonas.length===0 ? <Alert data-testid="phase-http-personas-empty"><AlertCircle className="h-4 w-4"/><AlertDescription>No active HTTP personas.</AlertDescription></Alert> : (
-            <div className="grid grid-cols-1 gap-2" data-testid="phase-http-personas-list">{httpPersonas.map(p=> <div data-testid={`phase-http-persona-${p.id}`} key={p.id} onClick={()=>togglePersona(p.id||'')} className={`p-2 border rounded cursor-pointer text-xs flex justify-between ${watchedPersonaIds.includes(p.id||'')?'border-primary bg-primary/5':'hover:border-primary/50'}`}><span data-testid={`phase-http-persona-name-${p.id}`}>{p.name}</span>{watchedPersonaIds.includes(p.id||'') && <Badge data-testid={`phase-http-persona-selected-${p.id}`} variant="default">Selected</Badge>}</div> )}</div>
+          {loadingData ? <div className="text-xs" data-testid="phase-http-personas-loading">Loading personas...</div> : httpPersonas.length===0 ? <Alert variant="warning" title="No Personas" message="No active HTTP personas available." data-testid="phase-http-personas-empty" /> : (
+            <div className="grid grid-cols-1 gap-2" data-testid="phase-http-personas-list">{httpPersonas.map(p=> <div data-testid={`phase-http-persona-${p.id}`} key={p.id} onClick={()=>togglePersona(p.id||'')} className={`p-2 border rounded cursor-pointer text-xs flex justify-between ${watchedPersonaIds.includes(p.id||'')?'border-primary bg-primary/5':'hover:border-primary/50'}`}><span data-testid={`phase-http-persona-name-${p.id}`}>{p.name}</span>{watchedPersonaIds.includes(p.id||'') && <Badge data-testid={`phase-http-persona-selected-${p.id}`} color="primary" size="sm">Selected</Badge>}</div> )}</div>
           )}
         </div>
         <div className="space-y-2" data-testid="phase-http-keyword-sets">
           <div className="text-xs font-medium" data-testid="phase-http-keyword-sets-label">Keyword Sets (optional)</div>
-          {loadingData ? <div className="text-xs" data-testid="phase-http-keyword-sets-loading">Loading keywords...</div> : keywordSets.length===0 ? <div className="text-[10px] text-muted-foreground" data-testid="phase-http-keyword-sets-empty">No keyword sets.</div> : (
-            <div className="grid grid-cols-2 gap-2" data-testid="phase-http-keyword-sets-list">{keywordSets.map(s=> <div data-testid={`phase-http-keyword-set-${s.id}`} key={s.id} onClick={()=>toggleKeywordSet(s.id||'')} className={`p-2 border rounded cursor-pointer text-[11px] ${watchedKeywordSetIds.includes(s.id||'')?'border-primary bg-primary/5':'hover:border-primary/50'}`}>{s.name}{watchedKeywordSetIds.includes(s.id||'') && <Badge data-testid={`phase-http-keyword-set-selected-${s.id}`} variant="secondary" className="ml-2">Selected</Badge>}</div>)}</div>
+          {loadingData ? <div className="text-xs" data-testid="phase-http-keyword-sets-loading">Loading keywords...</div> : keywordSets.length===0 ? <div className="text-[10px] text-gray-500 dark:text-gray-400" data-testid="phase-http-keyword-sets-empty">No keyword sets.</div> : (
+            <div className="grid grid-cols-2 gap-2" data-testid="phase-http-keyword-sets-list">{keywordSets.map(s=> <div data-testid={`phase-http-keyword-set-${s.id}`} key={s.id} onClick={()=>toggleKeywordSet(s.id||'')} className={`p-2 border rounded cursor-pointer text-[11px] ${watchedKeywordSetIds.includes(s.id||'')?'border-primary bg-primary/5':'hover:border-primary/50'}`}>{s.name}{watchedKeywordSetIds.includes(s.id||'') && <Badge data-testid={`phase-http-keyword-set-selected-${s.id}`} color="light" size="sm" className="ml-2">Selected</Badge>}</div>)}</div>
           )}
         </div>
         <div className="space-y-2" data-testid="phase-http-custom-keywords">
           <div className="text-xs font-medium" data-testid="phase-http-custom-keywords-label">Custom Keywords (optional)</div>
-          <Input
+          <InputAdapter
             data-testid="phase-http-input-custom-keyword"
             placeholder="Enter a keyword and press Enter"
             value={pendingKeyword}
             onChange={e=> setPendingKeyword(e.target.value)}
             onKeyDown={e=>{ if(e.key==='Enter'){ e.preventDefault(); addAdHocKeyword(pendingKeyword); } }}
           />
-          {watchedAdHocKeywords.length>0 && <div className="flex flex-wrap gap-2" data-testid="phase-http-custom-keywords-list">{watchedAdHocKeywords.map(k=> <Badge data-testid={`phase-http-custom-keyword-${k}`} key={k} variant="secondary" className="flex items-center gap-1">{k}<X className="h-3 w-3 cursor-pointer" onClick={()=>removeAdHocKeyword(k)} /></Badge>)}</div>}
+          {watchedAdHocKeywords.length>0 && <div className="flex flex-wrap gap-2" data-testid="phase-http-custom-keywords-list">{watchedAdHocKeywords.map(k=> <Badge data-testid={`phase-http-custom-keyword-${k}`} key={k} color="light" size="sm" className="flex items-center gap-1">{k}<CloseIcon className="h-3 w-3 cursor-pointer" onClick={()=>removeAdHocKeyword(k)} /></Badge>)}</div>}
         </div>
         <div className="space-y-2" data-testid="phase-http-proxy-pools">
           <div className="text-xs font-medium" data-testid="phase-http-proxy-pools-label">Proxy Pool (optional)</div>
-          {loadingData ? <div className="text-xs" data-testid="phase-http-proxy-pools-loading">Loading pools...</div> : proxyPools.length===0 ? <div className="text-[10px] text-muted-foreground" data-testid="phase-http-proxy-pools-empty">No pools.</div> : (
-            <div className="flex flex-wrap gap-2" data-testid="phase-http-proxy-pools-list">{proxyPools.map(p=> <Badge data-testid={`phase-http-proxy-pool-${p.id}`} key={p.id} variant={watchedProxyPoolId===p.id? 'default':'outline'} className="cursor-pointer" onClick={()=>selectProxyPool(p.id||'')}>{p.name}</Badge>)}</div>
+          {loadingData ? <div className="text-xs" data-testid="phase-http-proxy-pools-loading">Loading pools...</div> : proxyPools.length===0 ? <div className="text-[10px] text-gray-500 dark:text-gray-400" data-testid="phase-http-proxy-pools-empty">No pools.</div> : (
+            <div className="flex flex-wrap gap-2" data-testid="phase-http-proxy-pools-list">{proxyPools.map(p=> <button type="button" data-testid={`phase-http-proxy-pool-${p.id}`} key={p.id} className="focus:outline-none" onClick={()=>selectProxyPool(p.id||'')}><Badge color={watchedProxyPoolId===p.id? 'primary':'light'} size="sm" className="cursor-pointer">{p.name}</Badge></button>)}</div>
           )}
         </div>
         <div className="flex justify-between items-center gap-4" data-testid="phase-http-actions">
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-[10px] text-gray-500 dark:text-gray-400">
             {(watchedKeywordSetIds.length + watchedAdHocKeywords.length) === 0 && 'Add at least one keyword set or custom keyword to continue.'}
           </div>
           <Button

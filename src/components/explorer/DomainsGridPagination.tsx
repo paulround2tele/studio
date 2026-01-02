@@ -14,21 +14,13 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { 
-  ChevronFirst, 
-  ChevronLast, 
-  ChevronLeft, 
-  ChevronRight,
-  RefreshCw,
-} from 'lucide-react';
+  ChevronFirstIcon, 
+  ChevronLastIcon, 
+  ChevronLeftIcon, 
+  ChevronRightIcon,
+  RefreshIcon,
+} from '@/icons';
 import { VALID_PAGE_SIZES, type PageSize } from '@/types/explorer/state';
 
 // ============================================================================
@@ -103,16 +95,16 @@ export function DomainsGridPagination({
 
   return (
     <div 
-      className="flex items-center justify-between pt-4 border-t mt-4"
+      className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700 mt-4"
       data-testid="domains-grid-pagination"
     >
       {/* Left: Item count and page size */}
       <div className="flex items-center gap-4">
-        <span className="text-sm text-muted-foreground" data-testid="domains-grid-pagination-info">
+        <span className="text-sm text-gray-500 dark:text-gray-400" data-testid="domains-grid-pagination-info">
           {total > 0 ? (
             <>
-              Showing <strong>{startItem.toLocaleString()}</strong>–<strong>{endItem.toLocaleString()}</strong> of{' '}
-              <strong>{total.toLocaleString()}</strong>
+              Showing <strong className="text-gray-800 dark:text-white">{startItem.toLocaleString()}</strong>–<strong className="text-gray-800 dark:text-white">{endItem.toLocaleString()}</strong> of{' '}
+              <strong className="text-gray-800 dark:text-white">{total.toLocaleString()}</strong>
             </>
           ) : (
             'No results'
@@ -121,104 +113,89 @@ export function DomainsGridPagination({
 
         {/* Page size selector */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Per page:</span>
-          <Select
+          <span className="text-sm text-gray-500 dark:text-gray-400">Per page:</span>
+          <select
             value={String(pageSize)}
-            onValueChange={(v) => onSetPageSize(parseInt(v, 10) as PageSize)}
+            onChange={(e) => onSetPageSize(parseInt(e.target.value, 10) as PageSize)}
             disabled={isLoading}
+            className="h-8 w-[70px] rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-800 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+            data-testid="domains-grid-page-size-trigger"
           >
-            <SelectTrigger 
-              className="h-8 w-[70px]"
-              data-testid="domains-grid-page-size-trigger"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {VALID_PAGE_SIZES.map((size) => (
-                <SelectItem 
-                  key={size} 
-                  value={String(size)}
-                  data-testid={`domains-grid-page-size-${size}`}
-                >
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {VALID_PAGE_SIZES.map((size) => (
+              <option key={size} value={String(size)}>
+                {size}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
       {/* Right: Navigation */}
       <div className="flex items-center gap-2">
         {/* Refresh button */}
-        <Button
-          variant="outline"
-          size="icon"
+        <button
           onClick={onRefresh}
           disabled={isLoading}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
           data-testid="domains-grid-refresh"
           aria-label="Refresh"
         >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-        </Button>
+          <RefreshIcon className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+        </button>
 
         <div className="flex items-center gap-1">
           {/* First page */}
-          <Button
-            variant="outline"
-            size="icon"
+          <button
             onClick={() => onGoToPage(1)}
             disabled={!hasPrevPage || isLoading}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
             data-testid="domains-grid-first-page"
             aria-label="First page"
           >
-            <ChevronFirst className="h-4 w-4" />
-          </Button>
+            <ChevronFirstIcon className="h-4 w-4" />
+          </button>
 
           {/* Previous page */}
-          <Button
-            variant="outline"
-            size="icon"
+          <button
             onClick={onPrevPage}
             disabled={!hasPrevPage || isLoading}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
             data-testid="domains-grid-prev-page"
             aria-label="Previous page"
           >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+            <ChevronLeftIcon className="h-4 w-4" />
+          </button>
 
           {/* Page indicator */}
           <span 
-            className="px-3 text-sm min-w-[80px] text-center"
+            className="px-3 text-sm min-w-[80px] text-center text-gray-700 dark:text-gray-300"
             data-testid="domains-grid-page-indicator"
           >
-            Page <strong>{page}</strong>
-            {pageCount > 0 && <> of <strong>{pageCount}</strong></>}
+            Page <strong className="text-gray-800 dark:text-white">{page}</strong>
+            {pageCount > 0 && <> of <strong className="text-gray-800 dark:text-white">{pageCount}</strong></>}
           </span>
 
           {/* Next page */}
-          <Button
-            variant="outline"
-            size="icon"
+          <button
             onClick={onNextPage}
             disabled={!hasNextPage || isLoading}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
             data-testid="domains-grid-next-page"
             aria-label="Next page"
           >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+            <ChevronRightIcon className="h-4 w-4" />
+          </button>
 
           {/* Last page */}
-          <Button
-            variant="outline"
-            size="icon"
+          <button
             onClick={() => onGoToPage(pageCount)}
             disabled={!hasNextPage || isLoading || pageCount === 0}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
             data-testid="domains-grid-last-page"
             aria-label="Last page"
           >
-            <ChevronLast className="h-4 w-4" />
-          </Button>
+            <ChevronLastIcon className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </div>

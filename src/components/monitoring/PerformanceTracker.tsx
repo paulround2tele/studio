@@ -1,8 +1,6 @@
-import React, { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, Clock, Activity, AlertCircle } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import Badge from '@/components/ta/ui/badge/Badge';
+import { TrendingUpIcon, ClockIcon, ActivityIcon, AlertCircleIcon } from '@/icons';
 import { useGetPerformanceMetricsQuery } from '@/store/api/monitoringApi';
 import type { PerformanceMetrics } from '@/store/api/monitoringApi';
 
@@ -78,11 +76,14 @@ export const PerformanceTracker: React.FC<PerformanceTrackerProps> = ({
   }, [performanceData]);
 
   // Get performance status color
-  const getPerformanceStatus = (avgResponseTime: number, errorRate: number) => {
-    if (errorRate > 5 || avgResponseTime > 2000) return 'destructive';
-    if (errorRate > 2 || avgResponseTime > 1000) return 'secondary';
-    return 'default';
+  const getPerformanceStatus = (avgResponseTime: number, errorRate: number): 'error' | 'warning' | 'success' => {
+    if (errorRate > 5 || avgResponseTime > 2000) return 'error';
+    if (errorRate > 2 || avgResponseTime > 1000) return 'warning';
+    return 'success';
   };
+
+  // Track active tab
+  const [activeTab, setActiveTab] = useState<string>(summary.operationTypes[0] || '');
 
   // Format duration
   const formatDuration = (ms: number): string => {
@@ -92,115 +93,115 @@ export const PerformanceTracker: React.FC<PerformanceTrackerProps> = ({
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <ActivityIcon className="h-5 w-5" />
             Performance Tracker
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4 sm:p-6">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin h-8 w-8 border-b-2 border-primary rounded-full"></div>
+            <div className="animate-spin h-8 w-8 border-b-2 border-brand-500 rounded-full"></div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <ActivityIcon className="h-5 w-5" />
             Performance Tracker
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8 text-muted-foreground">
-            <AlertCircle className="h-8 w-8 mr-2" />
+          </h3>
+        </div>
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center justify-center py-8 text-gray-500 dark:text-gray-400">
+            <AlertCircleIcon className="h-8 w-8 mr-2" />
             Failed to load performance data
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (variant === 'compact') {
     return (
-      <Card className="w-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center justify-between">
+      <div className="w-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-sm font-medium text-gray-800 dark:text-white/90 flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
+              <ActivityIcon className="h-4 w-4" />
               Performance
             </span>
-            <Badge variant={getPerformanceStatus(summary.avgResponseTime, summary.avgErrorRate)}>
+            <Badge color={getPerformanceStatus(summary.avgResponseTime, summary.avgErrorRate)}>
               {summary.avgErrorRate.toFixed(1)}% errors
             </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-2">
+          </h3>
+        </div>
+        <div className="p-4 pt-2">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <div className="text-muted-foreground">Avg Response</div>
+              <div className="text-gray-500 dark:text-gray-400">Avg Response</div>
               <div className="font-semibold">{formatDuration(summary.avgResponseTime)}</div>
             </div>
             <div>
-              <div className="text-muted-foreground">Throughput</div>
+              <div className="text-gray-500 dark:text-gray-400">Throughput</div>
               <div className="font-semibold">{summary.totalThroughput.toFixed(1)}/s</div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+    <div className="w-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+        <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
+            <ActivityIcon className="h-5 w-5" />
             Performance Tracker
           </span>
-          <Badge variant={getPerformanceStatus(summary.avgResponseTime, summary.avgErrorRate)}>
+          <Badge color={getPerformanceStatus(summary.avgResponseTime, summary.avgErrorRate)}>
             {summary.operationTypes.length} operation types
           </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+      <div className="p-4 sm:p-6">
         {/* Summary Statistics */}
         <div className="grid gap-4 md:grid-cols-4 mb-6">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Avg Response Time</span>
+              <ClockIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-sm text-gray-500 dark:text-gray-400">Avg Response Time</span>
             </div>
             <div className="text-2xl font-bold">{formatDuration(summary.avgResponseTime)}</div>
           </div>
           
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Throughput</span>
+              <TrendingUpIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-sm text-gray-500 dark:text-gray-400">Throughput</span>
             </div>
             <div className="text-2xl font-bold">{summary.totalThroughput.toFixed(1)}/s</div>
           </div>
           
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <Activity className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Total Requests</span>
+              <ActivityIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-sm text-gray-500 dark:text-gray-400">Total Requests</span>
             </div>
             <div className="text-2xl font-bold">{summary.totalRequests.toLocaleString()}</div>
           </div>
           
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Error Rate</span>
+              <AlertCircleIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-sm text-gray-500 dark:text-gray-400">Error Rate</span>
             </div>
             <div className={`text-2xl font-bold ${summary.avgErrorRate > 5 ? 'text-red-600' : summary.avgErrorRate > 2 ? 'text-yellow-600' : 'text-green-600'}`}>
               {summary.avgErrorRate.toFixed(1)}%
@@ -208,17 +209,27 @@ export const PerformanceTracker: React.FC<PerformanceTrackerProps> = ({
           </div>
         </div>
 
-        {/* Operation Breakdown */}
-        <Tabs defaultValue={summary.operationTypes[0]} className="w-full">
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(summary.operationTypes.length, 4)}, 1fr)` }}>
+        {/* Operation Breakdown - Inline Tabs */}
+        <div className="w-full">
+          <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4">
             {summary.operationTypes.slice(0, 4).map((opType) => (
-              <TabsTrigger key={opType} value={opType} className="text-xs">
+              <button
+                key={opType}
+                onClick={() => setActiveTab(opType)}
+                className={`px-4 py-2 text-xs font-medium transition-colors ${
+                  activeTab === opType
+                    ? 'border-b-2 border-brand-500 text-brand-600 dark:text-brand-400'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
+              >
                 {opType.replace('_', ' ').toUpperCase()}
-              </TabsTrigger>
+              </button>
             ))}
-          </TabsList>
+          </div>
           
           {summary.operationTypes.map((opType) => {
+            if (activeTab !== opType) return null;
+            
             const metrics = metricsByOperation[opType] || [];
             const opSummary = {
               count: metrics.length,
@@ -233,42 +244,42 @@ export const PerformanceTracker: React.FC<PerformanceTrackerProps> = ({
               : 0;
 
             return (
-              <TabsContent key={opType} value={opType} className="space-y-4">
+              <div key={opType} className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
-                  <div className="bg-muted/50 p-4 rounded-lg">
-                    <div className="text-sm text-muted-foreground mb-1">Average Duration</div>
+                  <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Average Duration</div>
                     <div className="text-xl font-semibold">{formatDuration(opSummary.avgDuration)}</div>
                   </div>
                   
-                  <div className="bg-muted/50 p-4 rounded-lg">
-                    <div className="text-sm text-muted-foreground mb-1">Throughput</div>
+                  <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Throughput</div>
                     <div className="text-xl font-semibold">{opSummary.totalThroughput.toFixed(1)}/s</div>
                   </div>
                   
-                  <div className="bg-muted/50 p-4 rounded-lg">
-                    <div className="text-sm text-muted-foreground mb-1">Error Rate</div>
+                  <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Error Rate</div>
                     <div className={`text-xl font-semibold ${errorRate > 5 ? 'text-red-600' : errorRate > 2 ? 'text-yellow-600' : 'text-green-600'}`}>
                       {errorRate.toFixed(1)}%
                     </div>
                   </div>
                 </div>
                 
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
                   {opSummary.count} samples • {opSummary.totalSuccess} successful • {opSummary.totalErrors} errors
                 </div>
-              </TabsContent>
+              </div>
             );
           })}
-        </Tabs>
+        </div>
 
         {/* No Data Message */}
         {(!performanceData || performanceData.length === 0) && (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             No performance data available for the last {hoursToShow} hours
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

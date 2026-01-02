@@ -3,34 +3,26 @@
 
 "use client";
 
-import { useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useCallback, useMemo } from 'react';
+import Button from '@/components/ta/ui/button/Button';
+import Badge from '@/components/ta/ui/badge/Badge';
+import Input from '@/components/ta/form/input/InputField';
+import Label from '@/components/ta/form/Label';
+import SelectAdapter from '@/components/ta/adapters/SelectAdapter';
+import Switch from '@/components/ta/form/switch/Switch';
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { 
-  TestTubeDiagonal, 
-  PlayCircle, 
-  StopCircle, 
-  CheckCircle, 
-  XCircle, 
-  Clock,
-  Wifi,
-  TrendingUp,
-  TrendingDown,
-  Activity,
-  Loader2
-} from 'lucide-react';
+  TestTubeIcon, 
+  PlayIcon, 
+  StopIcon, 
+  CheckCircleIcon, 
+  XCircleIcon, 
+  ClockIcon,
+  WifiIcon,
+  TrendingUpIcon,
+  TrendingDownIcon,
+  ActivityIcon,
+  LoaderIcon
+} from '@/icons';
 import type { Proxy as ProxyType } from '@/lib/api-client/models/proxy';
 import { useTestProxyMutation } from '@/store/api/proxyApi';
 import { useToast } from '@/hooks/use-toast';
@@ -82,6 +74,14 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
   const [continuousMode, setContinuousMode] = useState(false);
   const [testInterval, setTestInterval] = useState(60);
   const [selectedProxyIds, setSelectedProxyIds] = useState<Set<string>>(new Set());
+
+  // Memoized options for parallel tests dropdown
+  const parallelTestOptions = useMemo(() => [
+    { value: '1', label: '1 (Sequential)' },
+    { value: '3', label: '3 (Recommended)' },
+    { value: '5', label: '5 (Fast)' },
+    { value: '10', label: '10 (Very Fast)' },
+  ], []);
 
   /**
    * Start testing selected proxies or all proxies
@@ -273,23 +273,23 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
   return (
     <div className="space-y-6">
       {/* Testing Configuration */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TestTubeDiagonal className="h-5 w-5 text-primary" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <TestTubeIcon className="h-5 w-5 text-brand-500" />
             Proxy Testing Configuration
-          </CardTitle>
-          <CardDescription>
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Configure and run comprehensive proxy tests with health monitoring.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+        </div>
+        <div className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="test-url">Test URL</Label>
               <Input
                 id="test-url"
-                value={testUrl}
+                defaultValue={testUrl}
                 onChange={(e) => setTestUrl(e.target.value)}
                 placeholder="https://httpbin.org/ip"
                 disabled={disabled || currentSession?.isRunning}
@@ -301,31 +301,22 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
               <Input
                 id="test-timeout"
                 type="number"
-                value={testTimeout}
+                defaultValue={testTimeout}
                 onChange={(e) => setTestTimeout(Number(e.target.value))}
-                min={1}
-                max={60}
+                min="1"
+                max="60"
                 disabled={disabled || currentSession?.isRunning}
               />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="parallel-tests">Parallel Tests</Label>
-              <Select
+              <SelectAdapter
+                options={parallelTestOptions}
                 value={parallelTests.toString()}
-                onValueChange={(value) => setParallelTests(Number(value))}
+                onChange={(value) => setParallelTests(Number(value))}
                 disabled={disabled || currentSession?.isRunning}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 (Sequential)</SelectItem>
-                  <SelectItem value="3">3 (Recommended)</SelectItem>
-                  <SelectItem value="5">5 (Fast)</SelectItem>
-                  <SelectItem value="10">10 (Very Fast)</SelectItem>
-                </SelectContent>
-              </Select>
+              />
             </div>
             
             <div className="space-y-2">
@@ -333,49 +324,39 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
               <Input
                 id="test-interval"
                 type="number"
-                value={testInterval}
+                defaultValue={testInterval}
                 onChange={(e) => setTestInterval(Number(e.target.value))}
-                min={30}
-                max={3600}
+                min="30"
+                max="3600"
                 disabled={disabled || !continuousMode}
               />
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={continuousMode}
-              onCheckedChange={setContinuousMode}
-              disabled={disabled || currentSession?.isRunning}
-            />
-            <Label>Continuous Testing Mode</Label>
-          </div>
+          <Switch
+            label="Continuous Testing Mode"
+            defaultChecked={continuousMode}
+            onChange={setContinuousMode}
+            disabled={disabled || currentSession?.isRunning}
+          />
 
           <div className="flex gap-2">
             <Button
               onClick={handleStartTesting}
               disabled={disabled || currentSession?.isRunning}
               className="flex-1"
+              startIcon={currentSession?.isRunning ? <LoaderIcon className="h-4 w-4 animate-spin" /> : <PlayIcon className="h-4 w-4" />}
             >
-              {currentSession?.isRunning ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Testing...
-                </>
-              ) : (
-                <>
-                  <PlayCircle className="h-4 w-4 mr-2" />
-                  Start Testing
-                </>
-              )}
+              {currentSession?.isRunning ? 'Testing...' : 'Start Testing'}
             </Button>
             
             {currentSession?.isRunning && (
               <Button
-                variant="destructive"
+                variant="outline"
                 onClick={handleStopTesting}
+                className="text-error-500 hover:bg-error-50 dark:hover:bg-error-500/10"
+                startIcon={<StopIcon className="h-4 w-4" />}
               >
-                <StopCircle className="h-4 w-4 mr-2" />
                 Stop
               </Button>
             )}
@@ -384,62 +365,57 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
               variant="outline"
               onClick={runHealthChecks}
               disabled={disabled || healthCheckInProgress}
+              startIcon={healthCheckInProgress ? <LoaderIcon className="h-4 w-4 animate-spin" /> : <ActivityIcon className="h-4 w-4" />}
             >
-              {healthCheckInProgress ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Health Check
-                </>
-              ) : (
-                <>
-                  <Activity className="h-4 w-4 mr-2" />
-                  Health Check
-                </>
-              )}
+              Health Check
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Testing Progress */}
       {currentSession && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Testing Progress
-              </span>
-              <Badge variant={currentSession.isRunning ? "default" : "secondary"}>
-                {currentSession.isRunning ? "Running" : "Completed"}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Progress value={progressPercentage} className="w-full" />
+        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+          <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+              <ClockIcon className="h-5 w-5" />
+              Testing Progress
+            </h3>
+            <Badge color={currentSession.isRunning ? "primary" : "light"}>
+              {currentSession.isRunning ? "Running" : "Completed"}
+            </Badge>
+          </div>
+          <div className="p-6 space-y-4">
+            {/* Inline TailAdmin progress bar */}
+            <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+              <div 
+                className="bg-brand-500 h-2 rounded-full transition-all duration-300" 
+                style={{ width: `${progressPercentage}%` }}
+              />
+            </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold">{currentSession.completedTests}</div>
-                <div className="text-sm text-muted-foreground">Completed</div>
+                <div className="text-2xl font-bold text-gray-800 dark:text-white/90">{currentSession.completedTests}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Completed</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-600">{currentSession.successfulTests}</div>
-                <div className="text-sm text-muted-foreground">Successful</div>
+                <div className="text-2xl font-bold text-success-600">{currentSession.successfulTests}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Successful</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-red-600">{currentSession.failedTests}</div>
-                <div className="text-sm text-muted-foreground">Failed</div>
+                <div className="text-2xl font-bold text-error-600">{currentSession.failedTests}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Failed</div>
               </div>
               <div>
-                <div className="text-2xl font-bold">{Math.round(averageResponseTime)}ms</div>
-                <div className="text-sm text-muted-foreground">Avg Response</div>
+                <div className="text-2xl font-bold text-gray-800 dark:text-white/90">{Math.round(averageResponseTime)}ms</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Avg Response</div>
               </div>
             </div>
             
             {currentSession.results.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-medium">Recent Results</h4>
+                <h4 className="font-medium text-gray-800 dark:text-white/90">Recent Results</h4>
                 <div className="max-h-40 overflow-y-auto space-y-1">
                   {currentSession.results
                     .slice(-10)
@@ -449,17 +425,17 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
                       return (
                         <div
                           key={`${result.proxyId}-${index}`}
-                          className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm"
+                          className="flex items-center justify-between p-2 bg-gray-100 dark:bg-white/[0.03] rounded text-sm"
                         >
                           <span className="flex items-center gap-2">
                             {result.success ? (
-                              <CheckCircle className="h-4 w-4 text-green-500" />
+                              <CheckCircleIcon className="h-4 w-4 text-success-500" />
                             ) : (
-                              <XCircle className="h-4 w-4 text-red-500" />
+                              <XCircleIcon className="h-4 w-4 text-error-500" />
                             )}
                             {proxy?.address || result.proxyId}
                           </span>
-                          <span className="text-muted-foreground">
+                          <span className="text-gray-500 dark:text-gray-400">
                             {result.responseTime ? `${result.responseTime}ms` : 'Failed'}
                           </span>
                         </div>
@@ -468,97 +444,97 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Health Metrics */}
       {healthMetrics && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
+        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+          <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+              <ActivityIcon className="h-5 w-5 text-brand-500" />
               Health Metrics
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold">{healthMetrics.totalProxies}</div>
-                <div className="text-sm text-muted-foreground">Total Proxies</div>
+                <div className="text-2xl font-bold text-gray-800 dark:text-white/90">{healthMetrics.totalProxies}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Total Proxies</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-600">{healthMetrics.activeProxies}</div>
-                <div className="text-sm text-muted-foreground">Active</div>
+                <div className="text-2xl font-bold text-success-600">{healthMetrics.activeProxies}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Active</div>
               </div>
               <div>
-                <div className="text-2xl font-bold">{healthMetrics.successRate}%</div>
-                <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+                <div className="text-2xl font-bold text-gray-800 dark:text-white/90">{healthMetrics.successRate}%</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1">
                   {healthMetrics.successRate >= 80 ? (
-                    <TrendingUp className="h-3 w-3 text-green-500" />
+                    <TrendingUpIcon className="h-3 w-3 text-success-500" />
                   ) : (
-                    <TrendingDown className="h-3 w-3 text-red-500" />
+                    <TrendingDownIcon className="h-3 w-3 text-error-500" />
                   )}
                   Success Rate
                 </div>
               </div>
               <div>
-                <div className="text-2xl font-bold">{healthMetrics.averageResponseTime}ms</div>
-                <div className="text-sm text-muted-foreground">Avg Response</div>
+                <div className="text-2xl font-bold text-gray-800 dark:text-white/90">{healthMetrics.averageResponseTime}ms</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Avg Response</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Proxy Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Wifi className="h-5 w-5 text-primary" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+              <WifiIcon className="h-5 w-5 text-brand-500" />
               Proxy Selection
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleSelectAll}
-              disabled={disabled || proxies.length === 0}
-            >
-              {selectedProxyIds.size === proxies.length ? 'Deselect All' : 'Select All'}
-            </Button>
-          </CardTitle>
-          <CardDescription>
-            Select specific proxies to test, or leave empty to test all proxies.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Select specific proxies to test, or leave empty to test all proxies.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleSelectAll}
+            disabled={disabled || proxies.length === 0}
+          >
+            {selectedProxyIds.size === proxies.length ? 'Deselect All' : 'Select All'}
+          </Button>
+        </div>
+        <div className="p-6">
           {proxies.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No proxies configured</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">No proxies configured</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
               {proxies.map(proxy => (
                 <div
                   key={proxy.id}
-                  className={`flex items-center space-x-2 p-2 rounded border cursor-pointer hover:bg-muted/50 ${
-                    (proxy.id && selectedProxyIds.has(proxy.id)) ? 'bg-primary/10 border-primary' : ''
+                  className={`flex items-center space-x-2 p-2 rounded border cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03] ${
+                    (proxy.id && selectedProxyIds.has(proxy.id)) ? 'bg-brand-50 dark:bg-brand-500/10 border-brand-500' : 'border-gray-200 dark:border-gray-700'
                   }`}
                   onClick={() => proxy.id && toggleProxySelection(proxy.id)}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{proxy.address}</p>
+                    <p className="text-sm font-medium truncate text-gray-800 dark:text-white/90">{proxy.address}</p>
                     <div className="flex items-center gap-1">
                       <Badge
-                        variant={proxy.isEnabled ? (proxy.isHealthy ? 'default' : 'destructive') : 'secondary'}
-                        className="text-xs"
+                        color={proxy.isEnabled ? (proxy.isHealthy ? 'success' : 'error') : 'light'}
+                        size="sm"
                       >
                         {proxy.isEnabled ? (proxy.isHealthy ? 'Active' : 'Failed') : 'Disabled'}
                       </Badge>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge color="light" size="sm">
                         {proxy.protocol}
                       </Badge>
                       {proxy.successCount && proxy.failureCount && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {Number(proxy.successCount)}/{Number(proxy.failureCount)}
                         </span>
                       )}
@@ -568,8 +544,8 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -396,7 +396,8 @@ describe('DomainDrawerDegraded', () => {
       />
     );
 
-    expect(screen.getByText('Error code: 500')).toBeInTheDocument();
+    // Error details are appended to the base message with a newline
+    expect(screen.getByText(/Error code: 500/)).toBeInTheDocument();
   });
 });
 

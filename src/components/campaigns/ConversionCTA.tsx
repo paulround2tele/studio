@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
 import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 

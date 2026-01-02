@@ -64,22 +64,23 @@ describe('nextUserAction selector progression', () => {
     snap = reselect({ discovery: 'completed', validation: 'configured', enrichment: undefined, extraction: undefined, analysis: undefined });
     expect(sel(snap.state)).toEqual({ type: 'start', phase: 'validation' });
 
-    // validation completed now asks to configure enrichment
+    // validation completed - enrichment is optional-config so we can skip straight to start, then ask to configure extraction
     snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: undefined, extraction: undefined, analysis: undefined });
-    expect(sel(snap.state)).toEqual({ type: 'configure', phase: 'enrichment', reason: 'Configuration required' });
+    expect(sel(snap.state)).toEqual({ type: 'start', phase: 'enrichment' }); // enrichment is optional-config, starts with defaults
 
     snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: 'configured', extraction: undefined, analysis: undefined });
     expect(sel(snap.state)).toEqual({ type: 'start', phase: 'enrichment' });
 
-    // enrichment completion shifts focus to extraction
+    // enrichment completion shifts focus to extraction (which requires configuration)
     snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: 'completed', extraction: undefined, analysis: undefined });
     expect(sel(snap.state)).toEqual({ type: 'configure', phase: 'extraction', reason: 'Configuration required' });
 
     snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: 'completed', extraction: 'configured', analysis: undefined });
     expect(sel(snap.state)).toEqual({ type: 'start', phase: 'extraction' });
 
+    // analysis is optional-config, so it goes to start, not configure
     snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: 'completed', extraction: 'completed', analysis: undefined });
-    expect(sel(snap.state)).toEqual({ type: 'configure', phase: 'analysis', reason: 'Configuration required' });
+    expect(sel(snap.state)).toEqual({ type: 'start', phase: 'analysis' });
 
     snap = reselect({ discovery: 'completed', validation: 'completed', enrichment: 'completed', extraction: 'completed', analysis: 'configured' });
     expect(sel(snap.state)).toEqual({ type: 'start', phase: 'analysis' });

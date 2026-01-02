@@ -2,17 +2,10 @@
 
 import React, { useState, useCallback } from 'react';
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import Button from '@/components/ta/ui/button/Button';
+import { Modal } from "@/components/ta/ui/modal";
 import { Form } from "@/components/ui/form";
-import { Loader2, CheckCircle } from 'lucide-react';
+import { LoaderIcon, CheckCircleIcon } from '@/icons';
 import { useToast } from "@/hooks/use-toast";
 import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
 import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
@@ -199,101 +192,95 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
 
   if (dataLoadError) {
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Error Loading Data</DialogTitle>
-          </DialogHeader>
-          <div className="text-center py-6">
-            <p className="text-destructive">Error loading configuration data: {dataLoadError}</p>
-            <Button onClick={() => window.location.reload()} variant="outline" className="mt-2">
-              Reload
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <Modal isOpen={isOpen} onClose={onClose} className="max-w-md p-6 lg:p-8">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Error Loading Data</h3>
+          <p className="text-destructive mb-4">Error loading configuration data: {dataLoadError}</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Reload
+          </Button>
+        </div>
+      </Modal>
     );
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            Configure {phaseDisplayNames[phaseType]}
-          </DialogTitle>
-          <DialogDescription>
-            Configure the settings for the next phase of your campaign pipeline.
-            This will transition &quot;{sourceCampaign?.name}&quot; to the {phaseDisplayNames[phaseType]?.toLowerCase()} phase.
-          </DialogDescription>
-        </DialogHeader>
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl max-h-[90vh] overflow-y-auto p-6 lg:p-8">
+      {/* Header */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <CheckCircleIcon className="h-5 w-5 text-green-600" />
+          Configure {phaseDisplayNames[phaseType]}
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Configure the settings for the next phase of your campaign pipeline.
+          This will transition &quot;{sourceCampaign?.name}&quot; to the {phaseDisplayNames[phaseType]?.toLowerCase()} phase.
+        </p>
+      </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Basic campaign details */}
-            <CampaignDetailsSection 
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Basic campaign details */}
+          <CampaignDetailsSection 
+            control={form.control}
+            disabled={isSubmitting}
+          />
+
+          {/* Keywords - only for HTTP validation */}
+          {needsKeywords && (
+            <KeywordTargetingSection 
               control={form.control}
               disabled={isSubmitting}
+              needsKeywords={needsKeywords}
             />
+          )}
 
-            {/* Keywords - only for HTTP validation */}
-            {needsKeywords && (
-              <KeywordTargetingSection 
-                control={form.control}
-                disabled={isSubmitting}
-                needsKeywords={needsKeywords}
-              />
-            )}
+          {/* Persona assignments - the core of the phase transition */}
+          <PersonaAssignmentSection 
+            control={form.control}
+            disabled={isSubmitting}
+            httpPersonas={httpPersonas.map(p => ({ id: p.id, name: p.name }))}
+            dnsPersonas={dnsPersonas.map(p => ({ id: p.id, name: p.name }))}
+            proxies={proxies.map(p => ({ id: p.id, host: p.host, port: p.port }))}
+            needsHttpPersona={needsHttpPersona}
+            needsDnsPersona={needsDnsPersona}
+            noneValuePlaceholder={CampaignFormConstants.NONE_VALUE_PLACEHOLDER}
+            isLoadingData={loadingData}
+          />
 
-            {/* Persona assignments - the core of the phase transition */}
-            <PersonaAssignmentSection 
-              control={form.control}
-              disabled={isSubmitting}
-              httpPersonas={httpPersonas.map(p => ({ id: p.id, name: p.name }))}
-              dnsPersonas={dnsPersonas.map(p => ({ id: p.id, name: p.name }))}
-              proxies={proxies.map(p => ({ id: p.id, host: p.host, port: p.port }))}
-              needsHttpPersona={needsHttpPersona}
-              needsDnsPersona={needsDnsPersona}
-              noneValuePlaceholder={CampaignFormConstants.NONE_VALUE_PLACEHOLDER}
-              isLoadingData={loadingData}
-            />
+          {/* Performance tuning */}
+          <PerformanceTuningSection 
+            control={form.control}
+            disabled={isSubmitting}
+          />
+        </form>
+      </Form>
 
-            {/* Performance tuning */}
-            <PerformanceTuningSection 
-              control={form.control}
-              disabled={isSubmitting}
-            />
-          </form>
-        </Form>
-
-        <DialogFooter>
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={form.handleSubmit(onSubmit)}
-              disabled={isSubmitting || loadingData || !form.formState.isValid}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Starting Phase...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Start {phaseDisplayNames[phaseType]}
-                </>
-              )}
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      {/* Footer */}
+      <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          onClick={form.handleSubmit(onSubmit)}
+          disabled={isSubmitting || loadingData || !form.formState.isValid}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          {isSubmitting ? (
+            <>
+              <LoaderIcon className="mr-2 h-4 w-4" />
+              Starting Phase...
+            </>
+          ) : (
+            <>
+              <CheckCircleIcon className="mr-2 h-4 w-4" />
+              Start {phaseDisplayNames[phaseType]}
+            </>
+          )}
+        </Button>
+      </div>
+    </Modal>
   );
 };
 

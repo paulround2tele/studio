@@ -1,11 +1,9 @@
 // src/components/error/ApiErrorBoundary.tsx
 // Enhanced error boundary specifically for API route mismatches and errors
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, RefreshCw, Bug, ExternalLink } from 'lucide-react';
+import Button from '@/components/ta/ui/button/Button';
+import Badge from '@/components/ta/ui/badge/Badge';
+import { WarningTriangleIcon, RefreshIcon, BugIcon, ExternalLinkIcon } from '@/icons';
 
 interface Props {
   children: ReactNode;
@@ -192,46 +190,44 @@ class ApiErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-          <Card className="w-full max-w-2xl">
-            <CardHeader>
+          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] w-full max-w-2xl">
+            <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-6 w-6 text-red-500" />
-                <CardTitle className="text-red-700">
+                <WarningTriangleIcon className="h-6 w-6 text-red-500" />
+                <h3 className="text-base font-medium text-red-700">
                   {isApiError ? 'API Error Detected' : 'Application Error'}
-                </CardTitle>
+                </h3>
               </div>
-              <CardDescription>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {isApiError 
                   ? 'There was a problem communicating with the server.'
                   : 'An unexpected error occurred in the application.'
                 }
-              </CardDescription>
-            </CardHeader>
+              </p>
+            </div>
 
-            <CardContent className="space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               {/* Error Details */}
               {errorDetails && (
-                <Alert>
-                  <Bug className="h-4 w-4" />
-                  <AlertTitle className="flex items-center gap-2">
-                    {errorDetails.type}
+                <div className="rounded-lg border border-error-500 bg-error-50 dark:border-error-500/30 dark:bg-error-500/15 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BugIcon className="h-4 w-4 text-error-500" />
+                    <span className="font-medium text-error-600">{errorDetails.type}</span>
                     {errorDetails.status && (
-                      <Badge variant="destructive">
+                      <Badge color="error" size="sm">
                         {errorDetails.status}
                       </Badge>
                     )}
-                  </AlertTitle>
-                  <AlertDescription className="mt-2">
-                    <div className="space-y-2">
-                      <p className="font-medium">{errorDetails.message}</p>
-                      {errorDetails.endpoint && (
-                        <p className="text-sm text-gray-600">
-                          <strong>Endpoint:</strong> <code className="bg-gray-100 px-1 rounded">{errorDetails.endpoint}</code>
-                        </p>
-                      )}
-                    </div>
-                  </AlertDescription>
-                </Alert>
+                  </div>
+                  <div className="space-y-2 text-sm text-error-700 dark:text-error-400">
+                    <p className="font-medium">{errorDetails.message}</p>
+                    {errorDetails.endpoint && (
+                      <p>
+                        <strong>Endpoint:</strong> <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{errorDetails.endpoint}</code>
+                      </p>
+                    )}
+                  </div>
+                </div>
               )}
 
               {/* Suggestions */}
@@ -273,12 +269,10 @@ class ApiErrorBoundary extends Component<Props, State> {
 
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4">
-                <Button onClick={this.handleRetry} className="flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4" />
+                <Button onClick={this.handleRetry} startIcon={<RefreshIcon className="h-4 w-4" />}>
                   Try Again
                 </Button>
-                <Button variant="outline" onClick={this.handleReload} className="flex items-center gap-2">
-                  <ExternalLink className="h-4 w-4" />
+                <Button variant="outline" onClick={this.handleReload} startIcon={<ExternalLinkIcon className="h-4 w-4" />}>
                   Reload Page
                 </Button>
               </div>
@@ -290,8 +284,8 @@ class ApiErrorBoundary extends Component<Props, State> {
                   {isApiError && ' This appears to be an API connectivity issue.'}
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       );
     }

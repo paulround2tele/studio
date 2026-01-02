@@ -1,14 +1,12 @@
 /**
  * Goal Step - Campaign name and description
+ * Migrated to TailAdmin + Tailwind patterns (Dec 31, 2025)
  */
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem as _RadioGroupItem } from '@/components/ui/radio-group';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, Settings } from 'lucide-react';
+import Input from '@/components/ta/form/input/InputField';
+import Label from '@/components/ta/form/Label';
+import { PlayIcon, SettingsIcon } from '@/icons';
 import type { WizardGoalStep, ExecutionMode } from '../../types';
 
 interface GoalStepProps {
@@ -25,28 +23,31 @@ export function GoalStep({ data, onChange }: GoalStepProps) {
 
   return (
     <div className="space-y-6">
+      {/* Campaign Name */}
       <div className="space-y-2">
-        <Label htmlFor="campaign-name">
-          Campaign Name *
+        <Label htmlFor="campaignName">
+          Campaign Name <span className="text-error-500">*</span>
         </Label>
         <Input
-          id="campaign-name"
+          id="campaignName"
+          type="text"
           placeholder="Enter a descriptive name for your campaign"
-          value={data.campaignName || ''}
+          defaultValue={data.campaignName || ''}
           onChange={(e) => onChange({ campaignName: e.target.value })}
-          required
         />
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Choose a clear name that describes your campaign purpose
         </p>
       </div>
 
+      {/* Description */}
       <div className="space-y-2">
-        <Label htmlFor="campaign-description">
+        <Label htmlFor="description">
           Description (Optional)
         </Label>
-        <Textarea
-          id="campaign-description"
+        <textarea
+          id="description"
+          className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-gray-500"
           placeholder="Describe your campaign goals and target audience"
           value={data.description || ''}
           onChange={(e) => onChange({ description: e.target.value })}
@@ -57,20 +58,25 @@ export function GoalStep({ data, onChange }: GoalStepProps) {
         </p>
       </div>
 
+      {/* Execution Mode */}
       <fieldset className="space-y-4">
-        <legend className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          Execution Mode *
+        <legend className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          Execution Mode <span className="text-error-500">*</span>
         </legend>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Choose how you want your campaign to run through its phases
         </p>
         
-        <RadioGroup
-          value={executionMode}
-          onValueChange={handleExecutionModeChange}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
-          <div className="relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Manual Option */}
+          <label
+            htmlFor="manual"
+            className={`relative block cursor-pointer rounded-xl border-2 p-5 transition-all duration-200 ${
+              executionMode === 'manual'
+                ? 'border-brand-500 bg-brand-50 shadow-md dark:bg-brand-500/10'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800/50'
+            }`}
+          >
             <input
               type="radio"
               id="manual"
@@ -80,65 +86,58 @@ export function GoalStep({ data, onChange }: GoalStepProps) {
               onChange={() => handleExecutionModeChange('manual')}
               className="sr-only"
             />
-            <label
-              htmlFor="manual"
-              className={`block cursor-pointer transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 ${
-                executionMode === 'manual'
-                  ? 'ring-2 ring-blue-600 bg-blue-50 dark:bg-blue-900/30 shadow-md'
-                  : 'ring-1 ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:ring-gray-300'
-              }`}
-            >
-              <Card className="border-0 shadow-none bg-transparent">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                        executionMode === 'manual'
-                          ? 'border-blue-600 bg-blue-600'
-                          : 'border-gray-300 dark:border-gray-600'
-                      }`}
-                    >
-                      {executionMode === 'manual' && (
-                        <div className="w-2 h-2 rounded-full bg-white" />
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Settings
-                        className={`w-4 h-4 ${
-                          executionMode === 'manual'
-                            ? 'text-blue-600'
-                            : 'text-gray-500'
-                        }`}
-                      />
-                      <CardTitle
-                        className={`text-base ${
-                          executionMode === 'manual'
-                            ? 'text-blue-900 dark:text-blue-100'
-                            : 'text-gray-900 dark:text-gray-100'
-                        }`}
-                      >
-                        Manual (Step-by-Step)
-                      </CardTitle>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <CardDescription
-                    className={
+            <div className="flex items-start gap-3">
+              <div
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                  executionMode === 'manual'
+                    ? 'border-brand-500 bg-brand-500'
+                    : 'border-gray-300 dark:border-gray-600'
+                }`}
+              >
+                {executionMode === 'manual' && (
+                  <div className="h-2 w-2 rounded-full bg-white" />
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <SettingsIcon
+                    className={`h-4 w-4 ${
+                      executionMode === 'manual' ? 'text-brand-600' : 'text-gray-500'
+                    }`}
+                  />
+                  <span
+                    className={`font-semibold ${
                       executionMode === 'manual'
-                        ? 'text-blue-700 dark:text-blue-200'
-                        : 'text-gray-600 dark:text-gray-400'
-                    }
+                        ? 'text-brand-900 dark:text-brand-100'
+                        : 'text-gray-900 dark:text-gray-100'
+                    }`}
                   >
-                    Control each phase manually. You&apos;ll configure and start each phase
-                    (domain generation, validation, extraction) individually when ready.
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            </label>
-          </div>
+                    Manual (Step-by-Step)
+                  </span>
+                </div>
+                <p
+                  className={`mt-1 text-sm ${
+                    executionMode === 'manual'
+                      ? 'text-brand-700 dark:text-brand-200'
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  Control each phase manually. You&apos;ll configure and start each phase
+                  (domain generation, validation, extraction) individually when ready.
+                </p>
+              </div>
+            </div>
+          </label>
 
-          <div className="relative">
+          {/* Auto Option */}
+          <label
+            htmlFor="auto"
+            className={`relative block cursor-pointer rounded-xl border-2 p-5 transition-all duration-200 ${
+              executionMode === 'auto'
+                ? 'border-brand-500 bg-brand-50 shadow-md dark:bg-brand-500/10'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800/50'
+            }`}
+          >
             <input
               type="radio"
               id="auto"
@@ -148,64 +147,49 @@ export function GoalStep({ data, onChange }: GoalStepProps) {
               onChange={() => handleExecutionModeChange('auto')}
               className="sr-only"
             />
-            <label
-              htmlFor="auto"
-              className={`block cursor-pointer transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 ${
-                executionMode === 'auto'
-                  ? 'ring-2 ring-blue-600 bg-blue-50 dark:bg-blue-900/30 shadow-md'
-                  : 'ring-1 ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:ring-gray-300'
-              }`}
-            >
-              <Card className="border-0 shadow-none bg-transparent">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                        executionMode === 'auto'
-                          ? 'border-blue-600 bg-blue-600'
-                          : 'border-gray-300 dark:border-gray-600'
-                      }`}
-                    >
-                      {executionMode === 'auto' && (
-                        <div className="w-2 h-2 rounded-full bg-white" />
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Play
-                        className={`w-4 h-4 ${
-                          executionMode === 'auto'
-                            ? 'text-blue-600'
-                            : 'text-gray-500'
-                        }`}
-                      />
-                      <CardTitle
-                        className={`text-base ${
-                          executionMode === 'auto'
-                            ? 'text-blue-900 dark:text-blue-100'
-                            : 'text-gray-900 dark:text-gray-100'
-                        }`}
-                      >
-                        Full Auto
-                      </CardTitle>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <CardDescription
-                    className={
+            <div className="flex items-start gap-3">
+              <div
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                  executionMode === 'auto'
+                    ? 'border-brand-500 bg-brand-500'
+                    : 'border-gray-300 dark:border-gray-600'
+                }`}
+              >
+                {executionMode === 'auto' && (
+                  <div className="h-2 w-2 rounded-full bg-white" />
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <PlayIcon
+                    className={`h-4 w-4 ${
+                      executionMode === 'auto' ? 'text-brand-600' : 'text-gray-500'
+                    }`}
+                  />
+                  <span
+                    className={`font-semibold ${
                       executionMode === 'auto'
-                        ? 'text-blue-700 dark:text-blue-200'
-                        : 'text-gray-600 dark:text-gray-400'
-                    }
+                        ? 'text-brand-900 dark:text-brand-100'
+                        : 'text-gray-900 dark:text-gray-100'
+                    }`}
                   >
-                    Run all phases automatically. The campaign will progress through
-                    domain generation, validation, and extraction without manual intervention.
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            </label>
-          </div>
-        </RadioGroup>
+                    Full Auto
+                  </span>
+                </div>
+                <p
+                  className={`mt-1 text-sm ${
+                    executionMode === 'auto'
+                      ? 'text-brand-700 dark:text-brand-200'
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  Run all phases automatically. The campaign will progress through
+                  domain generation, validation, and extraction without manual intervention.
+                </p>
+              </div>
+            </div>
+          </label>
+        </div>
       </fieldset>
     </div>
   );

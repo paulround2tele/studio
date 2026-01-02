@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, CheckCircle, XCircle, Cpu, HardDrive, MemoryStick } from 'lucide-react';
+import Badge from '@/components/ta/ui/badge/Badge';
+import { WarningTriangleIcon, CheckCircleIcon, XCircleIcon, CpuIcon, HardDriveIcon, MemoryStickIcon } from '@/icons';
 import { useGetResourceMetricsQuery, useGetSystemHealthQuery } from '@/store/api/monitoringApi';
 import { useSSE } from '@/hooks/useSSE';
 import type { ResourceMetrics } from '@/store/api/monitoringApi';
@@ -75,48 +73,48 @@ export const ResourceMonitor: React.FC<ResourceMonitorProps> = ({
   // Get status icon based on health status
   const getHealthIcon = (status: string) => {
     switch (status) {
-      case 'healthy': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'degraded': return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
-      case 'unhealthy': return <XCircle className="h-4 w-4 text-red-600" />;
-      default: return <AlertTriangle className="h-4 w-4 text-gray-600" />;
+      case 'healthy': return <CheckCircleIcon className="h-4 w-4 text-green-600" />;
+      case 'degraded': return <WarningTriangleIcon className="h-4 w-4 text-yellow-600" />;
+      case 'unhealthy': return <XCircleIcon className="h-4 w-4 text-red-600" />;
+      default: return <WarningTriangleIcon className="h-4 w-4 text-gray-600" />;
     }
   };
 
   if (isLoadingMetrics || isLoadingHealth) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Cpu className="h-5 w-5" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <CpuIcon className="h-5 w-5" />
             System Resources
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4 sm:p-6">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin h-8 w-8 border-b-2 border-primary rounded-full"></div>
+            <div className="animate-spin h-8 w-8 border-b-2 border-brand-500 rounded-full"></div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (variant === 'compact') {
     return (
-      <Card className="w-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center justify-between">
+      <div className="w-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-sm font-medium text-gray-800 dark:text-white/90 flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Cpu className="h-4 w-4" />
+              <CpuIcon className="h-4 w-4" />
               Resources
             </span>
             {healthData && (
-              <Badge variant={healthData.status === 'healthy' ? 'default' : 'destructive'}>
+              <Badge color={healthData.status === 'healthy' ? 'success' : 'error'}>
                 {healthData.status}
               </Badge>
             )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-2">
+          </h3>
+        </div>
+        <div className="p-4 pt-2">
           {currentMetrics && (
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
@@ -125,7 +123,9 @@ export const ResourceMonitor: React.FC<ResourceMonitorProps> = ({
                   {currentMetrics.cpu_percent.toFixed(1)}%
                 </span>
               </div>
-              <Progress value={currentMetrics.cpu_percent} className="h-2" />
+              <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                <div className="h-2 rounded-full bg-brand-500" style={{ width: `${currentMetrics.cpu_percent}%` }} />
+              </div>
               
               <div className="flex justify-between text-xs">
                 <span>Memory</span>
@@ -133,25 +133,27 @@ export const ResourceMonitor: React.FC<ResourceMonitorProps> = ({
                   {currentMetrics.memory_percent.toFixed(1)}%
                 </span>
               </div>
-              <Progress value={currentMetrics.memory_percent} className="h-2" />
+              <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                <div className="h-2 rounded-full bg-brand-500" style={{ width: `${currentMetrics.memory_percent}%` }} />
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+    <div className="w-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+        <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Cpu className="h-5 w-5" />
+            <CpuIcon className="h-5 w-5" />
             System Resource Monitor
           </span>
           <div className="flex items-center gap-2">
             {/* SSE Connection Status */}
-            <Badge variant={readyState === 1 ? 'default' : 'secondary'}>
+            <Badge color={readyState === 1 ? 'success' : 'light'}>
               {readyState === 1 ? 'Live' : 'Polling'}
             </Badge>
             {/* System Health Status */}
@@ -162,24 +164,26 @@ export const ResourceMonitor: React.FC<ResourceMonitorProps> = ({
               </div>
             )}
           </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+      <div className="p-4 sm:p-6">
         {currentMetrics ? (
           <div className="grid gap-6 md:grid-cols-3">
             {/* CPU Usage */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Cpu className="h-4 w-4" />
+                  <CpuIcon className="h-4 w-4" />
                   <span className="font-medium">CPU</span>
                 </div>
                 <span className={`font-bold ${getUsageColor(currentMetrics.cpu_percent)}`}>
                   {currentMetrics.cpu_percent.toFixed(1)}%
                 </span>
               </div>
-              <Progress value={currentMetrics.cpu_percent} className="h-3" />
-              <p className="text-xs text-muted-foreground">
+              <div className="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700">
+                <div className="h-3 rounded-full bg-brand-500" style={{ width: `${currentMetrics.cpu_percent}%` }} />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 System processor utilization
               </p>
             </div>
@@ -188,15 +192,17 @@ export const ResourceMonitor: React.FC<ResourceMonitorProps> = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MemoryStick className="h-4 w-4" />
+                  <MemoryStickIcon className="h-4 w-4" />
                   <span className="font-medium">Memory</span>
                 </div>
                 <span className={`font-bold ${getUsageColor(currentMetrics.memory_percent)}`}>
                   {currentMetrics.memory_percent.toFixed(1)}%
                 </span>
               </div>
-              <Progress value={currentMetrics.memory_percent} className="h-3" />
-              <p className="text-xs text-muted-foreground">
+              <div className="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700">
+                <div className="h-3 rounded-full bg-brand-500" style={{ width: `${currentMetrics.memory_percent}%` }} />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {formatBytes(currentMetrics.memory_used_bytes)} / {formatBytes(currentMetrics.memory_total_bytes)}
               </p>
             </div>
@@ -205,21 +211,23 @@ export const ResourceMonitor: React.FC<ResourceMonitorProps> = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <HardDrive className="h-4 w-4" />
+                  <HardDriveIcon className="h-4 w-4" />
                   <span className="font-medium">Disk</span>
                 </div>
                 <span className={`font-bold ${getUsageColor(currentMetrics.disk_percent)}`}>
                   {currentMetrics.disk_percent.toFixed(1)}%
                 </span>
               </div>
-              <Progress value={currentMetrics.disk_percent} className="h-3" />
-              <p className="text-xs text-muted-foreground">
+              <div className="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700">
+                <div className="h-3 rounded-full bg-brand-500" style={{ width: `${currentMetrics.disk_percent}%` }} />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {formatBytes(currentMetrics.disk_used_bytes)} / {formatBytes(currentMetrics.disk_total_bytes)}
               </p>
             </div>
           </div>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             No resource data available
           </div>
         )}
@@ -228,7 +236,7 @@ export const ResourceMonitor: React.FC<ResourceMonitorProps> = ({
         {healthData && healthData.issues.length > 0 && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <WarningTriangleIcon className="h-4 w-4 text-yellow-600" />
               <span className="font-medium text-yellow-800">System Issues</span>
             </div>
             <ul className="text-sm text-yellow-700 space-y-1">
@@ -241,12 +249,12 @@ export const ResourceMonitor: React.FC<ResourceMonitorProps> = ({
 
         {/* Last Update */}
         {currentMetrics && (
-          <div className="mt-4 text-xs text-muted-foreground text-center">
+          <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
             Last updated: {new Date(currentMetrics.timestamp).toLocaleTimeString()}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

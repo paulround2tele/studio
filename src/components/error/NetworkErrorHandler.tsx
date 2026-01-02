@@ -1,10 +1,9 @@
 "use client";
 
 import React, { Component, ReactNode } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, RefreshCw, LogIn, WifiOff } from 'lucide-react';
+import Alert from '@/components/ta/ui/alert/Alert';
+import Button from '@/components/ta/ui/button/Button';
+import { RefreshIcon, LogInIcon, WifiOffIcon } from '@/icons';
 import { toast } from '@/hooks/use-toast';
 
 interface Props {
@@ -187,33 +186,26 @@ class NetworkErrorHandler extends Component<Props, State> {
     if (hasNetworkError) {
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
+          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] w-full max-w-md">
+            <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 text-center">
               <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <WifiOff className="h-6 w-6 text-red-600" />
+                <WifiOffIcon className="h-6 w-6 text-red-600" />
               </div>
-              <CardTitle className="text-xl text-red-600">
+              <h3 className="text-xl font-medium text-red-600">
                 Connection Problem
-              </CardTitle>
-            </CardHeader>
+              </h3>
+            </div>
             
-            <CardContent className="space-y-4">
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Network Error</AlertTitle>
-                <AlertDescription>
-                  {errorMessage}
-                </AlertDescription>
-              </Alert>
+            <div className="p-4 sm:p-6 space-y-4">
+              <Alert variant="error" title="Network Error" message={errorMessage} />
 
               <div className="flex flex-col gap-2">
-                <Button onClick={this.handleRetry} className="flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4" />
+                <Button onClick={this.handleRetry} startIcon={<RefreshIcon className="h-4 w-4" />}>
                   Try Again
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       );
     }
@@ -222,37 +214,29 @@ class NetworkErrorHandler extends Component<Props, State> {
     if (hasAuthError) {
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
+          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] w-full max-w-md">
+            <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 text-center">
               <div className="mx-auto w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
-                <LogIn className="h-6 w-6 text-yellow-600" />
+                <LogInIcon className="h-6 w-6 text-yellow-600" />
               </div>
-              <CardTitle className="text-xl text-yellow-600">
+              <h3 className="text-xl font-medium text-yellow-600">
                 Authentication Required
-              </CardTitle>
-            </CardHeader>
+              </h3>
+            </div>
             
-            <CardContent className="space-y-4">
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Authentication Error</AlertTitle>
-                <AlertDescription>
-                  {errorMessage}
-                </AlertDescription>
-              </Alert>
+            <div className="p-4 sm:p-6 space-y-4">
+              <Alert variant="warning" title="Authentication Error" message={errorMessage} />
 
               <div className="flex flex-col gap-2">
-                <Button onClick={this.handleLogin} className="flex items-center gap-2">
-                  <LogIn className="h-4 w-4" />
+                <Button onClick={this.handleLogin} startIcon={<LogInIcon className="h-4 w-4" />}>
                   Log In
                 </Button>
-                <Button variant="outline" onClick={this.handleRetry} className="flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4" />
+                <Button variant="outline" onClick={this.handleRetry} startIcon={<RefreshIcon className="h-4 w-4" />}>
                   Retry
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       );
     }

@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap, Clock, Info } from 'lucide-react';
+import Button from '@/components/ta/ui/button/Button';
+import Badge from '@/components/ta/ui/badge/Badge';
+import { ZapIcon, ClockIcon, InfoIcon } from '@/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setFullSequenceMode, setPreflightOpen } from '@/store/ui/campaignUiSlice';
 import { useUpdateCampaignModeMutation } from '@/store/api/campaignApi';
@@ -22,20 +21,20 @@ interface CampaignModeToggleProps {
 
 const modeConfig = {
   full_sequence: {
-    icon: Zap,
+    icon: ZapIcon,
     label: 'Full Sequence',
     description: 'Automatically runs through all phases',
     color: 'text-blue-500',
     bgColor: 'bg-blue-100',
-    badgeVariant: 'default' as const,
+    badgeColor: 'primary' as const,
   },
   step_by_step: {
-    icon: Clock,
+    icon: ClockIcon,
     label: 'Step by Step',
     description: 'Manual control over each phase',
     color: 'text-green-500',
     bgColor: 'bg-green-100',
-    badgeVariant: 'outline' as const,
+    badgeColor: 'success' as const,
   },
 };
 
@@ -92,26 +91,26 @@ export function CampaignModeToggle({
   };
 
   return (
-    <Card className={className}>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <Info className="h-4 w-4" />
+    <div className={`rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className || ''}`}>
+      <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+        <h3 className="text-sm font-medium flex items-center gap-2 text-gray-800 dark:text-white/90">
+          <InfoIcon className="h-4 w-4" />
           Campaign Mode
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </h3>
+      </div>
+      <div className="p-5 space-y-4">
         {/* Current mode display */}
-        <div className="flex items-center justify-between p-3 rounded-lg border bg-gray-50">
+        <div className="flex items-center justify-between p-3 rounded-lg border bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-full ${currentConfig.bgColor}`}>
               <CurrentIcon className={`h-4 w-4 ${currentConfig.color}`} />
             </div>
             <div>
-              <div className="font-medium">{currentConfig.label}</div>
-              <div className="text-xs text-gray-600">{currentConfig.description}</div>
+              <div className="font-medium text-gray-800 dark:text-white/90">{currentConfig.label}</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">{currentConfig.description}</div>
             </div>
           </div>
-          <Badge variant={currentConfig.badgeVariant}>Active</Badge>
+          <Badge color={currentConfig.badgeColor}>Active</Badge>
         </div>
 
         {/* Toggle button */}
@@ -128,7 +127,7 @@ export function CampaignModeToggle({
             </>
           )}
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

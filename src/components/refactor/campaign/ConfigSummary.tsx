@@ -4,9 +4,8 @@
  */
 
 import React from 'react';
-import { Settings, Calendar, Target, Hash } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { SettingsIcon, CalenderIcon, TargetIcon, HashIcon } from '@/icons';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 
 interface ConfigItem {
@@ -29,14 +28,14 @@ function formatValue(item: ConfigItem): React.ReactNode {
     case 'number':
       return typeof item.value === 'number' ? item.value.toLocaleString() : item.value;
     case 'badge':
-      return <Badge variant="outline">{item.value}</Badge>;
+      return <Badge color="light" size="sm">{item.value}</Badge>;
     case 'list':
       // Assume comma-separated values
       const items = String(item.value).split(',').map(s => s.trim());
       return (
         <div className="flex flex-wrap gap-1">
           {items.map((listItem, index) => (
-            <Badge key={index} variant="secondary" className="text-xs">
+            <Badge key={index} color="light" size="sm">
               {listItem}
             </Badge>
           ))}
@@ -54,15 +53,15 @@ function getDefaultIcon(item: ConfigItem): React.ReactNode {
   // Provide default icons based on label patterns
   const label = item.label.toLowerCase();
   if (label.includes('date') || label.includes('time')) {
-    return <Calendar className="w-4 h-4 text-gray-500" />;
+    return <CalenderIcon className="w-4 h-4 text-gray-500" />;
   }
   if (label.includes('target') || label.includes('goal')) {
-    return <Target className="w-4 h-4 text-gray-500" />;
+    return <TargetIcon className="w-4 h-4 text-gray-500" />;
   }
   if (label.includes('count') || label.includes('number') || label.includes('max')) {
-    return <Hash className="w-4 h-4 text-gray-500" />;
+    return <HashIcon className="w-4 h-4 text-gray-500" />;
   }
-  return <Settings className="w-4 h-4 text-gray-500" />;
+  return <SettingsIcon className="w-4 h-4 text-gray-500" />;
 }
 
 export function ConfigSummary({ 
@@ -72,25 +71,25 @@ export function ConfigSummary({
 }: ConfigSummaryProps) {
   if (config.length === 0) {
     return (
-      <Card className={cn("", className)}>
-        <CardHeader>
-          <CardTitle className="text-lg">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold">{title}</h3>
+        </div>
+        <div className="px-6 pb-6">
           <div className="text-gray-500 dark:text-gray-400 text-center py-4">
             No configuration data available
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className={cn("", className)}>
-      <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+      <div className="p-6">
+        <h3 className="text-lg font-semibold">{title}</h3>
+      </div>
+      <div className="px-6 pb-6">
         <div className="space-y-4">
           {config.map((item, index) => (
             <div 
@@ -109,8 +108,8 @@ export function ConfigSummary({
             </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

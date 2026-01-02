@@ -4,9 +4,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, LogOut, Home } from 'lucide-react';
+import Button from '@/components/ta/ui/button/Button';
+import { LoaderIcon, LogOutIcon, HomeIcon } from '@/icons';
 import Link from 'next/link';
 
 export default function LogoutPage() {
@@ -45,18 +44,20 @@ export default function LogoutPage() {
   // Show logout in progress
   if (isLoggingOut && !logoutComplete) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <Loader2 className="h-6 w-6 animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+          <div className="text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-500/10">
+              <LoaderIcon className="h-6 w-6 animate-spin text-brand-500" />
             </div>
-            <CardTitle>Signing out...</CardTitle>
-            <CardDescription>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+              Signing out...
+            </h2>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               Please wait while we securely sign you out.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -64,62 +65,65 @@ export default function LogoutPage() {
   // Show logout complete
   if (logoutComplete) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-              <LogOut className="h-6 w-6 text-green-600" />
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+          <div className="text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success-50 dark:bg-success-500/10">
+              <LogOutIcon className="h-6 w-6 text-success-500" />
             </div>
-            <CardTitle>Signed out successfully</CardTitle>
-            <CardDescription>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+              Signed out successfully
+            </h2>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               You have been securely signed out. Redirecting to login...
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button asChild className="w-full">
-              <Link href="/login">Go to Sign In</Link>
-            </Button>
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/">
-                <Home className="mr-2 h-4 w-4" />
+            </p>
+          </div>
+          <div className="mt-6 space-y-3">
+            <Link href="/login" className="block">
+              <Button className="w-full">Go to Sign In</Button>
+            </Link>
+            <Link href="/" className="block">
+              <Button variant="outline" className="w-full" startIcon={<HomeIcon className="h-4 w-4" />}>
                 Go to Home
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
 
   // Show logout confirmation (fallback)
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <LogOut className="h-6 w-6" />
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-500/10">
+            <LogOutIcon className="h-6 w-6 text-brand-500" />
           </div>
-          <CardTitle>Sign out of DomainFlow?</CardTitle>
-          <CardDescription>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+            Sign out of DomainFlow?
+          </h2>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Are you sure you want to sign out of your account?
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+        </div>
+        <div className="mt-6 space-y-3">
           <Button onClick={handleManualLogout} className="w-full" disabled={isLoggingOut}>
             {isLoggingOut ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
                 Signing out...
               </>
             ) : (
               'Yes, sign out'
             )}
           </Button>
-          <Button asChild variant="outline" className="w-full">
-            <Link href="/">Cancel</Link>
-          </Button>
-        </CardContent>
-      </Card>
+          <Link href="/" className="block">
+            <Button variant="outline" className="w-full">Cancel</Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

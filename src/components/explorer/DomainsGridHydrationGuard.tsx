@@ -10,7 +10,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
 
 // ============================================================================
 // PROPS INTERFACE
@@ -27,6 +26,10 @@ export interface DomainsGridHydrationGuardProps {
 // ============================================================================
 // DEFAULT FALLBACK
 // ============================================================================
+
+function Skeleton({ className }: { className?: string }) {
+  return <div className={`animate-pulse bg-gray-200 dark:bg-gray-700 rounded ${className ?? ''}`} />;
+}
 
 function DefaultHydrationFallback() {
   return (
@@ -46,7 +49,7 @@ function DefaultHydrationFallback() {
       </div>
       
       {/* Table header skeleton */}
-      <div className="flex gap-4 border-b pb-2">
+      <div className="flex gap-4 border-b border-gray-200 dark:border-gray-700 pb-2">
         <Skeleton className="h-4 w-8" />
         <Skeleton className="h-4 w-48" />
         <Skeleton className="h-4 w-16" />

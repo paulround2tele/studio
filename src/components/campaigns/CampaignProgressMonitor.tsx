@@ -1,10 +1,8 @@
 "use client";
 
 import React, { memo, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { AlertCircle, CheckCircle, Clock, Pause } from 'lucide-react';
+import Badge from '@/components/ta/ui/badge/Badge';
+import { AlertCircleIcon, CheckCircleIcon, ClockIcon, PauseIcon } from '@/icons';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 type CampaignCurrentPhaseEnum = 'discovery' | 'validation' | 'extraction' | 'analysis' | 'enrichment';
 type CampaignPhaseStatusEnum = 'not_started' | 'configured' | 'running' | 'paused' | 'completed' | 'failed';
@@ -12,11 +10,24 @@ import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 import { getPhaseDisplayName as getCanonicalPhaseDisplayName } from '@/lib/utils/phaseMapping';
 
-// Helper function to ensure valid badge variants
-function getValidBadgeVariant(color: string): "default" | "secondary" | "destructive" | "outline" {
-  const validVariants = ["default", "secondary", "destructive", "outline"] as const;
-  type ValidVariant = typeof validVariants[number];
-  return validVariants.includes(color as ValidVariant) ? color as ValidVariant : "default";
+// Inline TailAdmin-style progress bar component
+const ProgressBar: React.FC<{ value: number; className?: string }> = ({ value, className }) => (
+  <div className={`w-full bg-gray-200 rounded-full dark:bg-gray-700 ${className || ''}`}>
+    <div
+      className="h-2 rounded-full bg-brand-500 transition-all duration-300"
+      style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+    />
+  </div>
+);
+
+// Helper function to map status colors to TailAdmin badge colors
+type BadgeColor = 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark';
+function getBadgeColor(statusColor: string): BadgeColor {
+  if (statusColor.includes('green') || statusColor.includes('success')) return 'success';
+  if (statusColor.includes('red') || statusColor.includes('error')) return 'error';
+  if (statusColor.includes('yellow') || statusColor.includes('warning')) return 'warning';
+  if (statusColor.includes('blue') || statusColor.includes('info')) return 'info';
+  return 'light';
 }
 
 interface CampaignProgressMonitorProps {
@@ -68,19 +79,19 @@ const CampaignProgressMonitor = memo(({
     let icon: React.ReactNode;
     switch (normalizedStatus as 'completed' | 'failed' | 'in_progress' | 'paused' | 'draft' | 'running' | 'cancelled') {
       case 'completed':
-        icon = <CheckCircle className="h-4 w-4" />;
+        icon = <CheckCircleIcon className="h-4 w-4" />;
         break;
       case 'failed':
-        icon = <AlertCircle className="h-4 w-4" />;
+        icon = <AlertCircleIcon className="h-4 w-4" />;
         break;
       case 'in_progress':
-        icon = <Clock className="h-4 w-4" />;
+        icon = <ClockIcon className="h-4 w-4" />;
         break;
       case 'paused':
-        icon = <Pause className="h-4 w-4" />;
+        icon = <PauseIcon className="h-4 w-4" />;
         break;
       default:
-        icon = <Clock className="h-4 w-4" />;
+        icon = <ClockIcon className="h-4 w-4" />;
     }
 
     return {
@@ -100,31 +111,31 @@ const CampaignProgressMonitor = memo(({
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-lg">
+    <div className="w-full rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+        <h3 className="flex items-center justify-between text-lg font-semibold text-gray-800 dark:text-white/90">
           Campaign Progress
           <div className="flex items-center gap-2">
             {/* Connection status indicator - shows polling mode during RTK consolidation */}
             <div className="w-2 h-2 rounded-full bg-blue-500" />
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
               Polling
             </span>
           </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </h3>
+      </div>
+      <div className="p-5 space-y-4">
         {/* Current Phase */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {progressInfo.icon}
-            <span className="font-medium">
+            <span className="font-medium text-gray-800 dark:text-white/90">
               {getPhaseDisplayName(progressInfo.phase)}
             </span>
           </div>
           <Badge 
-            variant={getValidBadgeVariant(progressInfo.statusColor)}
-            className="text-xs"
+            color={getBadgeColor(progressInfo.statusColor)}
+            size="sm"
           >
             {progressInfo.normalizedStatus}
           </Badge>
@@ -133,10 +144,10 @@ const CampaignProgressMonitor = memo(({
         {/* Progress Bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Progress</span>
+            <span className="text-gray-500 dark:text-gray-400">Progress</span>
             <span className="font-medium">{progressInfo.progress.toFixed(1)}%</span>
           </div>
-          <Progress 
+          <ProgressBar 
             value={progressInfo.progress} 
             className="h-2"
           />
@@ -145,23 +156,23 @@ const CampaignProgressMonitor = memo(({
         {/* Campaign Details */}
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-muted-foreground">Campaign ID</span>
+            <span className="text-gray-500 dark:text-gray-400">Campaign ID</span>
             <p className="font-mono text-xs">{campaignKey.id.slice(-8)}</p>
           </div>
           <div>
-            <span className="text-muted-foreground">Status</span>
+            <span className="text-gray-500 dark:text-gray-400">Status</span>
             <p className="font-medium">{progressInfo.status}</p>
           </div>
         </div>
 
         {/* Real-time Notice */}
-        <div className="text-xs text-muted-foreground border-t pt-3">
+        <div className="text-xs text-gray-500 dark:text-gray-400 border-t pt-3">
           📡 Real-time updates via Server-Sent Events coming soon.
           <br />
           Currently using periodic refresh for progress updates.
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 });
 

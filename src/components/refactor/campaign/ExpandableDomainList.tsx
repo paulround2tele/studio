@@ -15,7 +15,7 @@
 'use client';
 
 import React from 'react';
-import { ChevronDown, ChevronRight, Search, XCircle, Loader2 } from 'lucide-react';
+import { ChevronDownIcon, ChevronRightIcon, SearchIcon, XCircleIcon, LoaderIcon } from '@/icons';
 import { cn } from '@/lib/utils';
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 
@@ -53,9 +53,9 @@ const CATEGORY_STYLES: Record<DomainListCategory, { badge: string; row: string }
 };
 
 const CATEGORY_ICONS: Record<DomainListCategory, React.ComponentType<{ className?: string }>> = {
-  rejected: XCircle,
-  no_keywords: Search,
-  matches: ChevronRight,
+  rejected: XCircleIcon,
+  no_keywords: SearchIcon,
+  matches: ChevronRightIcon,
 };
 
 const PAGE_SIZE = 10;
@@ -119,9 +119,9 @@ export function ExpandableDomainList({
       >
         <div className="flex items-center gap-2">
           {isExpanded ? (
-            <ChevronDown className="h-4 w-4 text-gray-500" />
+            <ChevronDownIcon className="h-4 w-4 text-gray-500" />
           ) : (
-            <ChevronRight className="h-4 w-4 text-gray-500" />
+            <ChevronRightIcon className="h-4 w-4 text-gray-500" />
           )}
           <Icon className="h-4 w-4 text-gray-500" />
           <span className="font-medium text-gray-900 dark:text-gray-100">
@@ -135,7 +135,7 @@ export function ExpandableDomainList({
           </span>
         </div>
         {isLoading && (
-          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+          <LoaderIcon className="h-4 w-4 animate-spin text-gray-400" />
         )}
       </button>
       

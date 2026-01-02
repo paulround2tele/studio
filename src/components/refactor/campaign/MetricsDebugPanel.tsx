@@ -4,9 +4,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+// Card import removed - using inline TailAdmin card pattern
+import Button from '@/components/ta/ui/button/Button';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { getPerformanceStats, getTimingStats, clearPerformanceData, exportPerformanceData } from '@/services/campaignMetrics/metricsPerf';
@@ -151,14 +151,14 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
   }
 
   return (
-    <Card className={cn('border-dashed border-yellow-300 bg-yellow-50/50', className)}>
-      <CardHeader className="pb-2">
+    <div className={cn('rounded-2xl border border-dashed border-yellow-300 bg-yellow-50/50 dark:border-yellow-700 dark:bg-yellow-900/20', className)}>
+      <div className="p-6 pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium text-yellow-800">
+          <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
             🔧 Metrics Debug Panel
-          </CardTitle>
+          </h3>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
+            <Badge color="light" size="sm" className="text-xs">
               Development Only
             </Badge>
             <Button
@@ -170,9 +170,9 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
             </Button>
           </div>
         </div>
-      </CardHeader>
+      </div>
       
-      <CardContent className="space-y-4">
+      <div className="px-6 pb-6 space-y-4">
         <Tabs defaultValue="snapshots" className="w-full">
           <TabsList className="grid w-full grid-cols-8 text-xs">
             <TabsTrigger value="snapshots">Timeline</TabsTrigger>
@@ -189,7 +189,7 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-medium">Snapshot History ({snapshots.length})</h4>
               {memoryStats && (
-                <Badge variant="outline" className="text-xs">
+                <Badge color="light" size="sm" className="text-xs">
                   Campaigns: {memoryStats.campaignCount} | 
                   Snapshots: {memoryStats.totalSnapshots} | 
                   Memory: ~{memoryStats.estimatedSizeKB}KB
@@ -240,7 +240,8 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
                   <div className="flex items-center justify-between">
                     <span>{(delta as unknown as {metric?: string}).metric || delta.key || 'Unknown'}</span>
                     <Badge 
-                      variant={delta.direction === 'up' ? 'default' : delta.direction === 'down' ? 'destructive' : 'secondary'}
+                      color={delta.direction === 'up' ? 'success' : delta.direction === 'down' ? 'error' : 'light'}
+                      size="sm"
                       className="text-xs"
                     >
                       {delta.direction} {typeof (delta as unknown as {magnitude?: number}).magnitude === 'number' ? (delta as unknown as {magnitude: number}).magnitude.toFixed(2) : ''}
@@ -331,7 +332,7 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-medium">Detected Anomalies ({anomalies.length})</h4>
               {process.env.NEXT_PUBLIC_ENABLE_ANOMALY_RULES !== 'false' && (
-                <Badge variant="outline" className="text-xs bg-green-50">
+                <Badge color="success" size="sm" className="text-xs bg-green-50">
                   Enabled
                 </Badge>
               )}
@@ -346,7 +347,8 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-red-800">{anomaly.metric}</span>
                     <Badge 
-                      variant={anomaly.severity === 'critical' ? 'destructive' : 'outline'} 
+                      color={anomaly.severity === 'critical' ? 'error' : 'light'} 
+                      size="sm"
                       className="text-xs"
                     >
                       {anomaly.severity}
@@ -371,7 +373,7 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-medium">Portfolio Metrics</h4>
               {process.env.NEXT_PUBLIC_ENABLE_PORTFOLIO_METRICS !== 'false' && (
-                <Badge variant="outline" className="text-xs bg-green-50">
+                <Badge color="success" size="sm" className="text-xs bg-green-50">
                   Enabled
                 </Badge>
               )}
@@ -410,7 +412,7 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-medium">Export Status</h4>
               {process.env.NEXT_PUBLIC_ENABLE_EXPORT_TOOLS !== 'false' && (
-                <Badge variant="outline" className="text-xs bg-green-50">
+                <Badge color="success" size="sm" className="text-xs bg-green-50">
                   Enabled
                 </Badge>
               )}
@@ -441,7 +443,7 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-medium">Telemetry Status</h4>
               {telemetryStats?.enabled && (
-                <Badge variant="outline" className="text-xs bg-green-50">
+                <Badge color="success" size="sm" className="text-xs bg-green-50">
                   {telemetryStats.inSample ? 'Sampling' : 'Enabled'}
                 </Badge>
               )}
@@ -490,8 +492,8 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
             </div>
           </TabsContent>
         </Tabs>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

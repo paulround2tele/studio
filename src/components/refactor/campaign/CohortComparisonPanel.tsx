@@ -4,16 +4,16 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+// Card import removed - using inline TailAdmin card pattern
+import Button from '@/components/ta/ui/button/Button';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BarChart, LineChart, TrendingUp as _TrendingUp, TrendingDown as _TrendingDown, Users, Calendar, Info, Settings as _Settings } from 'lucide-react';
+// Progress import removed - using inline TailAdmin progress pattern
+// Alert import removed - using inline TailAdmin alert pattern
+import { BarChart3Icon, LineChartIcon, UsersIcon, CalenderIcon, InfoIcon } from '@/icons';
 import { AggregateSnapshot } from '@/types/campaignMetrics';
 import { 
   useCohortComparison, 
@@ -95,17 +95,17 @@ export function CohortComparisonPanel({
   }
 
   return (
-    <Card className={`w-full ${className}`}>
-      <CardHeader className="pb-4">
+    <div className={`w-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
+      <div className="p-6 pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+              <UsersIcon className="w-5 h-5" />
               Cohort Comparison
-            </CardTitle>
-            <CardDescription>
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Compare campaign performance by relative days since launch
-            </CardDescription>
+            </p>
           </div>
           
           <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export function CohortComparisonPanel({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge variant="outline" className="cursor-help">
+                    <Badge color="light" size="sm" className="cursor-help">
                       {matrixDensity.toFixed(1)}% density
                     </Badge>
                   </TooltipTrigger>
@@ -125,7 +125,7 @@ export function CohortComparisonPanel({
             )}
             
             {onClose && (
-              <Button variant="ghost" size="sm" onClick={onClose}>
+              <Button variant="outline" size="sm" onClick={onClose}>
                 ×
               </Button>
             )}
@@ -163,7 +163,7 @@ export function CohortComparisonPanel({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                  <InfoIcon className="w-4 h-4 text-gray-400 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Fill gaps in data using linear interpolation</p>
@@ -172,21 +172,21 @@ export function CohortComparisonPanel({
             </TooltipProvider>
           </div>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent>
+      <div className="px-6 pb-6">
         {error && (
-          <Alert className="mb-4">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          </div>
         )}
 
         {!canCompare && !loading && (
-          <Alert className="mb-4">
-            <AlertDescription>
+          <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               Need at least 2 campaigns with snapshot data for cohort comparison
-            </AlertDescription>
-          </Alert>
+            </p>
+          </div>
         )}
 
         {loading && (
@@ -202,11 +202,11 @@ export function CohortComparisonPanel({
           <Tabs value={viewType} onValueChange={(value) => setViewType(value as 'curves' | 'benchmarks')} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="curves" className="flex items-center gap-2">
-                <LineChart className="w-4 h-4" />
+                <LineChartIcon className="w-4 h-4" />
                 Growth Curves
               </TabsTrigger>
               <TabsTrigger value="benchmarks" className="flex items-center gap-2">
-                <BarChart className="w-4 h-4" />
+                <BarChart3Icon className="w-4 h-4" />
                 Benchmarks
               </TabsTrigger>
             </TabsList>
@@ -246,8 +246,8 @@ export function CohortComparisonPanel({
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -285,7 +285,7 @@ function CohortGrowthCurvesView({
           <div key={curve.campaignId} className="p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h5 className="font-medium">{curve.campaignName}</h5>
-              <Badge variant="outline">
+              <Badge color="light" size="sm">
                 {curve.curve.length} days
               </Badge>
             </div>
@@ -343,9 +343,9 @@ function CohortBenchmarksView({
         {benchmarks.slice(0, 10).map(benchmark => (
           <div key={benchmark.dayIndex} className="flex items-center justify-between p-2 bg-gray-50 rounded">
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-gray-400" />
+              <CalenderIcon className="w-4 h-4 text-gray-400" />
               <span className="font-medium">Day {benchmark.dayIndex}</span>
-              <Badge variant="outline" className="text-xs">
+              <Badge color="light" size="sm" className="text-xs">
                 n={benchmark.count}
               </Badge>
             </div>
@@ -408,7 +408,7 @@ function CampaignSummaryCard({
     <div className="p-3 border rounded-lg">
       <div className="flex items-center justify-between mb-2">
         <h5 className="font-medium truncate">{campaign.campaignName}</h5>
-        <Badge variant="secondary" className="text-xs">
+        <Badge color="light" size="sm" className="text-xs">
           {dayCount}d
         </Badge>
       </div>
@@ -440,22 +440,24 @@ export function CompactCohortPanel({
     <div className={`p-3 bg-gray-50 rounded-lg ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Users className="w-4 h-4" />
+          <UsersIcon className="w-4 h-4" />
           <span className="text-sm font-medium">Cohort</span>
         </div>
         
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-xs">
+          <Badge color="light" size="sm" className="text-xs">
             {campaigns.length} campaigns
           </Badge>
-          <Badge variant="secondary" className="text-xs">
+          <Badge color="light" size="sm" className="text-xs">
             {matrixDensity.toFixed(0)}%
           </Badge>
         </div>
       </div>
       
       <div className="mt-2">
-        <Progress value={matrixDensity} className="h-1" />
+        <div className="h-1 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+          <div className="h-full rounded-full bg-brand-500" style={{ width: `${matrixDensity}%` }} />
+        </div>
       </div>
     </div>
   );

@@ -4,8 +4,8 @@
  */
 
 import React from 'react';
-import { Wifi, WifiOff, Clock, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { WifiIcon, WifiOffIcon, ClockIcon, CheckCircle2Icon, AlertCircleIcon, LoaderIcon } from '@/icons';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 import { ProgressUpdate } from '@/types/campaignMetrics';
 import { useFormattedPhase } from '@/hooks/useCampaignProgress';
@@ -125,7 +125,8 @@ export function LiveProgressStatus({
         {/* Phase Information */}
         {progress && (
           <Badge 
-            variant="outline" 
+            color="light" 
+            size="sm"
             className={cn(styles.badge, "font-normal")}
           >
             {formattedPhase}
@@ -135,7 +136,7 @@ export function LiveProgressStatus({
         {/* Last Update Time */}
         {progress && (
           <div className="flex items-center gap-1 text-gray-500">
-            <Clock className={cn(styles.icon)} />
+            <ClockIcon className={cn(styles.icon)} />
             <span className={styles.container}>
               {formatLastUpdate(progress.updatedAt)}
             </span>
@@ -191,31 +192,31 @@ function getStatus(
 function getStatusConfig(status: Status) {
   const configs = {
     connected: {
-      icon: Wifi,
+      icon: WifiIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-50 border-green-200',
       label: 'Live Updates'
     },
     disconnected: {
-      icon: WifiOff,
+      icon: WifiOffIcon,
       color: 'text-gray-500',
       bgColor: 'bg-gray-50 border-gray-200',
       label: 'Disconnected'
     },
     connecting: {
-      icon: Loader2,
+      icon: LoaderIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50 border-blue-200',
       label: 'Connecting...'
     },
     completed: {
-      icon: CheckCircle2,
+      icon: CheckCircle2Icon,
       color: 'text-green-600',
       bgColor: 'bg-green-50 border-green-200',
       label: 'Completed'
     },
     error: {
-      icon: AlertCircle,
+      icon: AlertCircleIcon,
       color: 'text-red-600',
       bgColor: 'bg-red-50 border-red-200',
       label: 'Connection Error'

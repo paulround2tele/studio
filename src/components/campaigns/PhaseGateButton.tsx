@@ -1,16 +1,16 @@
 "use client";
 
-import { Button } from '@/components/ui/button';
-import type { LucideIcon } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
+import Button from '@/components/ta/ui/button/Button';
+import { LoaderIcon } from '@/icons';
+import type { ComponentType } from 'react';
 
 interface PhaseGateButtonProps {
   label: string;
   onClick: () => Promise<void> | void;
   disabled?: boolean;
   isLoading?: boolean;
-  Icon?: LucideIcon;
-  variant?: "default" | "secondary" | "destructive" | "outline" | "ghost" | "link";
+  Icon?: ComponentType<{ className?: string }>;
+  variant?: "primary" | "outline";
   className?: string;
 }
 
@@ -20,7 +20,7 @@ export default function PhaseGateButton({
   disabled = false,
   isLoading = false,
   Icon,
-  variant = "default",
+  variant = "primary",
   className
 }: PhaseGateButtonProps) {
   return (
@@ -31,7 +31,7 @@ export default function PhaseGateButton({
       className={className}
     >
       {isLoading ? (
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <LoaderIcon className="mr-2 h-4 w-4" />
       ) : (
         Icon && <Icon className="mr-2 h-4 w-4" />
       )}

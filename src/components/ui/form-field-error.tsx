@@ -2,7 +2,7 @@
 // Reusable form field error component for displaying validation errors
 
 import React from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircleIcon } from '@/icons';
 import { cn } from '@/lib/utils';
 
 interface FormFieldErrorProps {
@@ -26,7 +26,7 @@ export function FormFieldError({
       'flex items-center gap-1 text-sm text-destructive',
       className
     )}>
-      {showIcon && <AlertCircle className="h-4 w-4 shrink-0" />}
+      {showIcon && <AlertCircleIcon className="h-4 w-4 shrink-0" />}
       <span>{error}</span>
     </div>
   );
@@ -88,7 +88,7 @@ export function FormErrorSummary({
       className
     )}>
       <div className="flex items-start gap-2">
-        <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+        <AlertCircleIcon className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
         <div className="space-y-2">
           {mainError && (
             <p className="font-medium text-destructive">{mainError}</p>

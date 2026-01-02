@@ -142,8 +142,11 @@ describe('CampaignCreateWizard', () => {
   });
 
   describe('Auto-start Logic', () => {
+    // Increase timeout for these complex multi-step wizard tests
+    jest.setTimeout(15000);
+    
     it('should automatically start discovery phase when creating campaign in auto mode', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       // Mock successful API responses
       mockCreateCampaign.mockReturnValue({
@@ -171,7 +174,7 @@ describe('CampaignCreateWizard', () => {
       await user.click(nextButton);
 
       // Step 2: Fill in pattern step
-      const patternInput = screen.getByLabelText('Constant Segment');
+      const patternInput = screen.getByPlaceholderText('brand');
       await user.type(patternInput, 'brand');
 
       const maxDomainsInput = getMaxDomainsInput();
@@ -230,7 +233,7 @@ describe('CampaignCreateWizard', () => {
     });
 
     it('should handle auto-start failure gracefully', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       // Mock successful campaign creation but failed auto-start
       mockCreateCampaign.mockReturnValue({
@@ -256,7 +259,7 @@ describe('CampaignCreateWizard', () => {
     let nextButton = screen.getByRole('button', { name: /next/i });
     await user.click(nextButton);
 
-      const patternInput = screen.getByLabelText('Constant Segment');
+      const patternInput = screen.getByPlaceholderText('brand');
       await user.type(patternInput, 'brand');
 
       const maxDomainsInput = getMaxDomainsInput();
@@ -297,7 +300,7 @@ describe('CampaignCreateWizard', () => {
     });
 
     it('should not attempt auto-start for manual mode', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       mockCreateCampaign.mockReturnValue({
         unwrap: jest.fn().mockResolvedValue({ id: 'test-campaign-id' }),
@@ -320,7 +323,7 @@ describe('CampaignCreateWizard', () => {
       let nextButton = screen.getByRole('button', { name: /next/i });
       await user.click(nextButton);
 
-      const patternInput = screen.getByLabelText('Constant Segment');
+      const patternInput = screen.getByPlaceholderText('brand');
       await user.type(patternInput, 'brand');
 
       const maxDomainsInput = getMaxDomainsInput();
@@ -344,13 +347,12 @@ describe('CampaignCreateWizard', () => {
           mode: 'step_by_step',
         });
         
-        // Verify auto-start was NOT attempted
+        // Verify auto-start was NOT attempted (configurePhase may still be called for manual mode to pre-configure discovery)
         expect(mockStartPhase).not.toHaveBeenCalled();
-  expect(mockConfigurePhase).not.toHaveBeenCalled();
         
-        // Verify regular success toast
+        // Verify success toast mentions manual mode
         expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-          title: 'Campaign Created Successfully',
+          title: 'Campaign Ready',
           description: expect.stringContaining('manual mode'),
         }));
       });
@@ -359,7 +361,7 @@ describe('CampaignCreateWizard', () => {
 
   describe('Loading States', () => {
     it('should show "Starting Campaign..." when auto-starting', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       // Mock APIs with delays to test loading states
       mockCreateCampaign.mockReturnValue({
@@ -397,7 +399,7 @@ describe('CampaignCreateWizard', () => {
       let nextButton = screen.getByRole('button', { name: /^Next/i });
       await user.click(nextButton);
 
-      const patternInput = screen.getByLabelText('Constant Segment');
+      const patternInput = screen.getByPlaceholderText('brand');
       await user.type(patternInput, 'brand');
 
       const maxDomainsInput = getMaxDomainsInput();

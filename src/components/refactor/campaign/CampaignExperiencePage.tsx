@@ -9,7 +9,7 @@
 import React from 'react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useParams } from 'next/navigation';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircleIcon, LoaderIcon } from '@/icons';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import type { SerializedError } from '@reduxjs/toolkit';
 
@@ -37,7 +37,7 @@ import { ConfigInspector } from './ConfigInspector';
 import { WarningDistribution } from './WarningDistribution';
 import { MoverList } from './MoverList';
 import { Histogram } from './Histogram';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+// Alert import removed - using inline TailAdmin alert pattern
 
 import { useCampaignSSE } from '@/hooks/useCampaignSSE';
 import { 
@@ -910,7 +910,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+          <AlertCircleIcon className="w-8 h-8 text-red-500 mx-auto mb-2" />
           <h2 className="text-lg font-semibold">Invalid Campaign</h2>
           <p className="text-gray-600">Campaign ID is required</p>
         </div>
@@ -925,7 +925,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+          <AlertCircleIcon className="w-8 h-8 text-red-500 mx-auto mb-2" />
           <h2 className="text-lg font-semibold">Error Loading Campaign</h2>
           <p className="text-gray-600">
             {typeof metricsError === 'string'
@@ -986,9 +986,9 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-3">Pipeline Status</h2>
         {shouldShowFailureSummary && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTitle>Campaign requires attention</AlertTitle>
-            <AlertDescription>
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+            <h4 className="font-medium text-red-800 dark:text-red-200 mb-2">Campaign requires attention</h4>
+            <div className="text-sm text-red-700 dark:text-red-300">
               <div className="space-y-3">
                 {campaignErrorMessage && (
                   <p>{campaignErrorMessage}</p>
@@ -1007,8 +1007,8 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
                   </ul>
                 )}
               </div>
-            </AlertDescription>
-          </Alert>
+            </div>
+          </div>
         )}
         <PipelineTimeline phases={pipelinePhases} />
       </div>
@@ -1044,7 +1044,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
           <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border h-full">
             {funnelLoading ? (
               <div className="flex items-center justify-center p-8">
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <LoaderIcon className="w-6 h-6 animate-spin" />
               </div>
             ) : (
               <FunnelGate 
@@ -1128,7 +1128,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
           <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border h-full">
             {recsLoading ? (
               <div className="flex items-center justify-center p-8">
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <LoaderIcon className="w-6 h-6 animate-spin" />
               </div>
             ) : (
               <RecommendationsGate 
@@ -1234,7 +1234,7 @@ export function CampaignExperiencePage({ className: _className, role: _role = "r
           aria-label="Loading campaign data"
         >
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <LoaderIcon className="w-8 h-8 animate-spin mx-auto mb-4" />
             <p className="text-sm text-gray-600 dark:text-gray-400">Loading unified campaign experience...</p>
           </div>
         </div>

@@ -1,15 +1,15 @@
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  AlertCircle, 
-  Search, 
-  Dna,
-  ShieldQuestion,
-  HelpCircle 
-} from 'lucide-react';
+  CheckCircleIcon, 
+  XCircleIcon, 
+  ClockIcon, 
+  AlertCircleIcon, 
+  SearchIcon, 
+  DnaIcon,
+  ShieldQuestionIcon,
+  HelpCircleIcon 
+} from '@/icons';
 
 export type DomainActivityStatus = 
   | 'validated' 
@@ -32,64 +32,55 @@ interface StatusBadgeProps {
  */
 export const StatusBadge = React.memo<StatusBadgeProps>(function StatusBadge({ status, score: _score }) {
   let Icon;
-  let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'outline';
+  let color: 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark' = 'light';
   let text: string = status;
-  let className = '';
 
   switch (status) {
     case 'validated':
-      Icon = CheckCircle;
-      variant = 'default';
+      Icon = CheckCircleIcon;
+      color = 'success';
       text = 'Validated';
-      className = 'bg-green-500 text-white hover:bg-green-600';
       break;
     case 'generating':
-      Icon = Dna;
-      variant = 'secondary';
+      Icon = DnaIcon;
+      color = 'info';
       text = 'Generating';
-      className = 'bg-blue-500 text-white hover:bg-blue-600';
       break;
     case 'scanned':
-      Icon = Search;
-      variant = 'default';
+      Icon = SearchIcon;
+      color = 'success';
       text = 'Scanned';
-      className = 'bg-emerald-500 text-white hover:bg-emerald-600';
       break;
     case 'not_validated':
-      Icon = XCircle;
-      variant = 'destructive';
+      Icon = XCircleIcon;
+      color = 'error';
       text = 'Not Validated';
-      className = 'bg-red-500 text-white hover:bg-red-600';
       break;
     case 'Failed':
-      Icon = AlertCircle;
-      variant = 'destructive';
+      Icon = AlertCircleIcon;
+      color = 'error';
       text = 'Failed';
-      className = 'bg-red-600 text-white hover:bg-red-700';
       break;
     case 'no_leads':
-      Icon = ShieldQuestion;
-      variant = 'secondary';
+      Icon = ShieldQuestionIcon;
+      color = 'dark';
       text = 'No Leads';
-      className = 'bg-gray-500 text-white hover:bg-gray-600';
       break;
     case 'Pending':
-      Icon = Clock;
-      variant = 'secondary';
+      Icon = ClockIcon;
+      color = 'warning';
       text = 'Pending';
-      className = 'bg-yellow-500 text-white hover:bg-yellow-600';
       break;
     case 'n_a':
     default:
-      Icon = HelpCircle;
-      variant = 'outline';
+      Icon = HelpCircleIcon;
+      color = 'light';
       text = 'N/A';
-      className = 'bg-gray-100 text-gray-600 hover:bg-gray-200';
       break;
   }
 
   return (
-    <Badge variant={variant} className={`text-xs ${className}`}>
+    <Badge color={color} size="sm">
       <Icon className="mr-1 h-3 w-3" />
       {text}
     </Badge>

@@ -4,14 +4,12 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Button from '@/components/ta/ui/button/Button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Info } from 'lucide-react';
+import Input from '@/components/ta/form/input/InputField';
+import Textarea from '@/components/ta/form/input/TextArea';
 import PageHeader from '@/components/shared/PageHeader';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import Alert from '@/components/ta/ui/alert/Alert';
 
 // Use ONLY auto-generated types and new simplified form types
 import type { SimpleCampaignFormValues } from './types/SimpleCampaignFormTypes';
@@ -139,17 +137,17 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
         data-testid={editMode ? 'campaign-edit-header' : 'campaign-create-header'}
       />
 
-      <Card className="max-w-4xl mx-auto" data-testid={editMode ? 'campaign-edit-card' : 'campaign-create-card'}>
-        <CardHeader>
-      <CardTitle data-testid="campaign-form-title">{editMode ? "Edit Campaign" : "Campaign"}</CardTitle>
-          <CardDescription>
+      <div className="max-w-4xl mx-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]" data-testid={editMode ? 'campaign-edit-card' : 'campaign-create-card'}>
+        <div className="border-b border-gray-100 px-6 py-5 dark:border-gray-800">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90" data-testid="campaign-form-title">{editMode ? "Edit Campaign" : "Campaign"}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {editMode
               ? "Update basic campaign information. Domain generation configuration cannot be changed after creation."
-        : "Set up your campaign with basic information. Configure phases (Discovery, DNS, HTTP, Analysis) on the dashboard after creation."
+              : "Set up your campaign with basic information. Configure phases (Discovery, DNS, HTTP, Analysis) on the dashboard after creation."
             }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </p>
+        </div>
+        <div className="p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-testid="campaign-form">
               {/* Basic Information */}
@@ -186,13 +184,12 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
               </div>
 
               {/* Phase Information Alert */}
-              <Alert data-testid="campaign-phase-architecture-info">
-                <Info className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Phase-Centric Architecture:</strong> After creating your campaign, configure phases from the dashboard. 
-                  Start with Discovery (domain generation), then DNS Validation, HTTP Keyword Validation, and Analysis.
-                </AlertDescription>
-              </Alert>
+              <Alert 
+                variant="info"
+                title="Phase-Centric Architecture"
+                message="After creating your campaign, configure phases from the dashboard. Start with Discovery (domain generation), then DNS Validation, HTTP Keyword Validation, and Analysis."
+                data-testid="campaign-phase-architecture-info"
+              />
 
               {/* No Domain Generation fields on create (configure on dashboard) */}
 
@@ -209,6 +206,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
                 </Button>
                 <Button 
                   type="submit" 
+                  variant="primary"
                   disabled={isCreatingCampaign}
                   data-testid="campaign-submit"
                 >
@@ -217,8 +215,8 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
               </div>
             </form>
           </Form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </>
   );
 }

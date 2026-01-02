@@ -1,16 +1,15 @@
 /**
  * Enhanced Pattern Step - Unified domain generation configuration
  * Implements confirmed spec: patternType, variable lengths, charset presets, tlds, batch size, offset, optional variations mode.
+ * Migrated to TailAdmin + Tailwind patterns (Dec 31, 2025)
  */
 
 import React, { useMemo } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
+import Input from '@/components/ta/form/input/InputField';
+import Label from '@/components/ta/form/Label';
+import Alert from '@/components/ta/ui/alert/Alert';
+import Checkbox from '@/components/ta/form/input/Checkbox';
+import Button from '@/components/ta/ui/button/Button';
 import type { WizardPatternStep } from '../../types';
 import { DiscoveryPreviewPanel } from './DiscoveryPreviewPanel';
 
@@ -117,19 +116,18 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
 
   return (
     <div className="space-y-8">
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          Configure how domains will be generated. You can switch between manual variations and generated character-based patterns.
-        </AlertDescription>
-      </Alert>
+      <Alert
+        variant="info"
+        title="Domain Pattern Configuration"
+        message="Configure how domains will be generated. You can switch between manual variations and generated character-based patterns."
+      />
 
       {/* Mode Indicator (implicit via presence of {variation}) */}
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <Switch
+          <Checkbox
             checked={usingVariationsMode}
-            onCheckedChange={(checked) => {
+            onChange={(checked) => {
               if (checked) {
                 // Insert placeholder if missing
                 if (!data.basePattern || !data.basePattern.includes('{variation}')) {
@@ -142,25 +140,26 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
                 }
               }
             }}
+            label="Manual Variations Mode"
           />
-          <Label className="cursor-pointer">Manual Variations Mode</Label>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           When enabled, specify explicit variation tokens. Disabled = generated prefixes/suffixes from character set.
         </p>
       </div>
 
       {/* Base / Constant Pattern */}
       <div className="space-y-2">
-        <Label htmlFor="base-pattern">{usingVariationsMode ? 'Base Pattern (with {variation})' : 'Constant Segment'}</Label>
+        <Label htmlFor="basePattern">{usingVariationsMode ? 'Base Pattern (with {variation})' : 'Constant Segment'}</Label>
         <Input
-          id="base-pattern"
+          id="basePattern"
+          type="text"
           placeholder={usingVariationsMode ? 'brand-{variation}' : 'brand'}
-          value={data.basePattern || ''}
+          defaultValue={data.basePattern || ''}
           onChange={(e) => update({ basePattern: e.target.value })}
         />
         {usingVariationsMode && (
-          <p className="text-xs text-muted-foreground">Include the literal {'{variation}'} placeholder.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Include the literal {'{variation}'} placeholder.</p>
         )}
       </div>
 
@@ -170,11 +169,12 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
           <Label htmlFor="variations">Pattern Variations</Label>
           <Input
             id="variations"
+            type="text"
             placeholder="alpha, beta, gamma"
-            value={data.variations?.join(', ') || ''}
+            defaultValue={data.variations?.join(', ') || ''}
             onChange={(e) => update({ variations: e.target.value.split(',').map(v => v.trim()).filter(Boolean) })}
           />
-          <p className="text-xs text-muted-foreground">Comma-separated list. Up to 10,000 total domains will be requested.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Comma-separated list. Up to 10,000 total domains will be requested.</p>
         </div>
       )}
 
@@ -185,7 +185,7 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
             <div className="space-y-1">
               <Label>Pattern Type</Label>
               <select
-                className="border rounded px-2 py-1 bg-background"
+                className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-gray-800 focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
                 value={patternType}
                 onChange={(e) => {
                   const val = e.target.value as 'prefix' | 'suffix' | 'both';
@@ -214,9 +214,7 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
                 <Label>Prefix Variable Length</Label>
                 <Input
                   type="number"
-                  min={0}
-                  max={32}
-                  value={prefixVariableLength}
+                  defaultValue={prefixVariableLength}
                   onChange={(e) => {
                     const val = parseInt(e.target.value) || 0;
                     update({ prefixVariableLength: val, variableLength: val });
@@ -229,9 +227,7 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
                 <Label>Suffix Variable Length</Label>
                 <Input
                   type="number"
-                  min={0}
-                  max={32}
-                  value={suffixVariableLength}
+                  defaultValue={suffixVariableLength}
                   onChange={(e) => {
                     const val = parseInt(e.target.value) || 0;
                     update({ suffixVariableLength: val, variableLength: val });
@@ -245,9 +241,7 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
                   <Label>Prefix Variable Length</Label>
                   <Input
                     type="number"
-                    min={0}
-                    max={16}
-                    value={prefixVariableLength}
+                    defaultValue={prefixVariableLength}
                     onChange={(e) => {
                       const val = parseInt(e.target.value) || 0;
                       update({ prefixVariableLength: val, variableLength: val + (suffixVariableLength || 0) });
@@ -258,9 +252,7 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
                   <Label>Suffix Variable Length</Label>
                   <Input
                     type="number"
-                    min={0}
-                    max={16}
-                    value={suffixVariableLength}
+                    defaultValue={suffixVariableLength}
                     onChange={(e) => {
                       const val = parseInt(e.target.value) || 0;
                       update({ suffixVariableLength: val, variableLength: val + (prefixVariableLength || 0) });
@@ -278,22 +270,21 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
               {Object.keys(CHARSET_PRESETS).map(preset => (
                 <Button
                   key={preset}
-                  type="button"
-                  variant={data.charsetPreset === preset ? 'default' : 'secondary'}
+                  variant={data.charsetPreset === preset ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => handleCharsetPresetChange(preset)}
                 >{preset}</Button>
               ))}
             </div>
-            <Textarea
+            <textarea
               rows={3}
-              className="font-mono"
+              className="w-full font-mono rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-50"
               value={data.characterSet || ''}
               onChange={(e) => update({ characterSet: e.target.value })}
               placeholder="Enter custom characters"
               disabled={data.charsetPreset !== 'custom' && data.charsetPreset !== undefined && data.charsetPreset !== '' && data.charsetPreset !== 'custom'}
             />
-            <p className="text-xs text-muted-foreground">Unique chars: {uniqueSize}. Empty set with variable length &gt; 0 will produce 0 combinations.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Unique chars: {uniqueSize}. Empty set with variable length &gt; 0 will produce 0 combinations.</p>
           </div>
         </div>
       )}
@@ -302,17 +293,17 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-1">
           <Label>Max Domains</Label>
-          <Input type="number" min={1} max={10000} value={maxDomains}
+          <Input type="number" defaultValue={maxDomains}
             onChange={(e) => update({ maxDomains: parseInt(e.target.value) || 0 })} />
         </div>
         <div className="space-y-1">
           <Label>Batch Size</Label>
-          <Input type="number" min={1} max={1000} value={data.batchSize || 100}
+          <Input type="number" defaultValue={data.batchSize || 100}
             onChange={(e) => update({ batchSize: parseInt(e.target.value) || 0 })} />
         </div>
         <div className="space-y-1">
           <Label>Offset Start (Advanced)</Label>
-          <Input type="number" min={0} value={data.offsetStart || 0}
+          <Input type="number" defaultValue={data.offsetStart || 0}
             onChange={(e) => update({ offsetStart: parseInt(e.target.value) || 0 })} />
         </div>
       </div>
@@ -321,8 +312,9 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
       <div className="space-y-2">
         <Label>TLDs (comma separated)</Label>
         <Input
+          type="text"
           placeholder=".com, .net, .org"
-          value={(data.tlds && data.tlds.join(', ')) || data.tld || '.com'}
+          defaultValue={(data.tlds && data.tlds.join(', ')) || data.tld || '.com'}
           onChange={(e) => updateTlds(e.target.value)}
         />
         <div className="flex flex-wrap gap-2 text-xs">
@@ -330,7 +322,7 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
             <button
               key={t}
               type="button"
-              className="px-2 py-0.5 rounded border text-muted-foreground hover:bg-accent"
+              className="px-2 py-0.5 rounded border border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
               onClick={() => {
                 const next = new Set([...(data.tlds || []), t]);
                 update({ tlds: Array.from(next) });
@@ -349,7 +341,7 @@ export function PatternStep({ data, onChange }: PatternStepProps) {
           <div><strong>Requested:</strong> {maxDomains}</div>
         </div>
         {combinationEstimate < maxDomains && !usingVariationsMode && (
-          <p className="text-yellow-600 dark:text-yellow-400">Warning: Requested exceeds theoretical combination count. Some domains may repeat or generation will stop early.</p>
+          <p className="text-warning-600 dark:text-warning-400">Warning: Requested exceeds theoretical combination count. Some domains may repeat or generation will stop early.</p>
         )}
         <div>
           <p className="font-medium mb-1">Preview (first {preview.length})</p>

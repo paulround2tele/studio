@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import Button from "@/components/ta/ui/button/Button";
 import {
   Form,
   FormControl,
@@ -13,10 +13,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Input from "@/components/ta/form/input/InputField";
+import TextAreaAdapter from "@/components/ta/adapters/TextAreaAdapter";
+import Switch from "@/components/ta/form/switch/Switch";
+import SelectAdapter from "@/components/ta/adapters/SelectAdapter";
+import { useMemo } from "react";
 import type { Proxy as ProxyType } from '@/lib/api-client/models/proxy';
 import type { UpdateProxyRequestAPI as UpdateProxyRequest } from '@/lib/api-client/models/update-proxy-request-api';
 import { ProxyProtocol } from '@/lib/api-client/models/proxy-protocol';
@@ -25,7 +26,7 @@ import { ProxyProtocol } from '@/lib/api-client/models/proxy-protocol';
 import { useUpdateProxyMutation } from '@/store/api/proxyApi';
 import { useToast } from '@/hooks/use-toast';
 // THIN CLIENT: Removed AuthContext - backend handles auth
-import { Loader2 } from "lucide-react";
+import { LoaderIcon } from "@/icons";
 const PROXY_PROTOCOLS = ['http', 'https', 'socks4', 'socks5'] as const;
 const INITIAL_PROXY_STATUSES = ['Active', 'Disabled'] as const; // For creating new proxy
 
@@ -61,6 +62,10 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
   // THIN CLIENT: Removed useAuth - backend handles authentication
   const user = null; // Backend provides user data when needed
   const isEditing = !!proxyToEdit;
+
+  // Build options for SelectAdapter
+  const protocolOptions = useMemo(() => PROXY_PROTOCOLS.map(p => ({ value: p, label: p.toUpperCase() })), []);
+  const statusOptions = useMemo(() => INITIAL_PROXY_STATUSES.map(s => ({ value: s, label: s })), []);
 
   const form = useForm<ProxyFormValues>({
     resolver: zodResolver(proxyFormSchema),
@@ -163,7 +168,7 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
             <FormItem data-testid="proxy-field-description">
               <FormLabel>Description (Optional)</FormLabel>
               <FormControl>
-                <Textarea data-testid="proxy-input-description" placeholder="Proxy description" {...field} />
+                <TextAreaAdapter data-testid="proxy-input-description" placeholder="Proxy description" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -191,18 +196,15 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           render={({ field }) => (
             <FormItem data-testid="proxy-field-protocol">
               <FormLabel>Protocol</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger data-testid="proxy-input-protocol">
-                    <SelectValue placeholder="Select a protocol" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {PROXY_PROTOCOLS.map(protocol => (
-                    <SelectItem key={protocol} value={protocol}>{protocol}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <SelectAdapter
+                  data-testid="proxy-input-protocol"
+                  options={protocolOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Select a protocol"
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -253,7 +255,7 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
             <FormItem data-testid="proxy-field-notes">
               <FormLabel>Notes (Optional)</FormLabel>
               <FormControl>
-                <Textarea data-testid="proxy-input-notes" placeholder="Any notes about this proxy (e.g., provider, location)" {...field} />
+                <TextAreaAdapter data-testid="proxy-input-notes" placeholder="Any notes about this proxy (e.g., provider, location)" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -264,11 +266,12 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           name="userEnabled"
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="proxy-field-user-enabled">
-              <div className="space-y-0.5">
-                <FormLabel>User Enabled</FormLabel>
-              </div>
               <FormControl>
-                <Switch data-testid="proxy-input-user-enabled" checked={field.value} onCheckedChange={field.onChange} />
+                <Switch 
+                  label="User Enabled" 
+                  defaultChecked={field.value} 
+                  onChange={field.onChange} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -281,18 +284,15 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
             render={({ field }) => (
                 <FormItem data-testid="proxy-field-initial-status">
                 <FormLabel>Initial Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                    <SelectTrigger data-testid="proxy-input-initial-status">
-                        <SelectValue placeholder="Select initial status" />
-                    </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                    {INITIAL_PROXY_STATUSES.map(status => (
-                        <SelectItem key={status} value={status}>{status}</SelectItem>
-                    ))}
-                    </SelectContent>
-                </Select>
+                <FormControl>
+                  <SelectAdapter
+                    data-testid="proxy-input-initial-status"
+                    options={statusOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select initial status"
+                  />
+                </FormControl>
                 <FormDescription>Set the initial status for this new proxy. It&apos;s recommended to start as &apos;Disabled&apos; until tested.</FormDescription>
                 <FormMessage />
                 </FormItem>
@@ -304,8 +304,7 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           <Button data-testid="proxy-cancel" type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting}>
             Cancel
           </Button>
-          <Button data-testid="proxy-submit" type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button data-testid="proxy-submit" type="submit" disabled={form.formState.isSubmitting} startIcon={form.formState.isSubmitting ? <LoaderIcon className="h-4 w-4 animate-spin" /> : undefined}>
             {isEditing ? 'Save Changes' : 'Add Proxy'}
           </Button>
         </div>

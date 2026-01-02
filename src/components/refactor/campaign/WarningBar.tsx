@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { AlertTriangle, AlertCircle, Info, Activity } from 'lucide-react';
+import { WarningTriangleIcon, AlertCircleIcon, InfoIcon, ActivityIcon } from '@/icons';
 import { cn } from '@/lib/utils';
 
 export interface WarningBarData {
@@ -25,25 +25,25 @@ interface WarningBarProps {
 const warningConfig = {
   stuffing: {
     label: 'Stuffing',
-    icon: AlertTriangle,
+    icon: WarningTriangleIcon,
     color: 'bg-orange-500',
     lightColor: 'bg-orange-200 dark:bg-orange-900/40'
   },
   repetition: {
     label: 'Repetition',
-    icon: AlertCircle,
+    icon: AlertCircleIcon,
     color: 'bg-red-500',
     lightColor: 'bg-red-200 dark:bg-red-900/40'
   },
   anchor: {
     label: 'Anchor',
-    icon: Activity,
+    icon: ActivityIcon,
     color: 'bg-yellow-500',
     lightColor: 'bg-yellow-200 dark:bg-yellow-900/40'
   },
   general: {
     label: 'General',
-    icon: Info,
+    icon: InfoIcon,
     color: 'bg-blue-500',
     lightColor: 'bg-blue-200 dark:bg-blue-900/40'
   }

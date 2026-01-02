@@ -7,9 +7,8 @@
 'use client';
 
 import React from 'react';
-import { ChevronDown, ChevronRight, Globe, Server, Search, Settings } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { ChevronDownIcon, ChevronRightIcon, GlobeIcon, ServerIcon, SearchIcon, SettingsIcon } from '@/icons';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 
 // Interfaces matching actual backend response structure
@@ -71,7 +70,7 @@ function ConfigSection({ title, icon, children, defaultExpanded = false, isEmpty
         <div className="flex items-center gap-2 text-gray-500">
           {icon}
           <span className="font-medium">{title}</span>
-          <Badge variant="secondary" className="ml-auto text-xs">Not Configured</Badge>
+          <Badge color="light" size="sm" className="ml-auto">Not Configured</Badge>
         </div>
       </div>
     );
@@ -84,13 +83,13 @@ function ConfigSection({ title, icon, children, defaultExpanded = false, isEmpty
         className="w-full flex items-center gap-2 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
       >
         {isExpanded ? (
-          <ChevronDown className="w-4 h-4 text-gray-500" />
+          <ChevronDownIcon className="w-4 h-4 text-gray-500" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-gray-500" />
+          <ChevronRightIcon className="w-4 h-4 text-gray-500" />
         )}
         {icon}
         <span className="font-medium text-gray-900 dark:text-gray-100">{title}</span>
-        <Badge variant="outline" className="ml-auto text-xs">Configured</Badge>
+        <Badge color="success" size="sm" className="ml-auto">Configured</Badge>
       </button>
       {isExpanded && (
         <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50 dark:bg-gray-800/30">
@@ -110,12 +109,12 @@ function ConfigRow({ label, value, type = 'text' }: { label: string; value: unkn
       return (
         <div className="flex flex-wrap gap-1">
           {value.slice(0, 10).map((item, index) => (
-            <Badge key={index} variant="secondary" className="text-xs">
+            <Badge key={index} color="light" size="sm">
               {String(item)}
             </Badge>
           ))}
           {value.length > 10 && (
-            <Badge variant="outline" className="text-xs">
+            <Badge color="info" size="sm">
               +{value.length - 10} more
             </Badge>
           )}
@@ -126,7 +125,7 @@ function ConfigRow({ label, value, type = 'text' }: { label: string; value: unkn
       return <span className="font-mono">{Number(value).toLocaleString()}</span>;
     }
     if (type === 'boolean') {
-      return <Badge variant={value ? 'default' : 'secondary'} className="text-xs">{value ? 'Yes' : 'No'}</Badge>;
+      return <Badge color={value ? 'success' : 'light'} size="sm">{value ? 'Yes' : 'No'}</Badge>;
     }
     return <span>{String(value)}</span>;
   };
@@ -166,35 +165,35 @@ export function PhaseConfigDisplay({
 
   if (!hasAnyConfig) {
     return (
-      <Card className={cn("", className)}>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Settings className="w-5 h-5" />
+      <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <SettingsIcon className="w-5 h-5" />
             Phase Configurations
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="px-6 pb-6">
           <div className="text-gray-500 dark:text-gray-400 text-center py-4">
             No phase configurations recorded for this campaign
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className={cn("", className)}>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Settings className="w-5 h-5" />
+    <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+      <div className="p-6">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <SettingsIcon className="w-5 h-5" />
           Phase Configurations
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
+        </h3>
+      </div>
+      <div className="px-6 pb-6 space-y-3">
         {/* Domain Generation Config */}
         <ConfigSection
           title="Domain Discovery"
-          icon={<Globe className="w-4 h-4 text-blue-500" />}
+          icon={<GlobeIcon className="w-4 h-4 text-blue-500" />}
           defaultExpanded={defaultExpanded}
           isEmpty={!hasDomainGen}
         >
@@ -215,7 +214,7 @@ export function PhaseConfigDisplay({
         {/* DNS Validation Config */}
         <ConfigSection
           title="DNS Validation"
-          icon={<Server className="w-4 h-4 text-green-500" />}
+          icon={<ServerIcon className="w-4 h-4 text-green-500" />}
           defaultExpanded={defaultExpanded}
           isEmpty={!hasDns}
         >
@@ -231,7 +230,7 @@ export function PhaseConfigDisplay({
         {/* HTTP Keyword Validation Config */}
         <ConfigSection
           title="HTTP Keyword Validation"
-          icon={<Search className="w-4 h-4 text-purple-500" />}
+          icon={<SearchIcon className="w-4 h-4 text-purple-500" />}
           defaultExpanded={defaultExpanded}
           isEmpty={!hasHttp}
         >
@@ -246,8 +245,8 @@ export function PhaseConfigDisplay({
             <ConfigRow label="Micro Crawl Byte Budget" value={httpValidation.microCrawlByteBudget ? formatBytes(httpValidation.microCrawlByteBudget) : undefined} />
           </div>
         </ConfigSection>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

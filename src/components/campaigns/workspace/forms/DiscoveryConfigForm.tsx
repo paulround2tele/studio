@@ -3,10 +3,10 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 // Removed phantom PhaseStatusResponse enums (not generated); use literal phases and markConfigured helper
 import { markConfigured } from '@/utils/phaseStatus';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 import { Form } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import InputAdapter from '@/components/ta/adapters/InputAdapter';
+import TextAreaAdapter from '@/components/ta/adapters/TextAreaAdapter';
 // Legacy DomainGenerationConfig component removed with unified pipeline cleanup.
 // Provide minimal inline field set instead.
 import { useConfigurePhaseStandaloneMutation, campaignApi } from '@/store/api/campaignApi';
@@ -121,7 +121,7 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
           </div>
           <div className="flex flex-col gap-1" data-testid="phase-discovery-field-constant-string">
             <label className="font-medium">Constant String</label>
-            <Input data-testid="phase-discovery-input-constant-string" disabled={isLoading} {...form.register('constantString')} />
+            <InputAdapter data-testid="phase-discovery-input-constant-string" disabled={isLoading} {...form.register('constantString')} />
           </div>
           {/* Dynamic variable length fields */}
           {(() => {
@@ -129,13 +129,13 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
             if (pt === 'prefix') return (
               <div className="flex flex-col gap-1" data-testid="phase-discovery-field-prefix-length">
                 <label className="font-medium">Prefix Variable Length</label>
-                <Input data-testid="phase-discovery-input-prefix-length" type="number" disabled={isLoading} {...form.register('prefixVariableLength', { valueAsNumber: true })} />
+                <InputAdapter data-testid="phase-discovery-input-prefix-length" type="number" disabled={isLoading} {...form.register('prefixVariableLength', { valueAsNumber: true })} />
               </div>
             );
             if (pt === 'suffix') return (
               <div className="flex flex-col gap-1" data-testid="phase-discovery-field-suffix-length">
                 <label className="font-medium">Suffix Variable Length</label>
-                <Input data-testid="phase-discovery-input-suffix-length" type="number" disabled={isLoading} {...form.register('suffixVariableLength', { valueAsNumber: true })} />
+                <InputAdapter data-testid="phase-discovery-input-suffix-length" type="number" disabled={isLoading} {...form.register('suffixVariableLength', { valueAsNumber: true })} />
               </div>
             );
             if (pt === 'both') return (
@@ -143,11 +143,11 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1" data-testid="phase-discovery-field-prefix-length">
                     <label className="font-medium">Prefix Variable Length</label>
-                    <Input data-testid="phase-discovery-input-prefix-length" type="number" disabled={isLoading} {...form.register('prefixVariableLength', { valueAsNumber: true })} />
+                    <InputAdapter data-testid="phase-discovery-input-prefix-length" type="number" disabled={isLoading} {...form.register('prefixVariableLength', { valueAsNumber: true })} />
                   </div>
                   <div className="flex flex-col gap-1" data-testid="phase-discovery-field-suffix-length">
                     <label className="font-medium">Suffix Variable Length</label>
-                    <Input data-testid="phase-discovery-input-suffix-length" type="number" disabled={isLoading} {...form.register('suffixVariableLength', { valueAsNumber: true })} />
+                    <InputAdapter data-testid="phase-discovery-input-suffix-length" type="number" disabled={isLoading} {...form.register('suffixVariableLength', { valueAsNumber: true })} />
                   </div>
                 </div>
               </div>
@@ -156,19 +156,19 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
           })()}
           <div className="flex flex-col gap-1 md:col-span-2" data-testid="phase-discovery-field-character-set">
             <label className="font-medium">Character Set</label>
-            <Textarea data-testid="phase-discovery-input-character-set" disabled={isLoading} rows={2} className="font-mono" {...form.register('characterSet')} />
+            <TextAreaAdapter data-testid="phase-discovery-input-character-set" disabled={isLoading} rows={2} className="font-mono" {...form.register('characterSet')} />
           </div>
           <div className="flex flex-col gap-1" data-testid="phase-discovery-field-num-domains">
             <label className="font-medium">Num Domains</label>
-            <Input data-testid="phase-discovery-input-num-domains" type="number" disabled={isLoading} {...form.register('numDomainsToGenerate', { valueAsNumber: true })} />
+            <InputAdapter data-testid="phase-discovery-input-num-domains" type="number" disabled={isLoading} {...form.register('numDomainsToGenerate', { valueAsNumber: true })} />
           </div>
           <div className="flex flex-col gap-1" data-testid="phase-discovery-field-batch-size">
             <label className="font-medium">Batch Size</label>
-            <Input data-testid="phase-discovery-input-batch-size" type="number" disabled={isLoading} {...form.register('batchSize', { valueAsNumber: true })} />
+            <InputAdapter data-testid="phase-discovery-input-batch-size" type="number" disabled={isLoading} {...form.register('batchSize', { valueAsNumber: true })} />
           </div>
           <div className="flex flex-col gap-1 md:col-span-2" data-testid="phase-discovery-field-tlds">
             <label className="font-medium">TLDs (comma separated)</label>
-            <Input data-testid="phase-discovery-input-tlds" disabled={isLoading} {...form.register('tlds' as const)} onBlur={() => {
+            <InputAdapter data-testid="phase-discovery-input-tlds" disabled={isLoading} {...form.register('tlds' as const)} onBlur={() => {
               const rawVal = form.getValues('tlds') as string | string[] | undefined;
               if (typeof rawVal === 'string') {
                 const arr: string[] = rawVal.split(',').map((s: string) => s.trim()).filter(Boolean);

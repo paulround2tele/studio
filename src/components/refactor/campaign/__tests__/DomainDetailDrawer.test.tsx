@@ -67,26 +67,26 @@ const mockDomain: DomainListItem = {
   },
 };
 
-// Mock score breakdown response
+// Mock score breakdown response (components use {value, state} format with camelCase keys)
 const mockBreakdown: DomainScoreBreakdownResponse = {
   campaignId: 'test-campaign',
   domain: 'example-domain.com',
   components: {
-    density: 0.85,
-    coverage: 0.72,
-    non_parked: 1.0,
-    content_length: 0.65,
-    title_keyword: 0.9,
-    freshness: 0.5,
-    tf_lite: 0,
+    density: { value: 0.85, state: 'ok' },
+    coverage: { value: 0.72, state: 'ok' },
+    nonParked: { value: 1.0, state: 'ok' },
+    contentLength: { value: 0.65, state: 'ok' },
+    titleKeyword: { value: 0.9, state: 'ok' },
+    freshness: { value: 0.5, state: 'ok' },
+    tfLite: { value: 0, state: 'ok' },
   },
   final: 82,
   weights: {
     density: 2.5,
     coverage: 2.0,
-    non_parked: 1.5,
-    content_length: 1.0,
-    title_keyword: 1.5,
+    nonParked: 1.5,
+    contentLength: 1.0,
+    titleKeyword: 1.5,
     freshness: 0.5,
   },
   parkedPenaltyFactor: 1.0,
@@ -375,7 +375,7 @@ describe('DomainDetailDrawer', () => {
         campaignId: 'test-campaign',
         domain: 'example-domain.com',
         components: {
-          density: 0.85,
+          density: { value: 0.85, state: 'ok' },
           // Missing: coverage, non_parked, content_length, title_keyword, freshness
         } as DomainScoreBreakdownResponse['components'],
         final: 60,

@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ExternalLink, RefreshCw } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ta/ui/table';
+import { ExternalLinkIcon, RefreshIcon } from '@/icons';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
 import type { DomainRow as DomainRowType, LifecycleState as _LifecycleState } from '@/types/domain';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 // Deprecated hook replaced with direct RTK Query usage
 import { useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
 import { DEFAULT_DOMAIN_PAGE_SIZE } from '@/lib/constants';
@@ -114,7 +114,7 @@ const DomainRow = React.memo<{ domain: EnrichedDomain }>(function DomainRow({ do
             className="text-blue-600 hover:text-blue-800 hover:underline flex items-center"
           >
             {safedomainName}
-            <ExternalLink className="ml-1 h-3 w-3" />
+            <ExternalLinkIcon className="ml-1 h-3 w-3" />
           </a>
           {domain.dnsIp && (
             <div className="text-xs text-muted-foreground">
@@ -276,7 +276,7 @@ export default function DomainStreamingTable({
   if (loading && enrichedDomains.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+        <RefreshIcon className="h-6 w-6 animate-spin mx-auto mb-2" />
         Loading domain data...
       </div>
     );
@@ -287,7 +287,7 @@ export default function DomainStreamingTable({
       <div className="text-center py-8">
         <p className="text-destructive mb-4">Error loading domain data: {error}</p>
         <Button onClick={refresh} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshIcon className="h-4 w-4 mr-2" />
           Retry
         </Button>
       </div>
@@ -305,7 +305,7 @@ export default function DomainStreamingTable({
           </div>
         )}
         <Button onClick={refresh} variant="outline" size="sm" className="mt-4">
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshIcon className="h-4 w-4 mr-2" />
           Refresh
         </Button>
       </div>
@@ -324,20 +324,20 @@ export default function DomainStreamingTable({
           )}
         </div>
         <Button onClick={refresh} variant="outline" size="sm" disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshIcon className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
 
-      <ScrollArea className="h-[400px] rounded-md border">
+      <ScrollArea className="h-[400px] rounded-md border border-gray-200 dark:border-gray-800">
         <Table>
-          <TableHeader className="sticky top-0 bg-background z-10">
+          <TableHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10">
             <TableRow>
-              <TableHead>Domain & Details</TableHead>
-              <TableHead className="text-center">DNS Status</TableHead>
-              <TableHead className="text-center">HTTP Status</TableHead>
-              <TableHead>Content & Keywords</TableHead>
-              <TableHead className="text-center">Lead Score</TableHead>
+              <TableCell isHeader>Domain & Details</TableCell>
+              <TableCell isHeader className="text-center">DNS Status</TableCell>
+              <TableCell isHeader className="text-center">HTTP Status</TableCell>
+              <TableCell isHeader>Content & Keywords</TableCell>
+              <TableCell isHeader className="text-center">Lead Score</TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -348,37 +348,30 @@ export default function DomainStreamingTable({
         </Table>
       </ScrollArea>
       
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
         <div>
           Showing {enrichedDomains.length} of {total} domains
         </div>
         
         {hasMore && (
-          <Button onClick={loadMore} variant="outline" size="sm" disabled={loading}>
-            {loading ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Loading...
-              </>
-            ) : (
-              'Load More'
-            )}
+          <Button onClick={loadMore} variant="outline" size="sm" disabled={loading} startIcon={loading ? <RefreshIcon className="h-4 w-4 animate-spin" /> : undefined}>
+            {loading ? 'Loading...' : 'Load More'}
           </Button>
         )}
       </div>
 
       {statusSummary && (
-        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-          <h4 className="font-medium mb-2">Campaign Status</h4>
+        <div className="mt-4 p-4 bg-gray-100 dark:bg-white/[0.03] rounded-lg">
+          <h4 className="font-medium mb-2 text-gray-800 dark:text-white/90">Campaign Status</h4>
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Phase:</span> {statusSummary.currentPhase}
+              <span className="text-gray-500 dark:text-gray-400">Phase:</span> {statusSummary.currentPhase}
             </div>
             <div>
-              <span className="text-muted-foreground">Status:</span> {statusSummary.phaseStatus}
+              <span className="text-gray-500 dark:text-gray-400">Status:</span> {statusSummary.phaseStatus}
             </div>
             <div>
-              <span className="text-muted-foreground">DNS Validated:</span> {statusSummary.summary.dnsValidated}
+              <span className="text-gray-500 dark:text-gray-400">DNS Validated:</span> {statusSummary.summary.dnsValidated}
             </div>
           </div>
         </div>

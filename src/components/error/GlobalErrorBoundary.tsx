@@ -1,10 +1,9 @@
 "use client";
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import Button from '@/components/ta/ui/button/Button';
+import Alert from '@/components/ta/ui/alert/Alert';
+import { WarningTriangleIcon, RefreshIcon, HomeIcon, BugIcon } from '@/icons';
 import { toast } from '@/hooks/use-toast';
 
 interface Props {
@@ -145,48 +144,38 @@ class GlobalErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-2xl">
-            <CardHeader className="text-center">
+          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] w-full max-w-2xl">
+            <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 text-center">
               <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+                <WarningTriangleIcon className="h-6 w-6 text-red-600" />
               </div>
-              <CardTitle className="text-2xl text-red-600">
+              <h3 className="text-2xl font-medium text-red-600">
                 Oops! Something went wrong
-              </CardTitle>
-            </CardHeader>
+              </h3>
+            </div>
             
-            <CardContent className="space-y-6">
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Error Details</AlertTitle>
-                <AlertDescription>
-                  {errorMessage}
-                </AlertDescription>
-              </Alert>
+            <div className="p-4 sm:p-6 space-y-6">
+              <Alert variant="error" title="Error Details" message={errorMessage} />
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 {canRetry && (
-                  <Button onClick={this.handleRetry} className="flex items-center gap-2">
-                    <RefreshCw className="h-4 w-4" />
+                  <Button onClick={this.handleRetry} startIcon={<RefreshIcon className="h-4 w-4" />}>
                     Try Again ({this.maxRetries - this.state.retryCount} attempts left)
                   </Button>
                 )}
                 
                 {!canRetry && (
-                  <Button onClick={() => window.location.reload()} className="flex items-center gap-2">
-                    <RefreshCw className="h-4 w-4" />
+                  <Button onClick={() => window.location.reload()} startIcon={<RefreshIcon className="h-4 w-4" />}>
                     Refresh Page
                   </Button>
                 )}
                 
-                <Button variant="outline" onClick={this.handleGoHome} className="flex items-center gap-2">
-                  <Home className="h-4 w-4" />
+                <Button variant="outline" onClick={this.handleGoHome} startIcon={<HomeIcon className="h-4 w-4" />}>
                   Go Home
                 </Button>
                 
-                <Button variant="outline" onClick={this.handleReportBug} className="flex items-center gap-2">
-                  <Bug className="h-4 w-4" />
+                <Button variant="outline" onClick={this.handleReportBug} startIcon={<BugIcon className="h-4 w-4" />}>
                   Report Bug
                 </Button>
               </div>
@@ -235,8 +224,8 @@ class GlobalErrorBoundary extends Component<Props, State> {
                   </a>
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       );
     }

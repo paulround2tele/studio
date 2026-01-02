@@ -4,8 +4,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 import { Sparkline } from '@/components/refactor/campaign/Sparkline';
 import { getSnapshots, getSnapshotCount } from '@/services/campaignMetrics/historyStore';
@@ -108,12 +107,12 @@ export const EnhancedKPICard: React.FC<EnhancedKPICardProps> = ({
   }, [delta, deltaDirection]);
 
   return (
-    <Card className={cn('relative overflow-hidden', className)}>
-      <CardHeader className="pb-2">
+    <div className={cn('relative overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]', className)}>
+      <div className="p-6 pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium text-gray-600">
+          <h3 className="text-sm font-medium text-gray-600">
             {title}
-          </CardTitle>
+          </h3>
           
           {/* Sparkline in header if available */}
           {hasEnoughData && (
@@ -127,15 +126,15 @@ export const EnhancedKPICard: React.FC<EnhancedKPICardProps> = ({
                 annotateLast={false}
                 className="opacity-75"
               />
-              <Badge variant="outline" className="text-xs px-1 py-0">
+              <Badge color="light" size="sm">
                 {sparklineData.length}
               </Badge>
             </div>
           )}
         </div>
-      </CardHeader>
+      </div>
       
-      <CardContent className="pt-0">
+      <div className="px-6 pb-6 pt-0">
         <div className="flex items-end justify-between">
           <div>
             <div className="text-2xl font-bold tracking-tight">
@@ -186,8 +185,8 @@ export const EnhancedKPICard: React.FC<EnhancedKPICardProps> = ({
             {delta && ` Current change: ${delta > 0 ? 'increase' : 'decrease'} of ${Math.abs(delta)}${unit || ''}.`}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

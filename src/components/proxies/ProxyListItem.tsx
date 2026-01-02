@@ -1,17 +1,18 @@
 "use client";
 
 import type { Proxy as ProxyType } from '@/lib/api-client/models/proxy';
+import { useState } from 'react';
 
 // Define proxy status type based on common proxy states
 type ProxyStatus = 'Active' | 'Disabled' | 'Failed';
-import { TableCell, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Edit3, Trash2, TestTubeDiagonal, PowerOff, AlertCircle, CheckCircle, HelpCircle } from 'lucide-react';
+import { TableCell, TableRow } from '@/components/ta/ui/table';
+import { TABLE_BODY_CELL_CLASSES } from '@/components/shared/Card';
+import Badge from '@/components/ta/ui/badge/Badge';
+import Button from '@/components/ta/ui/button/Button';
+import { Dropdown } from '@/components/ta/ui/dropdown/Dropdown';
+import { DropdownItem } from '@/components/ta/ui/dropdown/DropdownItem';
+import { MoreVerticalIcon, Edit3Icon, TrashBinIcon, TestTubeIcon, PowerOffIcon, AlertCircleIcon, CheckCircleIcon, HelpCircleIcon } from '@/icons';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 interface ProxyListItemProps {
   proxy: ProxyType;
@@ -22,91 +23,116 @@ interface ProxyListItemProps {
   isLoading?: boolean;
 }
 
-const getStatusBadgeInfo = (status: ProxyStatus): { variant: "default" | "secondary" | "destructive" | "outline", icon: JSX.Element, text: string } => {
+const getStatusBadgeInfo = (status: ProxyStatus): { color: 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark', icon: JSX.Element, text: string } => {
   switch (status) {
     case 'Active':
-      return { variant: 'default', icon: <CheckCircle className="h-3.5 w-3.5 text-green-500" />, text: 'Active' };
+      return { color: 'success', icon: <CheckCircleIcon className="h-3.5 w-3.5" />, text: 'Active' };
     case 'Disabled':
-      return { variant: 'secondary', icon: <PowerOff className="h-3.5 w-3.5 text-muted-foreground" />, text: 'Disabled' };
+      return { color: 'dark', icon: <PowerOffIcon className="h-3.5 w-3.5" />, text: 'Disabled' };
     case 'Failed':
-      return { variant: 'destructive', icon: <AlertCircle className="h-3.5 w-3.5 text-destructive" />, text: 'Failed' };
+      return { color: 'error', icon: <AlertCircleIcon className="h-3.5 w-3.5" />, text: 'Failed' };
     default:
-      return { variant: 'outline', icon: <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />, text: status };
+      return { color: 'light', icon: <HelpCircleIcon className="h-3.5 w-3.5" />, text: status };
   }
 };
 
 export default function ProxyListItem({ proxy, onEdit, onDelete, onTest, onToggleStatus, isLoading }: ProxyListItemProps) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
   const derivedStatus: ProxyStatus = proxy.isEnabled
     ? (proxy.isHealthy ? 'Active' : 'Failed')
     : 'Disabled';
   const statusInfo = getStatusBadgeInfo(derivedStatus);
 
-  const handleToggle = (checked: boolean) => {
-    onToggleStatus(proxy, checked ? 'Active' : 'Disabled');
+  const handleToggle = () => {
+    const newStatus = derivedStatus === 'Active' ? 'Disabled' : 'Active';
+    onToggleStatus(proxy, newStatus);
   };
   
-  const canBeEnabled = derivedStatus === 'Disabled' || derivedStatus === 'Failed';
-  const canBeDisabled = derivedStatus === 'Active';
-
+  const canToggle = derivedStatus === 'Active' || derivedStatus === 'Disabled' || derivedStatus === 'Failed';
 
   return (
-    <TableRow className={cn(isLoading && "opacity-50 pointer-events-none")} data-testid={`proxy-row-${proxy.id || 'unknown'}`}>
-      <TableCell data-testid="proxy-cell-name">
-        <div className="font-medium truncate max-w-xs" title={proxy.name} data-testid="proxy-name">{proxy.name}</div>
-        {proxy.description && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.description} data-testid="proxy-description">{proxy.description}</div>}
+    <TableRow className={isLoading ? "opacity-50 pointer-events-none" : ""}>
+      <TableCell className={TABLE_BODY_CELL_CLASSES}>
+        <div className="font-medium text-gray-800 dark:text-white/90 truncate max-w-xs" title={proxy.name}>{proxy.name}</div>
+        {proxy.description && <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs" title={proxy.description}>{proxy.description}</div>}
       </TableCell>
-      <TableCell data-testid="proxy-cell-address">
-        <div className="font-medium truncate max-w-xs" title={proxy.address} data-testid="proxy-address">{proxy.address}</div>
-        {proxy.username && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.username} data-testid="proxy-username">User: {proxy.username}</div>}
-        {proxy.notes && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.notes} data-testid="proxy-notes">{proxy.notes}</div>}
+      <TableCell className={TABLE_BODY_CELL_CLASSES}>
+        <div className="font-medium text-gray-700 dark:text-gray-300 truncate max-w-xs" title={proxy.address}>{proxy.address}</div>
+        {proxy.username && <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs"><span className="font-medium text-gray-500 dark:text-gray-400">User:</span> {proxy.username}</div>}
+        {proxy.notes && <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs" title={proxy.notes}>{proxy.notes}</div>}
       </TableCell>
-      <TableCell data-testid="proxy-cell-protocol"><Badge variant="outline" data-testid="proxy-protocol">{proxy.protocol}</Badge></TableCell>
-      <TableCell className="text-xs" data-testid="proxy-cell-country">{proxy.countryCode || '-'}</TableCell>
-      <TableCell data-testid="proxy-cell-status">
-        <Badge variant={statusInfo.variant} className="text-xs" data-testid={`proxy-status-${statusInfo.text.toLowerCase()}`}>
+      <TableCell className={TABLE_BODY_CELL_CLASSES}><Badge color="light" size="sm">{proxy.protocol}</Badge></TableCell>
+      <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-xs text-gray-700 dark:text-gray-300`}>{proxy.countryCode || '-'}</TableCell>
+      <TableCell className={TABLE_BODY_CELL_CLASSES}>
+        <Badge color={statusInfo.color} size="sm">
           {statusInfo.icon}
           <span className="ml-1">{statusInfo.text}</span>
         </Badge>
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground" data-testid="proxy-cell-last-tested">
+      <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-xs text-gray-500 dark:text-gray-400`}>
         {proxy.lastTested ? format(new Date(proxy.lastTested), 'PPp') : 'Never'}
       </TableCell>
-      <TableCell className="text-xs" data-testid="proxy-cell-success-failure">
-        <span className="text-green-600" data-testid="proxy-success-count">{proxy.successCount}</span> / <span className="text-red-600" data-testid="proxy-failure-count">{proxy.failureCount}</span>
+      <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-xs`}>
+        <span className="text-green-600 dark:text-green-500">{proxy.successCount}</span> / <span className="text-red-600 dark:text-red-500">{proxy.failureCount}</span>
       </TableCell>
-      <TableCell className="text-xs text-destructive truncate max-w-[150px]" title={proxy.lastError} data-testid="proxy-cell-last-error">
-        {proxy.lastError || 'None'}
+      <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-xs text-red-500 dark:text-red-400 truncate max-w-[150px]`}>
+        <span title={proxy.lastError}>{proxy.lastError || 'None'}</span>
       </TableCell>
-      <TableCell className="text-right" data-testid="proxy-cell-actions">
-        <div className="flex items-center justify-end gap-1" data-testid="proxy-actions">
-        <Switch
-  checked={derivedStatus === 'Active'}
-        onCheckedChange={handleToggle}
-  disabled={isLoading || !(canBeEnabled || canBeDisabled)}
+      <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-right`}>
+        <div className="flex items-center justify-end gap-2">
+          {/* Toggle button instead of Switch */}
+          <button
+            onClick={handleToggle}
+            disabled={isLoading || !canToggle}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              derivedStatus === 'Active' 
+                ? 'bg-green-500' 
+                : 'bg-gray-300 dark:bg-gray-600'
+            } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             aria-label={`Toggle proxy ${proxy.address} status`}
-            className={cn(
-          derivedStatus === 'Active' ? "data-[state=checked]:bg-green-500" : "data-[state=unchecked]:bg-muted-foreground/50",
-            )}
-            data-testid="proxy-toggle-status"
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isLoading} data-testid="proxy-menu-trigger">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" data-testid="proxy-menu">
-              <DropdownMenuItem onClick={() => onEdit(proxy)} disabled={isLoading} data-testid="proxy-menu-edit">
-                <Edit3 className="mr-2 h-4 w-4" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => proxy.id && onTest(proxy.id)} disabled={isLoading || !proxy.id} data-testid="proxy-menu-test">
-                <TestTubeDiagonal className="mr-2 h-4 w-4" /> Test
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(proxy)} className="text-destructive focus:text-destructive-foreground focus:bg-destructive" disabled={isLoading} data-testid="proxy-menu-delete">
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                derivedStatus === 'Active' ? 'translate-x-5' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+          
+          {/* Dropdown menu */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              disabled={isLoading}
+              className="h-8 w-8 p-0 dropdown-toggle"
+            >
+              <MoreVerticalIcon className="h-4 w-4" />
+            </Button>
+            <Dropdown isOpen={isDropdownOpen} onClose={() => setIsDropdownOpen(false)}>
+              <div className="p-1 min-w-[120px]">
+                <DropdownItem onClick={() => { onEdit(proxy); setIsDropdownOpen(false); }}>
+                  <span className="flex items-center">
+                    <Edit3Icon className="mr-2 h-4 w-4" /> Edit
+                  </span>
+                </DropdownItem>
+                <DropdownItem onClick={() => { if (proxy.id) { onTest(proxy.id); } setIsDropdownOpen(false); }}>
+                  <span className="flex items-center">
+                    <TestTubeIcon className="mr-2 h-4 w-4" /> Test
+                  </span>
+                </DropdownItem>
+                <DropdownItem 
+                  onClick={() => { onDelete(proxy); setIsDropdownOpen(false); }}
+                  className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <span className="flex items-center">
+                    <TrashBinIcon className="mr-2 h-4 w-4" /> Delete
+                  </span>
+                </DropdownItem>
+              </div>
+            </Dropdown>
+          </div>
         </div>
       </TableCell>
     </TableRow>

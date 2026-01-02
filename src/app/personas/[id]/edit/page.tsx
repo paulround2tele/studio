@@ -4,12 +4,11 @@ import PersonaForm from '@/components/personas/PersonaForm';
 import PageHeader from '@/components/shared/PageHeader';
 
 // Use backend-generated types directly - no custom types needed
-import { UserCog, Globe, Wifi, AlertCircle } from 'lucide-react';
+import { UserCogIcon, GlobeIcon, WifiIcon, AlertCircleIcon } from '@/icons';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 import { PersonasApi } from '@/lib/api-client/apis/personas-api';
 import { apiConfiguration } from '@/lib/api/config';
 import { useToast } from '@/hooks/use-toast';
@@ -81,15 +80,21 @@ function EditPersonaPageContent() {
   }, [personaId, personaTypeParam, toast]); // Removed router from deps as it was not used
 
   if (loading) {
+    /* TailAdmin migration: Skeleton replaced with inline Tailwind animate-pulse pattern */
     const typeName = personaTypeParam === 'http' ? "HTTP" : personaTypeParam === 'dns' ? "DNS" : "Persona";
     return (
       <>
-        <PageHeader title={`Edit ${typeName} Persona`} icon={UserCog} />
+        <PageHeader title={`Edit ${typeName} Persona`} icon={UserCogIcon} />
         <div className="max-w-3xl mx-auto space-y-4">
-          <Skeleton className="h-10 w-1/2" /> <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-40 w-full" /> <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-40 w-full" />
-          <div className="flex justify-end gap-2"> <Skeleton className="h-10 w-24" /><Skeleton className="h-10 w-24" /></div>
+          <div className="h-10 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="h-20 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="h-40 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="h-40 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="h-40 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="flex justify-end gap-2">
+            <div className="h-10 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+            <div className="h-10 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          </div>
         </div>
       </>
     );
@@ -98,9 +103,11 @@ function EditPersonaPageContent() {
   if (error || !persona) {
     return (
        <div className="text-center py-10">
-        <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
-        <PageHeader title="Error Loading Persona" description={error || "Persona data could not be loaded or found."} icon={UserCog} />
-        <Button onClick={() => router.push('/personas')} className="mt-6">Back to Personas</Button>
+        <AlertCircleIcon className="mx-auto h-12 w-12 text-error-500" />
+        <PageHeader title="Error Loading Persona" description={error || "Persona data could not be loaded or found."} icon={UserCogIcon} />
+        <div className="mt-6">
+          <Button variant="primary" onClick={() => router.push('/personas')}>Back to Personas</Button>
+        </div>
       </div>
     );
   }
@@ -109,14 +116,16 @@ function EditPersonaPageContent() {
   if (!persona.personaType || (persona.personaType !== 'http' && persona.personaType !== 'dns')) {
     return (
        <div className="text-center py-10">
-        <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
-        <PageHeader title="Invalid Persona Type" description="Persona type is missing or invalid." icon={UserCog} />
-        <Button onClick={() => router.push('/personas')} className="mt-6">Back to Personas</Button>
+        <AlertCircleIcon className="mx-auto h-12 w-12 text-error-500" />
+        <PageHeader title="Invalid Persona Type" description="Persona type is missing or invalid." icon={UserCogIcon} />
+        <div className="mt-6">
+          <Button variant="primary" onClick={() => router.push('/personas')}>Back to Personas</Button>
+        </div>
       </div>
     );
   }
 
-  const IconToUse = persona.personaType === 'http' ? Globe : Wifi;
+  const IconToUse = persona.personaType === 'http' ? GlobeIcon : WifiIcon;
   const typeNameDisplay = persona.personaType.toUpperCase();
 
   return (
@@ -133,7 +142,12 @@ function EditPersonaPageContent() {
 
 export default function EditPersonaPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-center">Loading persona editor...<Skeleton className="h-60 w-full mt-4" /></div>}>
+    <Suspense fallback={
+      <div className="p-6 text-center">
+        Loading persona editor...
+        <div className="h-60 w-full mt-4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+      </div>
+    }>
       <EditPersonaPageContent />
     </Suspense>
   );

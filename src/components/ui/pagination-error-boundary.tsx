@@ -4,9 +4,8 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { WarningTriangleIcon, RefreshIcon } from '@/icons';
+import Button from '@/components/ta/ui/button/Button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface PaginationErrorBoundaryProps {
@@ -51,14 +50,14 @@ export class PaginationErrorBoundary extends Component<
       }
 
       return (
-        <Card className="border-destructive/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" />
+        <div className="rounded-2xl border border-error-200 dark:border-error-800 bg-white dark:bg-white/[0.03]">
+          <div className="px-6 py-5 border-b border-error-200 dark:border-error-800">
+            <h3 className="text-lg font-semibold text-error-600 flex items-center gap-2">
+              <WarningTriangleIcon className="h-5 w-5" />
               Pagination Error
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </h3>
+          </div>
+          <div className="p-6 space-y-4">
             <Alert variant="destructive">
               <AlertDescription>
                 Something went wrong while loading paginated data. This might be due to:
@@ -72,10 +71,10 @@ export class PaginationErrorBoundary extends Component<
             
             {this.state.error && (
               <details className="mt-4">
-                <summary className="text-sm font-medium cursor-pointer text-muted-foreground">
+                <summary className="text-sm font-medium cursor-pointer text-gray-500 dark:text-gray-400">
                   Technical Details
                 </summary>
-                <pre className="mt-2 text-xs bg-muted p-2 rounded overflow-auto">
+                <pre className="mt-2 text-xs bg-gray-100 dark:bg-white/[0.03] p-2 rounded overflow-auto">
                   {this.state.error.message}
                 </pre>
               </details>
@@ -86,9 +85,8 @@ export class PaginationErrorBoundary extends Component<
                 variant="outline"
                 size="sm"
                 onClick={this.handleReset}
-                className="flex items-center gap-2"
+                startIcon={<RefreshIcon className="h-4 w-4" />}
               >
-                <RefreshCw className="h-4 w-4" />
                 Try Again
               </Button>
               <Button
@@ -99,8 +97,8 @@ export class PaginationErrorBoundary extends Component<
                 Reload Page
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       );
     }
 

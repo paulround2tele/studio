@@ -11,18 +11,12 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectValue,
-  SelectItem,
-} from '@/components/ui/select';
-import { X } from 'lucide-react';
+import InputAdapter from '@/components/ta/adapters/InputAdapter';
+import Button from '@/components/ta/ui/button/Button';
+import Badge from '@/components/ta/ui/badge/Badge';
+import SwitchAdapter from '@/components/ta/adapters/SwitchAdapter';
+import SelectAdapter from '@/components/ta/adapters/SelectAdapter';
+import { CloseIcon } from '@/icons';
 import { PersonasApi } from '@/lib/api-client';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
@@ -252,7 +246,7 @@ export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, 
             <FormItem data-testid="phase-analysis-field-name">
               <FormLabel>Configuration Name</FormLabel>
               <FormControl>
-                <Input {...field} data-testid="phase-analysis-input-name" />
+                <InputAdapter {...field} data-testid="phase-analysis-input-name" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -284,7 +278,7 @@ export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, 
                 >
                   <span>{persona.name}</span>
                   {persona.id && watchedPersonaIds.includes(persona.id) && (
-                    <Badge variant="default">Selected</Badge>
+                    <Badge color="primary" size="sm">Selected</Badge>
                   )}
                 </div>
               ))}
@@ -293,9 +287,9 @@ export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, 
           {watchedPersonaIds.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {watchedPersonaIds.map((id) => (
-                <Badge key={id} variant="secondary" className="flex items-center gap-1">
+                <Badge key={id} color="light" size="sm" className="flex items-center gap-1">
                   {personaLookup[id]?.name || id}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => togglePersona(id)} />
+                  <CloseIcon className="h-3 w-3 cursor-pointer" onClick={() => togglePersona(id)} />
                 </Badge>
               ))}
             </div>
@@ -306,15 +300,21 @@ export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, 
           <div className="text-xs font-medium">Analysis Types</div>
           <div className="flex flex-wrap gap-2">
             {ALL_ANALYSIS_TYPES.map((type) => (
-              <Badge
+              <button
                 key={type}
+                type="button"
                 data-testid={`phase-analysis-type-${type}`}
-                className="cursor-pointer text-[11px]"
-                variant={watchedAnalysisTypes.includes(type) ? 'default' : 'outline'}
                 onClick={() => toggleAnalysisType(type)}
+                className="focus:outline-none"
               >
-                {type}
-              </Badge>
+                <Badge
+                  className="cursor-pointer text-[11px]"
+                  color={watchedAnalysisTypes.includes(type) ? 'primary' : 'light'}
+                  size="sm"
+                >
+                  {type}
+                </Badge>
+              </button>
             ))}
           </div>
         </div>
@@ -322,23 +322,23 @@ export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, 
         <div className="grid grid-cols-1 gap-4 text-xs md:grid-cols-3" data-testid="phase-analysis-toggles">
           <div className="flex items-center justify-between border rounded px-3 py-2">
             <span>Include External Links</span>
-            <Switch
+            <SwitchAdapter
               checked={form.watch('includeExternal')}
-              onCheckedChange={(checked) => form.setValue('includeExternal', !!checked)}
+              onChange={(checked) => form.setValue('includeExternal', !!checked)}
             />
           </div>
           <div className="flex items-center justify-between border rounded px-3 py-2">
             <span>AI Suggestions</span>
-            <Switch
+            <SwitchAdapter
               checked={form.watch('enableSuggestions')}
-              onCheckedChange={(checked) => form.setValue('enableSuggestions', !!checked)}
+              onChange={(checked) => form.setValue('enableSuggestions', !!checked)}
             />
           </div>
           <div className="flex items-center justify-between border rounded px-3 py-2">
             <span>Generate Reports</span>
-            <Switch
+            <SwitchAdapter
               checked={form.watch('generateReports')}
-              onCheckedChange={(checked) => form.setValue('generateReports', !!checked)}
+              onChange={(checked) => form.setValue('generateReports', !!checked)}
             />
           </div>
         </div>
@@ -347,21 +347,21 @@ export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, 
           <div className="text-xs font-medium">Keyword Rules</div>
           <div className="flex flex-col gap-2 border rounded p-3">
             <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_140px_120px_auto]">
-              <Input
+              <InputAdapter
                 placeholder="Pattern"
                 value={newRulePattern}
                 onChange={(evt) => setNewRulePattern(evt.target.value)}
               />
-              <Select value={newRuleType} onValueChange={(val: 'string' | 'regex') => setNewRuleType(val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="string">Contains</SelectItem>
-                  <SelectItem value="regex">Regex</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
+              <SelectAdapter
+                options={[
+                  { value: 'string', label: 'Contains' },
+                  { value: 'regex', label: 'Regex' },
+                ]}
+                value={newRuleType}
+                onChange={(val) => setNewRuleType(val as 'string' | 'regex')}
+                placeholder="Type"
+              />
+              <InputAdapter
                 type="number"
                 min={0}
                 value={newRuleContext}
@@ -387,17 +387,18 @@ export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, 
                     <span className="flex-1 truncate" title={watchedRules[index]?.pattern}>
                       {watchedRules[index]?.pattern}
                     </span>
-                    <Badge variant="outline">{watchedRules[index]?.ruleType}</Badge>
-                    <span className="text-[11px] text-muted-foreground">
+                    <Badge color="light" size="sm">{watchedRules[index]?.ruleType}</Badge>
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400">
                       ctx {watchedRules[index]?.contextChars ?? 0}
                     </span>
                     <Button
                       type="button"
-                      size="icon"
-                      variant="ghost"
+                      size="sm"
+                      variant="outline"
+                      className="p-1 h-auto"
                       onClick={() => ruleArray.remove(index)}
                     >
-                      <X className="h-4 w-4" />
+                      <CloseIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}

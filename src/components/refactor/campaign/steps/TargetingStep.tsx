@@ -1,15 +1,16 @@
 /**
  * Targeting Step - Personas, keywords, and simple filters
+ * Migrated to TailAdmin + Tailwind patterns (Dec 31, 2025)
  */
 
 import React, { useMemo, useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info, RefreshCcw, X } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import Input from '@/components/ta/form/input/InputField';
+import Label from '@/components/ta/form/Label';
+import Alert from '@/components/ta/ui/alert/Alert';
+import Checkbox from '@/components/ta/form/input/Checkbox';
+import Button from '@/components/ta/ui/button/Button';
+import Badge from '@/components/ta/ui/badge/Badge';
+import { RotateCcwIcon, CloseIcon } from '@/icons';
 import type { ExecutionMode, WizardTargetingStep } from '../../types';
 
 interface PersonaOption {
@@ -147,55 +148,59 @@ export function TargetingStep({
 
   return (
     <div className="space-y-6">
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          <strong>Targeting Personas & Keywords:</strong> Choose personas to run DNS and enrichment phases and supply the keywords used for analysis.
-          {autoMode ? ' Auto mode requires at least one DNS persona, one enrichment persona, and one keyword.' : ' You can configure these later from the campaign dashboard if needed.'}
-        </AlertDescription>
-      </Alert>
+      <Alert
+        variant="info"
+        title="Targeting Personas & Keywords"
+        message={autoMode 
+          ? 'Choose personas to run DNS and enrichment phases and supply the keywords used for analysis. Auto mode requires at least one DNS persona, one enrichment persona, and one keyword.'
+          : 'Choose personas to run DNS and enrichment phases and supply the keywords used for analysis. You can configure these later from the campaign dashboard if needed.'
+        }
+      />
 
       {personasError && (
-        <Alert variant="destructive" role="alert">
-          <AlertTitle>Persona data unavailable</AlertTitle>
-          <AlertDescription className="flex items-center justify-between gap-2">
-            <span>{personasError}</span>
-            {onRetryPersonas && (
-              <Button type="button" variant="outline" size="sm" onClick={onRetryPersonas} className="gap-1">
-                <RefreshCcw className="h-3 w-3" /> Retry
-              </Button>
-            )}
-          </AlertDescription>
-        </Alert>
+        <div className="rounded-lg border border-error-200 bg-error-50 p-4 dark:border-error-500/30 dark:bg-error-500/10">
+          <div className="flex items-start gap-3">
+            <svg className="mt-0.5 h-5 w-5 text-error-600 dark:text-error-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-error-800 dark:text-error-300">Persona data unavailable</h4>
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <span className="text-sm text-error-700 dark:text-error-400">{personasError}</span>
+                {onRetryPersonas && (
+                  <Button variant="outline" size="sm" onClick={onRetryPersonas} startIcon={<RotateCcwIcon className="h-3 w-3" />}>
+                    Retry
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <section className="space-y-3">
         <div>
-          <h3 className="text-sm font-semibold">DNS Personas</h3>
-          <p className="text-xs text-muted-foreground">Select personas that resolve DNS records for generated domains.</p>
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">DNS Personas</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Select personas that resolve DNS records for generated domains.</p>
         </div>
         {personasLoading ? (
-          <p className="text-sm text-muted-foreground">Loading personas...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Loading personas...</p>
         ) : dnsPersonas.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No DNS personas available. Create one before running validation.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">No DNS personas available. Create one before running validation.</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
             {dnsPersonas.map(persona => {
-              const checkboxId = `dns-persona-${persona.id}`;
               const checked = selectedDns.includes(persona.id);
               return (
                 <label
                   key={persona.id}
-                  htmlFor={checkboxId}
-                  className={`flex items-center gap-3 rounded border p-3 transition-colors ${checked ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}
+                  className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${checked ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10' : 'border-gray-200 dark:border-gray-700 hover:border-brand-300'}`}
                 >
                   <Checkbox
-                    id={checkboxId}
                     checked={checked}
-                    onCheckedChange={(value) => togglePersona(persona.id, persona.name, 'dns', value)}
-                    aria-label={`DNS persona ${persona.name}`}
+                    onChange={(value) => togglePersona(persona.id, persona.name, 'dns', value)}
                   />
-                  <span className="text-sm font-medium">{persona.name}</span>
+                  <span className="text-sm font-medium text-gray-800 dark:text-white/90">{persona.name}</span>
                 </label>
               );
             })}
@@ -205,31 +210,27 @@ export function TargetingStep({
 
       <section className="space-y-3">
         <div>
-          <h3 className="text-sm font-semibold">Enrichment Personas</h3>
-          <p className="text-xs text-muted-foreground">Select personas used during HTTP enrichment and downstream analysis.</p>
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Enrichment Personas</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Select personas used during HTTP enrichment and downstream analysis.</p>
         </div>
         {personasLoading ? (
-          <p className="text-sm text-muted-foreground">Loading personas...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Loading personas...</p>
         ) : httpPersonas.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No enrichment personas available. Create one before running enrichment.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">No enrichment personas available. Create one before running enrichment.</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
             {httpPersonas.map(persona => {
-              const checkboxId = `http-persona-${persona.id}`;
               const checked = selectedHttp.includes(persona.id);
               return (
                 <label
                   key={persona.id}
-                  htmlFor={checkboxId}
-                  className={`flex items-center gap-3 rounded border p-3 transition-colors ${checked ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}
+                  className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${checked ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10' : 'border-gray-200 dark:border-gray-700 hover:border-brand-300'}`}
                 >
                   <Checkbox
-                    id={checkboxId}
                     checked={checked}
-                    onCheckedChange={(value) => togglePersona(persona.id, persona.name, 'http', value)}
-                    aria-label={`Enrichment persona ${persona.name}`}
+                    onChange={(value) => togglePersona(persona.id, persona.name, 'http', value)}
                   />
-                  <span className="text-sm font-medium">{persona.name}</span>
+                  <span className="text-sm font-medium text-gray-800 dark:text-white/90">{persona.name}</span>
                 </label>
               );
             })}
@@ -240,17 +241,17 @@ export function TargetingStep({
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold">Keyword Sets</h3>
-            <p className="text-xs text-muted-foreground">Choose curated keyword collections that seed HTTP validation and enrichment.</p>
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Keyword Sets</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Choose curated keyword collections that seed HTTP validation and enrichment.</p>
           </div>
           {selectedKeywordSetIds.length === 0 && (
-            <span className="text-[11px] font-medium text-destructive">Required</span>
+            <span className="text-[11px] font-medium text-error-500">Required</span>
           )}
         </div>
         {personasLoading ? (
-          <p className="text-sm text-muted-foreground">Loading keyword sets...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Loading keyword sets...</p>
         ) : keywordSets.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No keyword sets available. Create one before launching campaigns.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">No keyword sets available. Create one before launching campaigns.</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {keywordSets.map(set => {
@@ -260,32 +261,33 @@ export function TargetingStep({
                   type="button"
                   key={set.id}
                   onClick={() => toggleKeywordSet(set.id)}
-                  className={`rounded border p-3 text-left transition-colors ${selected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}
+                  className={`rounded-lg border p-3 text-left transition-colors ${selected ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10' : 'border-gray-200 dark:border-gray-700 hover:border-brand-300'}`}
                 >
-                  <div className="flex items-center justify-between gap-2 text-sm font-medium">
+                  <div className="flex items-center justify-between gap-2 text-sm font-medium text-gray-800 dark:text-white/90">
                     <span>{set.name}</span>
-                    {selected && <Badge variant="secondary" className="text-[10px]">Selected</Badge>}
+                    {selected && <Badge color="primary" size="sm">Selected</Badge>}
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{set.description || 'No description provided.'}</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{set.description || 'No description provided.'}</p>
                   {typeof set.ruleCount === 'number' && (
-                    <p className="mt-1 text-[10px] text-muted-foreground">{set.ruleCount} rules</p>
+                    <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400">{set.ruleCount} rules</p>
                   )}
                 </button>
               );
             })}
           </div>
         )}
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           At least one keyword set is required for every campaign. Combine sets with custom keywords for nuanced enrichment.
         </p>
       </section>
 
       <section className="space-y-2">
-        <Label htmlFor="include-keywords">Include Keywords</Label>
+        <Label htmlFor="includeKeywords">Include Keywords</Label>
         <Input
-          id="include-keywords"
+          id="includeKeywords"
+          type="text"
           placeholder="keyword1, keyword2, keyword3"
-          value={includeKeywords.join(', ')}
+          defaultValue={includeKeywords.join(', ')}
           onChange={(event) => applyIncludeKeywords(event.target.value)}
         />
         <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -294,10 +296,11 @@ export function TargetingStep({
       </section>
 
       <section className="space-y-2">
-        <Label htmlFor="ad-hoc-keyword">Custom Keywords</Label>
+        <Label htmlFor="customKeyword">Custom Keywords</Label>
         <div className="flex gap-2">
-          <Input
-            id="ad-hoc-keyword"
+          <input
+            id="customKeyword"
+            type="text"
             placeholder="Add a single keyword and press Enter"
             value={pendingAdHocKeyword}
             onChange={(event) => setPendingAdHocKeyword(event.target.value)}
@@ -307,25 +310,29 @@ export function TargetingStep({
                 addAdHocKeyword();
               }
             }}
+            className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
           />
-          <Button type="button" onClick={addAdHocKeyword} variant="secondary">
+          <Button variant="outline" onClick={addAdHocKeyword}>
             Add
           </Button>
         </div>
         {adHocKeywords.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {adHocKeywords.map(keyword => (
-              <Badge key={keyword} variant="secondary" className="flex items-center gap-1">
+              <span 
+                key={keyword} 
+                className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-white/[0.03] dark:text-white/80"
+              >
                 {keyword}
                 <button
                   type="button"
                   onClick={() => removeAdHocKeyword(keyword)}
                   aria-label={`Remove keyword ${keyword}`}
-                  className="rounded-full p-0.5 hover:bg-secondary/80"
+                  className="rounded-full p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
-                  <X className="h-3 w-3" />
+                  <CloseIcon className="h-3 w-3" />
                 </button>
-              </Badge>
+              </span>
             ))}
           </div>
         )}
@@ -335,11 +342,11 @@ export function TargetingStep({
       </section>
 
       <section className="space-y-2">
-        <Label htmlFor="exclude-keywords">Exclude Keywords</Label>
+        <Label>Exclude Keywords</Label>
         <Input
-          id="exclude-keywords"
+          type="text"
           placeholder="spam, adult, illegal"
-          value={(data.excludeKeywords || []).join(', ')}
+          defaultValue={(data.excludeKeywords || []).join(', ')}
           onChange={(event) => applyExcludeKeywords(event.target.value)}
         />
         <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -348,11 +355,11 @@ export function TargetingStep({
       </section>
 
       <section className="space-y-2">
-        <Label htmlFor="exclude-extensions">Exclude Extensions</Label>
+        <Label>Exclude Extensions</Label>
         <Input
-          id="exclude-extensions"
+          type="text"
           placeholder="gov, edu, mil"
-          value={(data.excludeExtensions || []).join(', ')}
+          defaultValue={(data.excludeExtensions || []).join(', ')}
           onChange={(event) => applyExcludeExtensions(event.target.value)}
         />
         <p className="text-sm text-gray-600 dark:text-gray-400">

@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ta/ui/badge/Badge';
 
 export interface ClassificationBucket {
   name: string;
@@ -37,9 +37,8 @@ function BucketCard({ bucket, showSamples = true, maxSamples = 3 }: {
           {bucket.name}
         </h3>
         <Badge 
-          variant="outline" 
-          className="text-xs"
-          style={{ borderColor: bucket.color }}
+          color="light" 
+          size="sm"
         >
           {bucket.percentage.toFixed(1)}%
         </Badge>

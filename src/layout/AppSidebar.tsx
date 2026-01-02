@@ -4,16 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useCachedAuth } from "@/lib/hooks/useCachedAuth";
-import {
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  TableIcon,
-  UserCircleIcon,
-  PlugInIcon,
-  ListIcon,
-  BoxCubeIcon,
-} from "@/icons";
+import { ChevronDownIcon, GridIcon, HorizontaLDots } from "@/icons";
 import { LogOut, Target, Users, Settings, Zap, Database } from "lucide-react";
 
 type NavItem = {
@@ -26,7 +17,7 @@ type NavItem = {
 // DomainFlow Navigation Items
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon />,
+    icon: <GridIcon className="w-6 h-6" />,
     name: "Dashboard",
     path: "/dashboard",
   },
@@ -301,7 +292,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Menu"
                 ) : (
-                  <HorizontaLDots />
+                  <HorizontaLDots className="w-5 h-5" />
                 )}
               </h2>
               {renderMenuItems(navItems, "main")}
@@ -318,7 +309,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Others"
                 ) : (
-                  <HorizontaLDots />
+                  <HorizontaLDots className="w-5 h-5" />
                 )}
               </h2>
               {renderMenuItems(othersItems, "others")}

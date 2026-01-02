@@ -4,9 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Target, Zap } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { ChevronDownIcon, ChevronUpIcon, TrendingUpIcon, TrendingDownIcon, TargetIcon, ZapIcon } from '@/icons';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 import { Mover } from '@/types/campaignMetrics';
 import { formatMoverValue, getMoverColor } from '@/services/campaignMetrics/moversService';
@@ -66,16 +65,16 @@ export function MoversPanel({
   }
 
   return (
-    <Card className={cn("", className)}>
-      <CardHeader 
-        className="cursor-pointer select-none" 
+    <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+      <div 
+        className="p-6 cursor-pointer select-none" 
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-lg">{title}</CardTitle>
+            <h3 className="text-lg font-semibold">{title}</h3>
             {isSynthetic && (
-              <Badge variant="outline" className="text-xs">
+              <Badge color="light" size="sm">
                 Demo
               </Badge>
             )}
@@ -83,21 +82,21 @@ export function MoversPanel({
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 text-sm text-gray-500">
               <span className="text-green-600 font-medium">{gainers.length}</span>
-              <TrendingUp className="w-4 h-4 text-green-600" />
+              <TrendingUpIcon className="w-4 h-4 text-green-600" />
               <span className="text-red-600 font-medium">{decliners.length}</span>
-              <TrendingDown className="w-4 h-4 text-red-600" />
+              <TrendingDownIcon className="w-4 h-4 text-red-600" />
             </div>
             {isCollapsed ? (
-              <ChevronDown className="w-5 h-5 text-gray-400" />
+              <ChevronDownIcon className="w-5 h-5 text-gray-400" />
             ) : (
-              <ChevronUp className="w-5 h-5 text-gray-400" />
+              <ChevronUpIcon className="w-5 h-5 text-gray-400" />
             )}
           </div>
         </div>
-      </CardHeader>
+      </div>
       
       {!isCollapsed && (
-        <CardContent>
+        <div className="px-6 pb-6">
           <div className="space-y-3">
             {displayedMovers.map((mover, index) => (
               <MoverItem 
@@ -120,9 +119,9 @@ export function MoversPanel({
               </div>
             )}
           </div>
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -139,8 +138,8 @@ function MoverItem({ mover }: MoverItemProps) {
   const formattedValue = formatMoverValue(mover);
   
   // Get icon based on metric and direction
-  const IconComponent = direction === 'up' ? TrendingUp : TrendingDown;
-  const MetricIcon = metric === 'richness' ? Target : Zap;
+  const IconComponent = direction === 'up' ? TrendingUpIcon : TrendingDownIcon;
+  const MetricIcon = metric === 'richness' ? TargetIcon : ZapIcon;
 
   return (
     <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
@@ -149,10 +148,9 @@ function MoverItem({ mover }: MoverItemProps) {
           className="flex items-center justify-center w-8 h-8 rounded-full"
           style={{ backgroundColor: `${color}15` }}
         >
-          <MetricIcon 
-            className="w-4 h-4" 
-            style={{ color }}
-          />
+          <span style={{ color }}>
+            <MetricIcon className="w-4 h-4" />
+          </span>
         </div>
         
         <div className="min-w-0 flex-1">
@@ -166,17 +164,16 @@ function MoverItem({ mover }: MoverItemProps) {
       </div>
       
       <div className="flex items-center gap-2 flex-shrink-0">
-        <Badge 
-          variant="outline"
-          className="text-xs"
+        <span
+          className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
           style={{ 
-            borderColor: color,
+            border: `1px solid ${color}`,
             color 
           }}
         >
-          <IconComponent className="w-3 h-3 mr-1" />
+          <IconComponent className="w-3 h-3" />
           {Math.abs(delta).toFixed(metric === 'richness' ? 0 : 2)}
-        </Badge>
+        </span>
       </div>
     </div>
   );
@@ -220,12 +217,12 @@ export function MoversSummary({ movers, className }: MoversSummaryProps) {
   return (
     <div className={cn("flex items-center gap-4 text-sm", className)}>
       <div className="flex items-center gap-1">
-        <TrendingUp className="w-4 h-4 text-green-600" />
+        <TrendingUpIcon className="w-4 h-4 text-green-600" />
         <span className="font-medium text-green-600">{gainers.length}</span>
         <span className="text-gray-500">gainers</span>
       </div>
       <div className="flex items-center gap-1">
-        <TrendingDown className="w-4 h-4 text-red-600" />
+        <TrendingDownIcon className="w-4 h-4 text-red-600" />
         <span className="font-medium text-red-600">{decliners.length}</span>
         <span className="text-gray-500">decliners</span>
       </div>

@@ -14,10 +14,8 @@
 'use client';
 
 import React, { memo } from 'react';
-import { TableCell, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
+import { TableCell, TableRow } from '@/components/ta/ui/table';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 import type { DomainRow } from '@/types/explorer/state';
 
@@ -54,25 +52,24 @@ interface StatusBadgeProps {
   type: 'dns' | 'http' | 'lead';
 }
 
-function StatusBadge({ status, type }: StatusBadgeProps) {
+function StatusBadge({ status, type: _type }: StatusBadgeProps) {
   if (!status) {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-gray-400">—</span>;
   }
 
-  const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-    ok: 'default',
-    pending: 'secondary',
-    error: 'destructive',
-    timeout: 'outline',
-    match: 'default',
-    no_match: 'outline',
+  const colorMap: Record<string, 'success' | 'warning' | 'error' | 'light'> = {
+    ok: 'success',
+    pending: 'warning',
+    error: 'error',
+    timeout: 'light',
+    match: 'success',
+    no_match: 'light',
   };
 
   return (
     <Badge 
-      variant={variants[status] ?? 'outline'} 
-      className="text-xs"
-      data-testid={`domain-status-${type}`}
+      color={colorMap[status] ?? 'light'} 
+      size="sm"
     >
       {status}
     </Badge>
@@ -85,7 +82,7 @@ function StatusBadge({ status, type }: StatusBadgeProps) {
 
 function RichnessDisplay({ score }: { score: number | undefined | null }) {
   if (score === undefined || score === null) {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-gray-400">—</span>;
   }
 
   // Color based on score
@@ -120,18 +117,18 @@ function KeywordsDisplay({
   const topKeywords = keywords?.top_keywords?.slice(0, 3);
 
   if (!count && !topKeywords?.length) {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-gray-400">—</span>;
   }
 
   return (
     <div className="flex items-center gap-1" data-testid="domain-keywords">
       {count !== undefined && (
-        <Badge variant="outline" className="text-xs">
+        <Badge color="light" size="sm">
           {count}
         </Badge>
       )}
       {topKeywords && topKeywords.length > 0 && (
-        <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+        <span className="text-xs text-gray-500 truncate max-w-[120px]">
           {topKeywords.map((k) => k.keyword).join(', ')}
         </span>
       )}
@@ -145,7 +142,7 @@ function KeywordsDisplay({
 
 function MicrocrawlDisplay({ gain }: { gain: number | undefined | null }) {
   if (gain === undefined || gain === null) {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-gray-400">—</span>;
   }
 
   const formatted = gain >= 1 
@@ -154,7 +151,7 @@ function MicrocrawlDisplay({ gain }: { gain: number | undefined | null }) {
 
   return (
     <span 
-      className={cn('text-sm', gain >= 1 ? 'text-green-600' : 'text-muted-foreground')}
+      className={cn('text-sm', gain >= 1 ? 'text-green-600' : 'text-gray-500')}
       data-testid="domain-microcrawl"
     >
       {formatted}
@@ -166,21 +163,27 @@ function MicrocrawlDisplay({ gain }: { gain: number | undefined | null }) {
 // SKELETON ROW
 // ============================================================================
 
+function SkeletonCell({ className }: { className?: string }) {
+  return (
+    <div className={cn("animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-4", className)} />
+  );
+}
+
 function SkeletonRow({ enableSelection }: { enableSelection: boolean }) {
   return (
     <TableRow data-testid="domains-grid-row-skeleton">
       {enableSelection && (
-        <TableCell className="w-10">
-          <Skeleton className="h-4 w-4" />
+        <TableCell className="w-10 px-4 py-3">
+          <SkeletonCell className="h-4 w-4" />
         </TableCell>
       )}
-      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-      <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-      <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-      <TableCell><Skeleton className="h-4 w-10" /></TableCell>
-      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-      <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-      <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+      <TableCell className="px-4 py-3"><SkeletonCell className="w-32" /></TableCell>
+      <TableCell className="px-4 py-3"><SkeletonCell className="w-12" /></TableCell>
+      <TableCell className="px-4 py-3"><SkeletonCell className="w-12" /></TableCell>
+      <TableCell className="px-4 py-3"><SkeletonCell className="w-10" /></TableCell>
+      <TableCell className="px-4 py-3"><SkeletonCell className="w-24" /></TableCell>
+      <TableCell className="px-4 py-3"><SkeletonCell className="w-12" /></TableCell>
+      <TableCell className="px-4 py-3"><SkeletonCell className="w-12" /></TableCell>
     </TableRow>
   );
 }
@@ -212,26 +215,21 @@ export const DomainsGridRow = memo(function DomainsGridRow({
   return (
     <TableRow
       className={cn(
-        'cursor-pointer hover:bg-muted/50',
-        isSelected && 'bg-primary/5'
+        'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
+        isSelected && 'bg-brand-50 dark:bg-brand-900/20'
       )}
-      onClick={(e) => {
-        // Don't trigger row click if clicking checkbox
-        if ((e.target as HTMLElement).closest('[role="checkbox"]')) {
-          return;
-        }
-        onClick();
-      }}
       data-testid="domains-grid-row"
-      data-domain-id={domainId}
+      onClick={onClick}
     >
       {/* Selection Checkbox */}
       {enableSelection && (
-        <TableCell className="w-10 text-center">
-          <Checkbox
+        <TableCell className="w-10 text-center px-4 py-3">
+          <input
+            type="checkbox"
             checked={isSelected}
-            onCheckedChange={onToggle}
+            onChange={() => onToggle()}
             aria-label={`Select ${domain.domain}`}
+            className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800"
             data-testid={`domains-grid-row-select-${domainId}`}
           />
         </TableCell>
@@ -239,39 +237,46 @@ export const DomainsGridRow = memo(function DomainsGridRow({
 
       {/* Domain Name */}
       <TableCell 
-        className="font-medium max-w-[200px] truncate"
-        data-testid="domains-grid-cell-domain"
+        className="font-medium max-w-[200px] truncate px-4 py-3 text-gray-800 dark:text-white"
       >
-        {domain.domain}
+        <span 
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          className="cursor-pointer hover:text-brand-500"
+        >
+          {domain.domain}
+        </span>
       </TableCell>
 
       {/* DNS Status */}
-      <TableCell className="text-center" data-testid="domains-grid-cell-dns">
+      <TableCell className="text-center px-4 py-3" data-testid="domains-grid-cell-dns">
         <StatusBadge status={domain.dnsStatus} type="dns" />
       </TableCell>
 
       {/* HTTP Status */}
-      <TableCell className="text-center" data-testid="domains-grid-cell-http">
+      <TableCell className="text-center px-4 py-3">
         <StatusBadge status={domain.httpStatus} type="http" />
       </TableCell>
 
       {/* Richness Score */}
-      <TableCell className="text-center" data-testid="domains-grid-cell-richness">
+      <TableCell className="text-center px-4 py-3" data-testid="domains-grid-cell-richness">
         <RichnessDisplay score={domain.features?.richness?.score} />
       </TableCell>
 
       {/* Keywords */}
-      <TableCell data-testid="domains-grid-cell-keywords">
+      <TableCell className="px-4 py-3">
         <KeywordsDisplay keywords={domain.features?.keywords} />
       </TableCell>
 
       {/* Microcrawl Gain */}
-      <TableCell className="text-center" data-testid="domains-grid-cell-microcrawl">
+      <TableCell className="text-center px-4 py-3">
         <MicrocrawlDisplay gain={domain.features?.microcrawl?.gain_ratio} />
       </TableCell>
 
       {/* Lead Status */}
-      <TableCell className="text-center" data-testid="domains-grid-cell-lead">
+      <TableCell className="text-center px-4 py-3">
         <StatusBadge status={domain.leadStatus} type="lead" />
       </TableCell>
     </TableRow>

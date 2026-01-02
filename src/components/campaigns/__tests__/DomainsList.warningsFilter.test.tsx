@@ -31,9 +31,8 @@ describe('DomainsList warnings filter', () => {
   test('filter: With warnings', async () => {
     const user = userEvent.setup();
     render(<DomainsList campaignId="c1" />);
-    const trigger = screen.getByTestId('campaign-domains-warnings-filter-trigger');
-    await user.click(trigger);
-    await user.click(await screen.findByTestId('campaign-domains-warnings-filter-with'));
+    const select = screen.getByTestId('campaign-domains-warnings-filter');
+    await user.selectOptions(select, 'with');
     const domains = screen.getAllByTestId('campaign-domains-cell-domain').map(cell => cell.textContent || '');
     expect(domains).toEqual(expect.arrayContaining(['warn1.com','warn2.com']));
     expect(domains.join(',')).not.toMatch(/clean\.com/);
@@ -42,9 +41,8 @@ describe('DomainsList warnings filter', () => {
   test('filter: Without warnings', async () => {
     const user = userEvent.setup();
     render(<DomainsList campaignId="c1" />);
-    const trigger = screen.getByTestId('campaign-domains-warnings-filter-trigger');
-    await user.click(trigger);
-    await user.click(await screen.findByTestId('campaign-domains-warnings-filter-without'));
+    const select = screen.getByTestId('campaign-domains-warnings-filter');
+    await user.selectOptions(select, 'without');
     const domains = screen.getAllByTestId('campaign-domains-cell-domain').map(cell => cell.textContent || '');
     expect(domains).toEqual(expect.arrayContaining(['clean.com']));
     expect(domains.join(',')).not.toMatch(/warn1\.com|warn2\.com/);

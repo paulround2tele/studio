@@ -18,17 +18,17 @@
 
 import React, { useState } from 'react';
 import { 
-  CheckCircle2, 
-  Circle, 
-  XCircle, 
-  Loader2, 
-  PauseCircle,
-  ChevronDown,
-  ChevronUp,
-  Settings2
-} from 'lucide-react';
+  CheckCircle2Icon, 
+  CircleIcon, 
+  XCircleIcon, 
+  LoaderIcon, 
+  PauseCircleIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  Settings2Icon
+} from '@/icons';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 
 /**
  * PipelinePhase type - shared interface for pipeline phase status
@@ -57,49 +57,49 @@ interface PipelineTimelineProps {
 // Status configuration for icons and colors
 const STATUS_CONFIG = {
   not_started: {
-    icon: Circle,
+    icon: CircleIcon,
     iconColor: 'text-gray-300 dark:text-gray-600',
     label: 'Not Started',
     dotColor: 'bg-gray-300 dark:bg-gray-600',
     animate: false,
   },
   ready: {
-    icon: Circle,
+    icon: CircleIcon,
     iconColor: 'text-blue-400 dark:text-blue-500',
     label: 'Ready',
     dotColor: 'bg-blue-400 dark:bg-blue-500',
     animate: false,
   },
   configured: {
-    icon: Settings2,
+    icon: Settings2Icon,
     iconColor: 'text-blue-500 dark:text-blue-400',
     label: 'Configured',
     dotColor: 'bg-blue-500 dark:bg-blue-400',
     animate: false,
   },
   in_progress: {
-    icon: Loader2,
+    icon: LoaderIcon,
     iconColor: 'text-emerald-500 dark:text-emerald-400',
     label: 'Running',
     dotColor: 'bg-emerald-500 dark:bg-emerald-400',
     animate: true,
   },
   paused: {
-    icon: PauseCircle,
+    icon: PauseCircleIcon,
     iconColor: 'text-amber-500 dark:text-amber-400',
     label: 'Paused',
     dotColor: 'bg-amber-500 dark:bg-amber-400',
     animate: false,
   },
   completed: {
-    icon: CheckCircle2,
+    icon: CheckCircle2Icon,
     iconColor: 'text-emerald-500 dark:text-emerald-400',
     label: 'Completed',
     dotColor: 'bg-emerald-500 dark:bg-emerald-400',
     animate: false,
   },
   failed: {
-    icon: XCircle,
+    icon: XCircleIcon,
     iconColor: 'text-red-500 dark:text-red-400',
     label: 'Failed',
     dotColor: 'bg-red-500 dark:bg-red-400',
@@ -376,40 +376,31 @@ export function PipelineTimeline({
           </h3>
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <span className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-medium">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <CheckCircle2Icon className="w-3.5 h-3.5 text-emerald-500" />
               {completedCount}/{phases.length}
             </span>
             {failedCount > 0 && (
               <span className="flex items-center gap-1 text-red-500 text-xs font-medium">
-                <XCircle className="w-3.5 h-3.5" />
+                <XCircleIcon className="w-3.5 h-3.5" />
                 {failedCount} failed
               </span>
             )}
             {activePhase && isExpanded && (
               <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <LoaderIcon className="w-3.5 h-3.5 animate-spin" />
                 {activePhase.label}
               </span>
             )}
           </div>
         </div>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={() => setIsExpanded(!isExpanded)}
+          startIcon={isExpanded ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
           className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 h-8 px-2"
         >
-          {isExpanded ? (
-            <>
-              <ChevronUp className="w-4 h-4 mr-1" />
-              Collapse
-            </>
-          ) : (
-            <>
-              <ChevronDown className="w-4 h-4 mr-1" />
-              Expand
-            </>
-          )}
+          {isExpanded ? 'Collapse' : 'Expand'}
         </Button>
       </div>
 

@@ -4,8 +4,8 @@
  */
 
 import React from 'react';
-import { AlertTriangle, AlertCircle, Info, Activity, CheckCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { WarningTriangleIcon, AlertCircleIcon, InfoIcon, ActivityIcon, CheckCircleIcon } from '@/icons';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 
 export interface WarningPillData {
@@ -28,25 +28,25 @@ const warningConfig = {
   stuffing: {
     label: 'Keyword Stuffing',
     shortLabel: 'Stuffing',
-    icon: AlertTriangle,
+    icon: WarningTriangleIcon,
     color: 'text-orange-600 dark:text-orange-400'
   },
   repetition: {
     label: 'Content Repetition',
     shortLabel: 'Repetition',
-    icon: AlertCircle,
+    icon: AlertCircleIcon,
     color: 'text-red-600 dark:text-red-400'
   },
   anchor: {
     label: 'Anchor Share Issues',
     shortLabel: 'Anchor',
-    icon: Activity,
+    icon: ActivityIcon,
     color: 'text-yellow-600 dark:text-yellow-400'
   },
   general: {
     label: 'General Warnings',
     shortLabel: 'General',
-    icon: Info,
+    icon: InfoIcon,
     color: 'text-blue-600 dark:text-blue-400'
   }
 };
@@ -85,22 +85,26 @@ export function WarningPills({
   showClean = true
 }: WarningPillsProps) {
   
+  // Map severity to TailAdmin Badge color
+  const _getSeverityColor = (severity: WarningPillData['severity']): 'success' | 'error' | 'warning' | 'info' | 'light' => {
+    switch (severity) {
+      case 'critical': return 'error';
+      case 'high': return 'warning';
+      case 'medium': return 'info';
+      case 'low': return 'light';
+    }
+  };
+  
   if (warnings.length === 0) {
     if (!showClean) return null;
     
     return (
       <div className={cn("flex flex-wrap gap-2", className)}>
         <Badge 
-          variant="default"
-          className={cn(
-            "flex items-center gap-1.5 bg-green-50 text-green-700 border-green-200",
-            "dark:bg-green-900/30 dark:text-green-300 dark:border-green-700",
-            sizeConfig[size],
-            onPillClick && "cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/40"
-          )}
-          onClick={onPillClick ? () => {} : undefined}
+          color="success"
+          size={size === 'lg' ? 'md' : 'sm'}
+          startIcon={<CheckCircleIcon className="w-3 h-3" />}
         >
-          <CheckCircle className="w-3 h-3" />
           No Warnings
         </Badge>
       </div>
@@ -119,18 +123,16 @@ export function WarningPills({
     <div className={cn("flex flex-wrap gap-2", className)}>
       {sortedWarnings.map((warning) => {
         const config = warningConfig[warning.type];
-        const severityConf = severityConfig[warning.severity];
         const Icon = config.icon;
         
         const isClickable = onPillClick !== undefined;
         
         return (
-          <Badge
+          <span
             key={warning.type}
-            variant={severityConf.variant}
             className={cn(
-              "flex items-center gap-1.5 transition-colors",
-              severityConf.className,
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-medium transition-colors",
+              severityConfig[warning.severity].className,
               sizeConfig[size],
               warning.active && "ring-2 ring-blue-500 ring-offset-1",
               isClickable && "cursor-pointer hover:brightness-110",
@@ -159,7 +161,7 @@ export function WarningPills({
                 </span>
               </>
             )}
-          </Badge>
+          </span>
         );
       })}
     </div>

@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 // Only import icons that are actually used in the component
-import { Database, Server } from 'lucide-react';
+import { DatabaseIcon, ServerIcon } from '@/icons';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
 import { DatabaseApi, DbBulkQueryXRequestedWithEnum, DbBulkStatsXRequestedWithEnum } from '@/lib/api-client/apis/database-api';
 import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
@@ -195,7 +195,7 @@ export default function DatabaseGUI() {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <div className="bg-blue-600 p-3 rounded-lg">
-                <Database className="h-8 w-8 text-white" />
+                <DatabaseIcon className="h-8 w-8 text-white" />
               </div>
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">DomainFlow</h1>
@@ -280,7 +280,7 @@ export default function DatabaseGUI() {
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <Database className="h-5 w-5 text-blue-600" />
+            <DatabaseIcon className="h-5 w-5 text-blue-600" />
             <span className="font-semibold text-gray-900">DomainFlow DB</span>
           </div>
           <div className="text-xs text-gray-500 mt-1">domainflow_production</div>
@@ -292,7 +292,7 @@ export default function DatabaseGUI() {
             {/* Auth Schema */}
             <div className="space-y-1">
               <div className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-gray-700">
-                <Server className="h-4 w-4" />
+                <ServerIcon className="h-4 w-4" />
                 <span>auth schema</span>
               </div>
               <div className="ml-6 space-y-1">
@@ -314,7 +314,7 @@ export default function DatabaseGUI() {
             {/* Public Schema */}
             <div className="space-y-1 mt-4">
               <div className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-gray-700">
-                <Server className="h-4 w-4" />
+                <ServerIcon className="h-4 w-4" />
                 <span>public schema</span>
               </div>
               <div className="ml-6 space-y-1">

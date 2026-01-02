@@ -1,11 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Settings, Gauge, RotateCcw, IterationCw } from 'lucide-react';
+import SelectAdapter from '@/components/ta/adapters/SelectAdapter';
+import InputAdapter from '@/components/ta/adapters/InputAdapter';
+import { SettingsIcon, GaugeIcon, RotateCcwIcon, IterationCwIcon } from '@/icons';
 import { Control } from 'react-hook-form';
 
 // Use the same type as the parent form for consistency
@@ -48,14 +47,14 @@ export function PerformanceTuningSection({
   maxRetryAttempts = 10,
 }: PerformanceTuningSectionProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Settings className="h-4 w-4" />
+    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+        <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+          <SettingsIcon className="h-4 w-4" />
           Performance Tuning
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </h3>
+      </div>
+      <div className="p-5 space-y-4">
         {/* Processing Speed - Backend-driven options */}
         <FormField 
           control={control} 
@@ -63,26 +62,23 @@ export function PerformanceTuningSection({
           render={({ field: _field }) => (
             <FormItem>
               <FormLabel className="flex items-center gap-2">
-                <Gauge className="h-4 w-4" />
+                <GaugeIcon className="h-4 w-4" />
                 Processing Speed
               </FormLabel>
-              <Select 
-                onValueChange={_field.onChange} 
-                value={_field.value || defaultProcessingSpeed} 
-                disabled={disabled}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select processing speed" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="slow">Slow (Conservative)</SelectItem>
-                  <SelectItem value="medium">Medium (Balanced)</SelectItem>
-                  <SelectItem value="fast">Fast (Aggressive)</SelectItem>
-                  <SelectItem value="turbo">Turbo (Maximum)</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <SelectAdapter
+                  options={[
+                    { value: 'slow', label: 'Slow (Conservative)' },
+                    { value: 'medium', label: 'Medium (Balanced)' },
+                    { value: 'fast', label: 'Fast (Aggressive)' },
+                    { value: 'turbo', label: 'Turbo (Maximum)' },
+                  ]}
+                  value={_field.value || defaultProcessingSpeed}
+                  onChange={_field.onChange}
+                  disabled={disabled}
+                  placeholder="Select processing speed"
+                />
+              </FormControl>
               <FormDescription>
                 Controls request frequency and concurrent processing
               </FormDescription>
@@ -99,7 +95,7 @@ export function PerformanceTuningSection({
             <FormItem>
               <FormLabel>Batch Size</FormLabel>
               <FormControl>
-                <Input 
+                <InputAdapter 
                   type="number"
                   placeholder={defaultBatchSize.toString()}
                   value={_field.value || ''}
@@ -124,11 +120,11 @@ export function PerformanceTuningSection({
           render={({ field: _field }) => (
             <FormItem>
               <FormLabel className="flex items-center gap-2">
-                <RotateCcw className="h-4 w-4" />
+                <RotateCcwIcon className="h-4 w-4" />
                 Rotation Interval (seconds)
               </FormLabel>
               <FormControl>
-                <Input 
+                <InputAdapter 
                   type="number"
                   placeholder={defaultRotationInterval.toString()}
                   value={_field.value || ''}
@@ -153,11 +149,11 @@ export function PerformanceTuningSection({
           render={({ field: _field }) => (
             <FormItem>
               <FormLabel className="flex items-center gap-2">
-                <IterationCw className="h-4 w-4" />
+                <IterationCwIcon className="h-4 w-4" />
                 Retry Attempts
               </FormLabel>
               <FormControl>
-                <Input 
+                <InputAdapter 
                   type="number"
                   placeholder={defaultRetryAttempts.toString()}
                   value={_field.value || ''}
@@ -174,7 +170,7 @@ export function PerformanceTuningSection({
             </FormItem>
           )} 
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

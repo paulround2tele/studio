@@ -4,9 +4,8 @@
  */
 
 import React from 'react';
-import { AlertCircle, Loader2, CheckCircle, XCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { AlertCircleIcon, LoaderIcon, CheckCircleIcon, XCircleIcon } from '@/icons';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 
 export interface AutoStartBannerProps {
@@ -19,7 +18,7 @@ export interface AutoStartBannerProps {
 
 const statusConfig = {
   initializing: {
-    icon: Loader2,
+    icon: LoaderIcon,
     variant: 'default' as const,
     bgColor: 'bg-blue-50 dark:bg-blue-900/20',
     borderColor: 'border-blue-200 dark:border-blue-800',
@@ -29,7 +28,7 @@ const statusConfig = {
     badgeVariant: 'secondary' as const
   },
   starting: {
-    icon: Loader2,
+    icon: LoaderIcon,
     variant: 'default' as const,
     bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
     borderColor: 'border-yellow-200 dark:border-yellow-800',
@@ -39,7 +38,7 @@ const statusConfig = {
     badgeVariant: 'secondary' as const
   },
   success: {
-    icon: CheckCircle,
+    icon: CheckCircleIcon,
     variant: 'default' as const,
     bgColor: 'bg-green-50 dark:bg-green-900/20',
     borderColor: 'border-green-200 dark:border-green-800',
@@ -49,7 +48,7 @@ const statusConfig = {
     badgeVariant: 'secondary' as const
   },
   error: {
-    icon: XCircle,
+    icon: XCircleIcon,
     variant: 'destructive' as const,
     bgColor: 'bg-red-50 dark:bg-red-900/20',
     borderColor: 'border-red-200 dark:border-red-800',
@@ -59,7 +58,7 @@ const statusConfig = {
     badgeVariant: 'destructive' as const
   },
   hidden: {
-    icon: AlertCircle,
+    icon: AlertCircleIcon,
     variant: 'default' as const,
     bgColor: '',
     borderColor: '',
@@ -99,10 +98,20 @@ export function AutoStartBanner({
     }
   };
 
+  // Map badge variants to TailAdmin colors
+  const getBadgeColor = () => {
+    switch (status) {
+      case 'error': return 'error';
+      case 'success': return 'success';
+      case 'starting': return 'warning';
+      default: return 'info';
+    }
+  };
+
   return (
-    <Alert 
+    <div 
       className={cn(
-        "flex items-center gap-3 transition-all duration-300",
+        "flex items-center gap-3 transition-all duration-300 rounded-lg border p-4",
         config.bgColor,
         config.borderColor,
         className
@@ -117,7 +126,7 @@ export function AutoStartBanner({
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <Badge variant={config.badgeVariant} className="text-xs">
+          <Badge color={getBadgeColor()} size="sm">
             {config.badge}
           </Badge>
           {status === 'success' && (
@@ -126,11 +135,11 @@ export function AutoStartBanner({
             </span>
           )}
         </div>
-        <AlertDescription className="text-sm">
+        <p className="text-sm text-gray-700 dark:text-gray-300">
           {message || getDefaultMessage()}
-        </AlertDescription>
+        </p>
       </div>
-    </Alert>
+    </div>
   );
 }
 

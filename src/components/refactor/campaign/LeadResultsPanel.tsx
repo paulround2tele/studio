@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, AlertCircle, ChevronUp, ChevronDown, ChevronRight, Info, Filter } from 'lucide-react';
+import { LoaderIcon, AlertCircleIcon, ChevronUpIcon, ChevronDownIcon, ChevronRightIcon, InfoIcon, FilterIcon } from '@/icons';
 import { formatDistanceToNow } from 'date-fns';
 
 import { cn } from '@/lib/utils';
@@ -259,7 +259,7 @@ export function LeadResultsPanel({
         </div>
         {isLoading && (
           <span className="inline-flex items-center gap-2 text-xs text-gray-500">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            <LoaderIcon className="h-4 w-4 animate-spin" aria-hidden="true" />
             Updating...
           </span>
         )}
@@ -283,7 +283,7 @@ export function LeadResultsPanel({
 
       {error && (
         <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700/50 dark:bg-red-900/20 dark:text-red-200">
-          <AlertCircle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+          <AlertCircleIcon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
@@ -306,7 +306,7 @@ export function LeadResultsPanel({
         <>
           {/* Prominent UX hint for discoverability */}
           <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+            <InfoIcon className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
             <p className="text-sm text-blue-800 dark:text-blue-200">
               <strong>Click any lead row</strong> to inspect score breakdown, keyword analysis, and qualification details.
             </p>
@@ -327,7 +327,7 @@ export function LeadResultsPanel({
                     <span className="inline-flex items-center gap-1">
                       Score
                       {sortField === 'domainScore' && (
-                        sortDir === 'desc' ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />
+                        sortDir === 'desc' ? <ChevronDownIcon className="h-3 w-3" /> : <ChevronUpIcon className="h-3 w-3" />
                       )}
                     </span>
                   </th>
@@ -393,7 +393,7 @@ export function LeadResultsPanel({
                           {domainScore !== undefined && domainScore !== null
                             ? Math.round(domainScore)
                             : '—'}
-                          <ChevronRight className="h-3 w-3 opacity-60" />
+                          <ChevronRightIcon className="h-3 w-3 opacity-60" />
                         </button>
                       </td>
                       <td className="py-3 pr-3 align-top">
@@ -431,7 +431,7 @@ export function LeadResultsPanel({
                           className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 transition-colors"
                           aria-label={`Inspect score details for ${domain.domain ?? 'domain'}`}
                         >
-                          <ChevronRight className="h-4 w-4" />
+                          <ChevronRightIcon className="h-4 w-4" />
                         </button>
                       </td>
                     </tr>
@@ -486,7 +486,7 @@ export function LeadResultsPanel({
       {(rejectedDomains.length > 0 || noKeywordDomains.length > 0) && (
         <div className="space-y-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-500" />
+            <FilterIcon className="h-4 w-4 text-gray-500" />
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Additional Results</h4>
           </div>
           

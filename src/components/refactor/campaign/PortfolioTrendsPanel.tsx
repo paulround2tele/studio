@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, Users } from 'lucide-react';
+import { BarChart3Icon, TrendingUpIcon, TrendingDownIcon, WarningTriangleIcon, UsersIcon } from '@/icons';
 import { cn } from '@/lib/utils';
 import { PortfolioSummary, PortfolioOutlier } from '@/services/campaignMetrics/portfolioMetricsService';
 
@@ -30,7 +30,7 @@ const PortfolioTrendsPanel: React.FC<PortfolioTrendsPanelProps> = ({
     return (
       <div className={cn("p-6 bg-white dark:bg-gray-800 rounded-lg border", className)}>
         <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="w-5 h-5 text-blue-600" />
+          <BarChart3Icon className="w-5 h-5 text-blue-600" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Portfolio Overview
           </h3>
@@ -50,7 +50,7 @@ const PortfolioTrendsPanel: React.FC<PortfolioTrendsPanelProps> = ({
     <div className={cn("p-6 bg-white dark:bg-gray-800 rounded-lg border space-y-6", className)}>
       {/* Header */}
       <div className="flex items-center gap-2">
-        <BarChart3 className="w-5 h-5 text-blue-600" />
+        <BarChart3Icon className="w-5 h-5 text-blue-600" />
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Portfolio Overview
         </h3>
@@ -64,7 +64,7 @@ const PortfolioTrendsPanel: React.FC<PortfolioTrendsPanelProps> = ({
         <MetricCard
           label="Total Domains"
           value={summary.totalDomains.toLocaleString()}
-          icon={<Users className="w-4 h-4" />}
+          icon={<UsersIcon className="w-4 h-4" />}
         />
         <MetricCard
           label="Avg Success Rate"
@@ -74,12 +74,12 @@ const PortfolioTrendsPanel: React.FC<PortfolioTrendsPanelProps> = ({
         <MetricCard
           label="Total Leads"
           value={summary.totalLeads.toLocaleString()}
-          icon={<TrendingUp className="w-4 h-4" />}
+          icon={<TrendingUpIcon className="w-4 h-4" />}
         />
         <MetricCard
           label="High Potential"
           value={summary.totalHighPotential.toLocaleString()}
-          icon={<TrendingUp className="w-4 h-4 text-green-600" />}
+          icon={<TrendingUpIcon className="w-4 h-4 text-green-600" />}
         />
       </div>
 
@@ -120,7 +120,7 @@ const PortfolioTrendsPanel: React.FC<PortfolioTrendsPanelProps> = ({
       {outliersToShow.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-yellow-600" />
+            <WarningTriangleIcon className="w-4 h-4 text-yellow-600" />
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Portfolio Outliers
             </h4>
@@ -150,9 +150,9 @@ const MetricCard: React.FC<MetricCardProps> = ({ label, value, icon, trend, subT
   const getTrendIcon = () => {
     switch (trend) {
       case 'up':
-        return <TrendingUp className="w-3 h-3 text-green-600" />;
+        return <TrendingUpIcon className="w-3 h-3 text-green-600" />;
       case 'down':
-        return <TrendingDown className="w-3 h-3 text-red-600" />;
+        return <TrendingDownIcon className="w-3 h-3 text-red-600" />;
       default:
         return null;
     }
@@ -202,9 +202,9 @@ const CampaignPerformanceCard: React.FC<CampaignPerformanceCardProps> = ({
   const getTrendIcon = () => {
     switch (campaign.trend) {
       case 'up':
-        return <TrendingUp className="w-3 h-3 text-green-600" />;
+        return <TrendingUpIcon className="w-3 h-3 text-green-600" />;
       case 'down':
-        return <TrendingDown className="w-3 h-3 text-red-600" />;
+        return <TrendingDownIcon className="w-3 h-3 text-red-600" />;
       default:
         return <div className="w-3 h-3" />; // Spacer
     }

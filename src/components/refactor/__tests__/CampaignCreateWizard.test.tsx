@@ -184,7 +184,7 @@ describe('CampaignCreateWizard Component', () => {
     });
 
     it('should enable next button when campaign name is filled', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       render(
         <TestWrapper>
@@ -201,7 +201,7 @@ describe('CampaignCreateWizard Component', () => {
     });
 
     it('should advance to next step when next is clicked', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       render(
         <TestWrapper>
@@ -237,7 +237,7 @@ describe('CampaignCreateWizard Component', () => {
     });
 
     it('should allow going back to previous steps', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       render(
         <TestWrapper>
@@ -274,7 +274,7 @@ describe('CampaignCreateWizard Component', () => {
     });
 
     it('should render pattern step content after navigation', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       render(
         <TestWrapper>
@@ -297,7 +297,7 @@ describe('CampaignCreateWizard Component', () => {
 
   describe('Form Validation', () => {
     it('should validate pattern step requirements', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       render(
         <TestWrapper>
@@ -344,7 +344,7 @@ describe('CampaignCreateWizard Component', () => {
     });
 
     it('should allow clicking on completed steps', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       render(
         <TestWrapper>
@@ -407,7 +407,7 @@ describe('CampaignCreateWizard Component', () => {
     };
 
     it('should show create campaign button on final step', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       await setupCompleteWizard(user);
 
       const createButton = screen.getByRole('button', { name: /create campaign/i });
@@ -416,7 +416,7 @@ describe('CampaignCreateWizard Component', () => {
     });
 
     it('should call create campaign mutation on submit', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       const mockCreateCampaign = jest.fn(() => ({
         unwrap: jest.fn().mockResolvedValue({ id: 'new-campaign-id' })
       }));
@@ -441,7 +441,7 @@ describe('CampaignCreateWizard Component', () => {
     });
 
     it('should redirect to campaign page after successful creation', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       const mockCreateCampaign = jest.fn(() => ({
         unwrap: jest.fn().mockResolvedValue({ id: 'new-campaign-id' })
       }));
@@ -480,7 +480,7 @@ describe('CampaignCreateWizard Component', () => {
 
   describe('Cancel Action', () => {
     it('should navigate to campaigns list when cancel is clicked', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       render(
         <TestWrapper>
@@ -514,8 +514,9 @@ describe('CampaignCreateWizard Component', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByLabelText('Campaign Name *')).toBeInTheDocument();
-      expect(screen.getByLabelText('Description (Optional)')).toBeInTheDocument();
+      // Use getByRole for input accessibility - labels are associated via htmlFor/id
+      expect(screen.getByRole('textbox', { name: /campaign name/i })).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: /description/i })).toBeInTheDocument();
     });
   });
 });

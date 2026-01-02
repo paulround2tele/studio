@@ -386,7 +386,7 @@ describe('DomainsGridRow', () => {
       </table>
     );
 
-    expect(screen.getByTestId('domains-grid-row')).toHaveClass('bg-primary/5');
+    expect(screen.getByTestId('domains-grid-row')).toHaveClass('bg-brand-50');
   });
 });
 

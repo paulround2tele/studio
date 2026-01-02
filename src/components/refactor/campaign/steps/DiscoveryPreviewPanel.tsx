@@ -4,10 +4,10 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, AlertTriangle, History, Hash, ArrowRight, Info } from 'lucide-react';
+// Alert import removed - using inline TailAdmin alert pattern
+// Card import removed - using inline TailAdmin card pattern
+import Badge from '@/components/ta/ui/badge/Badge';
+import { LoaderIcon, WarningTriangleIcon, HistoryIcon, HashIcon, ArrowRightIcon, InfoIcon } from '@/icons';
 import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
 import type { DiscoveryPreviewRequest } from '@/lib/api-client/models/discovery-preview-request';
 import type { DiscoveryPreviewResponse } from '@/lib/api-client/models/discovery-preview-response';
@@ -152,22 +152,24 @@ export function DiscoveryPreviewPanel({
   
   if (loading) {
     return (
-      <Card className="mt-4 bg-muted/50">
-        <CardContent className="flex items-center gap-2 py-4">
-          <Loader2 className="h-4 w-4 animate-spin" />
+      <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50">
+        <div className="flex items-center gap-2 p-4">
+          <LoaderIcon className="h-4 w-4 animate-spin" />
           <span className="text-sm text-muted-foreground">Loading discovery lineage...</span>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
   
   if (error) {
     return (
-      <Alert variant="destructive" className="mt-4">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Preview Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+        <div className="flex items-center gap-2">
+          <WarningTriangleIcon className="h-4 w-4 text-red-600" />
+          <h4 className="font-medium text-red-800 dark:text-red-200">Preview Error</h4>
+        </div>
+        <p className="mt-1 text-sm text-red-700 dark:text-red-300">{error}</p>
+      </div>
     );
   }
   
@@ -185,10 +187,10 @@ export function DiscoveryPreviewPanel({
     : 0;
 
   return (
-    <Card className="mt-4 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <History className="h-4 w-4" />
+    <div className="mt-4 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20">
+      <div className="p-6 pb-2">
+        <h3 className="text-sm font-medium flex items-center gap-2 text-gray-900 dark:text-white">
+          <HistoryIcon className="h-4 w-4" />
           Discovery Lineage Preview
           <span 
             className="ml-1 text-muted-foreground cursor-help" 
@@ -196,12 +198,12 @@ export function DiscoveryPreviewPanel({
           >
             ⓘ
           </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </h3>
+      </div>
+      <div className="px-6 pb-6 space-y-4">
         {/* Config Hash with tooltip */}
         <div className="flex items-start gap-2 text-xs">
-          <Hash className="h-3 w-3 mt-0.5 text-muted-foreground" />
+          <HashIcon className="h-3 w-3 mt-0.5 text-muted-foreground" />
           <div>
             <span className="text-muted-foreground">Config Hash: </span>
             <code 
@@ -229,7 +231,7 @@ export function DiscoveryPreviewPanel({
           <div>
             <span className="text-muted-foreground">Next Offset:</span>
             <div className="font-medium flex items-center gap-1">
-              <ArrowRight className="h-3 w-3" />
+              <ArrowRightIcon className="h-3 w-3" />
               {data.nextOffset.toLocaleString()}
             </div>
             {/* Offset explanation (P0) */}
@@ -244,21 +246,23 @@ export function DiscoveryPreviewPanel({
         {/* Requested/Batch/Offset relationship (P1) */}
         {domainsRequested && batchSize && (
           <div className="text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded flex items-center gap-1">
-            <Info className="h-3 w-3" />
+            <InfoIcon className="h-3 w-3" />
             Up to {domainsRequested.toLocaleString()} new unique domains will be generated starting from offset {data.nextOffset.toLocaleString()}, in batches of {batchSize.toLocaleString()}.
           </div>
         )}
 
         {/* Exhaustion Warning with consequence (P0) */}
         {data.exhaustionWarning && (
-          <Alert variant="destructive" className="py-2">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-xs space-y-1">
-              <p><strong>Pattern Exhaustion Warning:</strong> Next offset + typical batch may exceed total combinations.</p>
-              <p className="font-medium">Some requested domains may not be generated if the pattern is exhausted.</p>
-              <p className="text-muted-foreground">Consider a different character set, longer variable length, or a new constant string.</p>
-            </AlertDescription>
-          </Alert>
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+            <div className="flex items-start gap-2">
+              <WarningTriangleIcon className="h-4 w-4 text-red-600 mt-0.5" />
+              <div className="text-xs space-y-1">
+                <p><strong>Pattern Exhaustion Warning:</strong> Next offset + typical batch may exceed total combinations.</p>
+                <p className="font-medium">Some requested domains may not be generated if the pattern is exhausted.</p>
+                <p className="text-muted-foreground">Consider a different character set, longer variable length, or a new constant string.</p>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Prior Campaigns */}
@@ -266,7 +270,7 @@ export function DiscoveryPreviewPanel({
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">Prior campaigns with this pattern:</span>
-              <Badge variant="secondary">{priorCampaigns.length}</Badge>
+              <Badge color="light" size="sm">{priorCampaigns.length}</Badge>
             </div>
             <div className="max-h-32 overflow-y-auto space-y-1">
               {priorCampaigns.slice(0, 5).map((campaign) => (
@@ -298,18 +302,18 @@ export function DiscoveryPreviewPanel({
         {/* Empty lineage copy - reassuring message (P1) */}
         {!hasPriorCampaigns && (
           <div className="text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 px-2 py-1.5 rounded flex items-center gap-1">
-            <Info className="h-3 w-3" />
+            <InfoIcon className="h-3 w-3" />
             This pattern hasn&apos;t been used before. Discovery will start from the beginning.
           </div>
         )}
 
         {/* Restart contract reminder (P1) */}
         <div className="text-[10px] text-muted-foreground border-t pt-2 mt-2 flex items-start gap-1">
-          <Info className="h-3 w-3 shrink-0 mt-0.5" />
+          <InfoIcon className="h-3 w-3 shrink-0 mt-0.5" />
           <span>Once created, discovery for this campaign is fixed. Re-running will not regenerate domains.</span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

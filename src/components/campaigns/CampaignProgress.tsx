@@ -6,17 +6,21 @@ import type { PhaseExecution } from '@/lib/api-client/models/phase-execution';
 import type { CampaignState } from '@/lib/api-client/models/campaign-state';
 // Local phase literal union matching OpenAPI string literals
 type CampaignPhase = 'discovery' | 'validation' | 'extraction' | 'analysis' | 'enrichment';
-import { CheckCircle, AlertTriangle, Clock, Loader2, WorkflowIcon } from 'lucide-react';
+import { CheckCircleIcon, WarningTriangleIcon, ClockIcon, LoaderIcon, WorkflowIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import TooltipAdapter from "@/components/ta/adapters/TooltipAdapter";
 import { getPhaseDisplayName } from '@/lib/utils/phaseMapping';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+
+// Inline TailAdmin-style progress bar component
+const ProgressBar: React.FC<{ value: number; className?: string }> = ({ value, className }) => (
+  <div className={cn("w-full bg-gray-200 rounded-full dark:bg-gray-700", className)}>
+    <div
+      className="h-2 rounded-full bg-brand-500 transition-all duration-300"
+      style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+    />
+  </div>
+);
 
 interface CampaignProgressProps {
   campaign: Campaign;
@@ -71,22 +75,22 @@ interface FailureContext {
 type PhaseStatus = 'not_started' | 'in_progress' | 'completed' | 'failed' | 'paused';
 const PhaseStatusIcon = memo(({ status }: { status: PhaseStatus }) => {
   if (status === 'completed') {
-    return <CheckCircle className="w-5 h-5 text-green-500" />;
+    return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
   }
   
   if (status === 'failed') {
-    return <AlertTriangle className="w-5 h-5 text-red-500" />;
+    return <WarningTriangleIcon className="w-5 h-5 text-red-500" />;
   }
   
   if (status === 'in_progress') {
-    return <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />;
+    return <LoaderIcon className="w-5 h-5 text-blue-500 animate-spin" />;
   }
   
   if (status === 'paused' || status === 'not_started') {
-    return <Clock className="w-5 h-5 text-gray-400" />;
+    return <ClockIcon className="w-5 h-5 text-gray-400" />;
   }
   
-  return <Clock className="w-5 h-5 text-gray-400" />;
+  return <ClockIcon className="w-5 h-5 text-gray-400" />;
 });
 
 PhaseStatusIcon.displayName = 'PhaseStatusIcon';
@@ -249,7 +253,7 @@ export function CampaignProgress({ campaign, phaseExecutions, state: _state }: C
   }, []);
 
   return (
-    <TooltipProvider>
+    <>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -276,7 +280,7 @@ export function CampaignProgress({ campaign, phaseExecutions, state: _state }: C
             <span>Progress</span>
             <span>{Math.round(progressPercentage)}%</span>
           </div>
-          <Progress value={progressPercentage} className="h-2" />
+          <ProgressBar value={progressPercentage} className="h-2" />
         </div>
 
         <div className="space-y-3">
@@ -303,32 +307,9 @@ export function CampaignProgress({ campaign, phaseExecutions, state: _state }: C
               }
               
               return (
-                <Tooltip key={phase} delayDuration={300}>
-                  <TooltipTrigger asChild>
-                    <div className={cn(
-                      "flex items-center space-x-3 p-2 rounded-lg transition-colors",
-                      isCurrentPhase && "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800",
-                      !isCurrentPhase && "hover:bg-gray-50 dark:hover:bg-gray-800"
-                    )}>
-                      <PhaseStatusIcon status={displayStatus} />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <span className={cn(
-                            "text-sm font-medium",
-                            isCurrentPhase ? "text-blue-700 dark:text-blue-300" : "text-gray-700 dark:text-gray-300"
-                          )}>
-                            {phaseDisplayNames[phase]}
-                          </span>
-                          {isCurrentPhase && (
-                            <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full">
-                              Current
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
+                <TooltipAdapter
+                  key={phase}
+                  content={
                     <p className="text-sm">
                       Phase {index + 1} of {PHASE_ORDER.length}: {phaseDisplayNames[phase]}
                       {isCurrentPhase && phaseStatus && (
@@ -344,8 +325,31 @@ export function CampaignProgress({ campaign, phaseExecutions, state: _state }: C
                         </>
                       )}
                     </p>
-                  </TooltipContent>
-                </Tooltip>
+                  }
+                >
+                  <div className={cn(
+                    "flex items-center space-x-3 p-2 rounded-lg transition-colors",
+                    isCurrentPhase && "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800",
+                    !isCurrentPhase && "hover:bg-gray-50 dark:hover:bg-gray-800"
+                  )}>
+                    <PhaseStatusIcon status={displayStatus} />
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <span className={cn(
+                          "text-sm font-medium",
+                          isCurrentPhase ? "text-blue-700 dark:text-blue-300" : "text-gray-700 dark:text-gray-300"
+                        )}>
+                          {phaseDisplayNames[phase]}
+                        </span>
+                        {isCurrentPhase && (
+                          <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full">
+                            Current
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </TooltipAdapter>
               );
             })}
           </div>
@@ -354,7 +358,7 @@ export function CampaignProgress({ campaign, phaseExecutions, state: _state }: C
         {phaseStatus === 'failed' ? (
           <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <div className="flex items-start space-x-3">
-              <AlertTriangle className="w-4 h-4 mt-0.5 text-red-600" />
+              <WarningTriangleIcon className="w-4 h-4 mt-0.5 text-red-600" />
               <div className="space-y-2 text-sm text-red-700 dark:text-red-300">
                 <p className="font-semibold">
                   {failureContext?.phaseLabel ?? currentPhaseDisplay} phase failed
@@ -386,7 +390,7 @@ export function CampaignProgress({ campaign, phaseExecutions, state: _state }: C
         ) : phaseStatus === 'in_progress' ? (
           <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <div className="flex items-center space-x-2">
-              <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+              <LoaderIcon className="w-4 h-4 text-blue-600 animate-spin" />
               <p className="text-sm text-blue-600 dark:text-blue-400">
                 The {currentPhaseDisplay} phase is currently running.
               </p>
@@ -394,7 +398,7 @@ export function CampaignProgress({ campaign, phaseExecutions, state: _state }: C
           </div>
         ) : null}
       </div>
-    </TooltipProvider>
+    </>
   );
 }
 

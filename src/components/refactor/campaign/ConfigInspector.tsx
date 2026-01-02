@@ -16,9 +16,8 @@
 'use client';
 
 import React from 'react';
-import { Settings, AlertCircle } from 'lucide-react';
+import { SettingsIcon, AlertCircleIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
@@ -51,23 +50,28 @@ interface ConfigInspectorProps {
 /**
  * Default trigger button for the config inspector
  * Uses forwardRef to properly pass click handlers from SheetTrigger asChild
+ * Uses native button with TailAdmin-style classes since TailAdmin Button doesn't support ref forwarding
  */
 const DefaultTrigger = React.forwardRef<
   HTMLButtonElement,
   { className?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>
 >(({ className, ...props }, ref) => {
   return (
-    <Button 
+    <button
       ref={ref}
-      variant="outline" 
-      size="sm"
-      className={cn("gap-2 hover:bg-accent", className)}
+      type="button"
+      className={cn(
+        "inline-flex items-center justify-center font-medium gap-2 rounded-lg transition px-4 py-3 text-sm",
+        "bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50",
+        "dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300",
+        className
+      )}
       aria-label="Open campaign configuration"
       {...props}
     >
-      <Settings className="w-4 h-4" />
+      <SettingsIcon className="w-4 h-4" />
       Configuration
-    </Button>
+    </button>
   );
 });
 DefaultTrigger.displayName = 'DefaultTrigger';
@@ -110,7 +114,7 @@ function ConfigSkeleton() {
 function ConfigError({ message }: { message?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <AlertCircle className="w-10 h-10 text-red-500 mb-3" />
+      <AlertCircleIcon className="w-10 h-10 text-red-500 mb-3" />
       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
         Failed to Load Configuration
       </h3>
@@ -187,7 +191,7 @@ export function ConfigInspector({
       >
         <SheetHeader className="mb-6">
           <SheetTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
+            <SettingsIcon className="w-5 h-5" />
             Campaign Configuration
           </SheetTitle>
           <SheetDescription>

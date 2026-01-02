@@ -1,14 +1,13 @@
 /**
  * Campaign Creation Wizard
  * Multi-step campaign creation: Goal → Pattern → Targeting → Review & Launch
+ * Migrated to TailAdmin + Tailwind patterns (Dec 31, 2025)
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { ArrowLeftIcon, ArrowRightIcon, CheckLineIcon } from '@/icons';
+import Button from '@/components/ta/ui/button/Button';
 import { useToast } from '@/hooks/use-toast';
 import { 
   useCreateCampaignMutation, 
@@ -638,7 +637,13 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
           <span>Step {wizardState.currentStep + 1} of {WIZARD_STEPS.length}</span>
           <span>{Math.round(progress)}% complete</span>
         </div>
-        <Progress value={progress} className="h-2" />
+        {/* Tailwind progress bar pattern */}
+        <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+          <div 
+            className="h-2 rounded-full bg-brand-500 transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
 
       {/* Auto-start banner */}
@@ -669,7 +674,7 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
                   : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
               }`}>
                 {index < wizardState.currentStep ? (
-                  <Check className="w-4 h-4" />
+                  <CheckLineIcon className="w-4 h-4" />
                 ) : (
                   index + 1
                 )}
@@ -683,15 +688,17 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
         ))}
       </div>
 
-      {/* Main content */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{isValidStep ? currentStep.title : 'Invalid Step'}</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Main content - Tailwind card pattern */}
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {isValidStep ? currentStep.title : 'Invalid Step'}
+          </h2>
+        </div>
+        <div className="p-6">
           {isValidStep ? renderStepContent() : <div>Step not found</div>}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Navigation */}
       <div className="flex items-center justify-between">
@@ -699,20 +706,21 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
           variant="outline"
           onClick={handlePrevious}
           disabled={isFirstStep}
+          startIcon={<ArrowLeftIcon className="w-4 h-4" />}
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
           Previous
         </Button>
 
         <div className="flex gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={() => router.push('/campaigns')}
             disabled={isLoading}
           >
             Cancel
           </Button>
           <Button
+            variant="primary"
             onClick={handleNext}
             disabled={!canProceed || isLoading}
           >
@@ -724,7 +732,7 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
             ) : (
               <>
                 Next
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRightIcon className="w-4 h-4 ml-2" />
               </>
             )}
           </Button>

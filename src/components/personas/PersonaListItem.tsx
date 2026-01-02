@@ -1,37 +1,20 @@
-
 "use client";
 
-import Link from 'next/link';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useState } from 'react';
+import Button from '@/components/ta/ui/button/Button';
+import Badge from '@/components/ta/ui/badge/Badge';
+import { Modal } from '@/components/ta/ui/modal';
+import { Dropdown } from '@/components/ta/ui/dropdown/Dropdown';
+import { DropdownItem } from '@/components/ta/ui/dropdown/DropdownItem';
 import type { PersonaResponse as ApiPersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { PersonaConfigHttp as HTTPConfigDetails } from '@/lib/api-client/models/persona-config-http';
 import type { PersonaConfigDns as DNSConfigDetails } from '@/lib/api-client/models/persona-config-dns';
 
-// Type for the actual persona data we receive from the API (personaType now plain 'http' | 'dns')
 type PersonaItem = ApiPersonaResponse;
-
-// Status type derived from the API
 type PersonaStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
-// (unused detailed config types removed)
 
-import { FilePenLine, Trash2, MoreVertical, Copy, Globe, Clock, Settings2, Wifi, TestTubeDiagonal, Power, PowerOff, FileJson, CheckCircle, HelpCircle, Loader2 } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import { PencilIcon, TrashBinIcon, MoreVerticalIcon, CopyIcon, GlobeIcon, ClockIcon, SettingsIcon, WifiIcon, TestTubeIcon, PowerIcon, PowerOffIcon, FileJsonIcon, CheckCircleIcon, HelpCircleIcon, LoaderIcon } from '@/icons';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 interface PersonaListItemProps {
@@ -43,39 +26,31 @@ interface PersonaListItemProps {
   isTogglingStatus?: boolean;
 }
 
-const getStatusBadgeInfo = (isEnabled: boolean | undefined): { variant: "default" | "secondary" | "destructive" | "outline", icon: JSX.Element, text: string } => {
+const getStatusBadgeInfo = (isEnabled: boolean | undefined): { color: 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark', icon: JSX.Element, text: string } => {
   if (isEnabled === true) {
-    return { variant: 'default', icon: <CheckCircle className="h-3.5 w-3.5 text-green-500" />, text: 'Active' };
+    return { color: 'success', icon: <CheckCircleIcon className="h-3.5 w-3.5" />, text: 'Active' };
   } else if (isEnabled === false) {
-    return { variant: 'secondary', icon: <PowerOff className="h-3.5 w-3.5 text-muted-foreground" />, text: 'Disabled' };
+    return { color: 'dark', icon: <PowerOffIcon className="h-3.5 w-3.5" />, text: 'Disabled' };
   } else {
-    return { variant: 'outline', icon: <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />, text: 'Unknown' };
+    return { color: 'light', icon: <HelpCircleIcon className="h-3.5 w-3.5" />, text: 'Unknown' };
   }
 };
 
-
 export default function PersonaListItem({ persona, onDelete, onTest, onToggleStatus, isTesting = false, isTogglingStatus = false }: PersonaListItemProps) {
   const { toast } = useToast();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const statusInfo = getStatusBadgeInfo(persona.isEnabled);
   const isActionDisabled = isTesting || isTogglingStatus;
 
   const handleDelete = () => {
     if (persona.id && persona.personaType) onDelete(persona.id, persona.personaType as "http" | "dns");
+    setIsDeleteModalOpen(false);
   };
 
   const handleExport = () => {
     try {
-      // Create a new object for export, omitting 'personaType' if it's http, and flattening 'config' for dns
       const exportablePersona: Record<string, unknown> = { ...persona };
-      if (persona.personaType === 'http') {
-        // delete exportablePersona.personaType; // Optional: remove if not desired in export
-      } else if (persona.personaType === 'dns') {
-        // For DNS, the 'config' object is already structured as desired for export.
-        // No need to flatten 'config' into the root of exportablePersona.
-        // We want to export the full DNSPersona structure including the nested config.
-      }
-
-
       const personaJson = JSON.stringify(exportablePersona, null, 2);
       const blob = new Blob([personaJson], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -107,9 +82,8 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
   };
 
   const renderHttpPersonaDetails = (p: PersonaItem) => {
-    // Type assert the configDetails to HTTPConfigDetails since we know this is an HTTP persona
-  const raw = p.configDetails as unknown;
-  const config = (raw as HTTPConfigDetails) || {
+    const raw = p.configDetails as unknown;
+    const config = (raw as HTTPConfigDetails) || {
       userAgent: 'Not set',
       headers: {},
       requestTimeoutSeconds: 30,
@@ -118,154 +92,170 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
     };
     return (
       <>
-        <div className="text-sm space-y-1 mb-3">
-          <div><strong>User-Agent:</strong> <p className="font-mono text-xs truncate block ml-1" title={config.userAgent}>{config.userAgent || "Not set"}</p></div>
-          
-          <p><strong>Timeout:</strong> {config.requestTimeoutSeconds}s</p>
-          {config.followRedirects !== undefined && <p><strong>Follow Redirects:</strong> {config.followRedirects ? "Yes" : "No"}</p>}
-          {(config.cookieHandling as { mode?: string })?.mode && <p><strong>Cookie Handling:</strong> {(config.cookieHandling as { mode?: string }).mode}</p>}
-          {config.notes && <p><strong>Notes:</strong> <span className="text-muted-foreground italic truncate" title={config.notes}>{config.notes}</span></p>}
+        <div className="text-sm space-y-1.5">
+          <div><span className="font-medium text-gray-500 dark:text-gray-400">User-Agent:</span> <p className="font-mono text-xs text-gray-700 dark:text-gray-300 truncate block" title={config.userAgent}>{config.userAgent || "Not set"}</p></div>
+          <p><span className="font-medium text-gray-500 dark:text-gray-400">Timeout:</span> <span className="text-gray-700 dark:text-gray-300">{config.requestTimeoutSeconds}s</span></p>
+          {config.followRedirects !== undefined && <p><span className="font-medium text-gray-500 dark:text-gray-400">Follow Redirects:</span> <span className="text-gray-700 dark:text-gray-300">{config.followRedirects ? "Yes" : "No"}</span></p>}
+          {(config.cookieHandling as { mode?: string })?.mode && <p><span className="font-medium text-gray-500 dark:text-gray-400">Cookie Handling:</span> <span className="text-gray-700 dark:text-gray-300">{(config.cookieHandling as { mode?: string }).mode}</span></p>}
+          {config.notes && <p><span className="font-medium text-gray-500 dark:text-gray-400">Notes:</span> <span className="text-gray-600 dark:text-gray-400 italic truncate" title={config.notes}>{config.notes}</span></p>}
         </div>
-        <Separator className="my-3" />
-        <div className="space-y-2">
-          {config.headers && Object.keys(config.headers).length > 0 &&
-              <Button variant="outline" size="sm" onClick={() => copyToClipboard(config.headers, "HTTP Headers")} className="w-full justify-start text-left text-xs">
-                <Copy className="mr-2 h-3 w-3"/> Copy HTTP Headers ({Object.keys(config.headers).length} headers)
-              </Button>
-          }
+        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20 -mx-6 px-6 pb-1">
+          <div className="space-y-2">
+            {config.headers && Object.keys(config.headers).length > 0 &&
+                <Button variant="outline" size="sm" onClick={() => copyToClipboard(config.headers, "HTTP Headers")} className="w-full justify-start text-left text-xs">
+                  <CopyIcon className="mr-2 h-3 w-3"/> Copy HTTP Headers ({Object.keys(config.headers).length} headers)
+                </Button>
+            }
+          </div>
         </div>
       </>
     );
   };
 
   const renderDnsPersonaDetails = (p: PersonaItem) => {
-    // Type assert the configDetails to DNSConfigDetails since we know this is a DNS persona
-  const raw = p.configDetails as unknown;
-  const config = (raw as DNSConfigDetails) || { resolverStrategy: undefined } as DNSConfigDetails;
+    const raw = p.configDetails as unknown;
+    const config = (raw as DNSConfigDetails) || { resolverStrategy: undefined } as DNSConfigDetails;
     return (
       <>
-        <div className="text-sm space-y-1 mb-3">
-          <div><strong>Strategy:</strong> <Badge variant="secondary" className="ml-2 text-xs">{config.resolverStrategy?.replace(/_/g, ' ') || 'Not set'}</Badge></div>
-          <p><strong>Timeout:</strong> {config.queryTimeoutSeconds}s</p>
-          <p><strong>Concurrent Queries/Domain:</strong> {config.concurrentQueriesPerDomain}</p>
-          <p><strong>Max Goroutines:</strong> {config.maxConcurrentGoroutines}</p>
-          {(config.queryDelayMinMs !== undefined && config.queryDelayMaxMs !== undefined) && <p><strong>Query Delay:</strong> {config.queryDelayMinMs}-{config.queryDelayMaxMs}ms</p>}
-          {config.useSystemResolvers && <p><strong>Uses System Resolvers:</strong> Yes</p>}
-          {config.maxDomainsPerRequest && <p><strong>Max Domains/Request:</strong> {config.maxDomainsPerRequest}</p>}
-          {config.rateLimitDps && <p><strong>Rate Limit (DPS):</strong> {config.rateLimitDps}</p>}
-          {config.rateLimitBurst && <p><strong>Rate Limit Burst:</strong> {config.rateLimitBurst}</p>}
+        <div className="text-sm space-y-1.5">
+          <div><span className="font-medium text-gray-500 dark:text-gray-400">Strategy:</span> <span className="ml-2"><Badge color="dark" size="sm">{config.resolverStrategy?.replace(/_/g, ' ') || 'Not set'}</Badge></span></div>
+          <p><span className="font-medium text-gray-500 dark:text-gray-400">Timeout:</span> <span className="text-gray-700 dark:text-gray-300">{config.queryTimeoutSeconds}s</span></p>
+          <p><span className="font-medium text-gray-500 dark:text-gray-400">Concurrent Queries/Domain:</span> <span className="text-gray-700 dark:text-gray-300">{config.concurrentQueriesPerDomain}</span></p>
+          <p><span className="font-medium text-gray-500 dark:text-gray-400">Max Goroutines:</span> <span className="text-gray-700 dark:text-gray-300">{config.maxConcurrentGoroutines}</span></p>
+          {(config.queryDelayMinMs !== undefined && config.queryDelayMaxMs !== undefined) && <p><span className="font-medium text-gray-500 dark:text-gray-400">Query Delay:</span> <span className="text-gray-700 dark:text-gray-300">{config.queryDelayMinMs}-{config.queryDelayMaxMs}ms</span></p>}
+          {config.useSystemResolvers && <p><span className="font-medium text-gray-500 dark:text-gray-400">Uses System Resolvers:</span> <span className="text-gray-700 dark:text-gray-300">Yes</span></p>}
+          {config.maxDomainsPerRequest && <p><span className="font-medium text-gray-500 dark:text-gray-400">Max Domains/Request:</span> <span className="text-gray-700 dark:text-gray-300">{config.maxDomainsPerRequest}</span></p>}
+          {config.rateLimitDps && <p><span className="font-medium text-gray-500 dark:text-gray-400">Rate Limit (DPS):</span> <span className="text-gray-700 dark:text-gray-300">{config.rateLimitDps}</span></p>}
+          {config.rateLimitBurst && <p><span className="font-medium text-gray-500 dark:text-gray-400">Rate Limit Burst:</span> <span className="text-gray-700 dark:text-gray-300">{config.rateLimitBurst}</span></p>}
           {config.resolvers && config.resolvers.length > 0 && (
               <div className="mt-1">
-                  <strong>Resolvers:</strong>
-                  <p className="text-xs font-mono truncate ml-1" title={config.resolvers.join(', ')}>{config.resolvers.join(', ').substring(0,35)}{config.resolvers.join(', ').length > 35 ? '...' : ''}</p>
+                  <span className="font-medium text-gray-500 dark:text-gray-400">Resolvers:</span>
+                  <p className="text-xs font-mono text-gray-700 dark:text-gray-300 truncate" title={config.resolvers.join(', ')}>{config.resolvers.join(', ').substring(0,35)}{config.resolvers.join(', ').length > 35 ? '...' : ''}</p>
               </div>
           )}
         </div>
-        <Separator className="my-3" />
-         <div className="space-y-2">
-           <Button variant="outline" size="sm" onClick={() => copyToClipboard(config, "Full DNS Config")} className="w-full justify-start text-left text-xs">
-                <Copy className="mr-2 h-3 w-3"/> Copy Full DNS Config
-              </Button>
+        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20 -mx-6 px-6 pb-1">
+          <div className="space-y-2">
+            <Button variant="outline" size="sm" onClick={() => copyToClipboard(config, "Full DNS Config")} className="w-full justify-start text-left text-xs">
+              <CopyIcon className="mr-2 h-3 w-3"/> Copy Full DNS Config
+            </Button>
+          </div>
         </div>
       </>
     );
   };
 
   return (
-    <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-      <CardHeader className="flex flex-row items-start justify-between gap-2 pb-3">
-        <div>
-          <CardTitle className="text-lg flex items-center gap-2">
-            {persona.personaType === 'http' ? <Globe className="h-5 w-5 text-primary" /> : <Wifi className="h-5 w-5 text-primary" />}
-            {persona.name}
-          </CardTitle>
-          <CardDescription className="line-clamp-2 text-xs mt-1">{persona.description || "No description provided."}</CardDescription>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" disabled={isActionDisabled}>
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">More actions</span>
+    <>
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col h-full dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="flex flex-row items-start justify-between gap-2 px-6 py-5">
+          <div>
+            <h3 className="text-base font-medium flex items-center gap-2 text-gray-800 dark:text-white/90">
+              {persona.personaType === 'http' ? <GlobeIcon className="h-5 w-5 text-blue-500" /> : <WifiIcon className="h-5 w-5 text-blue-500" />}
+              {persona.name}
+            </h3>
+            <p className="line-clamp-2 text-xs mt-1 text-gray-500 dark:text-gray-400">{persona.description || "No description provided."}</p>
+          </div>
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              disabled={isActionDisabled}
+              className="h-8 w-8 p-0 flex-shrink-0 dropdown-toggle"
+            >
+              <MoreVerticalIcon className="h-4 w-4" />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild disabled={isActionDisabled}>
-              <Link href={`/personas/${persona.id}/edit?type=${persona.personaType}`} className="flex items-center">
-                <FilePenLine className="mr-2 h-4 w-4" /> Edit
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onTest(persona.id!, persona.personaType as 'http' | 'dns')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
-              {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TestTubeDiagonal className="mr-2 h-4 w-4" />} Test Persona
-            </DropdownMenuItem>
-            {persona.isEnabled && (
-                <DropdownMenuItem onClick={() => onToggleStatus(persona.id!, persona.personaType as 'http' | 'dns', 'Disabled')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
-                   {isTogglingStatus ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PowerOff className="mr-2 h-4 w-4" />} Disable Persona
-                </DropdownMenuItem>
-            )}
-            {!persona.isEnabled && (
-                 <DropdownMenuItem onClick={() => onToggleStatus(persona.id!, persona.personaType as 'http' | 'dns', 'Active')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
-                    {isTogglingStatus ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Power className="mr-2 h-4 w-4" />} Enable Persona
-                </DropdownMenuItem>
-            )}
-             <DropdownMenuItem onClick={handleExport} disabled={isActionDisabled}>
-              <FileJson className="mr-2 h-4 w-4" /> Export JSON
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                <DropdownMenuItem 
-                    className="flex items-center text-destructive hover:!bg-destructive hover:!text-destructive-foreground focus:!bg-destructive focus:!text-destructive-foreground"
-                    disabled={isActionDisabled}
-                    onSelect={(e) => e.preventDefault()} // Prevents dropdown from closing
+            <Dropdown isOpen={isDropdownOpen} onClose={() => setIsDropdownOpen(false)}>
+              <div className="p-1 min-w-[160px]">
+                <DropdownItem tag="a" href={`/personas/${persona.id}/edit?type=${persona.personaType}`}>
+                  <span className="flex items-center">
+                    <PencilIcon className="mr-2 h-4 w-4" /> Edit
+                  </span>
+                </DropdownItem>
+                <DropdownItem onClick={() => { onTest(persona.id!, persona.personaType as 'http' | 'dns'); setIsDropdownOpen(false); }}>
+                  <span className="flex items-center">
+                    {isTesting ? <LoaderIcon className="mr-2 h-4 w-4 animate-spin" /> : <TestTubeIcon className="mr-2 h-4 w-4" />} Test Persona
+                  </span>
+                </DropdownItem>
+                {persona.isEnabled && (
+                  <DropdownItem onClick={() => { onToggleStatus(persona.id!, persona.personaType as 'http' | 'dns', 'Disabled'); setIsDropdownOpen(false); }}>
+                    <span className="flex items-center">
+                      {isTogglingStatus ? <LoaderIcon className="mr-2 h-4 w-4 animate-spin" /> : <PowerOffIcon className="mr-2 h-4 w-4" />} Disable Persona
+                    </span>
+                  </DropdownItem>
+                )}
+                {!persona.isEnabled && (
+                  <DropdownItem onClick={() => { onToggleStatus(persona.id!, persona.personaType as 'http' | 'dns', 'Active'); setIsDropdownOpen(false); }}>
+                    <span className="flex items-center">
+                      {isTogglingStatus ? <LoaderIcon className="mr-2 h-4 w-4 animate-spin" /> : <PowerIcon className="mr-2 h-4 w-4" />} Enable Persona
+                    </span>
+                  </DropdownItem>
+                )}
+                <DropdownItem onClick={() => { handleExport(); setIsDropdownOpen(false); }}>
+                  <span className="flex items-center">
+                    <FileJsonIcon className="mr-2 h-4 w-4" /> Export JSON
+                  </span>
+                </DropdownItem>
+                <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                <DropdownItem 
+                  onClick={() => { setIsDropdownOpen(false); setIsDeleteModalOpen(true); }}
+                  className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                </DropdownMenuItem>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the persona
-                    &quot;{persona.name}&quot;.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className={cn(buttonVariants({variant: "destructive"}))}>
-                    Delete
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </CardHeader>
-      <CardContent className="text-sm flex-grow pt-0 space-y-3">
-        <div className="flex items-center justify-between text-xs mb-2">
-            <Badge variant={statusInfo.variant} className="text-xs py-0.5 px-1.5">
-                {statusInfo.icon}
-                <span className="ml-1">{statusInfo.text}</span>
-            </Badge>
+                  <span className="flex items-center">
+                    <TrashBinIcon className="mr-2 h-4 w-4" /> Delete
+                  </span>
+                </DropdownItem>
+              </div>
+            </Dropdown>
+          </div>
         </div>
 
-  {persona.personaType === 'http' ? renderHttpPersonaDetails(persona as PersonaItem) : renderDnsPersonaDetails(persona as PersonaItem)}
-        
-      </CardContent>
-      <CardFooter className="text-xs text-muted-foreground border-t pt-3">
-        <div className="flex items-center">
-          <Clock className="mr-1.5 h-3 w-3" />
-          Created: {persona.createdAt ? format(new Date(persona.createdAt), 'PP') : 'N/A'}
+        <div className="text-sm flex-grow px-6 pt-0 space-y-3">
+          <div className="flex items-center justify-between text-xs mb-2">
+            <Badge color={statusInfo.color} size="sm">
+              {statusInfo.icon}
+              <span className="ml-1">{statusInfo.text}</span>
+            </Badge>
+          </div>
+          {persona.personaType === 'http' ? renderHttpPersonaDetails(persona as PersonaItem) : renderDnsPersonaDetails(persona as PersonaItem)}
         </div>
-         {persona.updatedAt && persona.updatedAt !== persona.createdAt && (
-           <div className="flex items-center ml-auto">
-            <Settings2 className="mr-1.5 h-3 w-3" />
-             Updated: {format(new Date(persona.updatedAt), 'PP')}
-           </div>
-         )}
-      </CardFooter>
-    </Card>
+
+        <div className="text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 px-6 py-4 flex mt-auto">
+          <div className="flex items-center">
+            <ClockIcon className="mr-1.5 h-3 w-3" />
+            Created: {persona.createdAt ? format(new Date(persona.createdAt), 'PP') : 'N/A'}
+          </div>
+          {persona.updatedAt && persona.updatedAt !== persona.createdAt && (
+            <div className="flex items-center ml-auto">
+              <SettingsIcon className="mr-1.5 h-3 w-3" />
+              Updated: {format(new Date(persona.updatedAt), 'PP')}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} className="max-w-md">
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">Are you sure?</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            This action cannot be undone. This will permanently delete the persona
+            &quot;{persona.name}&quot;.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="primary" 
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }
-    
-
-    

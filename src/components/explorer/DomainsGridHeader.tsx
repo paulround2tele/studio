@@ -14,16 +14,9 @@
 'use client';
 
 import React from 'react';
-import { TableHead } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowUp, ArrowDown, ArrowUpDown, AlertTriangle } from 'lucide-react';
+import { TableCell } from '@/components/ta/ui/table';
+import { ArrowUpIcon, ArrowDownIcon, ArrowUpDownIcon, WarningTriangleIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import type { DomainSortKey, SortDirection } from '@/types/explorer/state';
 import { COLUMN_SPECS, COLUMN_IDS } from '@/types/explorer/columns';
 
@@ -66,34 +59,25 @@ interface SortIndicatorProps {
 
 function SortIndicator({ isActive, direction, isNonAuthoritative }: SortIndicatorProps) {
   if (!isActive) {
-    return <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />;
+    return <ArrowUpDownIcon className="h-4 w-4 text-gray-400" />;
   }
 
-  const Arrow = direction === 'asc' ? ArrowUp : ArrowDown;
+  const Arrow = direction === 'asc' ? ArrowUpIcon : ArrowDownIcon;
   
   if (isNonAuthoritative) {
     // Show warning indicator for non-authoritative sort
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="inline-flex items-center gap-0.5">
-              <Arrow className="h-4 w-4 text-amber-500" />
-              <AlertTriangle className="h-3 w-3 text-amber-500" />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-xs">
-            <p className="text-xs">
-              <strong>Client-only sort.</strong> Results order may not match server.
-              Backend sort params not yet implemented.
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <span 
+        className="inline-flex items-center gap-0.5" 
+        title="Client-only sort. Results order may not match server. Backend sort params not yet implemented."
+      >
+        <Arrow className="h-4 w-4 text-amber-500" />
+        <WarningTriangleIcon className="h-3 w-3 text-amber-500" />
+      </span>
     );
   }
 
-  return <Arrow className="h-4 w-4 text-foreground" />;
+  return <Arrow className="h-4 w-4 text-gray-800 dark:text-white" />;
 }
 
 // ============================================================================
@@ -125,21 +109,25 @@ function ColumnHeader({
   };
 
   return (
-    <TableHead
-      style={{
-        minWidth: spec.minWidth,
-        width: spec.flex ? undefined : spec.minWidth,
-      }}
+    <TableCell
+      isHeader
       className={cn(
+        'px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400',
         spec.align === 'center' && 'text-center',
         spec.align === 'right' && 'text-right',
-        isSortable && 'cursor-pointer select-none hover:bg-muted/50'
+        isSortable && 'cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-gray-800'
       )}
-      onClick={isSortable ? handleClick : undefined}
-      data-testid={`domains-grid-header-${spec.id}`}
-      aria-sort={isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
     >
-      <span className="inline-flex items-center gap-1">
+      <span 
+        className="inline-flex items-center gap-1"
+        style={{
+          minWidth: spec.minWidth,
+          width: spec.flex ? undefined : spec.minWidth,
+        }}
+        onClick={isSortable ? handleClick : undefined}
+        data-testid={`domains-grid-header-${spec.id}`}
+        aria-sort={isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+      >
         {spec.header}
         {isSortable && (
           <SortIndicator
@@ -149,7 +137,7 @@ function ColumnHeader({
           />
         )}
       </span>
-    </TableHead>
+    </TableCell>
   );
 }
 
@@ -181,17 +169,19 @@ export function DomainsGridHeader({
     <>
       {/* Selection checkbox column */}
       {enableSelection && (
-        <TableHead 
-          className="w-10 text-center"
-          data-testid="domains-grid-header-select"
+        <TableCell 
+          isHeader
+          className="w-10 text-center px-4 py-3"
         >
-          <Checkbox
+          <input
+            type="checkbox"
             checked={isAllSelected}
-            onCheckedChange={onSelectAllChange}
+            onChange={onSelectAllChange}
             aria-label="Select all domains"
+            className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800"
             data-testid="domains-grid-select-all"
           />
-        </TableHead>
+        </TableCell>
       )}
 
       {/* Data columns */}

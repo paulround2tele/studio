@@ -3,12 +3,12 @@ import { ChevronDown, ChevronUp, ChevronsUpDown, Search, Filter, MoreHorizontal,
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import Button from "@/components/ta/ui/button/Button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
+import Badge from "@/components/ta/ui/badge/Badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 // Column definition types

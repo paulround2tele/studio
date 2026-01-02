@@ -11,16 +11,16 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { 
-  Filter, 
-  BarChart3, 
-  Users, 
-  TrendingUp, 
-  Lightbulb,
-  AlertTriangle,
-  Clock,
-  CheckCircle2,
-  Loader2,
-} from 'lucide-react';
+  FilterIcon, 
+  BarChart3Icon, 
+  UsersIcon, 
+  TrendingUpIcon, 
+  LightbulbIcon,
+  WarningTriangleIcon,
+  ClockIcon,
+  CheckCircle2Icon,
+  LoaderIcon,
+} from '@/icons';
 
 export interface PlaceholderProps {
   /** Current execution phase for context-aware messaging */
@@ -127,7 +127,7 @@ export function FunnelPlaceholder({ currentPhase, className, isRunning }: Placeh
   if (!hasStarted) {
     return (
       <PlaceholderBase
-        icon={Filter}
+        icon={FilterIcon}
         title="Conversion Funnel"
         description="Start the campaign to see domains flow through the funnel stages."
         hint="Funnel shows: Generated → DNS Valid → HTTP Valid → Analyzed → Leads"
@@ -139,7 +139,7 @@ export function FunnelPlaceholder({ currentPhase, className, isRunning }: Placeh
   if (isRunning && isEarly) {
     return (
       <PlaceholderBase
-        icon={Loader2}
+        icon={LoaderIcon}
         title="Generating Domains..."
         description="The discovery phase is generating domain candidates. Funnel will update shortly."
         variant="loading"
@@ -150,7 +150,7 @@ export function FunnelPlaceholder({ currentPhase, className, isRunning }: Placeh
   
   return (
     <PlaceholderBase
-      icon={Filter}
+      icon={FilterIcon}
       title="No Domains Yet"
       description="Funnel data will appear once domain generation begins."
       className={className}
@@ -167,7 +167,7 @@ export function KpiPlaceholder({ currentPhase, className, isRunning }: Placehold
   if (!hasStarted) {
     return (
       <PlaceholderBase
-        icon={BarChart3}
+        icon={BarChart3Icon}
         title="Key Metrics"
         description="Performance metrics will appear once analysis begins."
         hint="Tracks: High Potential, Leads, Keyword Coverage, Quality Scores"
@@ -180,7 +180,7 @@ export function KpiPlaceholder({ currentPhase, className, isRunning }: Placehold
   if (isRunning && isEarly) {
     return (
       <PlaceholderBase
-        icon={Clock}
+        icon={ClockIcon}
         title="Waiting for Analysis"
         description="Metrics require completed HTTP validation. Currently in the early pipeline stages."
         variant="loading"
@@ -192,7 +192,7 @@ export function KpiPlaceholder({ currentPhase, className, isRunning }: Placehold
   
   return (
     <PlaceholderBase
-      icon={BarChart3}
+      icon={BarChart3Icon}
       title="No Metrics Yet"
       description="Analysis phase must complete before metrics are available."
       className={className}
@@ -210,7 +210,7 @@ export function LeadsPlaceholder({ currentPhase, className, isRunning }: Placeho
   if (!hasStarted) {
     return (
       <PlaceholderBase
-        icon={Users}
+        icon={UsersIcon}
         title="Lead Results"
         description="Validated leads will appear after HTTP validation completes."
         hint="Leads are domains that passed all validation stages"
@@ -222,7 +222,7 @@ export function LeadsPlaceholder({ currentPhase, className, isRunning }: Placeho
   if (isRunning && isEarly) {
     return (
       <PlaceholderBase
-        icon={Loader2}
+        icon={LoaderIcon}
         title="Validating Domains..."
         description="DNS and HTTP validation in progress. Leads will appear once domains pass validation."
         variant="loading"
@@ -233,7 +233,7 @@ export function LeadsPlaceholder({ currentPhase, className, isRunning }: Placeho
   
   return (
     <PlaceholderBase
-      icon={Users}
+      icon={UsersIcon}
       title="No Leads Yet"
       description="No domains have passed HTTP validation yet."
       className={className}
@@ -250,7 +250,7 @@ export function MomentumPlaceholder({ currentPhase, className }: PlaceholderProp
   if (!hasStarted) {
     return (
       <PlaceholderBase
-        icon={TrendingUp}
+        icon={TrendingUpIcon}
         title="Momentum Analysis"
         description="Trend data requires multiple analysis runs to detect changes over time."
         className={className}
@@ -260,7 +260,7 @@ export function MomentumPlaceholder({ currentPhase, className }: PlaceholderProp
   
   return (
     <PlaceholderBase
-      icon={TrendingUp}
+      icon={TrendingUpIcon}
       title="No Momentum Data"
       description="Momentum tracking requires historical comparison data from previous runs."
       hint="Re-run analysis to generate trend comparisons"
@@ -278,7 +278,7 @@ export function RecommendationsPlaceholder({ currentPhase, className, isRunning 
   if (!hasStarted) {
     return (
       <PlaceholderBase
-        icon={Lightbulb}
+        icon={LightbulbIcon}
         title="Recommendations"
         description="AI-powered suggestions will appear based on campaign performance."
         className={className}
@@ -289,7 +289,7 @@ export function RecommendationsPlaceholder({ currentPhase, className, isRunning 
   if (isRunning) {
     return (
       <PlaceholderBase
-        icon={Clock}
+        icon={ClockIcon}
         title="Analyzing..."
         description="Recommendations are generated after sufficient data is collected."
         variant="loading"
@@ -300,7 +300,7 @@ export function RecommendationsPlaceholder({ currentPhase, className, isRunning 
   
   return (
     <PlaceholderBase
-      icon={CheckCircle2}
+      icon={CheckCircle2Icon}
       title="No Recommendations"
       description="Campaign is performing well. No optimization suggestions at this time."
       variant="success"
@@ -318,7 +318,7 @@ export function WarningsPlaceholder({ currentPhase, className }: PlaceholderProp
   if (!hasStarted) {
     return (
       <PlaceholderBase
-        icon={AlertTriangle}
+        icon={WarningTriangleIcon}
         title="Quality Issues"
         description="Quality analysis will identify potential issues during processing."
         className={className}
@@ -329,7 +329,7 @@ export function WarningsPlaceholder({ currentPhase, className }: PlaceholderProp
   // Positive message when no warnings exist
   return (
     <PlaceholderBase
-      icon={CheckCircle2}
+      icon={CheckCircle2Icon}
       title="No Quality Issues"
       description="All analyzed domains are passing quality checks."
       variant="success"

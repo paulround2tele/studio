@@ -1,15 +1,14 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ta/ui/badge/Badge';
+import Button from '@/components/ta/ui/button/Button';
 import { 
-  Trash2, 
-  Clock, 
-  AlertTriangle, 
-  CheckCircle,
-  RefreshCw,
-  Play
-} from 'lucide-react';
+  Trash2Icon, 
+  ClockIcon, 
+  WarningTriangleIcon, 
+  CheckCircleIcon,
+  RefreshIcon,
+  PlayIcon
+} from '@/icons';
 import { useGetCleanupStatusQuery, useForceCleanupCampaignMutation } from '@/store/api/monitoringApi';
 import type { CleanupStatus } from '@/store/api/monitoringApi';
 
@@ -65,87 +64,87 @@ export const CleanupStatusComponent: React.FC<CleanupStatusProps> = ({
   };
 
   // Get cleanup status color
-  const getCleanupStatusColor = (data: CleanupStatus) => {
-    if (data.cleanup_errors.length > 0) return 'destructive';
-    if (data.campaigns_awaiting_cleanup > 10) return 'secondary';
-    return 'default';
+  const getCleanupStatusColor = (data: CleanupStatus): 'error' | 'warning' | 'success' => {
+    if (data.cleanup_errors.length > 0) return 'error';
+    if (data.campaigns_awaiting_cleanup > 10) return 'warning';
+    return 'success';
   };
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trash2 className="h-5 w-5" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <Trash2Icon className="h-5 w-5" />
             Resource Cleanup
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4 sm:p-6">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin h-8 w-8 border-b-2 border-primary rounded-full"></div>
+            <div className="animate-spin h-8 w-8 border-b-2 border-brand-500 rounded-full"></div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trash2 className="h-5 w-5" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <Trash2Icon className="h-5 w-5" />
             Resource Cleanup
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4 sm:p-6">
           <div className="text-center py-8">
-            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">Failed to load cleanup status</p>
+            <WarningTriangleIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <p className="text-gray-500 dark:text-gray-400 mb-4">Failed to load cleanup status</p>
             <Button onClick={() => refetch()} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshIcon className="h-4 w-4 mr-2" />
               Retry
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (!cleanupData) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trash2 className="h-5 w-5" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <Trash2Icon className="h-5 w-5" />
             Resource Cleanup
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
+          </h3>
+        </div>
+        <div className="p-4 sm:p-6">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             No cleanup data available
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (variant === 'compact') {
     return (
-      <Card className="w-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center justify-between">
+      <div className="w-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-sm font-medium text-gray-800 dark:text-white/90 flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Trash2 className="h-4 w-4" />
+              <Trash2Icon className="h-4 w-4" />
               Cleanup
             </span>
-            <Badge variant={getCleanupStatusColor(cleanupData)}>
+            <Badge color={getCleanupStatusColor(cleanupData)}>
               {cleanupData.campaigns_awaiting_cleanup} pending
             </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-2">
-          <div className="text-xs text-muted-foreground">
+          </h3>
+        </div>
+        <div className="p-4 pt-2">
+          <div className="text-xs text-gray-500 dark:text-gray-400">
             {cleanupData.total_campaigns_tracked} total tracked
           </div>
           {cleanupData.cleanup_errors.length > 0 && (
@@ -153,59 +152,59 @@ export const CleanupStatusComponent: React.FC<CleanupStatusProps> = ({
               {cleanupData.cleanup_errors.length} error(s)
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+    <div className="w-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+        <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Trash2 className="h-5 w-5" />
+            <Trash2Icon className="h-5 w-5" />
             Resource Cleanup Status
           </span>
           <div className="flex items-center gap-2">
-            <Badge variant={getCleanupStatusColor(cleanupData)}>
+            <Badge color={getCleanupStatusColor(cleanupData)}>
               {cleanupData.campaigns_awaiting_cleanup} awaiting cleanup
             </Badge>
-            <Button onClick={() => refetch()} variant="ghost" size="sm">
-              <RefreshCw className="h-4 w-4" />
+            <Button onClick={() => refetch()} variant="outline" size="sm">
+              <RefreshIcon className="h-4 w-4" />
             </Button>
           </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+      <div className="p-4 sm:p-6">
         {/* Cleanup Statistics */}
         <div className="grid gap-4 md:grid-cols-3 mb-6">
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold text-primary">
+          <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+            <div className="text-2xl font-bold text-brand-500">
               {cleanupData.total_campaigns_tracked}
             </div>
-            <div className="text-sm text-muted-foreground">Total Tracked</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Total Tracked</div>
           </div>
           
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
+          <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
             <div className={`text-2xl font-bold ${cleanupData.campaigns_awaiting_cleanup > 10 ? 'text-yellow-600' : 'text-green-600'}`}>
               {cleanupData.campaigns_awaiting_cleanup}
             </div>
-            <div className="text-sm text-muted-foreground">Awaiting Cleanup</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Awaiting Cleanup</div>
           </div>
           
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
+          <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
             <div className={`text-2xl font-bold ${cleanupData.cleanup_errors.length > 0 ? 'text-red-600' : 'text-green-600'}`}>
               {cleanupData.cleanup_errors.length}
             </div>
-            <div className="text-sm text-muted-foreground">Cleanup Errors</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Cleanup Errors</div>
           </div>
         </div>
 
         {/* Last Cleanup */}
-        <div className="flex items-center justify-between mb-4 p-3 bg-muted/50 rounded-lg">
+        <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Last cleanup run:</span>
+            <ClockIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm text-gray-500 dark:text-gray-400">Last cleanup run:</span>
           </div>
           <span className="font-medium">
             {formatTimeSince(cleanupData.last_cleanup_run)}
@@ -214,11 +213,11 @@ export const CleanupStatusComponent: React.FC<CleanupStatusProps> = ({
 
         {/* Force Cleanup for Specific Campaign */}
         {campaignId && (
-          <div className="border-t pt-4 mb-4">
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mb-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-medium">Force Cleanup Campaign</div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
                   Immediately clean up resources for campaign {campaignId}
                 </div>
               </div>
@@ -229,9 +228,9 @@ export const CleanupStatusComponent: React.FC<CleanupStatusProps> = ({
                 size="sm"
               >
                 {isCleanupLoading ? (
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  <RefreshIcon className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <Play className="h-4 w-4 mr-2" />
+                  <PlayIcon className="h-4 w-4 mr-2" />
                 )}
                 Force Cleanup
               </Button>
@@ -243,7 +242,7 @@ export const CleanupStatusComponent: React.FC<CleanupStatusProps> = ({
         {cleanupData.cleanup_errors.length > 0 && (
           <div className="space-y-2">
             <div className="font-medium text-sm flex items-center gap-2 text-red-600">
-              <AlertTriangle className="h-4 w-4" />
+              <WarningTriangleIcon className="h-4 w-4" />
               Cleanup Errors ({cleanupData.cleanup_errors.length})
             </div>
             <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -259,7 +258,7 @@ export const CleanupStatusComponent: React.FC<CleanupStatusProps> = ({
         {/* Success Message */}
         {cleanupData.cleanup_errors.length === 0 && cleanupData.campaigns_awaiting_cleanup === 0 && (
           <div className="text-center py-4 text-green-600">
-            <CheckCircle className="h-8 w-8 mx-auto mb-2" />
+            <CheckCircleIcon className="h-8 w-8 mx-auto mb-2" />
             <div className="text-sm font-medium">All campaigns cleaned up successfully</div>
           </div>
         )}
@@ -268,15 +267,15 @@ export const CleanupStatusComponent: React.FC<CleanupStatusProps> = ({
         {cleanupData.campaigns_awaiting_cleanup > 0 && cleanupData.cleanup_errors.length === 0 && (
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center gap-2 text-blue-800">
-              <Clock className="h-4 w-4" />
+              <ClockIcon className="h-4 w-4" />
               <span className="text-sm font-medium">
                 {cleanupData.campaigns_awaiting_cleanup} campaign(s) scheduled for cleanup
               </span>
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

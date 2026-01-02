@@ -17,10 +17,8 @@
 'use client';
 
 import React from 'react';
-import { TrendingUp, Activity, Gauge } from 'lucide-react';
+import { TrendingUpIcon, ActivityIcon, GaugeIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DomainRow } from '@/types/explorer/state';
 import type { DomainScoreBreakdown, ScoreComponents } from '@/types/explorer/drawer';
 import { DomainDrawerDegraded, FallbackRichness } from './DomainDrawerDegraded';
@@ -42,16 +40,20 @@ const ScoreBar = React.memo(function ScoreBar({ label, value, description }: Sco
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-center text-sm">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium tabular-nums">{percentage}%</span>
+        <span className="text-gray-500 dark:text-gray-400">{label}</span>
+        <span className="font-medium tabular-nums text-gray-800 dark:text-white">{percentage}%</span>
       </div>
-      <Progress 
-        value={percentage} 
-        className="h-2"
+      <div 
+        className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700"
         data-testid={`score-bar-${label.toLowerCase().replace(/\s+/g, '-')}`}
-      />
+      >
+        <div 
+          className="h-2 rounded-full bg-brand-500" 
+          style={{ width: `${percentage}%` }} 
+        />
+      </div>
       {description && (
-        <p className="text-xs text-muted-foreground">{description}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
       )}
     </div>
   );
@@ -86,26 +88,26 @@ const BreakdownDisplay = React.memo(function BreakdownDisplay({
   return (
     <div className="space-y-4" data-testid="domain-drawer-breakdown">
       {/* Final score */}
-      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+      <div className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
         <div className="flex items-center gap-2">
-          <Gauge className="h-5 w-5 text-primary" />
-          <span className="font-medium">Final Score</span>
+          <GaugeIcon className="h-5 w-5 text-brand-500" />
+          <span className="font-medium text-gray-800 dark:text-white">Final Score</span>
         </div>
-        <span className="text-2xl font-bold tabular-nums">{final}</span>
+        <span className="text-2xl font-bold tabular-nums text-gray-800 dark:text-white">{final}</span>
       </div>
 
       {/* Parked penalty if applied */}
       {parkedPenaltyFactor !== undefined && parkedPenaltyFactor < 1 && (
         <div className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1">
-          <Activity className="h-4 w-4" />
+          <ActivityIcon className="h-4 w-4" />
           Parked penalty applied: {Math.round((1 - parkedPenaltyFactor) * 100)}% reduction
         </div>
       )}
 
       {/* Component breakdown */}
       <div className="space-y-3">
-        <h4 className="text-sm font-medium flex items-center gap-2">
-          <TrendingUp className="h-4 w-4" />
+        <h4 className="text-sm font-medium flex items-center gap-2 text-gray-700 dark:text-gray-300">
+          <TrendingUpIcon className="h-4 w-4" />
           Score Components
         </h4>
         
@@ -165,15 +167,15 @@ export const DomainDrawerRichness = React.memo(function DomainDrawerRichness({
   const fallbackScore = domain.features?.richness?.score ?? null;
 
   return (
-    <Card className={cn("", className)} data-testid="domain-drawer-richness">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Gauge className="h-4 w-4" />
+    <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)} data-testid="domain-drawer-richness">
+      <div className="p-4 pb-2">
+        <h3 className="text-base font-semibold flex items-center gap-2 text-gray-800 dark:text-white">
+          <GaugeIcon className="h-4 w-4" />
           Richness Score
-        </CardTitle>
-      </CardHeader>
+        </h3>
+      </div>
       
-      <CardContent className="space-y-4">
+      <div className="p-4 pt-0 space-y-4">
         {/* Loading state */}
         {isLoadingBreakdown && (
           <DomainDrawerSkeleton variant="breakdown-only" />
@@ -211,8 +213,8 @@ export const DomainDrawerRichness = React.memo(function DomainDrawerRichness({
         {!isLoadingBreakdown && !scoreBreakdown && !breakdownError && !isBreakdownUnavailable && (
           <FallbackRichness score={fallbackScore} />
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 });
 
