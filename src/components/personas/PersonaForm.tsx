@@ -5,7 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Checkbox from "@/components/ta/form/input/Checkbox";
-import { Loader2 } from "lucide-react";
+import Button from "@/components/ta/ui/button/Button";
+import { LoaderIcon } from "@/icons";
 import { useToast } from "@/hooks/use-toast";
 import { PersonasApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
@@ -407,26 +408,27 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: PersonaResp
             />
           </div>
 
-          {/* Actions - inline Tailwind buttons since TailAdmin Button lacks type prop */}
+          {/* Actions */}
           <div className="flex justify-end gap-2 pt-4" data-testid="persona-http-actions">
-            <button
+            <Button
               data-testid="persona-http-cancel"
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => router.push("/personas")}
               disabled={form.formState.isSubmitting}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs transition-colors hover:bg-gray-50 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               data-testid="persona-http-submit"
               type="submit"
+              size="sm"
               disabled={form.formState.isSubmitting}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+              startIcon={form.formState.isSubmitting ? <LoaderIcon className="h-4 w-4 animate-spin" /> : undefined}
             >
-              {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {form.formState.isSubmitting ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Persona")}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -760,26 +762,27 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: PersonaRespo
             />
           </div>
 
-          {/* Actions - inline Tailwind buttons since TailAdmin Button lacks type prop */}
+          {/* Actions */}
           <div className="flex justify-end gap-2 pt-4" data-testid="persona-dns-actions">
-            <button
+            <Button
               data-testid="persona-dns-cancel"
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => router.push("/personas")}
               disabled={form.formState.isSubmitting}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs transition-colors hover:bg-gray-50 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               data-testid="persona-dns-submit"
               type="submit"
+              size="sm"
               disabled={form.formState.isSubmitting}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+              startIcon={form.formState.isSubmitting ? <LoaderIcon className="h-4 w-4 animate-spin" /> : undefined}
             >
-              {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {form.formState.isSubmitting ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Persona")}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

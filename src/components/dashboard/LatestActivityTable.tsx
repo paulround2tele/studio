@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '../ui/scroll-area';
-import { ExternalLink, Activity } from 'lucide-react';
+// TailAdmin components
+import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components/ta/ui/table';
+import { TABLE_HEADER_CELL_CLASSES, TABLE_BODY_CELL_CLASSES } from '@/components/shared/Card';
+import Badge from '@/components/ta/ui/badge/Badge';
+// TailAdmin Icons
+import { BoltIcon } from '@/icons';
 import Link from 'next/link';
+// Data providers
 import { useRTKCampaignsList } from '@/providers/RTKCampaignDataProvider';
 import { useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
@@ -179,106 +181,108 @@ export default function LatestActivityTable() {
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="flex items-center gap-2 text-base font-medium text-gray-800 dark:text-white/90">
+            <BoltIcon className="h-5 w-5 text-brand-500" />
             Latest Domain Activity
-          </CardTitle>
-          <CardDescription>
+          </h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Loading recent domain activities from all campaigns...
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </p>
+        </div>
+        <div className="p-6">
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex items-center space-x-4 animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/6"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/6"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Activity className="h-5 w-5" />
+    <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+        <h3 className="flex items-center gap-2 text-base font-medium text-gray-800 dark:text-white/90">
+          <BoltIcon className="h-5 w-5 text-brand-500" />
           Latest Domain Activity
-        </CardTitle>
-        <CardDescription>
+        </h3>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Recent domain activities from all campaigns ({displayedActivities.length} items)
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[400px]">
-          <Table>
-            <TableHeader>
+        </p>
+      </div>
+      <div className="p-6">
+        <div className="max-h-[400px] overflow-auto">
+          <Table className="w-full">
+            <TableHeader className="border-b border-gray-100 dark:border-gray-800">
               <TableRow>
-                <TableHead>Domain</TableHead>
-                <TableHead>Campaign</TableHead>
-                <TableHead>Phase</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Lead Score</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead></TableHead>
+                <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Domain</TableCell>
+                <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Campaign</TableCell>
+                <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Phase</TableCell>
+                <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Status</TableCell>
+                <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Lead Score</TableCell>
+                <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>Date</TableCell>
+                <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES}>{' '}</TableCell>
               </TableRow>
             </TableHeader>
             <TableBody>
               {displayedActivities.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-center`}>
                     No domain activities found
                   </TableCell>
                 </TableRow>
               ) : (
                 displayedActivities.map((activity) => (
-                  <TableRow key={activity.id}>
-                    <TableCell className="font-medium">
+                  <TableRow key={activity.id} className="border-b border-gray-50 dark:border-gray-800 last:border-0">
+                    <TableCell className={TABLE_BODY_CELL_CLASSES}>
                       <Link 
                         href={activity.sourceUrl} 
                         target="_blank" 
-                        className="text-blue-600 hover:underline flex items-center gap-1"
+                        className="text-brand-500 hover:underline flex items-center gap-1 font-medium"
                       >
                         {activity.domainName}
-                        <ExternalLink className="h-3 w-3" />
+                        <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M3.5 3C3.22386 3 3 3.22386 3 3.5V8.5C3 8.77614 3.22386 9 3.5 9H8.5C8.77614 9 9 8.77614 9 8.5V6.5M6.5 3H9V5.5M9 3L5 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                       </Link>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className={TABLE_BODY_CELL_CLASSES}>
                       <Link 
                         href={`/campaigns/${activity.campaignId}`}
-                        className="text-blue-600 hover:underline"
+                        className="text-brand-500 hover:underline"
                       >
                         {activity.campaignName}
                       </Link>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
+                    <TableCell className={TABLE_BODY_CELL_CLASSES}>
+                      <Badge color="light">
                         {activity.phase?.replace('_', ' ')}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className={TABLE_BODY_CELL_CLASSES}>
                       <StatusBadge status={activity.status} />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className={TABLE_BODY_CELL_CLASSES}>
                       {activity.leadScore !== undefined ? (
                         <LeadScoreDisplay score={activity.leadScore} />
                       ) : (
-                        <span className="text-muted-foreground">-</span>
+                        <span className="text-gray-400">-</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className={`${TABLE_BODY_CELL_CLASSES} text-sm text-gray-500 dark:text-gray-400`}>
                       {formatDate(activity.generatedDate)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className={TABLE_BODY_CELL_CLASSES}>
                       <Link href={`/campaigns/${activity.campaignId}`}>
-                        <Badge variant="outline" className="cursor-pointer">
+                        <Badge color="primary">
                           View
                         </Badge>
                       </Link>
@@ -288,8 +292,8 @@ export default function LatestActivityTable() {
               )}
             </TableBody>
           </Table>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+        </div>
+      </div>
+    </div>
   );
 }
