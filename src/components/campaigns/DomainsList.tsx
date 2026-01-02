@@ -1,20 +1,26 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
 import { useListScoringProfilesQuery } from '@/store/api/scoringApi';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ta/ui/table';
+import Button from '@/components/ta/ui/button/Button';
 import { useCampaignSSE } from '@/hooks/useCampaignSSE';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import SelectAdapter from '@/components/ta/adapters/SelectAdapter';
 import { DEFAULT_DOMAIN_PAGE_SIZE, DOMAIN_PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { usePaginatedDomains } from '@/lib/hooks/usePaginatedDomains';
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
 import RichnessBadge from '@/components/domains/RichnessBadge';
 import TopKeywordsList from '@/components/domains/TopKeywordsList';
 import MicrocrawlGainChip from '@/components/domains/MicrocrawlGainChip';
-import { Switch } from '@/components/ui/switch';
+import Switch from '@/components/ta/form/switch/Switch';
+import {
+  TABLE_HEADER_CLASSES,
+  TABLE_HEADER_CELL_CLASSES,
+  TABLE_BODY_CLASSES,
+  TABLE_BODY_CELL_CLASSES,
+  TABLE_ROW_CLASSES,
+} from '@/components/shared/Card';
 import type { DomainRow, DomainWarning, MetricValue as _MetricValue } from '@/types/domain';
 import type { DomainAnalysisFeaturesRichness, ScoringProfile } from '@/lib/api-client/models';
 
@@ -115,6 +121,17 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
   }, [items, sortKey, sortDir, warningsFilter]);
   const ariaSort = (key: SortKey): React.AriaAttributes['aria-sort'] => sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none';
 
+  // Memoized options for SelectAdapter
+  const pageSizeOptions = useMemo(() => 
+    DOMAIN_PAGE_SIZE_OPTIONS.map((opt) => ({ value: String(opt), label: String(opt) })),
+    []
+  );
+  const warningsFilterOptions = useMemo(() => [
+    { value: 'all', label: 'All' },
+    { value: 'with', label: 'With' },
+    { value: 'without', label: 'Without' },
+  ], []);
+
   // Enriched campaign to surface scoring association + aggregates if backend provides
   const { data: enriched } = useGetCampaignEnrichedQuery(campaignId, { skip: !campaignId });
   // Scoring profiles list (to resolve profile display name)
@@ -164,14 +181,14 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
   const prevalencePct = items.length ? (flaggedCount / items.length) * 100 : 0;
 
   return (
-    <Card data-testid="campaign-domains-card">
-      <CardHeader className="flex flex-row items-center justify-between" data-testid="campaign-domains-header">
+    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]" data-testid="campaign-domains-card">
+      <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800 flex flex-row items-center justify-between" data-testid="campaign-domains-header">
         <div data-testid="campaign-domains-header-left">
-          <CardTitle data-testid="campaign-domains-title">Generated Domains</CardTitle>
-          <CardDescription data-testid="campaign-domains-description">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90" data-testid="campaign-domains-title">Generated Domains</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="campaign-domains-description">
             {((total ?? items.length)).toLocaleString()} total{total == null && cursorMode ? ' (so far)' : ''} • showing {items.length.toLocaleString()} {loading ? '(loading...)' : ''}
-          </CardDescription>
-          <div className="text-xs text-muted-foreground flex flex-wrap gap-3" data-testid="campaign-domains-aggregates">
+          </p>
+          <div className="text-xs text-gray-500 dark:text-gray-400 flex flex-wrap gap-3" data-testid="campaign-domains-aggregates">
             <span data-testid="campaign-domains-agg-discovered">Discovered: {discovered ?? '—'}</span>
             {validated !== undefined && <span data-testid="campaign-domains-agg-validated">Validated: {validated}</span>}
             {analyzed !== undefined && <span data-testid="campaign-domains-agg-analyzed">Analyzed: {analyzed}</span>}
@@ -184,94 +201,83 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
         <div className="flex gap-2 items-center" data-testid="campaign-domains-controls-cluster">
           <div className="flex flex-col gap-2 items-end" data-testid="campaign-domains-controls">
             <div className="flex items-center gap-2" data-testid="campaign-domains-page-size-control">
-              <span className="text-xs text-muted-foreground" data-testid="campaign-domains-page-size-label">Page size</span>
-              <Select
+              <span className="text-xs text-gray-500 dark:text-gray-400" data-testid="campaign-domains-page-size-label">Page size</span>
+              <SelectAdapter
+                options={pageSizeOptions}
                 value={String(pageSize)}
-                onValueChange={(v) => {
+                onChange={(v) => {
                   const n = parseInt(v, 10) || DEFAULT_DOMAIN_PAGE_SIZE;
                   setPageSize(n);
                   api.setPageSize(n);
                 }}
+                className="h-8 w-[100px]"
                 data-testid="campaign-domains-page-size-select"
-              >
-                <SelectTrigger className="h-8 w-[100px]" data-testid="campaign-domains-page-size-trigger">
-                  <SelectValue data-testid="campaign-domains-page-size-value" />
-                </SelectTrigger>
-                <SelectContent data-testid="campaign-domains-page-size-options">
-                  {DOMAIN_PAGE_SIZE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt} value={String(opt)} data-testid={`campaign-domains-page-size-option-${opt}`}>{opt}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
               <Button variant="outline" onClick={() => api.refresh()} disabled={loading} data-testid="campaign-domains-refresh">Refresh</Button>
             </div>
             <div className="flex items-center gap-3 text-xs" data-testid="campaign-domains-pagination-cluster">
               <div className="flex items-center gap-1" data-testid="campaign-domains-pagination-buttons">
-                <Button size="sm" variant="ghost" onClick={api.first} disabled={!hasPrev || loading} data-testid="campaign-domains-first">⏮</Button>
-                <Button size="sm" variant="ghost" onClick={api.prev} disabled={!hasPrev || loading} data-testid="campaign-domains-prev">◀</Button>
+                <Button size="sm" variant="outline" onClick={api.first} disabled={!hasPrev || loading} data-testid="campaign-domains-first">⏮</Button>
+                <Button size="sm" variant="outline" onClick={api.prev} disabled={!hasPrev || loading} data-testid="campaign-domains-prev">◀</Button>
                 <span data-testid="campaign-domains-page-indicator">Page {page}{pageCount ? ` / ${pageCount}` : (cursorMode ? ' (…)' : '')}</span>
-                <Button size="sm" variant="ghost" onClick={api.next} disabled={!hasMore || loading} data-testid="campaign-domains-next">▶</Button>
-                <Button size="sm" variant="ghost" onClick={api.last} disabled={!pageCount || page===pageCount || loading} data-testid="campaign-domains-last">⏭</Button>
+                <Button size="sm" variant="outline" onClick={api.next} disabled={!hasMore || loading} data-testid="campaign-domains-next">▶</Button>
+                <Button size="sm" variant="outline" onClick={api.last} disabled={!pageCount || page===pageCount || loading} data-testid="campaign-domains-last">⏭</Button>
               </div>
               <div className="flex items-center gap-1" data-testid="campaign-domains-infinite-toggle">
-                <Switch checked={infinite} onCheckedChange={(v)=>api.toggleInfinite(v)} data-testid="campaign-domains-infinite-switch" />
-                <span data-testid="campaign-domains-infinite-label">Infinite</span>
+                <Switch label="Infinite" defaultChecked={infinite} onChange={(v)=>api.toggleInfinite(v)} data-testid="campaign-domains-infinite-switch" />
               </div>
               <div className="flex items-center gap-1" data-testid="campaign-domains-warnings-filter">
                 <span className="text-xs" id="warnings-filter-label">Warnings</span>
-                <Select value={warningsFilter} onValueChange={(v)=>onChangeWarningsFilter(v as WarningsFilter)}>
-                  <SelectTrigger className="h-7 w-[110px]" aria-labelledby="warnings-filter-label" data-testid="campaign-domains-warnings-filter-trigger">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent data-testid="campaign-domains-warnings-filter-options">
-                    <SelectItem value="all" data-testid="campaign-domains-warnings-filter-all">All</SelectItem>
-                    <SelectItem value="with" data-testid="campaign-domains-warnings-filter-with">With</SelectItem>
-                    <SelectItem value="without" data-testid="campaign-domains-warnings-filter-without">Without</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SelectAdapter
+                  options={warningsFilterOptions}
+                  value={warningsFilter}
+                  onChange={(v) => onChangeWarningsFilter(v as WarningsFilter)}
+                  className="h-7 w-[110px]"
+                  data-testid="campaign-domains-warnings-filter"
+                />
               </div>
             </div>
           </div>
         </div>
-      </CardHeader>
-      <CardContent data-testid="campaign-domains-content">
+      </div>
+      <div className="p-5" data-testid="campaign-domains-content">
         {loading && items.length === 0 ? (
-          <div className="text-sm text-muted-foreground" data-testid="campaign-domains-loading-initial">Loading domains...</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400" data-testid="campaign-domains-loading-initial">Loading domains...</div>
         ) : items.length === 0 ? (
-          <div className="text-sm text-muted-foreground" data-testid="campaign-domains-empty">No domains yet. Start Discovery to generate domains.</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400" data-testid="campaign-domains-empty">No domains yet. Start Discovery to generate domains.</div>
         ) : (
           <div className="overflow-x-auto" data-testid="campaign-domains-table-wrapper">
             {!infinite || !shouldVirtualize ? (
               <Table data-testid="campaign-domains-table">
                 <caption className="sr-only" id="campaign-domains-warnings-legend">Warnings legend: S = Keyword stuffing penalty applied. R = High repetition index (&gt;0.30). A = High anchor share (&gt;40%).</caption>
-                <TableHeader data-testid="campaign-domains-thead">
+                <TableHeader className={TABLE_HEADER_CLASSES} data-testid="campaign-domains-thead">
                   <TableRow data-testid="campaign-domains-header-row">
-                    <TableHead data-testid="campaign-domains-col-domain">Domain</TableHead>
-                    <TableHead data-testid="campaign-domains-col-dns">DNS</TableHead>
-                    <TableHead data-testid="campaign-domains-col-http">HTTP</TableHead>
-                    <TableHead aria-sort={ariaSort('richness')} data-testid="campaign-domains-col-richness">
+                    <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-domain">Domain</TableCell>
+                    <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-dns">DNS</TableCell>
+                    <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-http">HTTP</TableCell>
+                    <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} aria-sort={ariaSort('richness')} data-testid="campaign-domains-col-richness">
                       <button type="button" className="underline text-xs" onClick={()=>toggleSort('richness')} data-testid="campaign-domains-sort-richness">Richness</button>
-                    </TableHead>
-                    <TableHead aria-sort={ariaSort('keywords')} data-testid="campaign-domains-col-topkeywords">
+                    </TableCell>
+                    <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} aria-sort={ariaSort('keywords')} data-testid="campaign-domains-col-topkeywords">
                       <button type="button" className="underline text-xs" onClick={()=>toggleSort('keywords')} data-testid="campaign-domains-sort-keywords">Top Keywords</button>
-                    </TableHead>
-                    <TableHead aria-sort={ariaSort('microcrawl')} data-testid="campaign-domains-col-microcrawl">
+                    </TableCell>
+                    <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} aria-sort={ariaSort('microcrawl')} data-testid="campaign-domains-col-microcrawl">
                       <button type="button" className="underline text-xs" onClick={()=>toggleSort('microcrawl')} data-testid="campaign-domains-sort-microcrawl">Microcrawl</button>
-                    </TableHead>
-                    <TableHead data-testid="campaign-domains-col-warnings">Warnings</TableHead>
-                    <TableHead data-testid="campaign-domains-col-lead">Lead</TableHead>
+                    </TableCell>
+                    <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-warnings">Warnings</TableCell>
+                    <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-lead">Lead</TableCell>
                   </TableRow>
                 </TableHeader>
-                <TableBody data-testid="campaign-domains-tbody">
+                <TableBody className={TABLE_BODY_CLASSES} data-testid="campaign-domains-tbody">
                   {sortedItems.map((d: DomainRow, idx: number) => (
-                    <TableRow key={`${d.id || d.domain || idx}`} data-row-index={idx} data-testid="campaign-domains-row">
-                      <TableCell className="font-medium" data-testid="campaign-domains-cell-domain">{d.domain}</TableCell>
-                      <TableCell data-testid="campaign-domains-cell-dns">{d.dnsStatus || '—'}</TableCell>
-                      <TableCell data-testid="campaign-domains-cell-http">{d.httpStatus || '—'}</TableCell>
-                      <TableCell data-testid="campaign-domains-cell-richness"><RichnessBadge features={d.features} /></TableCell>
-                      <TableCell data-testid="campaign-domains-cell-topkeywords"><TopKeywordsList features={d.features} /></TableCell>
-                      <TableCell data-testid="campaign-domains-cell-microcrawl"><MicrocrawlGainChip features={d.features} /></TableCell>
-                      <TableCell data-testid="campaign-domains-cell-warnings">
+                    <TableRow key={`${d.id || d.domain || idx}`} className={TABLE_ROW_CLASSES} data-row-index={idx} data-testid="campaign-domains-row">
+                      <TableCell className={`${TABLE_BODY_CELL_CLASSES} font-medium`} data-testid="campaign-domains-cell-domain">{d.domain}</TableCell>
+                      <TableCell className={TABLE_BODY_CELL_CLASSES} data-testid="campaign-domains-cell-dns">{d.dnsStatus || '—'}</TableCell>
+                      <TableCell className={TABLE_BODY_CELL_CLASSES} data-testid="campaign-domains-cell-http">{d.httpStatus || '—'}</TableCell>
+                      <TableCell className={TABLE_BODY_CELL_CLASSES} data-testid="campaign-domains-cell-richness"><RichnessBadge features={d.features} /></TableCell>
+                      <TableCell className={TABLE_BODY_CELL_CLASSES} data-testid="campaign-domains-cell-topkeywords"><TopKeywordsList features={d.features} /></TableCell>
+                      <TableCell className={TABLE_BODY_CELL_CLASSES} data-testid="campaign-domains-cell-microcrawl"><MicrocrawlGainChip features={d.features} /></TableCell>
+                      <TableCell className={TABLE_BODY_CELL_CLASSES} data-testid="campaign-domains-cell-warnings">
                         {(() => {
                           const warns = getDomainWarnings(d.features?.richness);
                           if (warns.length === 0) return '—';
@@ -284,7 +290,7 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                           );
                         })()}
                       </TableCell>
-                      <TableCell data-testid="campaign-domains-cell-lead">{d.leadStatus || '—'}</TableCell>
+                      <TableCell className={TABLE_BODY_CELL_CLASSES} data-testid="campaign-domains-cell-lead">{d.leadStatus || '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -293,16 +299,16 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
               <div style={{ height: 400 }} data-testid="campaign-domains-virtualized">
                 <Table data-testid="campaign-domains-virtual-table">
                   <caption className="sr-only" id="campaign-domains-warnings-legend">Warnings legend: S = Keyword stuffing penalty applied. R = High repetition index (&gt;0.30). A = High anchor share (&gt;40%).</caption>
-                  <TableHeader>
+                  <TableHeader className={TABLE_HEADER_CLASSES}>
                     <TableRow>
-                      <TableHead data-testid="campaign-domains-col-domain">Domain</TableHead>
-                      <TableHead data-testid="campaign-domains-col-dns">DNS</TableHead>
-                      <TableHead data-testid="campaign-domains-col-http">HTTP</TableHead>
-                      <TableHead data-testid="campaign-domains-col-richness">Richness</TableHead>
-                      <TableHead data-testid="campaign-domains-col-topkeywords">Top Keywords</TableHead>
-                      <TableHead data-testid="campaign-domains-col-microcrawl">Microcrawl</TableHead>
-                      <TableHead data-testid="campaign-domains-col-warnings">Warnings</TableHead>
-                      <TableHead data-testid="campaign-domains-col-lead">Lead</TableHead>
+                      <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-domain">Domain</TableCell>
+                      <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-dns">DNS</TableCell>
+                      <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-http">HTTP</TableCell>
+                      <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-richness">Richness</TableCell>
+                      <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-topkeywords">Top Keywords</TableCell>
+                      <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-microcrawl">Microcrawl</TableCell>
+                      <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-warnings">Warnings</TableCell>
+                      <TableCell isHeader className={TABLE_HEADER_CELL_CLASSES} data-testid="campaign-domains-col-lead">Lead</TableCell>
                     </TableRow>
                   </TableHeader>
                 </Table>
@@ -313,15 +319,15 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                     return (
                       <div style={style} data-virtual-row data-testid="campaign-domains-virtual-row">
                         <Table className="table-fixed w-full">
-                          <TableBody>
-                            <TableRow key={`${d.id || d.domain || index}`}> 
-                              <TableCell className="font-medium truncate max-w-[180px]" data-testid="campaign-domains-virtual-cell-domain">{d.domain}</TableCell>
-                              <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-dns">{d.dnsStatus || '—'}</TableCell>
-                              <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-http">{d.httpStatus || '—'}</TableCell>
-                              <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-richness"><RichnessBadge features={d.features} /></TableCell>
-                              <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-topkeywords"><TopKeywordsList features={d.features} /></TableCell>
-                              <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-microcrawl"><MicrocrawlGainChip features={d.features} /></TableCell>
-                              <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-warnings">
+                          <TableBody className={TABLE_BODY_CLASSES}>
+                            <TableRow key={`${d.id || d.domain || index}`} className={TABLE_ROW_CLASSES}> 
+                              <TableCell className={`${TABLE_BODY_CELL_CLASSES} font-medium truncate max-w-[180px]`} data-testid="campaign-domains-virtual-cell-domain">{d.domain}</TableCell>
+                              <TableCell className={`${TABLE_BODY_CELL_CLASSES} truncate`} data-testid="campaign-domains-virtual-cell-dns">{d.dnsStatus || '—'}</TableCell>
+                              <TableCell className={`${TABLE_BODY_CELL_CLASSES} truncate`} data-testid="campaign-domains-virtual-cell-http">{d.httpStatus || '—'}</TableCell>
+                              <TableCell className={`${TABLE_BODY_CELL_CLASSES} truncate`} data-testid="campaign-domains-virtual-cell-richness"><RichnessBadge features={d.features} /></TableCell>
+                              <TableCell className={`${TABLE_BODY_CELL_CLASSES} truncate`} data-testid="campaign-domains-virtual-cell-topkeywords"><TopKeywordsList features={d.features} /></TableCell>
+                              <TableCell className={`${TABLE_BODY_CELL_CLASSES} truncate`} data-testid="campaign-domains-virtual-cell-microcrawl"><MicrocrawlGainChip features={d.features} /></TableCell>
+                              <TableCell className={`${TABLE_BODY_CELL_CLASSES} truncate`} data-testid="campaign-domains-virtual-cell-warnings">
                                 {(() => {
                                   const warns = getDomainWarnings(d.features?.richness);
                                   if (warns.length === 0) return '—';
@@ -334,7 +340,7 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                                   );
                                 })()}
                               </TableCell>
-                              <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-lead">{d.leadStatus || '—'}</TableCell>
+                              <TableCell className={`${TABLE_BODY_CELL_CLASSES} truncate`} data-testid="campaign-domains-virtual-cell-lead">{d.leadStatus || '—'}</TableCell>
                             </TableRow>
                           </TableBody>
                         </Table>
@@ -344,16 +350,16 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                 </List>
               </div>
             )}
-            {loading && <div className="py-2 text-xs text-muted-foreground" data-testid="campaign-domains-loading-more">Loading…</div>}
+            {loading && <div className="py-2 text-xs text-gray-500 dark:text-gray-400" data-testid="campaign-domains-loading-more">Loading…</div>}
             {infinite && hasMore && !loading && (
               <div className="py-3 flex justify-center" data-testid="campaign-domains-load-more-wrapper">
-                <Button size="sm" onClick={api.next} disabled={loading} data-testid="campaign-domains-load-more">Load more</Button>
+                <Button size="sm" variant="primary" onClick={api.next} disabled={loading} data-testid="campaign-domains-load-more">Load more</Button>
               </div>
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
