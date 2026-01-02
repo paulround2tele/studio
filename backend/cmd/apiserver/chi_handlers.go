@@ -61,7 +61,7 @@ func startChiServer() {
 						if sd, verr := deps.Session.ValidateSession(sessionID, ip); verr == nil {
 							ctx = context.WithValue(ctx, "user_id", sd.UserID.String())
 							ctx = context.WithValue(ctx, "session_id", sd.ID)
-							
+
 							// Sliding session expiration: extend if within 6 hours of expiry
 							if services.ShouldExtendSession(sd.ExpiresAt) {
 								if newExpiry, extended := deps.Session.ExtendSessionWithSliding(sd.ID, sd.ExpiresAt); extended {

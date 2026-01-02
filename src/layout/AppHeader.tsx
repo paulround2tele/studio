@@ -3,7 +3,7 @@ import { ThemeToggleButton } from "@/components/ta/common/ThemeToggleButton";
 import NotificationDropdown from "@/components/ta/header/NotificationDropdown";
 import UserDropdown from "@/components/ta/header/UserDropdown";
 import { useSidebar } from "@/contexts/SidebarContext";
-import Image from "next/image";
+import { DomainFlowLogo } from "@/components/common/DomainFlowLogo";
 import Link from "next/link";
 import React, { useState ,useEffect,useRef} from "react";
 
@@ -83,21 +83,9 @@ const AppHeader: React.FC = () => {
             {/* Cross Icon */}
           </button>
 
-          <Link href="/" className="lg:hidden">
-            <Image
-              width={154}
-              height={32}
-              className="dark:hidden"
-              src="./images/logo/logo.svg"
-              alt="Logo"
-            />
-            <Image
-              width={154}
-              height={32}
-              className="hidden dark:block"
-              src="./images/logo/logo-dark.svg"
-              alt="Logo"
-            />
+          {/* Mobile-only logo - always visible on mobile, hidden on desktop */}
+          <Link href="/dashboard" className="lg:hidden">
+            <DomainFlowLogo size={24} className="text-gray-900 dark:text-white" />
           </Link>
 
           <button

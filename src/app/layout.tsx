@@ -13,7 +13,6 @@ import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ReduxProvider } from '@/components/providers/ReduxProvider';
 import { NuqsProvider } from '@/components/providers/NuqsProvider';
 import { RTKCampaignDataProvider } from '@/providers/RTKCampaignDataProvider';
-import { NoSSR } from '@/components/providers/NoSSR';
 import NetworkRequestLogger from '@/components/debug/NetworkRequestLogger';
 
 export const metadata: Metadata = {
@@ -36,32 +35,24 @@ export default async function RootLayout({
   }
   return (
     <html lang="en" suppressHydrationWarning data-has-session={hasSession ? '1' : '0'}>
-      <body className="font-sans antialiased" suppressHydrationWarning>
-        <NoSSR fallback={
-          <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          </div>
-        }>
-          <>
-            {process.env.NEXT_PUBLIC_ENABLE_NETWORK_LOGGING === 'true' ? <NetworkRequestLogger /> : null}
-            <ReduxProvider>
-              <NuqsProvider>
-                <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
-                  <TAThemeProvider>
-                    <AuthProvider>
-                      <RTKCampaignDataProvider>
-                        <GlobalLoadingIndicator />
-                        <AdvancedConditionalLayout>
-                          {children}
-                        </AdvancedConditionalLayout>
-                      </RTKCampaignDataProvider>
-                    </AuthProvider>
-                  </TAThemeProvider>
-                </ThemeProvider>
-              </NuqsProvider>
-            </ReduxProvider>
-          </>
-        </NoSSR>
+      <body className="font-sans antialiased bg-gray-50 dark:bg-gray-900" suppressHydrationWarning>
+        {process.env.NEXT_PUBLIC_ENABLE_NETWORK_LOGGING === 'true' ? <NetworkRequestLogger /> : null}
+        <ReduxProvider>
+          <NuqsProvider>
+            <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
+              <TAThemeProvider>
+                <AuthProvider>
+                  <RTKCampaignDataProvider>
+                    <GlobalLoadingIndicator />
+                    <AdvancedConditionalLayout>
+                      {children}
+                    </AdvancedConditionalLayout>
+                  </RTKCampaignDataProvider>
+                </AuthProvider>
+              </TAThemeProvider>
+            </ThemeProvider>
+          </NuqsProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

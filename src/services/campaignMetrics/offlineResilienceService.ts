@@ -110,7 +110,7 @@ class OfflineResilienceService {
   private cache = new Map<string, CacheEntry>();
   private actionQueue: DeferredAction[] = [];
   private governanceLog: GovernanceEvent[] = [];
-  private isOnline = navigator.onLine;
+  private isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
   private syncTimer: ReturnType<typeof setInterval> | null = null;
   private sequenceCounter = 0;
 
@@ -371,6 +371,11 @@ class OfflineResilienceService {
    * Initialize offline handling
    */
   private initializeOfflineHandling(): void {
+    // Only run in browser environment
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     // Listen for online/offline events
     window.addEventListener('online', () => {
       this.isOnline = true;
@@ -544,6 +549,7 @@ class OfflineResilienceService {
   private async isActionAlreadyProcessed(replayKey: string): Promise<boolean> {
     // In a real implementation, this would check with the server
     // For now, just check if we have a record locally
+    if (typeof localStorage === 'undefined') return false;
     const processed = localStorage.getItem(`processed_${replayKey}`);
     return processed === 'true';
   }
@@ -691,6 +697,7 @@ class OfflineResilienceService {
    * Persist state to localStorage
    */
   private persistState(): void {
+    if (typeof localStorage === 'undefined') return;
     try {
       const state = {
         cache: Array.from(this.cache.entries()),
@@ -710,6 +717,7 @@ class OfflineResilienceService {
    * Load persisted state from localStorage
    */
   private loadPersistedState(): void {
+    if (typeof localStorage === 'undefined') return;
     try {
       const stateStr = localStorage.getItem('offline_resilience_state');
       if (!stateStr) return;
@@ -732,6 +740,7 @@ class OfflineResilienceService {
    * Clear persisted state
    */
   private clearPersistedState(): void {
+    if (typeof localStorage === 'undefined') return;
     localStorage.removeItem('offline_resilience_state');
   }
 
@@ -758,6 +767,7 @@ class OfflineResilienceService {
    * Get last sync time
    */
   private getLastSyncTime(): string {
+    if (typeof localStorage === 'undefined') return new Date(0).toISOString();
     const state = localStorage.getItem('offline_resilience_state');
     if (state) {
       const parsed = JSON.parse(state);

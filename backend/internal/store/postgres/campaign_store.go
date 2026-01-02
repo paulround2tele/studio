@@ -555,8 +555,8 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 		return nil
 	}
 	stmt, err := exec.PrepareNamedContext(ctx, `INSERT INTO generated_domains
-		(id, campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, http_status, http_title, http_keywords, lead_score)
-		VALUES (:id, :campaign_id, :domain_name, :source_keyword, :source_pattern, :tld, :offset_index, :generated_at, :created_at, :dns_status, :http_status, :http_title, :http_keywords, :lead_score)`)
+		(id, campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, http_status, http_title, http_keywords, lead_score, rejection_reason)
+		VALUES (:id, :campaign_id, :domain_name, :source_keyword, :source_pattern, :tld, :offset_index, :generated_at, :created_at, :dns_status, :http_status, :http_title, :http_keywords, :lead_score, :rejection_reason)`)
 	if err != nil {
 		return err
 	}
@@ -591,6 +591,12 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 		if !domain.LeadScore.Valid {
 			domain.LeadScore = sql.NullFloat64{Float64: 0.0, Valid: true}
 			log.Printf("DEBUG [CreateGeneratedDomains]: Initialized lead score to 0.0 for domain %s", domain.DomainName)
+		}
+		// P0-1: Initialize rejection_reason to 'pending' for new domains
+		if domain.RejectionReason == nil {
+			pending := models.DomainRejectionReasonPending
+			domain.RejectionReason = &pending
+			log.Printf("DEBUG [CreateGeneratedDomains]: Initialized rejection_reason to 'pending' for domain %s", domain.DomainName)
 		}
 		_, err := stmt.ExecContext(ctx, domain)
 		if err != nil {

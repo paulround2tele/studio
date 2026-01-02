@@ -9,31 +9,26 @@ export const DomainFlowLogo: React.FC<DomainFlowLogoProps> = ({
   size = 24,
   className,
 }) => {
-  const width = size * 5.5;
-  const height = size;
-
   return (
-    <svg
-      width={width}
-      height={height}
-      viewBox="0 0 132 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <span
       className={className}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        fontFamily:
+          'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        fontSize: size * 0.75, // 18px when size = 24
+        fontWeight: 500,
+        letterSpacing: '-0.02em',
+        lineHeight: 1,
+        color: 'currentColor',
+        whiteSpace: 'nowrap',
+        userSelect: 'none',
+      }}
       aria-label="DomainFlow"
     >
-      <text
-        x="0"
-        y="18"
-        fill="currentColor"
-        fontFamily="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-        fontSize="18"
-        fontWeight="500"
-        letterSpacing="-0.02em"
-      >
-        DomainFlow
-      </text>
-    </svg>
+      DomainFlow
+    </span>
   );
 };
 
