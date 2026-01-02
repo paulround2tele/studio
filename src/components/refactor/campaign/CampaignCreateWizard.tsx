@@ -6,7 +6,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeftIcon, ArrowRightIcon, CheckLineIcon } from '@/icons';
 import Button from '@/components/ta/ui/button/Button';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -674,7 +674,7 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
                   : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
               }`}>
                 {index < wizardState.currentStep ? (
-                  <Check className="w-4 h-4" />
+                  <CheckLineIcon className="w-4 h-4" />
                 ) : (
                   index + 1
                 )}
@@ -706,7 +706,7 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
           variant="outline"
           onClick={handlePrevious}
           disabled={isFirstStep}
-          startIcon={<ArrowLeft className="w-4 h-4" />}
+          startIcon={<ArrowLeftIcon className="w-4 h-4" />}
         >
           Previous
         </Button>
@@ -732,7 +732,7 @@ export function CampaignCreateWizard({ className: _className }: CampaignCreateWi
             ) : (
               <>
                 Next
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRightIcon className="w-4 h-4 ml-2" />
               </>
             )}
           </Button>

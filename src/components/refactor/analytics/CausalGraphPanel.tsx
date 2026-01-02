@@ -6,11 +6,11 @@
 import React, { useState, useMemo } from 'react';
 import { useCausalGraph as _useCausalGraph, useFilteredCausalGraph, useCausalGraphStats } from '@/hooks/useCausalGraph';
 import type { CausalNode, CausalEdge } from '@/services/analytics/causalGraphService';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+// Card import removed - using inline TailAdmin card pattern
+import Button from '@/components/ta/ui/button/Button';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { Slider } from '@/components/ui/slider';
-import { RefreshCw, Filter, Info, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { RefreshIcon, FilterIcon, InfoIcon, TrendingUpIcon, TrendingDownIcon, MinusIcon } from '@/icons';
 
 interface CausalGraphPanelProps {
   className?: string;
@@ -50,13 +50,13 @@ export function CausalGraphPanel({
 
   if (!filteredState.capabilities.available) {
     return (
-      <Card className={`p-6 ${className}`}>
+      <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-6 ${className}`}>
         <div className="text-center text-gray-500">
-          <Info className="mx-auto h-8 w-8 mb-2" />
+          <InfoIcon className="mx-auto h-8 w-8 mb-2" />
           <p>Causal Graph Analysis is not available.</p>
           <p className="text-sm mt-1">Enable NEXT_PUBLIC_ENABLE_CAUSAL_GRAPH to use this feature.</p>
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -93,7 +93,7 @@ export function CausalGraphPanel({
       >
         <div className="flex justify-between items-start mb-2">
           <div className="font-medium text-sm truncate flex-1">{node.metric}</div>
-          <Badge variant={node.type === 'metric' ? 'default' : 'secondary'} className="ml-2 text-xs">
+          <Badge color={node.type === 'metric' ? 'primary' : 'light'} size="sm" className="ml-2 text-xs">
             {node.type}
           </Badge>
         </div>
@@ -110,11 +110,11 @@ export function CausalGraphPanel({
     );
   };
 
-  const renderEdgeList = (edges: CausalEdge[], title: string, variant: 'default' | 'secondary' | 'outline') => (
+  const renderEdgeList = (edges: CausalEdge[], title: string, badgeColor: 'primary' | 'light' | 'info') => (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <h4 className="font-medium text-sm">{title}</h4>
-        <Badge variant={variant}>{edges.length}</Badge>
+        <Badge color={badgeColor} size="sm">{edges.length}</Badge>
       </div>
       {edges.slice(0, 5).map(edge => (
         <div key={edge.id} className="text-xs p-2 bg-gray-50 rounded border">
@@ -122,9 +122,9 @@ export function CausalGraphPanel({
             <span className="font-medium">{edge.from} → {edge.to}</span>
             <div className="flex items-center gap-1">
               {edge.direction === 'positive' ? (
-                <TrendingUp className="h-3 w-3 text-green-500" />
+                <TrendingUpIcon className="h-3 w-3 text-green-500" />
               ) : (
-                <TrendingDown className="h-3 w-3 text-red-500" />
+                <TrendingDownIcon className="h-3 w-3 text-red-500" />
               )}
               <span className="text-gray-600">{(edge.confidence * 100).toFixed(0)}%</span>
             </div>
@@ -143,7 +143,7 @@ export function CausalGraphPanel({
   );
 
   return (
-    <Card className={`${className}`}>
+    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -160,16 +160,15 @@ export function CausalGraphPanel({
                 size="sm"
                 onClick={handleRefresh}
                 disabled={loading}
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              </Button>
+                startIcon={<RefreshIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />}
+              />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handlePruneByConfidence}
                 disabled={loading}
+                startIcon={<FilterIcon className="h-4 w-4" />}
               >
-                <Filter className="h-4 w-4" />
                 Prune
               </Button>
             </div>
@@ -225,12 +224,12 @@ export function CausalGraphPanel({
 
         {loading ? (
           <div className="text-center py-8">
-            <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2" />
+            <RefreshIcon className="h-8 w-8 animate-spin mx-auto mb-2" />
             <p className="text-gray-600">Loading causal graph...</p>
           </div>
         ) : !graph || graph.nodes.length === 0 ? (
           <div className="text-center py-8">
-            <Minus className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+            <MinusIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
             <p className="text-gray-600">No causal relationships found</p>
             <p className="text-sm text-gray-500">Data will appear as metrics are ingested</p>
           </div>
@@ -246,9 +245,9 @@ export function CausalGraphPanel({
 
             {/* Relationships Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {renderEdgeList(edgeBands.strong, 'Strong Relationships', 'default')}
-              {renderEdgeList(edgeBands.medium, 'Medium Relationships', 'secondary')}
-              {renderEdgeList(edgeBands.weak, 'Weak Relationships', 'outline')}
+              {renderEdgeList(edgeBands.strong, 'Strong Relationships', 'primary')}
+              {renderEdgeList(edgeBands.medium, 'Medium Relationships', 'light')}
+              {renderEdgeList(edgeBands.weak, 'Weak Relationships', 'info')}
             </div>
 
             {selectedNode && (
@@ -268,6 +267,6 @@ export function CausalGraphPanel({
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }

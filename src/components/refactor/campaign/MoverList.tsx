@@ -4,9 +4,8 @@
  */
 
 import React from 'react';
-import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { TrendingUpIcon, TrendingDownIcon, ArrowUpRightIcon, ArrowDownRightIcon } from '@/icons';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 
 export interface MoverData {
@@ -31,8 +30,8 @@ interface MoverListProps {
 
 const typeConfig = {
   up: {
-    icon: TrendingUp,
-    arrowIcon: ArrowUpRight,
+    icon: TrendingUpIcon,
+    arrowIcon: ArrowUpRightIcon,
     title: 'Top Gainers',
     color: 'text-green-600 dark:text-green-400',
     bgColor: 'bg-green-50 dark:bg-green-900/20',
@@ -40,8 +39,8 @@ const typeConfig = {
     badgeColor: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
   },
   down: {
-    icon: TrendingDown,
-    arrowIcon: ArrowDownRight,
+    icon: TrendingDownIcon,
+    arrowIcon: ArrowDownRightIcon,
     title: 'Top Decliners',
     color: 'text-red-600 dark:text-red-400',
     bgColor: 'bg-red-50 dark:bg-red-900/20',
@@ -69,39 +68,39 @@ export function MoverList({
   
   if (movers.length === 0) {
     return (
-      <Card className={cn("", className)}>
-        <CardHeader className={compact ? "pb-3" : ""}>
-          <CardTitle className="text-lg flex items-center gap-2">
+      <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+        <div className={cn("p-6", compact ? "pb-3" : "")}>
+          <h3 className="text-lg font-semibold flex items-center gap-2">
             <Icon className={cn("w-5 h-5", config.color)} />
             {displayTitle}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className={compact ? "pt-0" : ""}>
+          </h3>
+        </div>
+        <div className={cn("px-6 pb-6", compact ? "pt-0" : "")}>
           <div className="text-center py-6">
             <Icon className={cn("w-8 h-8 mx-auto mb-2 opacity-50", config.color)} />
             <p className="text-sm text-gray-500">
               No significant {type === 'up' ? 'gainers' : 'decliners'} found
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className={cn("", className)}>
-      <CardHeader className={compact ? "pb-3" : ""}>
+    <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+      <div className={cn("p-6", compact ? "pb-3" : "")}>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
             <Icon className={cn("w-5 h-5", config.color)} />
             {displayTitle}
-          </CardTitle>
-          <Badge variant="outline" className="text-xs">
+          </h3>
+          <Badge color="light" size="sm">
             {movers.length} movers
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent className={compact ? "pt-0" : ""}>
+      </div>
+      <div className={cn("px-6 pb-6", compact ? "pt-0" : "")}>
         <div className="space-y-3">
           {displayMovers.map((mover, index) => (
             <div 
@@ -126,10 +125,7 @@ export function MoverList({
                       {mover.domain}
                     </span>
                     {mover.change && mover.change !== 'stable' && (
-                      <Badge 
-                        variant="outline" 
-                        className="text-xs px-1 py-0"
-                      >
+                      <Badge color="light" size="sm">
                         {mover.change}
                       </Badge>
                     )}
@@ -173,8 +169,8 @@ export function MoverList({
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

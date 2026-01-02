@@ -10,7 +10,6 @@ import Label from '@/components/ta/form/Label';
 import Alert from '@/components/ta/ui/alert/Alert';
 import Checkbox from '@/components/ta/form/input/Checkbox';
 import Button from '@/components/ta/ui/button/Button';
-import { Info } from 'lucide-react';
 import type { WizardPatternStep } from '../../types';
 import { DiscoveryPreviewPanel } from './DiscoveryPreviewPanel';
 

@@ -4,7 +4,7 @@ import PersonaForm from '@/components/personas/PersonaForm';
 import PageHeader from '@/components/shared/PageHeader';
 
 // Use backend-generated types directly - no custom types needed
-import { UserCog, Globe, Wifi, AlertCircle } from 'lucide-react';
+import { UserCogIcon, GlobeIcon, WifiIcon, AlertCircleIcon } from '@/icons';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
@@ -84,7 +84,7 @@ function EditPersonaPageContent() {
     const typeName = personaTypeParam === 'http' ? "HTTP" : personaTypeParam === 'dns' ? "DNS" : "Persona";
     return (
       <>
-        <PageHeader title={`Edit ${typeName} Persona`} icon={UserCog} />
+        <PageHeader title={`Edit ${typeName} Persona`} icon={UserCogIcon} />
         <div className="max-w-3xl mx-auto space-y-4">
           <div className="h-10 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
           <div className="h-20 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
@@ -103,8 +103,8 @@ function EditPersonaPageContent() {
   if (error || !persona) {
     return (
        <div className="text-center py-10">
-        <AlertCircle className="mx-auto h-12 w-12 text-error-500" />
-        <PageHeader title="Error Loading Persona" description={error || "Persona data could not be loaded or found."} icon={UserCog} />
+        <AlertCircleIcon className="mx-auto h-12 w-12 text-error-500" />
+        <PageHeader title="Error Loading Persona" description={error || "Persona data could not be loaded or found."} icon={UserCogIcon} />
         <div className="mt-6">
           <Button variant="primary" onClick={() => router.push('/personas')}>Back to Personas</Button>
         </div>
@@ -116,8 +116,8 @@ function EditPersonaPageContent() {
   if (!persona.personaType || (persona.personaType !== 'http' && persona.personaType !== 'dns')) {
     return (
        <div className="text-center py-10">
-        <AlertCircle className="mx-auto h-12 w-12 text-error-500" />
-        <PageHeader title="Invalid Persona Type" description="Persona type is missing or invalid." icon={UserCog} />
+        <AlertCircleIcon className="mx-auto h-12 w-12 text-error-500" />
+        <PageHeader title="Invalid Persona Type" description="Persona type is missing or invalid." icon={UserCogIcon} />
         <div className="mt-6">
           <Button variant="primary" onClick={() => router.push('/personas')}>Back to Personas</Button>
         </div>
@@ -125,7 +125,7 @@ function EditPersonaPageContent() {
     );
   }
 
-  const IconToUse = persona.personaType === 'http' ? Globe : Wifi;
+  const IconToUse = persona.personaType === 'http' ? GlobeIcon : WifiIcon;
   const typeNameDisplay = persona.personaType.toUpperCase();
 
   return (

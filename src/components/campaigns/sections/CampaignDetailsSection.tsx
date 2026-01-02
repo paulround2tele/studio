@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import Input from '@/components/ta/form/input/InputField';
+import Textarea from '@/components/ta/form/input/TextArea';
 import { Control } from 'react-hook-form';
 
 // Use the same type as the parent form for consistency
@@ -29,11 +28,11 @@ interface CampaignDetailsSectionProps {
 
 export function CampaignDetailsSection({ control, disabled }: CampaignDetailsSectionProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Campaign Details</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+        <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Campaign Details</h3>
+      </div>
+      <div className="p-5 space-y-4">
         <FormField 
           control={control} 
           name="name" 
@@ -69,7 +68,7 @@ export function CampaignDetailsSection({ control, disabled }: CampaignDetailsSec
             </FormItem>
           )} 
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -4,10 +4,8 @@
  */
 
 import React from 'react';
-import { AlertTriangle, AlertCircle, Info, CheckCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { WarningTriangleIcon, AlertCircleIcon, InfoIcon, CheckCircleIcon } from '@/icons';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 
 interface Warning {
@@ -26,47 +24,47 @@ interface WarningSummaryProps {
 function getWarningIcon(type: Warning['type']) {
   switch (type) {
     case 'error':
-      return <AlertCircle className="w-4 h-4 text-red-500" />;
+      return <AlertCircleIcon className="w-4 h-4 text-red-500" />;
     case 'warning':
-      return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+      return <WarningTriangleIcon className="w-4 h-4 text-yellow-500" />;
     case 'info':
-      return <Info className="w-4 h-4 text-blue-500" />;
+      return <InfoIcon className="w-4 h-4 text-blue-500" />;
     case 'success':
-      return <CheckCircle className="w-4 h-4 text-green-500" />;
+      return <CheckCircleIcon className="w-4 h-4 text-green-500" />;
     default:
-      return <Info className="w-4 h-4 text-gray-500" />;
+      return <InfoIcon className="w-4 h-4 text-gray-500" />;
   }
 }
 
-function getWarningVariant(type: Warning['type']): 'default' | 'destructive' {
+function _getWarningVariant(type: Warning['type']): 'default' | 'destructive' {
   return type === 'error' ? 'destructive' : 'default';
 }
 
-function getBadgeVariant(type: Warning['type']): 'default' | 'secondary' | 'destructive' | 'outline' {
+function getBadgeColor(type: Warning['type']): 'error' | 'warning' | 'success' | 'info' | 'light' {
   switch (type) {
     case 'error':
-      return 'destructive';
+      return 'error';
     case 'warning':
-      return 'outline';
+      return 'warning';
     case 'success':
-      return 'default';
+      return 'success';
     case 'info':
     default:
-      return 'secondary';
+      return 'info';
   }
 }
 
 export function WarningSummary({ warnings, className }: WarningSummaryProps) {
   if (warnings.length === 0) {
     return (
-      <Card className={cn("", className)}>
-        <CardContent className="pt-6">
+      <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+        <div className="p-6">
           <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-            <CheckCircle className="w-5 h-5" />
+            <CheckCircleIcon className="w-5 h-5" />
             <span className="text-sm font-medium">All systems operational</span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -77,30 +75,35 @@ export function WarningSummary({ warnings, className }: WarningSummaryProps) {
   }, {} as Record<Warning['type'], number>);
 
   return (
-    <Card className={cn("", className)}>
-      <CardHeader>
+    <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+      <div className="p-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">System Status</CardTitle>
+          <h3 className="text-lg font-semibold">System Status</h3>
           <div className="flex gap-2">
             {Object.entries(summary).map(([type, count]) => (
               <Badge 
                 key={type}
-                variant={getBadgeVariant(type as Warning['type'])}
-                className="text-xs"
+                color={getBadgeColor(type as Warning['type'])}
+                size="sm"
               >
                 {count} {type}
               </Badge>
             ))}
           </div>
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="px-6 pb-6">
         <div className="space-y-3">
           {warnings.map((warning) => (
-            <Alert 
+            <div 
               key={warning.id}
-              variant={getWarningVariant(warning.type)}
-              className="py-3"
+              className={cn(
+                "py-3 px-4 rounded-lg border",
+                warning.type === 'error' ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' :
+                warning.type === 'warning' ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800' :
+                warning.type === 'success' ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' :
+                'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800'
+              )}
             >
               <div className="flex items-start gap-3">
                 {getWarningIcon(warning.type)}
@@ -110,21 +113,21 @@ export function WarningSummary({ warnings, className }: WarningSummaryProps) {
                       {warning.title}
                     </h4>
                     {warning.count && warning.count > 1 && (
-                      <Badge variant="outline" className="text-xs">
+                      <Badge color="light" size="sm">
                         {warning.count}
                       </Badge>
                     )}
                   </div>
-                  <AlertDescription className="mt-1 text-sm">
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                     {warning.message}
-                  </AlertDescription>
+                  </p>
                 </div>
               </div>
-            </Alert>
+            </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

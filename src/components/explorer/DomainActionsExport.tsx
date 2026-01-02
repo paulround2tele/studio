@@ -18,27 +18,11 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import { Download, FileJson, FileSpreadsheet, Loader2, AlertCircle } from 'lucide-react';
+import { DownloadIcon, LoaderIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import Button from '@/components/ta/ui/button/Button';
+import { Modal } from '@/components/ta/ui/modal';
+import Alert from '@/components/ta/ui/alert/Alert';
 import type { DomainRow } from '@/types/explorer/state';
 
 // ============================================================================
@@ -238,116 +222,112 @@ export function DomainActionsExport({
   const isDisabled = disabled || selectionCount === 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn("gap-2", className)}
-          disabled={isDisabled}
-          data-testid="domain-actions-export-button"
-        >
-          <Download className="h-4 w-4" />
-          Export
-          {selectionCount > 0 && (
-            <span className="text-xs text-muted-foreground">
-              ({selectionCount})
-            </span>
-          )}
-        </Button>
-      </DialogTrigger>
+    <>
+      {/* Export trigger button */}
+      <Button
+        variant="outline"
+        size="sm"
+        className={cn("gap-2", className)}
+        disabled={isDisabled}
+        onClick={() => setIsOpen(true)}
+        data-testid="domain-actions-export-button"
+        startIcon={<DownloadIcon className="h-4 w-4" />}
+      >
+        Export
+        {selectionCount > 0 && (
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            ({selectionCount})
+          </span>
+        )}
+      </Button>
 
-      <DialogContent data-testid="domain-actions-export-dialog">
-        <DialogHeader>
-          <DialogTitle>Export Domains</DialogTitle>
-          <DialogDescription>
-            Export {selectionCount.toLocaleString()} selected {selectionCount === 1 ? 'domain' : 'domains'} to a file.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          {/* Format selection */}
-          <div className="space-y-2">
-            <Label htmlFor="export-format">Format</Label>
-            <Select
-              value={format}
-              onValueChange={(v) => setFormat(v as ExportFormat)}
-            >
-              <SelectTrigger id="export-format" data-testid="export-format-select">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="csv">
-                  <div className="flex items-center gap-2">
-                    <FileSpreadsheet className="h-4 w-4" />
-                    CSV (Spreadsheet)
-                  </div>
-                </SelectItem>
-                <SelectItem value="json">
-                  <div className="flex items-center gap-2">
-                    <FileJson className="h-4 w-4" />
-                    JSON (Developer)
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Export Modal */}
+      <Modal 
+        isOpen={isOpen} 
+        onClose={() => setIsOpen(false)}
+        showCloseButton={true}
+      >
+        <div data-testid="domain-actions-export-dialog">
+          {/* Header */}
+          <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+              Export Domains
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Export {selectionCount.toLocaleString()} selected {selectionCount === 1 ? 'domain' : 'domains'} to a file.
+            </p>
           </div>
 
-          {/* Include features toggle */}
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="include-features">Include Features</Label>
-              <p className="text-xs text-muted-foreground">
-                Richness, keywords, microcrawl data
-              </p>
+          <div className="space-y-4">
+            {/* Format selection */}
+            <div className="space-y-2">
+              <label htmlFor="export-format" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Format
+              </label>
+              <select
+                id="export-format"
+                value={format}
+                onChange={(e) => setFormat(e.target.value as ExportFormat)}
+                data-testid="export-format-select"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              >
+                <option value="csv">📊 CSV (Spreadsheet)</option>
+                <option value="json">📄 JSON (Developer)</option>
+              </select>
             </div>
+
+            {/* Include features toggle */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <label htmlFor="include-features" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Include Features
+                </label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Richness, keywords, microcrawl data
+                </p>
+              </div>
+              <Button
+                variant={includeFeatures ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setIncludeFeatures(!includeFeatures)}
+                data-testid="export-include-features"
+              >
+                {includeFeatures ? 'Included' : 'Excluded'}
+              </Button>
+            </div>
+
+            {/* Error display */}
+            {error && (
+              <Alert 
+                variant="error" 
+                title="Export Error"
+                message={error}
+              />
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button
-              variant={includeFeatures ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setIncludeFeatures(!includeFeatures)}
-              data-testid="export-include-features"
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              disabled={isExporting}
             >
-              {includeFeatures ? 'Included' : 'Excluded'}
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleExport}
+              disabled={isExporting || domains.length === 0}
+              data-testid="export-confirm-button"
+              startIcon={isExporting ? <LoaderIcon className="h-4 w-4 animate-spin" /> : <DownloadIcon className="h-4 w-4" />}
+            >
+              {isExporting ? 'Exporting...' : `Export ${format.toUpperCase()}`}
             </Button>
           </div>
-
-          {/* Error display */}
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
         </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setIsOpen(false)}
-            disabled={isExporting}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleExport}
-            disabled={isExporting || domains.length === 0}
-            data-testid="export-confirm-button"
-          >
-            {isExporting ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Exporting...
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4 mr-2" />
-                Export {format.toUpperCase()}
-              </>
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </Modal>
+    </>
   );
 }
 

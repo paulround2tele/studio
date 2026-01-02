@@ -9,7 +9,7 @@ import DNSValidationConfigForm from '@/components/campaigns/workspace/forms/DNSV
 import HTTPValidationConfigForm from '@/components/campaigns/workspace/forms/HTTPValidationConfigForm';
 import AnalysisConfigForm from '@/components/campaigns/workspace/forms/AnalysisConfigForm';
 import EnrichmentConfigForm from '@/components/campaigns/workspace/forms/EnrichmentConfigForm';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 import { PhaseStepper, PhasePanelShell, StatusBadge, CampaignOverviewCard, AlertStack } from '@/components/campaigns/workspace';
 import { useStartPhaseStandaloneMutation, useGetCampaignStatusQuery } from '@/store/api/campaignApi';
 import computeAutoStartPhase from '@/store/selectors/autoAdvanceLogic';
@@ -166,8 +166,8 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
                   <Button
                     key={p}
                     size="sm"
-                    variant="destructive"
-                    className="text-[10px] py-1"
+                    variant="outline"
+                    className="text-[10px] py-1 text-error-500 hover:bg-error-50 dark:hover:bg-error-500/10"
                     onClick={async () => {
                       try {
                         await startPhase({ campaignId, phase: p as CampaignPhase }).unwrap();

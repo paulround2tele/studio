@@ -4,8 +4,8 @@
  */
 
 import React from 'react';
-import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowUpIcon, ArrowDownIcon, MinusIcon } from '@/icons';
+// Card import removed - using inline TailAdmin card pattern
 import { cn } from '@/lib/utils';
 import type { CampaignKpi } from '../types';
 
@@ -33,12 +33,12 @@ function formatValue(value: string | number, format?: CampaignKpi['format']): st
 function getTrendIcon(direction: 'up' | 'down' | 'stable') {
   switch (direction) {
     case 'up':
-      return <ArrowUp className="w-4 h-4 text-green-500" />;
+      return <ArrowUpIcon className="w-4 h-4 text-green-500" />;
     case 'down':
-      return <ArrowDown className="w-4 h-4 text-red-500" />;
+      return <ArrowDownIcon className="w-4 h-4 text-red-500" />;
     case 'stable':
     default:
-      return <Minus className="w-4 h-4 text-gray-500" />;
+      return <MinusIcon className="w-4 h-4 text-gray-500" />;
   }
 }
 
@@ -56,13 +56,13 @@ function getTrendColor(direction: 'up' | 'down' | 'stable'): string {
 
 export function CampaignKpiCard({ kpi, className }: CampaignKpiCardProps) {
   return (
-    <Card className={cn("", className)}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+    <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+      <div className="p-6 pb-2">
+        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
           {kpi.label}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+      <div className="px-6 pb-6 pt-0">
         <div className="flex items-center justify-between">
           <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {formatValue(kpi.value, kpi.format)}
@@ -77,8 +77,8 @@ export function CampaignKpiCard({ kpi, className }: CampaignKpiCardProps) {
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

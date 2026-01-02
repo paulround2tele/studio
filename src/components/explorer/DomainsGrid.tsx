@@ -18,10 +18,9 @@ import { DomainsGridTable } from './DomainsGridTable';
 import { DomainsGridPagination } from './DomainsGridPagination';
 import { DomainsGridHydrationGuard } from './DomainsGridHydrationGuard';
 import { DomainsGridEmptyState } from './DomainsGridEmptyState';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import Alert from '@/components/ta/ui/alert/Alert';
+import { RefreshIcon } from '@/icons';
+import Button from '@/components/ta/ui/button/Button';
 
 // ============================================================================
 // PROPS INTERFACE
@@ -125,39 +124,39 @@ export function DomainsGrid({
   // === ERROR STATE ===
   if (error && !isLoading && domains.length === 0) {
     return (
-      <Card data-testid="domains-grid-error">
-        <CardContent className="pt-6">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
-              <span>Failed to load domains: {error}</span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={actions.refresh}
-                data-testid="domains-grid-retry"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Retry
-              </Button>
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]" data-testid="domains-grid-error">
+        <div className="p-6">
+          <Alert
+            variant="error"
+            title="Error"
+            message={`Failed to load domains: ${error}`}
+          />
+          <div className="mt-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={actions.refresh}
+              startIcon={<RefreshIcon className="h-4 w-4" />}
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
     <DomainsGridHydrationGuard>
-      <Card data-testid="domains-grid">
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]" data-testid="domains-grid">
         {/* Header */}
-        <CardHeader className="pb-4" data-testid="domains-grid-header">
+        <div className="p-6 pb-4" data-testid="domains-grid-header">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle data-testid="domains-grid-title">{title}</CardTitle>
-              <CardDescription data-testid="domains-grid-description">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white" data-testid="domains-grid-title">{title}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="domains-grid-description">
                 {gridDescription}
-              </CardDescription>
+              </p>
             </div>
             
             {/* Aggregates Summary */}
@@ -185,23 +184,22 @@ export function DomainsGrid({
           {/* Selection summary */}
           {enableSelection && selectionCount > 0 && (
             <div 
-              className="mt-2 text-sm text-primary flex items-center gap-2"
+              className="mt-2 text-sm text-brand-500 flex items-center gap-2"
               data-testid="domains-grid-selection-summary"
             >
               <span>{selectionCount} domain{selectionCount > 1 ? 's' : ''} selected</span>
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm" 
                 onClick={actions.deselectAll}
-                data-testid="domains-grid-clear-selection"
               >
                 Clear
               </Button>
             </div>
           )}
-        </CardHeader>
+        </div>
 
-        <CardContent className="pt-0">
+        <div className="px-6 pb-6">
           {/* Empty State */}
           {!isLoading && domains.length === 0 ? (
             <DomainsGridEmptyState 
@@ -247,8 +245,8 @@ export function DomainsGrid({
               />
             </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </DomainsGridHydrationGuard>
   );
 }

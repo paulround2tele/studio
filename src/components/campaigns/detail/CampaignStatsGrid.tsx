@@ -47,7 +47,7 @@ export function StatCard({ icon, label, value, subValue, trend, color = "blue" }
         </div>
         {trend && (
           <Badge color={trend.positive ? "success" : "error"}>
-            <ArrowUpIcon className={trend.positive ? "" : "rotate-180"} />
+            <ArrowUpIcon className={`h-3 w-3 ${trend.positive ? "" : "rotate-180"}`} />
             {trend.value}
           </Badge>
         )}
@@ -69,9 +69,9 @@ export function CampaignStatsGrid({
   domainsTotal = 0,
   domainsProcessed = 0,
   domainsSuccessful = 0,
-  domainsFailed = 0,
+  domainsFailed: _domainsFailed = 0,
   leadsFound = 0,
-  currentPhase
+  currentPhase: _currentPhase
 }: CampaignStatsGridProps) {
   const successRate = domainsProcessed > 0 
     ? ((domainsSuccessful / domainsProcessed) * 100).toFixed(1)

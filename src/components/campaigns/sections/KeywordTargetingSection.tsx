@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-import { Globe } from 'lucide-react';
+import Textarea from '@/components/ta/form/input/TextArea';
+import { GlobeIcon } from '@/icons';
 import { Control } from 'react-hook-form';
 
 // Use the same type as the parent form for consistency
@@ -39,14 +38,14 @@ export function KeywordTargetingSection({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Globe className="h-4 w-4" />
+    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+        <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+          <GlobeIcon className="h-4 w-4" />
           HTTP Keyword Targeting
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+      <div className="p-5">
         <FormField 
           control={control} 
           name="targetKeywords" 
@@ -65,7 +64,7 @@ export function KeywordTargetingSection({
             </FormItem>
           )} 
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

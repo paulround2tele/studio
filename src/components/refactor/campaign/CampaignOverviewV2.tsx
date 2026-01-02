@@ -9,7 +9,7 @@ import type { DomainListItem } from '@/lib/api-client/models';
 import type { ClassificationBucket } from '../types';
 import type { Mover, Recommendation } from '@/types/campaignMetrics';
 import type { EnhancedRecommendation } from '@/services/campaignMetrics/recommendationsV3Pipeline';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { LoaderIcon, AlertCircleIcon } from '@/icons';
 import { cn } from '@/lib/utils';
 
 import CampaignKpiCard from './CampaignKpiCard';
@@ -356,7 +356,7 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
     return (
       <div className={cn("flex items-center justify-center py-8", className)}>
         <div className="flex items-center gap-2" role="status" aria-live="polite">
-          <Loader2 className="w-5 h-5 animate-spin" />
+          <LoaderIcon className="w-5 h-5 animate-spin" />
           <span className="text-sm text-gray-600 dark:text-gray-400">Loading overview...</span>
         </div>
       </div>
@@ -367,7 +367,7 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
     return (
       <div className={cn("flex items-center justify-center py-8", className)}>
         <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
-          <AlertCircle className="w-5 h-5" />
+          <AlertCircleIcon className="w-5 h-5" />
           <span className="text-sm">Failed to load campaign overview</span>
         </div>
       </div>

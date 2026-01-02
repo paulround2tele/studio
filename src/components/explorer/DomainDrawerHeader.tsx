@@ -14,16 +14,9 @@
 'use client';
 
 import React from 'react';
-import { ExternalLink, Copy, Check, Clock } from 'lucide-react';
+import { ExternalLinkIcon, CopyIcon, CheckLineIcon, ClockIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import Badge from '@/components/ta/ui/badge/Badge';
 import type { DomainRow } from '@/types/explorer/state';
 
 // ============================================================================
@@ -32,8 +25,7 @@ import type { DomainRow } from '@/types/explorer/state';
 
 interface StatusConfig {
   label: string;
-  variant: 'default' | 'secondary' | 'destructive' | 'outline';
-  className?: string;
+  color: 'success' | 'warning' | 'error' | 'light' | 'info';
 }
 
 function getStatusConfig(status: string | undefined, _type: 'dns' | 'http' | 'lead'): StatusConfig {
@@ -43,8 +35,7 @@ function getStatusConfig(status: string | undefined, _type: 'dns' | 'http' | 'le
   if (normalizedStatus === 'valid' || normalizedStatus === 'reachable' || normalizedStatus === 'extracted') {
     return { 
       label: status ?? 'Unknown', 
-      variant: 'default',
-      className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+      color: 'success',
     };
   }
   
@@ -52,8 +43,7 @@ function getStatusConfig(status: string | undefined, _type: 'dns' | 'http' | 'le
   if (normalizedStatus === 'pending' || normalizedStatus === 'queued') {
     return { 
       label: status ?? 'Pending', 
-      variant: 'secondary',
-      className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+      color: 'info',
     };
   }
   
@@ -61,8 +51,7 @@ function getStatusConfig(status: string | undefined, _type: 'dns' | 'http' | 'le
   if (normalizedStatus === 'invalid' || normalizedStatus === 'unreachable' || normalizedStatus === 'failed') {
     return { 
       label: status ?? 'Failed', 
-      variant: 'destructive',
-      className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+      color: 'error',
     };
   }
   
@@ -70,16 +59,14 @@ function getStatusConfig(status: string | undefined, _type: 'dns' | 'http' | 'le
   if (normalizedStatus === 'skipped' || normalizedStatus === 'n/a') {
     return { 
       label: status ?? 'Skipped', 
-      variant: 'outline',
-      className: 'text-muted-foreground',
+      color: 'light',
     };
   }
   
   // Unknown/default
   return { 
     label: status ?? 'Unknown', 
-    variant: 'outline',
-    className: '',
+    color: 'light',
   };
 }
 
@@ -144,65 +131,43 @@ export const DomainDrawerHeader = React.memo(function DomainDrawerHeader({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <h2 
-            className="text-lg font-semibold truncate"
+            className="text-lg font-semibold truncate text-gray-800 dark:text-white"
             title={domain.domain}
             data-testid="domain-drawer-domain-name"
           >
             {domain.domain ?? 'Unknown Domain'}
           </h2>
           {domain.id && (
-            <p className="text-xs text-muted-foreground font-mono truncate">
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-mono truncate">
               ID: {domain.id}
             </p>
           )}
         </div>
         
         <div className="flex gap-1 flex-shrink-0">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={handleCopy}
-                  data-testid="domain-drawer-copy-button"
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {copied ? 'Copied!' : 'Copy domain'}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <button
+            onClick={handleCopy}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+            title={copied ? 'Copied!' : 'Copy domain'}
+            data-testid="domain-drawer-copy-button"
+          >
+            {copied ? (
+              <CheckLineIcon className="h-4 w-4 text-green-600" />
+            ) : (
+              <CopyIcon className="h-4 w-4" />
+            )}
+          </button>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  asChild
-                  data-testid="domain-drawer-external-link"
-                >
-                  <a 
-                    href={`https://${domain.domain}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Open in new tab</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <a 
+            href={`https://${domain.domain}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+            title="Open in new tab"
+            data-testid="domain-drawer-external-link"
+          >
+            <ExternalLinkIcon className="h-4 w-4" />
+          </a>
         </div>
       </div>
 
@@ -211,45 +176,24 @@ export const DomainDrawerHeader = React.memo(function DomainDrawerHeader({
         className="flex flex-wrap gap-2"
         data-testid="domain-drawer-status-badges"
       >
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge 
-                variant={dnsConfig.variant}
-                className={cn("text-xs", dnsConfig.className)}
-                data-testid="domain-drawer-dns-status"
-              >
-                DNS: {dnsConfig.label}
-              </Badge>
-            </TooltipTrigger>
-            {domain.dnsReason && (
-              <TooltipContent>{domain.dnsReason}</TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
+        <Badge 
+          color={dnsConfig.color}
+          size="sm"
+        >
+          DNS: {dnsConfig.label}
+        </Badge>
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge 
-                variant={httpConfig.variant}
-                className={cn("text-xs", httpConfig.className)}
-                data-testid="domain-drawer-http-status"
-              >
-                HTTP: {httpConfig.label}
-              </Badge>
-            </TooltipTrigger>
-            {domain.httpReason && (
-              <TooltipContent>{domain.httpReason}</TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
+        <Badge 
+          color={httpConfig.color}
+          size="sm"
+        >
+          HTTP: {httpConfig.label}
+        </Badge>
 
         {leadConfig && (
           <Badge 
-            variant={leadConfig.variant}
-            className={cn("text-xs", leadConfig.className)}
-            data-testid="domain-drawer-lead-status"
+            color={leadConfig.color}
+            size="sm"
           >
             Lead: {leadConfig.label}
           </Badge>
@@ -259,10 +203,10 @@ export const DomainDrawerHeader = React.memo(function DomainDrawerHeader({
       {/* Timestamp */}
       {domain.createdAt && (
         <div 
-          className="flex items-center gap-1.5 text-xs text-muted-foreground"
+          className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"
           data-testid="domain-drawer-timestamp"
         >
-          <Clock className="h-3.5 w-3.5" />
+          <ClockIcon className="h-3.5 w-3.5" />
           <span>Generated: {formatDate(domain.createdAt)}</span>
         </div>
       )}

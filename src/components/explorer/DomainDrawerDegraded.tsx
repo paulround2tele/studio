@@ -15,10 +15,10 @@
 'use client';
 
 import React from 'react';
-import { AlertTriangle, RefreshCw, AlertCircle, Info } from 'lucide-react';
+import { RefreshIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import Alert from '@/components/ta/ui/alert/Alert';
+import Button from '@/components/ta/ui/button/Button';
 
 // ============================================================================
 // DEGRADED STATE TYPES
@@ -77,49 +77,46 @@ export const DomainDrawerDegraded = React.memo(function DomainDrawerDegraded({
 
   const displayMessage = message ?? defaultMessages[type];
 
-  // Visual treatment varies by severity
-  const variants: Record<DegradedStateType, { icon: React.ElementType; variant: 'default' | 'destructive' }> = {
-    'breakdown-unavailable': { icon: Info, variant: 'default' },
-    'breakdown-error': { icon: AlertCircle, variant: 'destructive' },
-    'partial-data': { icon: AlertTriangle, variant: 'default' },
+  // Visual treatment varies by severity - map to TailAdmin Alert variants
+  const variants: Record<DegradedStateType, 'info' | 'error' | 'warning'> = {
+    'breakdown-unavailable': 'info',
+    'breakdown-error': 'error',
+    'partial-data': 'warning',
   };
 
-  const { icon: Icon, variant } = variants[type];
+  const alertVariant = variants[type];
+  const title = type === 'breakdown-unavailable' ? 'Limited Data' : 'Data Issue';
+  
+  // Build message with error details if present
+  const fullMessage = errorDetails 
+    ? `${displayMessage}\n${errorDetails}`
+    : displayMessage;
 
   return (
-    <Alert 
-      variant={variant}
+    <div 
       className={cn('my-4', className)}
       data-testid="domain-drawer-degraded"
       data-degraded-type={type}
     >
-      <Icon className="h-4 w-4" />
-      <AlertTitle className="text-sm font-medium">
-        {type === 'breakdown-unavailable' ? 'Limited Data' : 'Data Issue'}
-      </AlertTitle>
-      <AlertDescription className="mt-1 text-sm">
-        <span>{displayMessage}</span>
-        
-        {errorDetails && (
-          <span className="block mt-1 text-xs text-muted-foreground font-mono">
-            {errorDetails}
-          </span>
-        )}
-
-        {canRetry && onRetry && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-2 h-7 text-xs"
-            onClick={onRetry}
-            data-testid="domain-drawer-degraded-retry"
-          >
-            <RefreshCw className="w-3 h-3 mr-1" />
-            Retry
-          </Button>
-        )}
-      </AlertDescription>
-    </Alert>
+      <Alert 
+        variant={alertVariant}
+        title={title}
+        message={fullMessage}
+      />
+      
+      {canRetry && onRetry && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-2"
+          onClick={onRetry}
+          data-testid="domain-drawer-degraded-retry"
+          startIcon={<RefreshIcon className="w-3 h-3" />}
+        >
+          Retry
+        </Button>
+      )}
+    </div>
   );
 });
 
@@ -147,7 +144,7 @@ export const FallbackRichness = React.memo(function FallbackRichness({
   if (score === null) {
     return (
       <div 
-        className={cn("text-sm text-muted-foreground", className)}
+        className={cn("text-sm text-gray-500 dark:text-gray-400", className)}
         data-testid="domain-drawer-richness-unavailable"
       >
         Richness score not available
@@ -171,9 +168,9 @@ export const FallbackRichness = React.memo(function FallbackRichness({
         <span className={cn("text-3xl font-bold tabular-nums", getScoreColor(score))}>
           {score}
         </span>
-        <span className="text-sm text-muted-foreground">/ 100</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">/ 100</span>
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
         Aggregate richness score from features
       </p>
     </div>

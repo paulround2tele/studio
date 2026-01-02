@@ -4,9 +4,8 @@
  */
 
 import React from 'react';
-import { AlertTriangle, AlertCircle, Info, Activity } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { WarningTriangleIcon, AlertCircleIcon, InfoIcon, ActivityIcon } from '@/icons';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 
 export interface WarningData {
@@ -26,25 +25,25 @@ interface WarningDistributionProps {
 const warningConfig = {
   stuffing: {
     label: 'Keyword Stuffing',
-    icon: AlertTriangle,
+    icon: WarningTriangleIcon,
     description: 'Excessive keyword density detected',
     color: 'text-orange-600 dark:text-orange-400'
   },
   repetition: {
     label: 'Content Repetition',
-    icon: AlertCircle,
+    icon: AlertCircleIcon,
     description: 'Repetitive content patterns found',
     color: 'text-red-600 dark:text-red-400'
   },
   anchor: {
     label: 'Anchor Share Issues',
-    icon: Activity,
+    icon: ActivityIcon,
     description: 'High anchor text concentration',
     color: 'text-yellow-600 dark:text-yellow-400'
   },
   general: {
     label: 'General Warnings',
-    icon: Info,
+    icon: InfoIcon,
     description: 'Other quality concerns detected',
     color: 'text-blue-600 dark:text-blue-400'
   }
@@ -52,20 +51,16 @@ const warningConfig = {
 
 const severityConfig = {
   low: {
-    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-    variant: 'secondary' as const
+    color: 'info' as const
   },
   medium: {
-    color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-    variant: 'outline' as const
+    color: 'warning' as const
   },
   high: {
-    color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-    variant: 'destructive' as const
+    color: 'warning' as const
   },
   critical: {
-    color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-    variant: 'destructive' as const
+    color: 'error' as const
   }
 };
 
@@ -79,50 +74,50 @@ export function WarningDistribution({
 
   if (warnings.length === 0) {
     return (
-      <Card className={cn("", className)}>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Activity className="w-5 h-5 text-green-600" />
+      <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <ActivityIcon className="w-5 h-5 text-green-600" />
             Warning Distribution
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="px-6 pb-6">
           <div className="text-center py-8">
             <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 mb-2">
-              <Activity className="w-6 h-6" />
+              <ActivityIcon className="w-6 h-6" />
               <span className="text-lg font-medium">No warnings detected</span>
             </div>
             <p className="text-sm text-gray-500">
               All domains are passing quality checks
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className={cn("", className)}>
-      <CardHeader>
+    <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+      <div className="p-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Activity className="w-5 h-5 text-orange-600" />
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <ActivityIcon className="w-5 h-5 text-orange-600" />
             Warning Distribution
-          </CardTitle>
+          </h3>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
+            <Badge color="light" size="sm">
               {totalWarnings} warnings
             </Badge>
             <Badge 
-              variant={overallRate > 20 ? 'destructive' : overallRate > 10 ? 'outline' : 'secondary'}
-              className="text-xs"
+              color={overallRate > 20 ? 'error' : overallRate > 10 ? 'warning' : 'info'}
+              size="sm"
             >
               {overallRate.toFixed(1)}% rate
             </Badge>
           </div>
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="px-6 pb-6">
         <div className="space-y-4">
           {warnings.map((warning) => {
             const config = warningConfig[warning.type];
@@ -142,8 +137,8 @@ export function WarningDistribution({
                         {config.label}
                       </h4>
                       <Badge 
-                        variant={severityConf.variant}
-                        className="text-xs"
+                        color={severityConf.color}
+                        size="sm"
                       >
                         {warning.severity}
                       </Badge>
@@ -179,8 +174,8 @@ export function WarningDistribution({
             </p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

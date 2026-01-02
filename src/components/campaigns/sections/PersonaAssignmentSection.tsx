@@ -1,9 +1,8 @@
 'use client';
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useMemo } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import SelectAdapter, { type SelectOption } from '@/components/ta/adapters/SelectAdapter';
 import { Control } from 'react-hook-form';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 
@@ -53,16 +52,47 @@ export const PersonaAssignmentSection: React.FC<PersonaAssignmentSectionProps> =
   disabled = false,
   isLoadingData = false
 }) => {
+  // Build options for SelectAdapter
+  const dnsPersonaOptions = useMemo((): SelectOption[] => {
+    const opts: SelectOption[] = [{ value: noneValuePlaceholder, label: 'None (Default)' }];
+    dnsPersonas.filter(p => p.id).forEach(p => {
+      opts.push({ value: p.id!, label: p.name || 'Unnamed' });
+    });
+    if (dnsPersonas.length === 0 && !isLoadingData) {
+      opts.push({ value: 'no-active-dns', label: 'No DNS personas found', disabled: true });
+    }
+    return opts;
+  }, [dnsPersonas, isLoadingData, noneValuePlaceholder]);
+
+  const httpPersonaOptions = useMemo((): SelectOption[] => {
+    const opts: SelectOption[] = [{ value: noneValuePlaceholder, label: 'None (Default)' }];
+    httpPersonas.filter(p => p.id).forEach(p => {
+      opts.push({ value: p.id!, label: p.name || 'Unnamed' });
+    });
+    if (httpPersonas.length === 0 && !isLoadingData) {
+      opts.push({ value: 'no-active-http', label: 'No HTTP personas found', disabled: true });
+    }
+    return opts;
+  }, [httpPersonas, isLoadingData, noneValuePlaceholder]);
+
+  const proxyOptions = useMemo((): SelectOption[] => {
+    const opts: SelectOption[] = [{ value: noneValuePlaceholder, label: 'No proxy' }];
+    (_proxies as LocalProxy[])?.filter((p: LocalProxy) => p.id).forEach((p: LocalProxy) => {
+      const label = p.host ? `${p.host}${p.port ? `:${p.port}` : ''}` : (p.name || 'Unnamed proxy');
+      opts.push({ value: p.id!, label });
+    });
+    return opts;
+  }, [_proxies, noneValuePlaceholder]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Persona Assignment</CardTitle>
-        <CardDescription>
+    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Persona Assignment</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Assign DNS and HTTP personas for campaign execution using proper backend types
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+        </p>
+      </div>
+      <div className="p-5 space-y-6">
         {/* DNS Persona Selection */}
         <FormField
           control={control}
@@ -70,22 +100,15 @@ export const PersonaAssignmentSection: React.FC<PersonaAssignmentSectionProps> =
           render={({ field }) => (
             <FormItem>
               <FormLabel>DNS Persona</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={disabled || isLoadingData}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={isLoadingData ? "Loading DNS personas..." : "Select DNS persona"} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value={noneValuePlaceholder}>None (Default)</SelectItem>
-                  {dnsPersonas.filter(p => p.id).map(p => (
-                    <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>
-                  ))}
-                  {dnsPersonas.length === 0 && !isLoadingData && (
-                    <SelectItem value="no-active-dns" disabled>No DNS personas found. Please upload some first.</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <SelectAdapter
+                  options={dnsPersonaOptions}
+                  value={field.value || noneValuePlaceholder}
+                  onChange={field.onChange}
+                  disabled={disabled || isLoadingData}
+                  placeholder={isLoadingData ? "Loading DNS personas..." : "Select DNS persona"}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -98,22 +121,15 @@ export const PersonaAssignmentSection: React.FC<PersonaAssignmentSectionProps> =
           render={({ field }) => (
             <FormItem>
               <FormLabel>HTTP Persona</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={disabled || isLoadingData}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={isLoadingData ? "Loading HTTP personas..." : "Select HTTP persona"} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value={noneValuePlaceholder}>None (Default)</SelectItem>
-                  {httpPersonas.filter(p => p.id).map(p => (
-                    <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>
-                  ))}
-                  {httpPersonas.length === 0 && !isLoadingData && (
-                    <SelectItem value="no-active-http" disabled>No HTTP personas found. Please upload some first.</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <SelectAdapter
+                  options={httpPersonaOptions}
+                  value={field.value || noneValuePlaceholder}
+                  onChange={field.onChange}
+                  disabled={disabled || isLoadingData}
+                  placeholder={isLoadingData ? "Loading HTTP personas..." : "Select HTTP persona"}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -127,26 +143,20 @@ export const PersonaAssignmentSection: React.FC<PersonaAssignmentSectionProps> =
             <FormItem>
               <FormLabel>Proxy (Optional)</FormLabel>
               <FormControl>
-                <Select onValueChange={field.onChange} value={field.value} disabled={disabled || isLoadingData}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={isLoadingData ? "Loading proxies..." : "Select proxy (optional)"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={noneValuePlaceholder}>No proxy</SelectItem>
-                    { (_proxies as LocalProxy[])?.filter((p: LocalProxy) => p.id).map((p: LocalProxy) => (
-                      <SelectItem key={p.id} value={p.id!}>
-                        {p.host ? `${p.host}${p.port ? `:${p.port}` : ''}` : (p.name || 'Unnamed proxy')}
-                      </SelectItem>
-                    )) }
-                  </SelectContent>
-                </Select>
+                <SelectAdapter
+                  options={proxyOptions}
+                  value={field.value || noneValuePlaceholder}
+                  onChange={field.onChange}
+                  disabled={disabled || isLoadingData}
+                  placeholder={isLoadingData ? "Loading proxies..." : "Select proxy (optional)"}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

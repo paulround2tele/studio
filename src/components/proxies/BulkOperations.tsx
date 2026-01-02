@@ -3,39 +3,22 @@
 
 "use client";
 
-import { useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
+import { useState, useCallback, useMemo } from 'react';
+import Button from '@/components/ta/ui/button/Button';
+import Checkbox from '@/components/ta/form/input/Checkbox';
+import Badge from '@/components/ta/ui/badge/Badge';
+import SelectAdapter from '@/components/ta/adapters/SelectAdapter';
+import DialogAdapter from '@/components/ta/adapters/DialogAdapter';
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { 
-  PlayCircle, 
-  StopCircle, 
-  TestTubeDiagonal, 
-  Trash2, 
-  CheckSquare, 
-  Square,
-  Sparkles,
-  AlertTriangle,
-  Loader2
-} from 'lucide-react';
+  PlayIcon, 
+  StopIcon, 
+  TestTubeIcon, 
+  TrashBinIcon, 
+  CheckSquareIcon, 
+  SquareIcon,
+  SparklesIcon,
+  LoaderIcon
+} from '@/icons';
 import type { Proxy as ProxyType } from '@/lib/api-client/models/proxy';
 // Removed unused types/helpers
 import {
@@ -93,6 +76,14 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
   const disabledProxies = proxies.filter(p => !p.isEnabled);
   const failedProxies = proxies.filter(p => deriveStatus(p) === 'Failed');
   const activeProxies = proxies.filter(p => deriveStatus(p) === 'Active');
+
+  // Memoized options for quick select dropdown
+  const quickSelectOptions = useMemo(() => [
+    { value: 'active', label: `Active (${activeProxies.length})` },
+    { value: 'enabled', label: `Enabled (${enabledProxies.length})` },
+    { value: 'disabled', label: `Disabled (${disabledProxies.length})` },
+    { value: 'failed', label: `Failed (${failedProxies.length})` },
+  ], [activeProxies.length, enabledProxies.length, disabledProxies.length, failedProxies.length]);
 
   const selectedProxies = proxies.filter(p => p.id && selectedProxyIds.has(p.id));
   const selectedCount = selectedProxyIds.size;
@@ -355,17 +346,17 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
 
   return (
     <>
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center">
-            <CheckSquare className="mr-2 h-5 w-5 text-primary" />
+      <div className="mb-6 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center">
+            <CheckSquareIcon className="mr-2 h-5 w-5 text-brand-500" />
             Bulk Operations
-          </CardTitle>
-          <CardDescription>
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Select multiple proxies and perform actions on them simultaneously.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+        </div>
+        <div className="p-6 space-y-4">
           {/* Selection Controls */}
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -373,26 +364,21 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
               size="sm"
               onClick={toggleSelectAll}
               disabled={disabled || proxies.length === 0}
+              startIcon={allSelected ? <SquareIcon className="h-4 w-4" /> : <CheckSquareIcon className="h-4 w-4" />}
             >
-              {allSelected ? <Square className="h-4 w-4" /> : <CheckSquare className="h-4 w-4" />}
-              <span className="ml-1">
-                {allSelected ? 'Deselect All' : 'Select All'}
-              </span>
+              {allSelected ? 'Deselect All' : 'Select All'}
             </Button>
             
-            <Select onValueChange={selectByStatus} disabled={disabled}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Quick Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active ({activeProxies.length})</SelectItem>
-                <SelectItem value="enabled">Enabled ({enabledProxies.length})</SelectItem>
-                <SelectItem value="disabled">Disabled ({disabledProxies.length})</SelectItem>
-                <SelectItem value="failed">Failed ({failedProxies.length})</SelectItem>
-              </SelectContent>
-            </Select>
+            <SelectAdapter
+              options={quickSelectOptions}
+              value=""
+              onChange={(value) => selectByStatus(value as 'active' | 'disabled' | 'failed' | 'enabled')}
+              placeholder="Quick Select"
+              disabled={disabled}
+              className="w-[180px]"
+            />
             
-            <Badge variant="outline">
+            <Badge color="light">
               {selectedCount} selected
             </Badge>
           </div>
@@ -404,8 +390,8 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
               size="sm"
               onClick={() => handleBulkAction('enable')}
               disabled={disabled || noneSelected || isProcessing}
+              startIcon={<PlayIcon className="h-4 w-4" />}
             >
-              <PlayCircle className="h-4 w-4 mr-1" />
               Enable
             </Button>
             
@@ -414,8 +400,8 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
               size="sm"
               onClick={() => handleBulkAction('disable')}
               disabled={disabled || noneSelected || isProcessing}
+              startIcon={<StopIcon className="h-4 w-4" />}
             >
-              <StopCircle className="h-4 w-4 mr-1" />
               Disable
             </Button>
             
@@ -424,8 +410,8 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
               size="sm"
               onClick={() => handleBulkAction('test')}
               disabled={disabled || noneSelected || isProcessing}
+              startIcon={<TestTubeIcon className="h-4 w-4" />}
             >
-              <TestTubeDiagonal className="h-4 w-4 mr-1" />
               Test
             </Button>
             
@@ -434,26 +420,27 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
               size="sm"
               onClick={() => handleBulkAction('clean')}
               disabled={disabled || failedProxies.length === 0 || isProcessing}
+              startIcon={<SparklesIcon className="h-4 w-4" />}
             >
-              <Sparkles className="h-4 w-4 mr-1" />
               Clean Failed ({failedProxies.length})
             </Button>
             
             <Button
-              variant="destructive"
+              variant="outline"
               size="sm"
               onClick={() => handleBulkAction('delete')}
               disabled={disabled || noneSelected || isProcessing}
+              startIcon={<TrashBinIcon className="h-4 w-4" />}
+              className="text-error-500 hover:bg-error-50 dark:hover:bg-error-500/10"
             >
-              <Trash2 className="h-4 w-4 mr-1" />
               Delete
             </Button>
           </div>
 
           {/* Processing Progress */}
           {isProcessing && processingProgress && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <LoaderIcon className="h-4 w-4 animate-spin" />
               <span>
                 Processing: {processingProgress.current} / {processingProgress.total}
               </span>
@@ -462,31 +449,31 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
 
           {/* Proxy Selection Checkboxes */}
           {proxies.length > 0 && (
-            <div className="border rounded-lg p-3 max-h-64 overflow-y-auto">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 max-h-64 overflow-y-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {proxies.map(proxy => {
                   const status = deriveStatus(proxy);
                   return (
                     <div
                     key={proxy.id}
-                    className="flex items-center space-x-2 p-2 rounded border hover:bg-muted/50"
+                    className="flex items-center space-x-2 p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/[0.03]"
                   >
                     <Checkbox
                       checked={proxy.id ? selectedProxyIds.has(proxy.id) : false}
-                      onCheckedChange={() => proxy.id && toggleProxySelection(proxy.id)}
+                      onChange={() => proxy.id && toggleProxySelection(proxy.id)}
                       disabled={disabled || isProcessing}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{proxy.address}</p>
                       <div className="flex items-center gap-1">
                         <Badge
-                          variant={status === 'Active' ? 'default' : 
-                                  status === 'Failed' ? 'destructive' : 'secondary'}
-                          className="text-xs"
+                          color={status === 'Active' ? 'success' : 
+                                  status === 'Failed' ? 'error' : 'light'}
+                          size="sm"
                         >
                           {status}
                         </Badge>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge color="light" size="sm">
                           {proxy.protocol}
                         </Badge>
                       </div>
@@ -497,37 +484,26 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Confirmation Dialog */}
-      <AlertDialog open={isConfirmationOpen} onOpenChange={setIsConfirmationOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Confirm Bulk Action
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to {bulkAction ? getActionDescription(bulkAction) : 'perform this action'}?
-              {bulkAction === 'delete' && (
-                <span className="block mt-2 text-destructive font-medium">
-                  This action cannot be undone.
-                </span>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmBulkAction}
-              className={bulkAction === 'delete' ? 'bg-destructive hover:bg-destructive/90' : ''}
-            >
-              Confirm
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DialogAdapter
+        isOpen={isConfirmationOpen}
+        onOpenChange={setIsConfirmationOpen}
+        title="Confirm Bulk Action"
+        description={`Are you sure you want to ${bulkAction ? getActionDescription(bulkAction) : 'perform this action'}?`}
+        onConfirm={confirmBulkAction}
+        confirmLabel="Confirm"
+        cancelLabel="Cancel"
+        destructive={bulkAction === 'delete'}
+      >
+        {bulkAction === 'delete' && (
+          <span className="block mt-2 text-error-500 font-medium">
+            This action cannot be undone.
+          </span>
+        )}
+      </DialogAdapter>
     </>
   );
 }

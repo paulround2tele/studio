@@ -1,12 +1,12 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { X, AlertCircle } from 'lucide-react';
+import InputAdapter from '@/components/ta/adapters/InputAdapter';
+import Badge from '@/components/ta/ui/badge/Badge';
+import Alert from '@/components/ta/ui/alert/Alert';
+import { CloseIcon } from '@/icons';
 import { useToast } from '@/hooks/use-toast';
 import { PersonasApi, ProxiesApi as _ProxiesApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
@@ -186,24 +186,24 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
   return (
     <Form {...form}>
       <form data-testid="phase-dns-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="name" render={({field})=> <FormItem data-testid="phase-dns-field-name"><FormLabel>Name</FormLabel><FormControl><Input data-testid="phase-dns-input-name" {...field} /></FormControl><FormMessage/></FormItem>} />
+        <FormField control={form.control} name="name" render={({field})=> <FormItem data-testid="phase-dns-field-name"><FormLabel>Name</FormLabel><FormControl><InputAdapter data-testid="phase-dns-input-name" {...field} /></FormControl><FormMessage/></FormItem>} />
         <div className="space-y-2" data-testid="phase-dns-personas">
           <div className="text-xs font-medium" data-testid="phase-dns-personas-label">DNS Personas</div>
-          {loadingData ? <div className="text-xs" data-testid="phase-dns-personas-loading">Loading...</div> : dnsPersonas.length === 0 ? <Alert data-testid="phase-dns-personas-empty"><AlertCircle className="h-4 w-4"/><AlertDescription>No active DNS personas.</AlertDescription></Alert> : (
+          {loadingData ? <div className="text-xs" data-testid="phase-dns-personas-loading">Loading...</div> : dnsPersonas.length === 0 ? <Alert variant="warning" title="No Personas" message="No active DNS personas available." data-testid="phase-dns-personas-empty" /> : (
             <div className="grid grid-cols-1 gap-2" data-testid="phase-dns-personas-list">
               {dnsPersonas.map(p=> (
                 <div data-testid={`phase-dns-persona-${p.id}`} key={p.id} onClick={()=>handlePersonaToggle(p.id||'')} className={`p-2 border rounded cursor-pointer text-xs flex justify-between ${watchedPersonaIds.includes(p.id||'')?'border-primary bg-primary/5':'hover:border-primary/50'}`}>
-                  <span data-testid={`phase-dns-persona-name-${p.id}`}>{p.name}</span>{watchedPersonaIds.includes(p.id||'') && <Badge data-testid={`phase-dns-persona-selected-${p.id}`} variant="default">Selected</Badge>}
+                  <span data-testid={`phase-dns-persona-name-${p.id}`}>{p.name}</span>{watchedPersonaIds.includes(p.id||'') && <Badge data-testid={`phase-dns-persona-selected-${p.id}`} color="primary" size="sm">Selected</Badge>}
                 </div>
               ))}
             </div>
           )}
-          {watchedPersonaIds.length>0 && <div className="flex flex-wrap gap-2" data-testid="phase-dns-personas-selected">{watchedPersonaIds.map(id=>{ const persona=dnsPersonas.find(p=>p.id===id); return <Badge key={id} variant="secondary" className="flex items-center gap-1" data-testid={`phase-dns-chip-${id}`}>{persona?.name}<X className="h-3 w-3 cursor-pointer" onClick={()=>handlePersonaToggle(id)} /></Badge>; })}</div>}
+          {watchedPersonaIds.length>0 && <div className="flex flex-wrap gap-2" data-testid="phase-dns-personas-selected">{watchedPersonaIds.map(id=>{ const persona=dnsPersonas.find(p=>p.id===id); return <Badge key={id} color="light" size="sm" className="flex items-center gap-1" data-testid={`phase-dns-chip-${id}`}>{persona?.name}<CloseIcon className="h-3 w-3 cursor-pointer" onClick={()=>handlePersonaToggle(id)} /></Badge>; })}</div>}
         </div>
         <div className="space-y-2" data-testid="phase-dns-proxy-pools">
           <div className="text-xs font-medium" data-testid="phase-dns-proxy-pools-label">Proxy Pool (Optional)</div>
-          {loadingData ? <div className="text-xs" data-testid="phase-dns-proxy-pools-loading">Loading...</div> : proxyPools.length===0 ? <div className="text-[10px] text-muted-foreground" data-testid="phase-dns-proxy-pools-empty">No pools available.</div> : (
-            <div className="flex flex-wrap gap-2" data-testid="phase-dns-proxy-pools-list">{proxyPools.map(p=> <Badge key={p.id} variant={watchedProxyPoolId===p.id? 'default':'outline'} onClick={()=>handleProxyPoolSelect(p.id||'')} className="cursor-pointer" data-testid={`phase-dns-proxy-pool-${p.id}`}>{p.name}</Badge>)}</div>
+          {loadingData ? <div className="text-xs" data-testid="phase-dns-proxy-pools-loading">Loading...</div> : proxyPools.length===0 ? <div className="text-[10px] text-gray-500 dark:text-gray-400" data-testid="phase-dns-proxy-pools-empty">No pools available.</div> : (
+            <div className="flex flex-wrap gap-2" data-testid="phase-dns-proxy-pools-list">{proxyPools.map(p=> <button type="button" key={p.id} onClick={()=>handleProxyPoolSelect(p.id||'')} className="focus:outline-none" data-testid={`phase-dns-proxy-pool-${p.id}`}><Badge color={watchedProxyPoolId===p.id? 'primary':'light'} size="sm" className="cursor-pointer">{p.name}</Badge></button>)}</div>
           )}
         </div>
         <div className="flex justify-end" data-testid="phase-dns-actions"><Button data-testid="phase-dns-submit" type="submit" size="sm" disabled={saving || watchedPersonaIds.length === 0}>{saving? 'Saving...' : watchedPersonaIds.length === 0 ? 'Select DNS Persona' : 'Save DNS Validation'}</Button></div>

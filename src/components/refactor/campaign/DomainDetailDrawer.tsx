@@ -8,7 +8,7 @@
 'use client';
 
 import React from 'react';
-import { Loader2, AlertCircle, Copy, CheckCircle2, ExternalLink, TrendingUp, Target, FileText, Clock, Shield, Sparkles } from 'lucide-react';
+import { LoaderIcon, AlertCircleIcon, CopyIcon, CheckCircle2Icon, ExternalLinkIcon, TrendingUpIcon, TargetIcon, FileTextIcon, ClockIcon, ShieldIcon, SparklesIcon } from '@/icons';
 
 import {
   Sheet,
@@ -17,8 +17,8 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import Badge from '@/components/ta/ui/badge/Badge';
+import Button from '@/components/ta/ui/button/Button';
 import { cn } from '@/lib/utils';
 import { useGetCampaignDomainScoreBreakdownQuery } from '@/store/api/campaignApi';
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
@@ -26,12 +26,12 @@ import type { DomainScoreBreakdownResponse } from '@/lib/api-client/models/domai
 
 // Score component configuration for display (keys match API camelCase)
 const SCORE_COMPONENTS = [
-  { key: 'density', label: 'Keyword Density', weight: 2.5, icon: Target, description: 'Frequency of target keywords in content' },
-  { key: 'coverage', label: 'Keyword Coverage', weight: 2.0, icon: FileText, description: 'Variety of unique keywords found' },
-  { key: 'nonParked', label: 'Not Parked', weight: 1.5, icon: Shield, description: 'Domain is live and not parked' },
-  { key: 'contentLength', label: 'Content Quality', weight: 1.0, icon: FileText, description: 'Sufficient meaningful content length' },
-  { key: 'titleKeyword', label: 'Title Keyword', weight: 1.5, icon: Sparkles, description: 'Target keyword in page title' },
-  { key: 'freshness', label: 'Freshness', weight: 0.5, icon: Clock, description: 'Recent content updates detected' },
+  { key: 'density', label: 'Keyword Density', weight: 2.5, icon: TargetIcon, description: 'Frequency of target keywords in content' },
+  { key: 'coverage', label: 'Keyword Coverage', weight: 2.0, icon: FileTextIcon, description: 'Variety of unique keywords found' },
+  { key: 'nonParked', label: 'Not Parked', weight: 1.5, icon: ShieldIcon, description: 'Domain is live and not parked' },
+  { key: 'contentLength', label: 'Content Quality', weight: 1.0, icon: FileTextIcon, description: 'Sufficient meaningful content length' },
+  { key: 'titleKeyword', label: 'Title Keyword', weight: 1.5, icon: SparklesIcon, description: 'Target keyword in page title' },
+  { key: 'freshness', label: 'Freshness', weight: 0.5, icon: ClockIcon, description: 'Recent content updates detected' },
 ] as const;
 
 // Helper to extract numeric value from ScoreComponent
@@ -232,47 +232,32 @@ export function DomainDetailDrawer({
               {domain?.domain ?? 'Domain Details'}
             </SheetTitle>
             {domain?.leadStatus && (
-              <Badge variant="outline" className={cn('font-medium', leadStatusColor)}>
+              <Badge color="light" size="sm" className={cn('font-medium', leadStatusColor)}>
                 {isMatch ? 'Match ✓' : domain.leadStatus}
               </Badge>
             )}
           </div>
           <SheetDescription className="flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               className="h-7 px-2"
               onClick={handleCopyDomain}
               disabled={!domain?.domain}
+              startIcon={copied ? <CheckCircle2Icon className="h-3.5 w-3.5 text-emerald-500" /> : <CopyIcon className="h-3.5 w-3.5" />}
             >
-              {copied ? (
-                <>
-                  <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-emerald-500" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5 mr-1.5" />
-                  Copy Domain
-                </>
-              )}
+              {copied ? 'Copied' : 'Copy Domain'}
             </Button>
             {domain?.domain && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2"
-                asChild
+              <a
+                href={`https://${domain.domain}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 h-7 px-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 rounded-md"
               >
-                <a
-                  href={`https://${domain.domain}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                  Visit Site
-                </a>
-              </Button>
+                <ExternalLinkIcon className="h-3.5 w-3.5" />
+                Visit Site
+              </a>
             )}
           </SheetDescription>
         </SheetHeader>
@@ -282,14 +267,14 @@ export function DomainDetailDrawer({
           <div className="rounded-lg border bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <TrendingUpIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <span className="font-semibold text-gray-900 dark:text-gray-100">
                   Overall Domain Score
                 </span>
               </div>
               <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                 {isLoading ? (
-                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <LoaderIcon className="h-8 w-8 animate-spin" />
                 ) : (
                   `${Math.round(displayData?.overallScore ?? domain?.domainScore ?? 0)}/100`
                 )}
@@ -308,7 +293,7 @@ export function DomainDetailDrawer({
             
             {isLoading && (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                <LoaderIcon className="h-6 w-6 animate-spin text-gray-400" />
                 <span className="ml-2 text-sm text-gray-500">Loading score details...</span>
               </div>
             )}
@@ -316,7 +301,7 @@ export function DomainDetailDrawer({
             {isError && (
               <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 p-4">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                  <AlertCircleIcon className="h-5 w-5 text-red-500 flex-shrink-0" />
                   <div>
                     <p className="font-medium text-red-800 dark:text-red-200">
                       Failed to load score breakdown
@@ -356,7 +341,7 @@ export function DomainDetailDrawer({
             {keywords.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {keywords.map((keyword, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-sm">
+                  <Badge key={idx} color="light" className="text-sm">
                     {keyword}
                   </Badge>
                 ))}

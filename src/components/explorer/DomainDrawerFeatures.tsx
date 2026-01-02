@@ -11,10 +11,9 @@
 'use client';
 
 import React from 'react';
-import { Hash, Globe, Tag, ArrowUpRight } from 'lucide-react';
+import { HashIcon, GlobeIcon, TagIcon, ArrowUpRightIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Badge from '@/components/ta/ui/badge/Badge';
 import type { DomainRow } from '@/types/explorer/state';
 import type { 
   DomainAnalysisFeaturesKeywords,
@@ -36,7 +35,7 @@ const KeywordsSection = React.memo(function KeywordsSection({
 }: KeywordsSectionProps) {
   if (!keywords) {
     return (
-      <div className={cn("text-sm text-muted-foreground", className)}>
+      <div className={cn("text-sm text-gray-500 dark:text-gray-400", className)}>
         No keyword data available
       </div>
     );
@@ -50,32 +49,32 @@ const KeywordsSection = React.memo(function KeywordsSection({
       {/* Summary stats */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
-          <div className="text-2xl font-bold tabular-nums">
+          <div className="text-2xl font-bold tabular-nums text-gray-800 dark:text-white">
             {unique_count ?? 0}
           </div>
-          <div className="text-xs text-muted-foreground">Unique keywords</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Unique keywords</div>
         </div>
         <div className="space-y-1">
-          <div className="text-2xl font-bold tabular-nums">
+          <div className="text-2xl font-bold tabular-nums text-gray-800 dark:text-white">
             {hits_total ?? 0}
           </div>
-          <div className="text-xs text-muted-foreground">Total hits</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Total hits</div>
         </div>
       </div>
 
       {/* Top keywords (from top3 array) */}
       {top3 && top3.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium flex items-center gap-1.5">
-            <Tag className="h-3.5 w-3.5" />
+          <h4 className="text-sm font-medium flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+            <TagIcon className="h-3.5 w-3.5" />
             Top Keywords
           </h4>
           <div className="flex flex-wrap gap-1.5">
             {top3.map((kw: string, i: number) => (
               <Badge 
                 key={`${kw}-${i}`} 
-                variant="secondary"
-                className="text-xs"
+                color="light"
+                size="sm"
               >
                 {kw}
               </Badge>
@@ -104,7 +103,7 @@ const MicrocrawlSection = React.memo(function MicrocrawlSection({
 }: MicrocrawlSectionProps) {
   if (!microcrawl) {
     return (
-      <div className={cn("text-sm text-muted-foreground", className)}>
+      <div className={cn("text-sm text-gray-500 dark:text-gray-400", className)}>
         No microcrawl data available
       </div>
     );
@@ -120,7 +119,7 @@ const MicrocrawlSection = React.memo(function MicrocrawlSection({
 
   // Color code gain ratio
   const getGainColor = (ratio: number | undefined): string => {
-    if (ratio === undefined) return 'text-muted-foreground';
+    if (ratio === undefined) return 'text-gray-500';
     if (ratio >= 0.5) return 'text-green-600 dark:text-green-400';
     if (ratio >= 0.2) return 'text-amber-600 dark:text-amber-400';
     return 'text-red-600 dark:text-red-400';
@@ -132,17 +131,17 @@ const MicrocrawlSection = React.memo(function MicrocrawlSection({
         {/* Gain ratio - the main metric */}
         <div className="space-y-1">
           <div className="flex items-center gap-1">
-            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+            <ArrowUpRightIcon className="h-4 w-4 text-gray-500" />
           </div>
           <div className={cn("text-2xl font-bold tabular-nums", getGainColor(gain_ratio))}>
             {gainPercentage}
           </div>
-          <div className="text-xs text-muted-foreground">Gain ratio</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Gain ratio</div>
         </div>
       </div>
 
       {/* Explanation of gain ratio */}
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
         Gain ratio indicates keyword discovery efficiency — higher is better.
       </p>
     </div>
@@ -175,30 +174,30 @@ export const DomainDrawerFeatures = React.memo(function DomainDrawerFeatures({
   return (
     <div className={cn("space-y-4", className)} data-testid="domain-drawer-features">
       {/* Keywords card */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Hash className="h-4 w-4" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="p-4 pb-2">
+          <h3 className="text-base font-semibold flex items-center gap-2 text-gray-800 dark:text-white">
+            <HashIcon className="h-4 w-4" />
             Keywords
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4 pt-0">
           <KeywordsSection keywords={features?.keywords} />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Microcrawl card */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Globe className="h-4 w-4" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="p-4 pb-2">
+          <h3 className="text-base font-semibold flex items-center gap-2 text-gray-800 dark:text-white">
+            <GlobeIcon className="h-4 w-4" />
             Microcrawl
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4 pt-0">
           <MicrocrawlSection microcrawl={features?.microcrawl} />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 });

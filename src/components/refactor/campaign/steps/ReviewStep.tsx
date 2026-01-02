@@ -6,7 +6,6 @@
 import React from 'react';
 import Badge from '@/components/ta/ui/badge/Badge';
 import Alert from '@/components/ta/ui/alert/Alert';
-import { Info } from 'lucide-react';
 import type { WizardGoalStep, WizardPatternStep, WizardTargetingStep } from '../../types';
 
 interface ReviewStepProps {

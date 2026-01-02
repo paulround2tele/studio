@@ -27,7 +27,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     {}
   );
 
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleCountryChange = (e: React.ChangeEvent<globalThis.HTMLSelectElement>) => {
     const newCountry = e.target.value;
     setSelectedCountry(newCountry);
     const countryCode = countryCodes[newCountry] ?? "";

@@ -23,16 +23,9 @@
 'use client';
 
 import React, { useCallback, useMemo } from 'react';
-import { X } from 'lucide-react';
+import { CloseIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-} from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
+import { Modal } from '@/components/ta/ui/modal';
 import type { DomainRow } from '@/types/explorer/state';
 import type { DomainDrawerData } from '@/types/explorer/drawer';
 import { createDrawerData } from '@/types/explorer/drawer';
@@ -136,7 +129,7 @@ export function DomainDrawer({
    * Handle open change from Sheet
    * Only responds to close events (open is controlled by isOpen prop)
    */
-  const handleOpenChange = useCallback((open: boolean) => {
+  const _handleOpenChange = useCallback((open: boolean) => {
     if (!open) {
       handleClose();
     }
@@ -157,39 +150,39 @@ export function DomainDrawer({
   // ========================================================================
 
   return (
-    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
-      <SheetContent 
-        side="right"
-        className={cn(
-          SIZE_CLASSES[size],
-          "flex flex-col p-0",
-          className
-        )}
+    <Modal 
+      isOpen={isOpen} 
+      onClose={handleClose}
+      className={cn(
+        SIZE_CLASSES[size],
+        "flex flex-col h-full max-h-[90vh] overflow-hidden",
+        className
+      )}
+      showCloseButton={false}
+    >
+      <div 
+        className="flex flex-col h-full"
         data-testid="domain-drawer"
       >
         {/* Header */}
-        <SheetHeader className="px-6 py-4 border-b flex-shrink-0">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <SheetTitle className="text-lg font-semibold">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
               Domain Details
-            </SheetTitle>
-            <SheetClose asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleClose}
-                data-testid="domain-drawer-close"
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </Button>
-            </SheetClose>
+            </h2>
+            <button
+              onClick={handleClose}
+              className="h-8 w-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+              data-testid="domain-drawer-close"
+            >
+              <CloseIcon className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </button>
           </div>
-        </SheetHeader>
+        </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-auto px-6 py-4">
           {/* No domain selected */}
           {!domain && (
             <DomainDrawerEmpty />
@@ -204,8 +197,8 @@ export function DomainDrawer({
             />
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </Modal>
   );
 }
 

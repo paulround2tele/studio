@@ -5,7 +5,6 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { CampaignDomain, PipelineSegment } from '../types';
 
@@ -79,11 +78,11 @@ export function PipelineBarContainer({
   const segments = generatePipelineSegments(domains);
 
   return (
-    <Card className={cn("", className)}>
-      <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+      <div className="p-6">
+        <h3 className="text-lg font-semibold">{title}</h3>
+      </div>
+      <div className="px-6 pb-6">
         {domains.length === 0 ? (
           <div className="text-gray-500 dark:text-gray-400 text-center py-4">
             No domains available for pipeline visualization
@@ -122,8 +121,8 @@ export function PipelineBarContainer({
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

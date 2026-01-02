@@ -1,15 +1,14 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import Badge from '@/components/ta/ui/badge/Badge';
+import Button from '@/components/ta/ui/button/Button';
 import { 
-  CheckCircle, 
-  AlertTriangle, 
-  XCircle, 
-  Shield, 
-  Clock,
-  RefreshCw
-} from 'lucide-react';
+  CheckCircleIcon, 
+  WarningTriangleIcon, 
+  XCircleIcon, 
+  ShieldIcon, 
+  ClockIcon,
+  RefreshIcon
+} from '@/icons';
 import { useGetSystemHealthQuery } from '@/store/api/monitoringApi';
 import type { SystemHealth } from '@/store/api/monitoringApi';
 
@@ -45,34 +44,34 @@ export const SystemHealthCard: React.FC<SystemHealthCardProps> = ({
     switch (health.status) {
       case 'healthy':
         return {
-          icon: <CheckCircle className="h-5 w-5 text-green-600" />,
+          icon: <CheckCircleIcon className="h-5 w-5 text-green-600" />,
           color: 'text-green-600',
           bgColor: 'bg-green-50 border-green-200',
-          badgeVariant: 'default' as const,
+          badgeColor: 'success' as const,
           message: 'All systems operational'
         };
       case 'degraded':
         return {
-          icon: <AlertTriangle className="h-5 w-5 text-yellow-600" />,
+          icon: <WarningTriangleIcon className="h-5 w-5 text-yellow-600" />,
           color: 'text-yellow-600',
           bgColor: 'bg-yellow-50 border-yellow-200',
-          badgeVariant: 'secondary' as const,
+          badgeColor: 'warning' as const,
           message: 'Some issues detected'
         };
       case 'unhealthy':
         return {
-          icon: <XCircle className="h-5 w-5 text-red-600" />,
+          icon: <XCircleIcon className="h-5 w-5 text-red-600" />,
           color: 'text-red-600',
           bgColor: 'bg-red-50 border-red-200',
-          badgeVariant: 'destructive' as const,
+          badgeColor: 'error' as const,
           message: 'Critical issues detected'
         };
       default:
         return {
-          icon: <Shield className="h-5 w-5 text-gray-600" />,
+          icon: <ShieldIcon className="h-5 w-5 text-gray-600" />,
           color: 'text-gray-600',
           bgColor: 'bg-gray-50 border-gray-200',
-          badgeVariant: 'secondary' as const,
+          badgeColor: 'light' as const,
           message: 'Status unknown'
         };
     }
@@ -89,69 +88,69 @@ export const SystemHealthCard: React.FC<SystemHealthCardProps> = ({
   // Get resource status icon
   const getResourceStatusIcon = (status: string) => {
     switch (status) {
-      case 'normal': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'high': return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
-      case 'critical': return <XCircle className="h-4 w-4 text-red-600" />;
-      default: return <Shield className="h-4 w-4 text-gray-600" />;
+      case 'normal': return <CheckCircleIcon className="h-4 w-4 text-green-600" />;
+      case 'high': return <WarningTriangleIcon className="h-4 w-4 text-yellow-600" />;
+      case 'critical': return <XCircleIcon className="h-4 w-4 text-red-600" />;
+      default: return <ShieldIcon className="h-4 w-4 text-gray-600" />;
     }
   };
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <ShieldIcon className="h-5 w-5" />
             System Health
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4 sm:p-6">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin h-8 w-8 border-b-2 border-primary rounded-full"></div>
+            <div className="animate-spin h-8 w-8 border-b-2 border-brand-500 rounded-full"></div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <ShieldIcon className="h-5 w-5" />
             System Health
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-4 sm:p-6">
           <div className="text-center py-8">
-            <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">Failed to load system health</p>
+            <XCircleIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <p className="text-gray-500 dark:text-gray-400 mb-4">Failed to load system health</p>
             <Button onClick={handleRefresh} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshIcon className="h-4 w-4 mr-2" />
               Retry
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (!healthData) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <ShieldIcon className="h-5 w-5" />
             System Health
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
+          </h3>
+        </div>
+        <div className="p-4 sm:p-6">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             No health data available
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -159,52 +158,52 @@ export const SystemHealthCard: React.FC<SystemHealthCardProps> = ({
 
   if (variant === 'compact') {
     return (
-      <Card className="w-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center justify-between">
+      <div className="w-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-sm font-medium text-gray-800 dark:text-white/90 flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
+              <ShieldIcon className="h-4 w-4" />
               Health
             </span>
-            <Badge variant={healthDetails.badgeVariant}>
+            <Badge color={healthDetails.badgeColor}>
               {healthData.status}
             </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-2">
+          </h3>
+        </div>
+        <div className="p-4 pt-2">
           <div className="flex items-center gap-2">
             {healthDetails.icon}
             <span className="text-sm">{healthDetails.message}</span>
           </div>
           {healthData.issues.length > 0 && (
-            <div className="mt-2 text-xs text-muted-foreground">
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               {healthData.issues.length} issue(s) detected
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+    <div className="w-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+        <h3 className="text-base font-medium text-gray-800 dark:text-white/90 flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
+            <ShieldIcon className="h-5 w-5" />
             System Health Status
           </span>
           <div className="flex items-center gap-2">
-            <Badge variant={healthDetails.badgeVariant}>
+            <Badge color={healthDetails.badgeColor}>
               {healthData.status.toUpperCase()}
             </Badge>
-            <Button onClick={handleRefresh} variant="ghost" size="sm">
-              <RefreshCw className="h-4 w-4" />
+            <Button onClick={handleRefresh} variant="outline" size="sm">
+              <RefreshIcon className="h-4 w-4" />
             </Button>
           </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+      <div className="p-4 sm:p-6">
         {/* Main Health Status */}
         <div className={`p-4 rounded-lg border-2 ${healthDetails.bgColor} mb-4`}>
           <div className="flex items-center gap-3">
@@ -213,7 +212,7 @@ export const SystemHealthCard: React.FC<SystemHealthCardProps> = ({
               <div className={`font-semibold ${healthDetails.color}`}>
                 {healthDetails.message}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
                 Last checked: {new Date(healthData.last_check).toLocaleTimeString()}
               </div>
             </div>
@@ -222,34 +221,34 @@ export const SystemHealthCard: React.FC<SystemHealthCardProps> = ({
 
         {/* System Uptime */}
         <div className="flex items-center gap-2 mb-4">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Uptime:</span>
+          <ClockIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+          <span className="text-sm text-gray-500 dark:text-gray-400">Uptime:</span>
           <span className="font-medium">{formatUptime(healthData.uptime_seconds)}</span>
         </div>
 
         {/* Resource Status */}
         <div className="grid gap-3 md:grid-cols-3 mb-4">
-          <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
             {getResourceStatusIcon(healthData.cpu_status)}
             <div>
               <div className="text-sm font-medium">CPU</div>
-              <div className="text-xs text-muted-foreground capitalize">{healthData.cpu_status}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{healthData.cpu_status}</div>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
             {getResourceStatusIcon(healthData.memory_status)}
             <div>
               <div className="text-sm font-medium">Memory</div>
-              <div className="text-xs text-muted-foreground capitalize">{healthData.memory_status}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{healthData.memory_status}</div>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
             {getResourceStatusIcon(healthData.disk_status)}
             <div>
               <div className="text-sm font-medium">Disk</div>
-              <div className="text-xs text-muted-foreground capitalize">{healthData.disk_status}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{healthData.disk_status}</div>
             </div>
           </div>
         </div>
@@ -258,12 +257,12 @@ export const SystemHealthCard: React.FC<SystemHealthCardProps> = ({
         {healthData.issues.length > 0 && (
           <div className="space-y-2">
             <div className="font-medium text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
+              <WarningTriangleIcon className="h-4 w-4" />
               Active Issues ({healthData.issues.length})
             </div>
             <div className="space-y-1">
               {healthData.issues.map((issue, index) => (
-                <div key={index} className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+                <div key={index} className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-2 rounded">
                   • {issue}
                 </div>
               ))}
@@ -274,12 +273,12 @@ export const SystemHealthCard: React.FC<SystemHealthCardProps> = ({
         {/* No Issues */}
         {healthData.issues.length === 0 && healthData.status === 'healthy' && (
           <div className="text-center py-4 text-green-600">
-            <CheckCircle className="h-8 w-8 mx-auto mb-2" />
+            <CheckCircleIcon className="h-8 w-8 mx-auto mb-2" />
             <div className="text-sm font-medium">All systems running smoothly</div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

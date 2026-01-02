@@ -15,7 +15,7 @@
 'use client';
 
 import React from 'react';
-import { Table, TableBody, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableHeader, TableRow } from '@/components/ta/ui/table';
 import { DomainsGridHeader } from './DomainsGridHeader';
 import { DomainsGridRow } from './DomainsGridRow';
 import type { DomainRow, DomainSortKey, SortDirection } from '@/types/explorer/state';

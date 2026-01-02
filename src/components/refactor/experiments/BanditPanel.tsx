@@ -6,12 +6,10 @@
 import React, { useState } from 'react';
 import { useBandit, useBanditArmPerformance } from '@/hooks/useBandit';
 import type { BanditArm } from '@/services/experimentation/banditService';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import Button from '@/components/ta/ui/button/Button';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
-import { TrendingUp as _TrendingUp, TrendingDown as _TrendingDown, Settings as _Settings, RefreshCw, AlertCircle, Award, Plus, Target } from 'lucide-react';
+import { RefreshIcon, AlertCircleIcon, AwardIcon, PlusIcon, TargetIcon } from '@/icons';
 
 interface BanditPanelProps {
   className?: string;
@@ -39,13 +37,13 @@ export function BanditPanel({
   // Feature flag check
   if (!state.capabilities.available) {
     return (
-      <Card className={`p-6 ${className}`}>
+      <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-6 ${className}`}>
         <div className="text-center text-gray-500">
-          <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+          <AlertCircleIcon className="mx-auto h-8 w-8 mb-2" />
           <p>Bandit Experiments are not available.</p>
           <p className="text-sm mt-1">Enable NEXT_PUBLIC_ENABLE_BANDIT_EXPERIMENTS to use this feature.</p>
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -116,10 +114,10 @@ export function BanditPanel({
             <div className="text-xs text-gray-600 mt-1">{arm.meta.description}</div>
           </div>
           <div className="flex items-center gap-2">
-            {isBest && <Award className="h-4 w-4 text-yellow-500" />}
+            {isBest && <AwardIcon className="h-4 w-4 text-yellow-500" />}
             <Badge 
-              variant={statusColor === 'green' ? 'default' : statusColor === 'yellow' ? 'secondary' : 'outline'}
-              className="text-xs"
+              color={statusColor === 'green' ? 'success' : statusColor === 'yellow' ? 'warning' : 'light'}
+              size="sm"
             >
               {statusText}
             </Badge>
@@ -149,10 +147,12 @@ export function BanditPanel({
                   <span>Performance</span>
                   <span>{formatReward(arm.stats.averageReward)}</span>
                 </div>
-                <Progress 
-                  value={arm.stats.averageReward * 100} 
-                  className="h-2"
-                />
+                <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div 
+                    className="h-full rounded-full bg-brand-500 transition-all duration-300" 
+                    style={{ width: `${arm.stats.averageReward * 100}%` }}
+                  />
+                </div>
               </div>
             </>
           )}
@@ -166,7 +166,7 @@ export function BanditPanel({
   };
 
   return (
-    <Card className={`${className}`}>
+    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -183,14 +183,16 @@ export function BanditPanel({
                 size="sm"
                 onClick={handleRefresh}
                 disabled={loading}
+                startIcon={<RefreshIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />}
               >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
               </Button>
               <Button
-                variant="destructive"
+                variant="outline"
                 size="sm"
                 onClick={handleClearExperiments}
                 disabled={loading || arms.length === 0}
+                className="text-red-600 hover:text-red-700"
               >
                 Clear All
               </Button>
@@ -230,7 +232,7 @@ export function BanditPanel({
         {showControls && (
           <div className="mb-6 p-4 border rounded-lg bg-gray-50">
             <h4 className="font-medium mb-3 flex items-center gap-2">
-              <Plus className="h-4 w-4" />
+              <PlusIcon className="h-4 w-4" />
               Add New Experiment Arm
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -256,8 +258,8 @@ export function BanditPanel({
               onClick={handleAddArm}
               disabled={!newArmName.trim() || loading}
               size="sm"
+              startIcon={<PlusIcon className="h-4 w-4" />}
             >
-              <Plus className="h-4 w-4 mr-1" />
               Add Arm
             </Button>
           </div>
@@ -265,12 +267,12 @@ export function BanditPanel({
 
         {loading ? (
           <div className="text-center py-8">
-            <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2" />
+            <RefreshIcon className="h-8 w-8 animate-spin mx-auto mb-2" />
             <p className="text-gray-600">Loading experiments...</p>
           </div>
         ) : arms.length === 0 ? (
           <div className="text-center py-8">
-            <Target className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+            <TargetIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
             <p className="text-gray-600">No experiment arms configured</p>
             <p className="text-sm text-gray-500">Add arms above to start experimenting</p>
           </div>
@@ -292,7 +294,7 @@ export function BanditPanel({
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -312,7 +314,7 @@ function ArmDetailView({ armId, onClose }: { armId: string; onClose: () => void 
     <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
       <div className="flex justify-between items-start mb-3">
         <h4 className="font-medium">Arm Details: {armId}</h4>
-        <Button variant="ghost" size="sm" onClick={onClose}>×</Button>
+        <Button variant="outline" size="sm" onClick={onClose}>×</Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -333,7 +335,7 @@ function ArmDetailView({ armId, onClose }: { armId: string; onClose: () => void 
           <div className="font-medium">
             #{armPerformance.rank} 
             {armPerformance.rank === 1 && (
-              <Award className="inline h-3 w-3 ml-1 text-yellow-500" />
+              <AwardIcon className="inline h-3 w-3 ml-1 text-yellow-500" />
             )}
           </div>
         </div>

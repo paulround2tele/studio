@@ -6,9 +6,9 @@ import {
   completePhaseTransition, 
   failPhaseTransition 
 } from '@/store/slices/campaignSlice';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 import { useToast } from '@/hooks/use-toast';
-import { Play, Loader2 } from 'lucide-react';
+import { PlayIcon, LoaderIcon } from '@/icons';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 import { getApiErrorMessage } from '@/lib/utils/getApiErrorMessage';
 
@@ -76,9 +76,9 @@ export const ReduxPhaseTransitionButton: React.FC<ReduxPhaseTransitionButtonProp
       className="flex items-center gap-2"
     >
       {isLoading || isCurrentlyTransitioning ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <LoaderIcon className="h-4 w-4" />
       ) : (
-        <Play className="h-4 w-4" />
+        <PlayIcon className="h-4 w-4" />
       )}
       {isLoading || isCurrentlyTransitioning ? 'Starting...' : label}
     </Button>

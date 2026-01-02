@@ -31,23 +31,23 @@ import type { ScoreComponent } from '@/lib/api-client/models/score-component';
 import type { RejectionSummaryResponseTotals } from '@/lib/api-client/models/rejection-summary-response-totals';
 import { exportDomains } from '@/services/results/domainExportService';
 import {
-  ChevronDown,
-  ChevronRight,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Search,
-  Globe,
-  Clock,
-  ShieldCheck,
-  ShieldAlert,
-  Calculator,
-  FileJson,
-  FileSpreadsheet,
-  AlertCircle,
-  CircleDashed,
-  CircleSlash,
-} from 'lucide-react';
+  ChevronDownIcon,
+  ChevronRightIcon,
+  CheckCircle2Icon,
+  XCircleIcon,
+  WarningTriangleIcon,
+  SearchIcon,
+  GlobeIcon,
+  ClockIcon,
+  ShieldCheckIcon,
+  ShieldAlertIcon,
+  CalculatorIcon,
+  FileJsonIcon,
+  FileSpreadsheetIcon,
+  AlertCircleIcon,
+  CircleDashedIcon,
+  CircleSlashIcon,
+} from '@/icons';
 
 // ============================================================================
 // Types
@@ -73,63 +73,63 @@ const REJECTION_REASON_CONFIG: Record<DomainRejectionReasonEnum, RejectionReason
     description: 'Domains that passed validation and scoring thresholds',
     color: 'text-emerald-700',
     bgColor: 'bg-emerald-50',
-    icon: CheckCircle2,
+    icon: CheckCircle2Icon,
   },
   [DomainRejectionReasonEnum.low_score]: {
     label: 'Low Score',
     description: 'Domains with keywords but score below threshold',
     color: 'text-orange-700',
     bgColor: 'bg-orange-50',
-    icon: AlertTriangle,
+    icon: WarningTriangleIcon,
   },
   [DomainRejectionReasonEnum.no_keywords]: {
     label: 'No Keywords',
     description: 'HTTP OK but no keyword matches found',
     color: 'text-purple-700',
     bgColor: 'bg-purple-50',
-    icon: Search,
+    icon: SearchIcon,
   },
   [DomainRejectionReasonEnum.parked]: {
     label: 'Parked',
     description: 'Detected as parked/placeholder pages',
     color: 'text-blue-700',
     bgColor: 'bg-blue-50',
-    icon: Globe,
+    icon: GlobeIcon,
   },
   [DomainRejectionReasonEnum.dns_error]: {
     label: 'DNS Error',
     description: 'DNS validation errors (NXDOMAIN, SERVFAIL, etc.)',
     color: 'text-red-700',
     bgColor: 'bg-red-50',
-    icon: XCircle,
+    icon: XCircleIcon,
   },
   [DomainRejectionReasonEnum.dns_timeout]: {
     label: 'DNS Timeout',
     description: 'DNS validation timed out',
     color: 'text-red-700',
     bgColor: 'bg-red-50',
-    icon: Clock,
+    icon: ClockIcon,
   },
   [DomainRejectionReasonEnum.http_error]: {
     label: 'HTTP Error',
     description: 'HTTP validation errors (connection, TLS, non-2xx)',
     color: 'text-red-700',
     bgColor: 'bg-red-50',
-    icon: XCircle,
+    icon: XCircleIcon,
   },
   [DomainRejectionReasonEnum.http_timeout]: {
     label: 'HTTP Timeout',
     description: 'HTTP validation timed out',
     color: 'text-red-700',
     bgColor: 'bg-red-50',
-    icon: Clock,
+    icon: ClockIcon,
   },
   [DomainRejectionReasonEnum.pending]: {
     label: 'Pending',
     description: 'Not yet processed',
     color: 'text-gray-700',
     bgColor: 'bg-gray-50',
-    icon: Clock,
+    icon: ClockIcon,
   },
 };
 
@@ -156,7 +156,7 @@ const BREAKDOWN_STATE_CONFIG: Record<BreakdownState, BreakdownStateConfig> = {
   complete: {
     label: 'Complete',
     description: 'All score components are available and verified.',
-    icon: CheckCircle2,
+    icon: CheckCircle2Icon,
     bgColor: 'bg-emerald-50',
     textColor: 'text-emerald-700',
     borderColor: 'border-emerald-200',
@@ -164,7 +164,7 @@ const BREAKDOWN_STATE_CONFIG: Record<BreakdownState, BreakdownStateConfig> = {
   partial: {
     label: 'Partial Data',
     description: 'Some score components are unavailable. Displayed values may not reflect final scoring.',
-    icon: AlertCircle,
+    icon: AlertCircleIcon,
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-700',
     borderColor: 'border-amber-200',
@@ -172,7 +172,7 @@ const BREAKDOWN_STATE_CONFIG: Record<BreakdownState, BreakdownStateConfig> = {
   degraded: {
     label: 'Degraded',
     description: 'Score breakdown is significantly incomplete. Treat displayed values as preliminary.',
-    icon: CircleSlash,
+    icon: CircleSlashIcon,
     bgColor: 'bg-red-50',
     textColor: 'text-red-700',
     borderColor: 'border-red-200',
@@ -306,7 +306,7 @@ const AuditEquation: React.FC<AuditEquationProps> = ({ totals, balanced }) => {
     <div className="bg-slate-50 border border-slate-200 rounded px-2 py-1.5">
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 font-mono text-xs">
-          <Calculator className="h-3 w-3 text-slate-400" />
+          <CalculatorIcon className="h-3 w-3 text-slate-400" />
           <span className="px-1.5 py-0.5 bg-white border rounded font-bold tabular-nums">{analyzed}</span>
           <span className="text-slate-400">=</span>
           <span className="px-1.5 py-0.5 bg-emerald-50 border border-emerald-200 rounded tabular-nums text-emerald-700">{qualified}</span>
@@ -322,12 +322,12 @@ const AuditEquation: React.FC<AuditEquationProps> = ({ totals, balanced }) => {
         {/* TailAdmin migration: Badge -> inline span */}
         {balanced ? (
           <span className="inline-flex items-center rounded border bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] h-5 px-1.5 ml-auto">
-            <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
+            <ShieldCheckIcon className="h-2.5 w-2.5 mr-0.5" />
             OK
           </span>
         ) : (
           <span className="inline-flex items-center rounded border bg-amber-50 text-amber-700 border-amber-200 text-[10px] h-5 px-1.5 ml-auto">
-            <ShieldAlert className="h-2.5 w-2.5 mr-0.5" />
+            <ShieldAlertIcon className="h-2.5 w-2.5 mr-0.5" />
             Mismatch
           </span>
         )}
@@ -363,7 +363,7 @@ const AuditStatusBanner: React.FC<AuditStatusBannerProps> = ({ balanced, auditNo
   return (
     <div className="relative w-full rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900" role="alert">
       <div className="flex items-start gap-3">
-        <ShieldAlert className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+        <ShieldAlertIcon className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
         <div className="flex-1">
           <h5 className="font-medium leading-none tracking-tight text-amber-800 mb-1">
             Audit Equation Mismatch
@@ -432,7 +432,7 @@ const DomainRow: React.FC<DomainRowProps> = ({
             {domain.domainScore}
           </span>
         ) : hasError ? (
-          <XCircle className="h-3.5 w-3.5 text-red-400" />
+          <XCircleIcon className="h-3.5 w-3.5 text-red-400" />
         ) : null}
       </div>
       {hasError && errorText && (
@@ -510,9 +510,9 @@ const DomainSection: React.FC<DomainSectionProps> = ({
       >
         <div className="flex items-center gap-1.5">
           {isOpen ? (
-            <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+            <ChevronDownIcon className="h-3.5 w-3.5 text-gray-500" />
           ) : (
-            <ChevronRight className="h-3.5 w-3.5 text-gray-500" />
+            <ChevronRightIcon className="h-3.5 w-3.5 text-gray-500" />
           )}
           <Icon className={cn('h-3.5 w-3.5', config.color)} />
           <span className={cn('font-medium text-xs', config.color)}>
@@ -538,7 +538,7 @@ const DomainSection: React.FC<DomainSectionProps> = ({
                   className="inline-flex items-center h-5 px-1.5 text-[10px] text-gray-600 hover:bg-gray-100 rounded transition-colors"
                   title="Export CSV"
                 >
-                  <FileSpreadsheet className="h-2.5 w-2.5 mr-0.5" />
+                  <FileSpreadsheetIcon className="h-2.5 w-2.5 mr-0.5" />
                   CSV
                 </button>
                 <button
@@ -547,7 +547,7 @@ const DomainSection: React.FC<DomainSectionProps> = ({
                   className="inline-flex items-center h-5 px-1.5 text-[10px] text-gray-600 hover:bg-gray-100 rounded transition-colors"
                   title="Export JSON"
                 >
-                  <FileJson className="h-2.5 w-2.5 mr-0.5" />
+                  <FileJsonIcon className="h-2.5 w-2.5 mr-0.5" />
                   JSON
                 </button>
               </div>
@@ -605,10 +605,10 @@ const ScoreComponentCard: React.FC<ScoreComponentCardProps> = ({ name, component
   const isUnavailable = component.state === 'unavailable';
 
   const stateConfig = isOk
-    ? { color: 'text-emerald-600', bg: '', icon: CheckCircle2 }
+    ? { color: 'text-emerald-600', bg: '', icon: CheckCircle2Icon }
     : isUnavailable
-    ? { color: 'text-gray-400', bg: 'bg-gray-50', icon: CircleDashed }
-    : { color: 'text-red-500', bg: 'bg-red-50', icon: XCircle };
+    ? { color: 'text-gray-400', bg: 'bg-gray-50', icon: CircleDashedIcon }
+    : { color: 'text-red-500', bg: 'bg-red-50', icon: XCircleIcon };
 
   const StateIcon = stateConfig.icon;
 
@@ -732,7 +732,7 @@ const ScoreBreakdownPanel: React.FC<ScoreBreakdownPanelProps> = ({
           </div>
         ) : (
           <div className="px-2 py-1.5 rounded border border-gray-200 bg-gray-50 flex items-center gap-2">
-            <CircleDashed className="h-3.5 w-3.5 text-gray-400" />
+            <CircleDashedIcon className="h-3.5 w-3.5 text-gray-400" />
             <span className="text-xs text-muted-foreground">No score</span>
           </div>
         )}
@@ -894,12 +894,12 @@ export const ResultsDrilldown: React.FC<ResultsDrilldownProps> = ({
               {/* TailAdmin migration: Badge -> inline span */}
               {balanced ? (
                 <span className="inline-flex items-center rounded border bg-emerald-50 text-emerald-700 border-emerald-200 h-4 text-[10px] px-1">
-                  <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
+                  <ShieldCheckIcon className="h-2.5 w-2.5 mr-0.5" />
                   OK
                 </span>
               ) : (
                 <span className="inline-flex items-center rounded border bg-amber-50 text-amber-700 border-amber-200 h-4 text-[10px] px-1">
-                  <ShieldAlert className="h-2.5 w-2.5 mr-0.5" />
+                  <ShieldAlertIcon className="h-2.5 w-2.5 mr-0.5" />
                   Mismatch
                 </span>
               )}

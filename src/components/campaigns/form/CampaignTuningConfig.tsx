@@ -13,19 +13,15 @@
  */
 
 import React from 'react';
-import { AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import Alert from '@/components/ta/ui/alert/Alert';
 
 const CampaignTuningConfig = () => {
   return (
-    <Alert className="border-amber-200 bg-amber-50">
-      <AlertTriangle className="h-4 w-4 text-amber-600" />
-      <AlertDescription className="text-amber-800">
-        <strong>Component Decommissioned</strong><br/>
-        This amateur component has been replaced by professional environment configuration
-        and phase-specific tuning parameters with proper OpenAPI validation.
-      </AlertDescription>
-    </Alert>
+    <Alert 
+      variant="warning"
+      title="Component Decommissioned"
+      message="This amateur component has been replaced by professional environment configuration and phase-specific tuning parameters with proper OpenAPI validation."
+    />
   );
 };
 

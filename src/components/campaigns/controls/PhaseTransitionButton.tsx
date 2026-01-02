@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Loader2, Play, Pause, Square, ArrowRight } from 'lucide-react';
+import Button from '@/components/ta/ui/button/Button';
+import { LoaderIcon, PlayIcon, PauseIcon, SquareIcon, ArrowRightIcon } from '@/icons';
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { useToast } from '@/hooks/use-toast';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
@@ -21,24 +21,24 @@ interface PhaseTransitionButtonProps {
 
 const buttonConfig = {
   start: {
-    icon: Play,
+    icon: PlayIcon,
     label: 'Start',
-    variant: 'default' as const,
+    buttonVariant: 'primary' as const,
   },
   pause: {
-    icon: Pause,
+    icon: PauseIcon,
     label: 'Pause',
-    variant: 'outline' as const,
+    buttonVariant: 'outline' as const,
   },
   stop: {
-    icon: Square,
+    icon: SquareIcon,
     label: 'Stop',
-    variant: 'destructive' as const,
+    buttonVariant: 'outline' as const,
   },
   transition: {
-    icon: ArrowRight,
+    icon: ArrowRightIcon,
     label: 'Next Phase',
-    variant: 'default' as const,
+    buttonVariant: 'primary' as const,
   },
 };
 
@@ -85,13 +85,13 @@ export function PhaseTransitionButton({
 
   return (
     <Button
-      variant={config.variant}
+      variant={config.buttonVariant}
       onClick={handleTransition}
       disabled={disabled || isLoading}
       className={className}
     >
       {isLoading ? (
-        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        <LoaderIcon className="h-4 w-4 mr-2" />
       ) : (
         <Icon className="h-4 w-4 mr-2" />
       )}

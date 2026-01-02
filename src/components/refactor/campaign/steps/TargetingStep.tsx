@@ -10,7 +10,7 @@ import Alert from '@/components/ta/ui/alert/Alert';
 import Checkbox from '@/components/ta/form/input/Checkbox';
 import Button from '@/components/ta/ui/button/Button';
 import Badge from '@/components/ta/ui/badge/Badge';
-import { Info, RefreshCcw, X } from 'lucide-react';
+import { RotateCcwIcon, CloseIcon } from '@/icons';
 import type { ExecutionMode, WizardTargetingStep } from '../../types';
 
 interface PersonaOption {
@@ -168,7 +168,7 @@ export function TargetingStep({
               <div className="mt-1 flex items-center justify-between gap-2">
                 <span className="text-sm text-error-700 dark:text-error-400">{personasError}</span>
                 {onRetryPersonas && (
-                  <Button variant="outline" size="sm" onClick={onRetryPersonas} startIcon={<RefreshCcw className="h-3 w-3" />}>
+                  <Button variant="outline" size="sm" onClick={onRetryPersonas} startIcon={<RotateCcwIcon className="h-3 w-3" />}>
                     Retry
                   </Button>
                 )}
@@ -330,7 +330,7 @@ export function TargetingStep({
                   aria-label={`Remove keyword ${keyword}`}
                   className="rounded-full p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
-                  <X className="h-3 w-3" />
+                  <CloseIcon className="h-3 w-3" />
                 </button>
               </span>
             ))}

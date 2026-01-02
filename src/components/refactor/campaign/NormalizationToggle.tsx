@@ -5,9 +5,9 @@
 
 import React from 'react';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info, TrendingUp, TrendingDown } from 'lucide-react';
+import { InfoIcon, TrendingUpIcon, TrendingDownIcon } from '@/icons';
 import { isNormalizationAvailable } from '@/services/campaignMetrics/normalizationService';
 
 /**
@@ -90,7 +90,7 @@ export function NormalizationToggle({
       {/* Status indicators */}
       <div className="flex items-center gap-1">
         {loading && (
-          <Badge variant="secondary" className="text-xs">
+          <Badge color="light" size="sm" className="text-xs">
             <div className="animate-spin w-3 h-3 border border-gray-300 border-t-blue-500 rounded-full mr-1" />
             Loading
           </Badge>
@@ -100,8 +100,7 @@ export function NormalizationToggle({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="destructive" className="text-xs cursor-help">
-                  <TrendingDown className="w-3 h-3 mr-1" />
+                <Badge color="error" size="sm" startIcon={<TrendingDownIcon className="w-3 h-3" />} className="text-xs cursor-help">
                   Error
                 </Badge>
               </TooltipTrigger>
@@ -116,8 +115,7 @@ export function NormalizationToggle({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="outline" className="text-xs cursor-help">
-                  <TrendingUp className="w-3 h-3 mr-1" />
+                <Badge color="light" size="sm" startIcon={<TrendingUpIcon className="w-3 h-3" />} className="text-xs cursor-help">
                   Ready
                 </Badge>
               </TooltipTrigger>
@@ -138,8 +136,7 @@ export function NormalizationToggle({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="secondary" className="text-xs cursor-help">
-                  <Info className="w-3 h-3 mr-1" />
+                <Badge color="light" size="sm" startIcon={<InfoIcon className="w-3 h-3" />} className="text-xs cursor-help">
                   No Data
                 </Badge>
               </TooltipTrigger>
@@ -217,8 +214,7 @@ export function NormalizationIndicator({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant="outline" className={`text-xs cursor-help ${className}`}>
-            <TrendingUp className="w-3 h-3 mr-1" />
+          <Badge color="light" size="sm" startIcon={<TrendingUpIcon className="w-3 h-3" />} className={`text-xs cursor-help ${className}`}>
             Normalized
           </Badge>
         </TooltipTrigger>

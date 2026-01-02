@@ -1,14 +1,46 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, AlertCircle, RefreshCw, Loader2, Shield, Wifi, Database, Key } from 'lucide-react';
+import Badge from '@/components/ta/ui/badge/Badge';
+import Button from '@/components/ta/ui/button/Button';
+import { CheckCircleIcon, AlertIcon, CloseLineIcon, LockIcon } from '@/icons';
 import { cn } from '@/lib/utils';
 import healthService from '@/lib/services/healthService';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
+
+// TailAdmin inline SVG icons (matching TailAdmin style)
+const RefreshIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M14.167 5.83325C13.0004 4.66659 11.3337 3.83325 9.50039 3.83325C5.91706 3.83325 3.00039 6.74992 3.00039 10.3333C3.00039 13.9166 5.91706 16.8333 9.50039 16.8333C12.5004 16.8333 15.0004 14.7499 15.7504 11.9166M14.167 5.83325H10.8337M14.167 5.83325V2.49992" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const LoaderIcon = ({ className }: { className?: string }) => (
+  <svg className={cn("animate-spin", className)} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+  </svg>
+);
+
+const ShieldIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 1.66675L3.33337 4.16675V9.16675C3.33337 13.5834 6.08337 17.6834 10 18.3334C13.9167 17.6834 16.6667 13.5834 16.6667 9.16675V4.16675L10 1.66675Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const WifiIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 15.8334H10.0083M3.33337 8.33341C5.08337 6.58341 7.41671 5.41675 10 5.41675C12.5834 5.41675 14.9167 6.58341 16.6667 8.33341M5.83337 11.2501C7 10.0834 8.41671 9.16675 10 9.16675C11.5834 9.16675 13 10.0834 14.1667 11.2501M8.33337 14.1667C8.83337 13.6667 9.41671 13.3334 10 13.3334C10.5834 13.3334 11.1667 13.6667 11.6667 14.1667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const DatabaseIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="10" cy="5" rx="6.66667" ry="2.5" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M3.33337 5V10C3.33337 11.3807 6.31814 12.5 10 12.5C13.6819 12.5 16.6667 11.3807 16.6667 10V5" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M3.33337 10V15C3.33337 16.3807 6.31814 17.5 10 17.5C13.6819 17.5 16.6667 16.3807 16.6667 15V10" stroke="currentColor" strokeWidth="1.5"/>
+  </svg>
+);
 
 // Enhanced error serialization utility for robust logging
 const serializeError = (obj: unknown): unknown => {
@@ -111,7 +143,7 @@ interface SystemCheck {
   status: 'passed' | 'Failed' | 'warning' | 'checking';
   message: string;
   details?: string;
-  icon?: React.ReactNode;
+  iconType?: 'shield' | 'database' | 'wifi' | 'key';
   isTestConnection?: boolean; // Distinguish between test and operational status
 }
 
@@ -155,7 +187,7 @@ export default function ProductionReadinessCheck() {
           status: 'passed',
           message: 'User authenticated successfully',
           details: 'THIN CLIENT: Backend manages user session',
-          icon: <Shield className="h-4 w-4" />
+          iconType: 'shield'
         });
       } else {
         results.push({
@@ -163,7 +195,7 @@ export default function ProductionReadinessCheck() {
           status: 'Failed',
           message: 'Not authenticated',
           details: 'User must be logged in to access the application',
-          icon: <Shield className="h-4 w-4" />
+          iconType: 'shield'
         });
       }
     } catch (_error) {
@@ -172,7 +204,7 @@ export default function ProductionReadinessCheck() {
         status: 'Failed',
         message: 'Authentication check failed',
         details: 'Unknown error',
-        icon: <Shield className="h-4 w-4" />
+        iconType: 'shield'
       });
     }
 
@@ -198,7 +230,7 @@ export default function ProductionReadinessCheck() {
           status: 'passed',
           message: 'Backend API is responsive',
           details: healthDetails,
-          icon: <Database className="h-4 w-4" />
+          iconType: 'database'
         });
   } else if (data.status === 'degraded' || data.status === 'warning') {
         results.push({
@@ -206,7 +238,7 @@ export default function ProductionReadinessCheck() {
           status: 'warning',
           message: 'Backend API is degraded but functional',
           details: `${healthDetails} - Some components may be experiencing issues`,
-          icon: <Database className="h-4 w-4" />
+          iconType: 'database'
         });
       } else {
         results.push({
@@ -214,7 +246,7 @@ export default function ProductionReadinessCheck() {
           status: 'Failed',
           message: 'Backend API returned unhealthy status',
           details: `Status: ${data.status ?? 'Unknown'} ${data.isCached ? '(Cached)' : ''}`,
-          icon: <Database className="h-4 w-4" />
+          iconType: 'database'
         });
       }
     } catch (_error) {
@@ -223,7 +255,7 @@ export default function ProductionReadinessCheck() {
         status: 'Failed',
         message: 'Cannot connect to backend API',
         details: 'Ensure backend is running on port 8080',
-        icon: <Database className="h-4 w-4" />
+        iconType: 'database'
       });
     }
 
@@ -236,7 +268,7 @@ export default function ProductionReadinessCheck() {
         status: 'passed',
         message: 'SSE-enabled realtime',
         details: 'Real-time updates use Server-Sent Events (SSE)',
-        icon: <Wifi className="h-4 w-4" />
+        iconType: 'wifi'
       });
     } catch (error) {
       logWithTimestamp('error', '❌ Real-time communication check failed:', serializeError(error));
@@ -245,7 +277,7 @@ export default function ProductionReadinessCheck() {
         status: 'Failed',
         message: 'Real-time communication unavailable',
         details: 'Real-time updates temporarily disabled during RTK consolidation',
-        icon: <Wifi className="h-4 w-4" />
+        iconType: 'wifi'
       });
     }
 
@@ -259,7 +291,7 @@ export default function ProductionReadinessCheck() {
           status: 'passed',
           message: 'Session-based authentication active',
           details: 'Secure HttpOnly session cookies configured properly',
-          icon: <Key className="h-4 w-4" />
+          iconType: 'key'
         });
       } else {
         results.push({
@@ -267,7 +299,7 @@ export default function ProductionReadinessCheck() {
           status: 'warning',
           message: 'Session authentication not detected',
           details: 'May need to re-authenticate',
-          icon: <Key className="h-4 w-4" />
+          iconType: 'key'
         });
       }
     } catch (_error) {
@@ -276,7 +308,7 @@ export default function ProductionReadinessCheck() {
         status: 'warning',
         message: 'Session security check failed',
         details: 'Authentication status uncertain',
-        icon: <Key className="h-4 w-4" />
+        iconType: 'key'
       });
     }
 
@@ -326,79 +358,85 @@ export default function ProductionReadinessCheck() {
   const getStatusIcon = (status: SystemCheck['status']) => {
     switch (status) {
       case 'passed':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircleIcon className="h-5 w-5 text-success-500" />;
       case 'Failed':
-        return <XCircle className="h-5 w-5 text-destructive" />;
+        return <CloseLineIcon className="h-5 w-5 text-error-500" />;
       case 'warning':
-        return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+        return <AlertIcon className="h-5 w-5 text-warning-500" />;
       case 'checking':
-        return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />;
+        return <LoaderIcon className="h-5 w-5 text-gray-400" />;
+    }
+  };
+
+  const getCheckIcon = (iconType?: string) => {
+    switch (iconType) {
+      case 'shield':
+        return <ShieldIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />;
+      case 'database':
+        return <DatabaseIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />;
+      case 'wifi':
+        return <WifiIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />;
+      case 'key':
+        return <LockIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />;
+      default:
+        return null;
     }
   };
 
   const getOverallStatusBadge = () => {
     switch (overallStatus) {
       case 'ready':
-        return <Badge className="bg-green-500">Production Ready</Badge>;
+        return <Badge color="success">Production Ready</Badge>;
       case 'issues':
-        return <Badge className="bg-yellow-500">Minor Issues</Badge>;
+        return <Badge color="warning">Minor Issues</Badge>;
       case 'critical':
-        return <Badge className="bg-destructive">Critical Issues</Badge>;
+        return <Badge color="error">Critical Issues</Badge>;
       case 'checking':
-        return <Badge variant="secondary">Checking...</Badge>;
+        return <Badge color="light">Checking...</Badge>;
     }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-center justify-between">
+    <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      {/* Card Header */}
+      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <CardTitle>System Status</CardTitle>
-            <CardDescription>Production readiness checks</CardDescription>
+            <h3 className="text-base font-medium text-gray-800 dark:text-white/90">System Status</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Production readiness checks</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {getOverallStatusBadge()}
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => runChecks(true)}
-                disabled={isChecking}
-                title="Force refresh all system checks"
-              >
-                {isChecking ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Checking...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Check Now
-                  </>
-                )}
-              </Button>
-              {lastHealthCheck && (
-                <span className="text-xs text-muted-foreground">
-                  Last check: {lastHealthCheck.toLocaleTimeString()}
-                </span>
-              )}
-            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => runChecks(true)}
+              disabled={isChecking}
+              startIcon={isChecking ? <LoaderIcon className="h-4 w-4" /> : <RefreshIcon className="h-4 w-4" />}
+            >
+              {isChecking ? 'Checking...' : 'Check Now'}
+            </Button>
+            {lastHealthCheck && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Last: {lastHealthCheck.toLocaleTimeString()}
+              </span>
+            )}
           </div>
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+
+      {/* Card Content */}
+      <div className="p-4 sm:p-6">
         <div className="space-y-3">
           {checks.map((check, index) => (
             <div
               key={index}
               className={cn(
-                "flex items-start space-x-3 p-3 rounded-lg border",
-                check.status === 'passed' && "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800",
-                check.status === 'Failed' && "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800",
-                check.status === 'warning' && "bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800",
-                check.status === 'checking' && "bg-muted"
+                "flex items-start gap-3 p-3 rounded-lg border",
+                check.status === 'passed' && "bg-success-50 border-success-200 dark:bg-success-500/10 dark:border-success-800",
+                check.status === 'Failed' && "bg-error-50 border-error-200 dark:bg-error-500/10 dark:border-error-800",
+                check.status === 'warning' && "bg-warning-50 border-warning-200 dark:bg-warning-500/10 dark:border-warning-800",
+                check.status === 'checking' && "bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700"
               )}
             >
               <div className="flex-shrink-0 mt-0.5">
@@ -406,45 +444,46 @@ export default function ProductionReadinessCheck() {
               </div>
               <div className="flex-1 space-y-1">
                 <div className="flex items-center gap-2">
-                  {check.icon}
-                  <p className="font-medium text-sm">{check.name}</p>
+                  {getCheckIcon(check.iconType)}
+                  <p className="font-medium text-sm text-gray-800 dark:text-white/90">{check.name}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{check.message}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{check.message}</p>
                 {check.details && (
-                  <p className="text-xs text-muted-foreground">{check.details}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500">{check.details}</p>
                 )}
               </div>
             </div>
           ))}
         </div>
 
+        {/* Status Alerts */}
         {overallStatus === 'critical' && (
-          <Alert variant="destructive" className="mt-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
+          <div className="mt-4 flex items-start gap-3 p-4 rounded-lg border border-error-200 bg-error-50 dark:border-error-800 dark:bg-error-500/10">
+            <AlertIcon className="h-5 w-5 text-error-500 flex-shrink-0" />
+            <p className="text-sm text-error-600 dark:text-error-400">
               Critical issues detected. Please resolve the failed checks before deploying to production.
-            </AlertDescription>
-          </Alert>
+            </p>
+          </div>
         )}
 
         {overallStatus === 'issues' && (
-          <Alert className="mt-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
+          <div className="mt-4 flex items-start gap-3 p-4 rounded-lg border border-warning-200 bg-warning-50 dark:border-warning-800 dark:bg-warning-500/10">
+            <AlertIcon className="h-5 w-5 text-warning-500 flex-shrink-0" />
+            <p className="text-sm text-warning-600 dark:text-warning-400">
               Some minor issues detected. The application will work but may have limited functionality.
-            </AlertDescription>
-          </Alert>
+            </p>
+          </div>
         )}
 
         {overallStatus === 'ready' && (
-          <Alert className="mt-4 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800 dark:text-green-200">
+          <div className="mt-4 flex items-start gap-3 p-4 rounded-lg border border-success-200 bg-success-50 dark:border-success-800 dark:bg-success-500/10">
+            <CheckCircleIcon className="h-5 w-5 text-success-500 flex-shrink-0" />
+            <p className="text-sm text-success-600 dark:text-success-400">
               All systems operational. The application is production-ready!
-            </AlertDescription>
-          </Alert>
+            </p>
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

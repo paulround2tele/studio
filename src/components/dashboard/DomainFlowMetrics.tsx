@@ -2,8 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import Badge from "@/components/ta/ui/badge/Badge";
-import { ArrowUpIcon } from "@/icons";
-import { Target, Users, Zap, Database, ArrowRight } from "lucide-react";
+import { ArrowUpIcon, ArrowRightIcon, TaskIcon, BoltIcon, BoxCubeIcon, GroupIcon } from "@/icons";
 import { useListCampaignsQuery } from "@/store/api/cleanCampaignApi";
 import type { components } from '@/lib/api-client/types';
 
@@ -19,7 +18,7 @@ interface MetricCardProps {
 
 function MetricCard({ icon, label, value, trend, href }: MetricCardProps) {
   const content = (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 transition-all hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-700">
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 transition-all hover:shadow-theme-md hover:border-gray-300 dark:hover:border-gray-700">
       <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
         {icon}
       </div>
@@ -35,12 +34,12 @@ function MetricCard({ icon, label, value, trend, href }: MetricCardProps) {
         </div>
         {trend && (
           <Badge color={trend.positive ? "success" : "error"}>
-            <ArrowUpIcon className={trend.positive ? "" : "rotate-180"} />
+            <ArrowUpIcon className={`h-3 w-3 ${trend.positive ? "" : "rotate-180"}`} />
             {trend.value}
           </Badge>
         )}
         {href && (
-          <ArrowRight className="w-5 h-5 text-gray-400" />
+          <ArrowRightIcon className="w-5 h-5 text-gray-400" />
         )}
       </div>
     </div>
@@ -69,24 +68,24 @@ export function DomainFlowMetrics() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
       <MetricCard
-        icon={<Target className="text-blue-500 size-6" />}
+        icon={<TaskIcon className="text-brand-500 size-6" />}
         label="Total Campaigns"
         value={isLoading ? "..." : totalCampaigns}
         href="/campaigns"
       />
       <MetricCard
-        icon={<Zap className="text-green-500 size-6" />}
+        icon={<BoltIcon className="text-success-500 size-6" />}
         label="Active Campaigns"
         value={isLoading ? "..." : activeCampaigns}
         trend={activeCampaigns > 0 ? { value: "Active", positive: true } : undefined}
       />
       <MetricCard
-        icon={<Database className="text-purple-500 size-6" />}
+        icon={<BoxCubeIcon className="text-brand-600 size-6" />}
         label="Domains Generated"
         value={isLoading ? "..." : totalDomains.toLocaleString()}
       />
       <MetricCard
-        icon={<Users className="text-orange-500 size-6" />}
+        icon={<GroupIcon className="text-warning-500 size-6" />}
         label="Completed"
         value={isLoading ? "..." : completedCampaigns}
         trend={completedCampaigns > 0 ? { value: `${completedCampaigns}`, positive: true } : undefined}

@@ -23,7 +23,7 @@ const Select: React.FC<SelectProps> = ({
   // Manage the selected value
   const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<globalThis.HTMLSelectElement>) => {
     const value = e.target.value;
     setSelectedValue(value);
     onChange(value); // Trigger parent handler

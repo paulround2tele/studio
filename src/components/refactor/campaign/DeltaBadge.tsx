@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUpIcon, TrendingDownIcon, MinusIcon } from '@/icons';
 import { cn } from '@/lib/utils';
 import { DeltaMetrics } from '@/types/campaignMetrics';
 import { getDeltaColor, formatDeltaValue } from '@/services/campaignMetrics/deltasService';
@@ -73,8 +73,8 @@ export function DeltaBadge({
   const formattedValue = formatDeltaValue(delta);
 
   // Get appropriate icon based on direction
-  const IconComponent = direction === 'up' ? TrendingUp : 
-                       direction === 'down' ? TrendingDown : Minus;
+  const IconComponent = direction === 'up' ? TrendingUpIcon : 
+                       direction === 'down' ? TrendingDownIcon : MinusIcon;
 
   // Generate accessible label
   const accessibleLabel = ariaLabel || generateAccessibleLabel(delta);

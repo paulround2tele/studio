@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Download, FileText, Share, AlertCircle, CheckCircle } from 'lucide-react';
+import { DownloadIcon, FileTextIcon, ShareIcon, AlertCircleIcon, CheckCircleIcon } from '@/icons';
 import { cn } from '@/lib/utils';
 import { AggregateSnapshot } from '@/types/campaignMetrics';
 import { EnhancedRecommendation } from '@/services/campaignMetrics/recommendationsV3Pipeline';
@@ -148,7 +148,7 @@ const ExportActions: React.FC<ExportActionsProps> = ({
     <div className={cn("space-y-4", className)}>
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Download className="w-4 h-4 text-blue-600" />
+        <DownloadIcon className="w-4 h-4 text-blue-600" />
         <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Export Data
         </h4>
@@ -162,7 +162,7 @@ const ExportActions: React.FC<ExportActionsProps> = ({
       {/* Size Warning */}
       {validation.warning && (
         <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
-          <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5" />
+          <AlertCircleIcon className="w-4 h-4 text-yellow-600 mt-0.5" />
           <div className="text-sm text-yellow-800 dark:text-yellow-200">
             {validation.warning}
           </div>
@@ -175,7 +175,7 @@ const ExportActions: React.FC<ExportActionsProps> = ({
           onClick={handleExportJSON}
           disabled={!hasData || exporting !== null}
           loading={exporting === 'json'}
-          icon={<FileText className="w-4 h-4" />}
+          icon={<FileTextIcon className="w-4 h-4" />}
           label="JSON"
           description="Structured data"
         />
@@ -184,7 +184,7 @@ const ExportActions: React.FC<ExportActionsProps> = ({
           onClick={handleExportCSV}
           disabled={!hasData || exporting !== null}
           loading={exporting === 'csv'}
-          icon={<Download className="w-4 h-4" />}
+          icon={<DownloadIcon className="w-4 h-4" />}
           label="CSV"
           description="Spreadsheet format"
         />
@@ -193,7 +193,7 @@ const ExportActions: React.FC<ExportActionsProps> = ({
           onClick={handleGenerateShareUrl}
           disabled={!hasData || exporting !== null}
           loading={exporting === 'share'}
-          icon={<Share className="w-4 h-4" />}
+          icon={<ShareIcon className="w-4 h-4" />}
           label="Share"
           description="Shareable link"
         />
@@ -202,7 +202,7 @@ const ExportActions: React.FC<ExportActionsProps> = ({
       {/* Status Messages */}
       {lastExport && (
         <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
-          <CheckCircle className="w-4 h-4 text-green-600" />
+          <CheckCircleIcon className="w-4 h-4 text-green-600" />
           <span className="text-sm text-green-800 dark:text-green-200">
             {lastExport}
           </span>
@@ -227,7 +227,7 @@ const ExportActions: React.FC<ExportActionsProps> = ({
       {/* No Data Message */}
       {!hasData && (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          <Download className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          <DownloadIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <div className="text-sm">No snapshots available for export</div>
         </div>
       )}

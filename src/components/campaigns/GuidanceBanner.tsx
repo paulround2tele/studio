@@ -3,7 +3,7 @@ import React from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 import { clearGuidance } from '@/store/ui/campaignUiSlice';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 
 export const GuidanceBanner: React.FC<{ campaignId: string }> = ({ campaignId }) => {
   const dispatch = useAppDispatch();

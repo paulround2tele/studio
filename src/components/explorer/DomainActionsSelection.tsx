@@ -12,16 +12,9 @@
 'use client';
 
 import React from 'react';
-import { X } from 'lucide-react';
+import { CloseIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import Button from '@/components/ta/ui/button/Button';
 
 // ============================================================================
 // TYPES
@@ -86,24 +79,23 @@ export const DomainActionsSelection = React.memo(function DomainActionsSelection
       data-testid="domain-actions-selection"
     >
       {/* Select all checkbox */}
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex items-center">
-              <Checkbox
-                checked={checkboxState}
-                onCheckedChange={handleCheckboxChange}
-                disabled={disabled || totalDomains === 0}
-                aria-label={hasSelection ? 'Clear selection' : 'Select all on page'}
-                data-testid="domain-actions-select-all-checkbox"
-              />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            {hasSelection ? 'Clear selection' : `Select all ${Math.min(pageSize, totalDomains)} on page`}
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          ref={(el) => {
+            if (el) {
+              el.indeterminate = checkboxState === 'indeterminate';
+            }
+          }}
+          checked={checkboxState === true}
+          onChange={handleCheckboxChange}
+          disabled={disabled || totalDomains === 0}
+          aria-label={hasSelection ? 'Clear selection' : 'Select all on page'}
+          title={hasSelection ? 'Clear selection' : `Select all ${Math.min(pageSize, totalDomains)} on page`}
+          data-testid="domain-actions-select-all-checkbox"
+          className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        />
+      </div>
 
       {/* Selection count */}
       {hasSelection && (
@@ -114,20 +106,19 @@ export const DomainActionsSelection = React.memo(function DomainActionsSelection
           <span className="font-medium tabular-nums">
             {selectionCount.toLocaleString()}
           </span>
-          <span className="text-muted-foreground">
+          <span className="text-gray-500 dark:text-gray-400">
             {selectionCount === 1 ? 'domain selected' : 'domains selected'}
           </span>
 
           {/* Clear selection button */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="h-7 px-2 text-xs"
             onClick={onDeselectAll}
             disabled={disabled}
             data-testid="domain-actions-clear-selection"
+            startIcon={<CloseIcon className="h-3.5 w-3.5" />}
           >
-            <X className="h-3.5 w-3.5 mr-1" />
             Clear
           </Button>
         </div>
@@ -136,7 +127,7 @@ export const DomainActionsSelection = React.memo(function DomainActionsSelection
       {/* No selection hint */}
       {!hasSelection && totalDomains > 0 && (
         <span 
-          className="text-sm text-muted-foreground"
+          className="text-sm text-gray-500 dark:text-gray-400"
           data-testid="domain-actions-selection-hint"
         >
           Select domains to enable actions

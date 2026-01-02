@@ -5,13 +5,11 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, User, Shield } from 'lucide-react';
+import Button from '@/components/ta/ui/button/Button';
+import Input from '@/components/ta/form/input/InputField';
+import Label from '@/components/ta/form/Label';
+import Badge from '@/components/ta/ui/badge/Badge';
+import { EyeIcon, EyeCloseIcon, UserIcon, ShieldIcon } from '@/icons';
 
 interface UserProfileProps {
   onProfileUpdated?: () => void;
@@ -23,8 +21,6 @@ export function UserProfile({
   showPasswordChange = true 
 }: UserProfileProps) {
   const router = useRouter();
-  // THIN CLIENT: Get user data from backend API instead of frontend context
-  // In thin client architecture, backend provides user data via API calls
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -54,7 +50,6 @@ export function UserProfile({
     setMessage(null);
 
     try {
-      // THIN CLIENT: Call backend API directly for password change
       const response = await fetch('/api/v2/auth/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -84,140 +79,130 @@ export function UserProfile({
     } catch (_error) {
       // ignore
     } finally {
-      // Let middleware gate next request, but navigate client-side for UX
       router.push('/login');
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* User Info Section - Simplified for thin client */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
+      {/* User Info Section */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="mb-4">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 dark:text-white/90">
+            <UserIcon className="h-5 w-5" />
             Profile Information
-          </CardTitle>
-          <CardDescription>
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             THIN CLIENT: User data provided by backend middleware
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+        </div>
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            <Badge variant="secondary">Authenticated User</Badge>
+            <ShieldIcon className="h-4 w-4" />
+            <Badge color="dark">Authenticated User</Badge>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Backend middleware manages all user session data
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Password Change Section */}
       {showPasswordChange && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Change Password</CardTitle>
-            <CardDescription>
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Change Password</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Update your password to keep your account secure
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handlePasswordChange} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
-                <div className="relative">
-                  <Input
-                    id="currentPassword"
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    value={passwordForm.currentPassword}
-                    onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  >
-                    {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
+            </p>
+          </div>
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <div className="relative">
+                <Input
+                  id="currentPassword"
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  defaultValue={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  {showCurrentPassword ? <EyeCloseIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                </button>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <div className="relative">
-                  <Input
-                    id="newPassword"
-                    type={showNewPassword ? 'text' : 'password'}
-                    value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                  >
-                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <div className="relative">
+                <Input
+                  id="newPassword"
+                  type={showNewPassword ? 'text' : 'password'}
+                  defaultValue={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? <EyeCloseIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                </button>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={passwordForm.confirmPassword}
-                    onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  defaultValue={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeCloseIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                </button>
               </div>
+            </div>
 
-              {message && (
-                <Alert variant={message.type === 'error' ? 'destructive' : 'default'}>
-                  <AlertDescription>{message.text}</AlertDescription>
-                </Alert>
-              )}
+            {message && (
+              <div className={`rounded-lg border p-4 ${
+                message.type === 'error' 
+                  ? 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400' 
+                  : 'border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400'
+              }`}>
+                {message.text}
+              </div>
+            )}
 
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Updating...' : 'Update Password'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            <Button variant="primary" disabled={isLoading} className="w-full sm:w-auto">
+              {isLoading ? 'Updating...' : 'Update Password'}
+            </Button>
+          </form>
+        </div>
       )}
 
       {/* Logout Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Session Management</CardTitle>
-          <CardDescription>
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Session Management</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Sign out of your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" onClick={handleLogout}>
-            Sign Out
-          </Button>
-        </CardContent>
-      </Card>
+          </p>
+        </div>
+        <Button variant="outline" onClick={handleLogout}>
+          Sign Out
+        </Button>
+      </div>
     </div>
   );
 }

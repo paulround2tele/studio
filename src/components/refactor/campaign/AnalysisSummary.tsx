@@ -12,17 +12,17 @@
 
 import React from 'react';
 import { 
-  TrendingUp, 
-  Filter, 
-  CheckCircle2, 
-  XCircle, 
-  AlertTriangle,
-  Target,
-  FileSearch,
-  Sparkles,
-  ChevronDown,
-  ChevronUp
-} from 'lucide-react';
+  TrendingUpIcon, 
+  FilterIcon, 
+  CheckCircle2Icon, 
+  XCircleIcon, 
+  WarningTriangleIcon,
+  TargetIcon,
+  FileSearchIcon,
+  SparklesIcon,
+  ChevronDownIcon,
+  ChevronUpIcon
+} from '@/icons';
 import { cn } from '@/lib/utils';
 
 export interface AnalysisSummaryData {
@@ -75,7 +75,7 @@ function computeRejectionBreakdown(data: AnalysisSummaryData): RejectionReason[]
     reasons.push({
       reason: 'Pending Analysis',
       count: pendingAnalysis,
-      icon: FileSearch,
+      icon: FileSearchIcon,
       description: 'Awaiting content analysis and scoring',
     });
   }
@@ -86,7 +86,7 @@ function computeRejectionBreakdown(data: AnalysisSummaryData): RejectionReason[]
     reasons.push({
       reason: 'Low Score',
       count: lowScore,
-      icon: TrendingUp,
+      icon: TrendingUpIcon,
       description: 'Score below threshold (limited keyword density, weak content)',
     });
   }
@@ -97,7 +97,7 @@ function computeRejectionBreakdown(data: AnalysisSummaryData): RejectionReason[]
     reasons.push({
       reason: 'Structural Issues',
       count: structuralRejection,
-      icon: AlertTriangle,
+      icon: WarningTriangleIcon,
       description: 'Potential detected but validation signals insufficient',
     });
   }
@@ -108,7 +108,7 @@ function computeRejectionBreakdown(data: AnalysisSummaryData): RejectionReason[]
     reasons.push({
       reason: 'No Keywords Found',
       count: noKeywords,
-      icon: Target,
+      icon: TargetIcon,
       description: 'HTTP reachable but no target keywords in content',
     });
   }
@@ -147,7 +147,7 @@ export function AnalysisSummary({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <SparklesIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Analysis & Enrichment Summary
           </h3>
@@ -210,17 +210,17 @@ export function AnalysisSummary({
       {/* Visual progress flow */}
       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-4 px-2">
         <div className="flex items-center gap-1">
-          <Target className="h-3.5 w-3.5" />
+          <TargetIcon className="h-3.5 w-3.5" />
           <span>Keywords</span>
         </div>
         <div className="h-px flex-1 bg-gradient-to-r from-blue-300 to-indigo-300 dark:from-blue-700 dark:to-indigo-700 mx-2" />
         <div className="flex items-center gap-1">
-          <FileSearch className="h-3.5 w-3.5" />
+          <FileSearchIcon className="h-3.5 w-3.5" />
           <span>Analyzed</span>
         </div>
         <div className="h-px flex-1 bg-gradient-to-r from-indigo-300 to-emerald-300 dark:from-indigo-700 dark:to-emerald-700 mx-2" />
         <div className="flex items-center gap-1">
-          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+          <CheckCircle2Icon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
           <span className="font-medium text-emerald-700 dark:text-emerald-300">Leads</span>
         </div>
       </div>
@@ -234,15 +234,15 @@ export function AnalysisSummary({
             className="flex items-center justify-between w-full text-left group"
           >
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
+              <FilterIcon className="h-4 w-4 text-gray-500" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Why were {totalRejected.toLocaleString()} domains rejected?
               </span>
             </div>
             {showDetails ? (
-              <ChevronUp className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+              <ChevronUpIcon className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+              <ChevronDownIcon className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
             )}
           </button>
           
@@ -276,7 +276,7 @@ export function AnalysisSummary({
                   onClick={onViewRejected}
                   className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                 >
-                  <XCircle className="h-3.5 w-3.5" />
+                  <XCircleIcon className="h-3.5 w-3.5" />
                   View rejected domains
                 </button>
               )}

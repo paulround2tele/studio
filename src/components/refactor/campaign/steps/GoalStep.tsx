@@ -6,7 +6,7 @@
 import React from 'react';
 import Input from '@/components/ta/form/input/InputField';
 import Label from '@/components/ta/form/Label';
-import { Play, Settings } from 'lucide-react';
+import { PlayIcon, SettingsIcon } from '@/icons';
 import type { WizardGoalStep, ExecutionMode } from '../../types';
 
 interface GoalStepProps {
@@ -100,7 +100,7 @@ export function GoalStep({ data, onChange }: GoalStepProps) {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <Settings
+                  <SettingsIcon
                     className={`h-4 w-4 ${
                       executionMode === 'manual' ? 'text-brand-600' : 'text-gray-500'
                     }`}
@@ -161,7 +161,7 @@ export function GoalStep({ data, onChange }: GoalStepProps) {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <Play
+                  <PlayIcon
                     className={`h-4 w-4 ${
                       executionMode === 'auto' ? 'text-brand-600' : 'text-gray-500'
                     }`}

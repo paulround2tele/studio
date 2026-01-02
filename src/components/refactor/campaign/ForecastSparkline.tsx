@@ -7,8 +7,8 @@ import React, { useMemo } from 'react';
 import { AggregateSnapshot } from '@/types/campaignMetrics';
 import type { ForecastPoint } from '@/types/forecasting';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import Badge from '@/components/ta/ui/badge/Badge';
+import { TrendingUpIcon, TrendingDownIcon, ActivityIcon } from '@/icons';
 
 /**
  * ForecastSparkline props
@@ -265,7 +265,8 @@ export function ForecastSparkline({
             <div className="absolute -top-1 -right-1 flex gap-1">
               {forecastMethod && (
                 <Badge 
-                  variant={forecastMethod === 'server' ? 'default' : 'secondary'} 
+                  color={forecastMethod === 'server' ? 'primary' : 'light'} 
+                  size="sm"
                   className="text-xs px-1 py-0"
                 >
                   {forecastMethod === 'server' ? 'ML' : 'Est'}
@@ -275,9 +276,9 @@ export function ForecastSparkline({
               {trend !== 'flat' && (
                 <div className="flex items-center">
                   {trend === 'up' ? (
-                    <TrendingUp className="w-3 h-3 text-green-500" />
+                    <TrendingUpIcon className="w-3 h-3 text-green-500" />
                   ) : (
-                    <TrendingDown className="w-3 h-3 text-red-500" />
+                    <TrendingDownIcon className="w-3 h-3 text-red-500" />
                   )}
                 </div>
               )}
@@ -287,7 +288,7 @@ export function ForecastSparkline({
         <TooltipContent>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4" />
+              <ActivityIcon className="w-4 h-4" />
               <span className="font-medium">{formatMetricName(metricKey)}</span>
             </div>
             

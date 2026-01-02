@@ -1,7 +1,7 @@
 "use client"; 
 import PersonaForm from '@/components/personas/PersonaForm';
 import PageHeader from '@/components/shared/PageHeader'; // Keep PageHeader for title consistency
-import { UserPlus, Globe, Wifi, AlertCircle } from 'lucide-react';
+import { UserPlusIcon, GlobeIcon, WifiIcon, AlertCircleIcon } from '@/icons';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react'; 
 import Button from '@/components/ta/ui/button/Button';
@@ -37,7 +37,7 @@ function NewPersonaPageContent() {
     /* TailAdmin migration: Skeleton replaced with inline Tailwind animate-pulse pattern */
     return (
       <>
-        <PageHeader title="Create New Persona" icon={UserPlus} />
+        <PageHeader title="Create New Persona" icon={UserPlusIcon} />
         <div className="max-w-3xl mx-auto space-y-4">
           <div className="h-10 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
           <div className="h-20 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
@@ -55,12 +55,12 @@ function NewPersonaPageContent() {
   if (!isValidType || !personaType) {
      return (
         <>
-         <PageHeader title="Invalid Persona Type" description="Please select a valid persona type to create using the buttons below or ensure the URL includes '?type=http' or '?type=dns'." icon={AlertCircle} />
+         <PageHeader title="Invalid Persona Type" description="Please select a valid persona type to create using the buttons below or ensure the URL includes '?type=http' or '?type=dns'." icon={AlertCircleIcon} />
           <div className="max-w-3xl mx-auto text-center py-10 flex justify-center gap-2">
-            <Button variant="primary" onClick={() => router.push('/personas/new?type=http')} startIcon={<Globe className="h-4 w-4" />}>
+            <Button variant="primary" onClick={() => router.push('/personas/new?type=http')} startIcon={<GlobeIcon className="h-4 w-4" />}>
               Create HTTP Persona
             </Button>
-            <Button variant="outline" onClick={() => router.push('/personas/new?type=dns')} startIcon={<Wifi className="h-4 w-4" />}>
+            <Button variant="outline" onClick={() => router.push('/personas/new?type=dns')} startIcon={<WifiIcon className="h-4 w-4" />}>
               Create DNS Persona
             </Button>
           </div>
@@ -68,7 +68,7 @@ function NewPersonaPageContent() {
      );
   }
 
-  const IconToUse = personaType === 'http' ? Globe : Wifi;
+  const IconToUse = personaType === 'http' ? GlobeIcon : WifiIcon;
   const typeNameDisplay = personaType.toUpperCase();
 
   return (

@@ -7,20 +7,28 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { 
-  BarChart3, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  Target,
-  TrendingUp,
-  Activity
-} from 'lucide-react';
+  BarChart3Icon, 
+  ClockIcon, 
+  CheckCircleIcon, 
+  XCircleIcon, 
+  TargetIcon,
+  TrendingUpIcon,
+  ActivityIcon
+} from '@/icons';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import { cn } from '@/lib/utils';
+
+// Inline TailAdmin-style progress bar component
+const ProgressBar: React.FC<{ value: number; className?: string }> = ({ value, className }) => (
+  <div className={cn("w-full bg-gray-200 rounded-full dark:bg-gray-700", className)}>
+    <div
+      className="h-2 rounded-full bg-brand-500 transition-all duration-300"
+      style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+    />
+  </div>
+);
 
 // Streaming statistics interface for real-time updates
 interface StreamingStats {
@@ -139,10 +147,10 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
       <div className={cn('flex items-center gap-4', className)}>
         <div className="flex-1 space-y-1">
           <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Progress</span>
+            <span className="text-gray-500 dark:text-gray-400">Progress</span>
             <span className="font-medium">{stats.progressPercentage.toFixed(0)}%</span>
           </div>
-          <Progress value={stats.progressPercentage} className="h-1" />
+          <ProgressBar value={stats.progressPercentage} className="h-1" />
         </div>
         
         <div className="text-right text-xs">
@@ -162,21 +170,21 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           <div className="text-lg font-semibold">
             {Number(stats.targetItems).toLocaleString()}
           </div>
-          <div className="text-xs text-muted-foreground">Total</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
         </div>
         
         <div>
           <div className="text-lg font-semibold">
             {stats.progressPercentage.toFixed(0)}%
           </div>
-          <div className="text-xs text-muted-foreground">Progress</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Progress</div>
         </div>
         
         <div>
           <div className="text-lg font-semibold">
             {stats.successRate.toFixed(0)}%
           </div>
-          <div className="text-xs text-muted-foreground">Success</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Success</div>
         </div>
       </div>
     );
@@ -185,41 +193,41 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
   // Enhanced variant (CampaignMetrics style)
   if (variant === 'enhanced') {
     return (
-      <Card className={cn("shadow-xl border-2 bg-gradient-to-br from-card to-muted/10", className)}>
-        <CardHeader className="pb-4 bg-gradient-to-r from-card to-muted/20 border-b">
-          <CardTitle className="flex items-center gap-3 text-xl font-bold">
-            <BarChart3 className="h-6 w-6 text-primary" />
+      <div className={cn("rounded-xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50 dark:border-gray-700 dark:from-gray-900 dark:to-gray-800", className)}>
+        <div className="border-b border-gray-100 px-6 py-4 bg-gradient-to-r from-white to-gray-50 dark:border-gray-700 dark:from-gray-900 dark:to-gray-800">
+          <h3 className="flex items-center gap-3 text-xl font-bold text-gray-800 dark:text-white">
+            <BarChart3Icon className="h-6 w-6 text-brand-500" />
             Campaign Metrics
             {/* Real-time connection indicator */}
             <div className={`ml-auto flex items-center gap-2 text-xs ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
               {isConnected ? 'Live' : 'Disconnected'}
             </div>
-          </CardTitle>
-          <CardDescription className="text-base mt-1">
+          </h3>
+          <p className="text-base mt-1 text-gray-600 dark:text-gray-400">
             Real-time progress and performance statistics
             {streamingStats && isConnected && (
               <span className="ml-2 text-xs text-green-600">
                 • {streamingStats.messagesReceived || 0} updates received
               </span>
             )}
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
         
-        <CardContent className="space-y-8 p-6">
+        <div className="space-y-8 p-6">
           {/* Main Progress Bar */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Overall Progress</span>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="light" color="light">
                 {stats.progressPercentage.toFixed(1)}%
               </Badge>
             </div>
-            <Progress 
+            <ProgressBar 
               value={stats.progressPercentage} 
               className="h-3"
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
+            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
               <span>{formatNumber(stats.processedItems)} processed</span>
               <span>{formatNumber(stats.targetItems)} target</span>
             </div>
@@ -229,19 +237,19 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {/* Total Domains */}
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-xl border shadow-sm">
-              <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                <Target className="h-5 w-5 text-blue-600" />
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-2">
+                <TargetIcon className="h-5 w-5 text-blue-600" />
                 <span className="text-sm font-medium">Total Domains</span>
               </div>
-              <div className="text-2xl font-bold text-foreground">
+              <div className="text-2xl font-bold text-gray-800 dark:text-white">
                 {formatNumber(totalDomains || stats.processedItems)}
               </div>
             </div>
 
             {/* Success Count */}
             <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-xl border shadow-sm">
-              <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-2">
+                <CheckCircleIcon className="h-5 w-5 text-green-600" />
                 <span className="text-sm font-medium">Successful</span>
               </div>
               <div className="text-2xl font-bold text-green-700 dark:text-green-400">
@@ -251,8 +259,8 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
 
             {/* Failed Count */}
             <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-4 rounded-xl border shadow-sm">
-              <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                <XCircle className="h-5 w-5 text-red-600" />
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-2">
+                <XCircleIcon className="h-5 w-5 text-red-600" />
                 <span className="text-sm font-medium">Failed</span>
               </div>
               <div className="text-2xl font-bold text-red-700 dark:text-red-400">
@@ -262,11 +270,11 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
 
             {/* Duration */}
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4 rounded-xl border shadow-sm">
-              <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                <Clock className="h-5 w-5 text-purple-600" />
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-2">
+                <ClockIcon className="h-5 w-5 text-purple-600" />
                 <span className="text-sm font-medium">Duration</span>
               </div>
-              <div className="text-2xl font-bold text-foreground">
+              <div className="text-2xl font-bold text-gray-800 dark:text-white">
                 {duration}
               </div>
             </div>
@@ -280,7 +288,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
                   <span className="text-sm font-medium text-green-600">Success Rate</span>
                   <span className="text-sm">{stats.successRate.toFixed(1)}%</span>
                 </div>
-                <Progress value={stats.successRate} className="h-2" />
+                <ProgressBar value={stats.successRate} className="h-2" />
               </div>
               
               <div className="space-y-2">
@@ -288,7 +296,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
                   <span className="text-sm font-medium text-red-600">Failure Rate</span>
                   <span className="text-sm">{stats.failureRate.toFixed(1)}%</span>
                 </div>
-                <Progress value={stats.failureRate} className="h-2" />
+                <ProgressBar value={stats.failureRate} className="h-2" />
               </div>
             </div>
           )}
@@ -297,8 +305,8 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
             {/* Processing Rate */}
             <div className="space-y-1">
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <TrendingUp className="h-4 w-4" />
+              <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+                <TrendingUpIcon className="h-4 w-4" />
                 <span className="text-xs">Avg. Processing Rate</span>
               </div>
               <div className="text-sm font-medium">
@@ -309,8 +317,8 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
             {/* Real-time Streaming Stats */}
             {streamingStats && (
               <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <Activity className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+                  <ActivityIcon className="h-4 w-4" />
                   <span className="text-xs">Streaming Rate</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -318,8 +326,8 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
                     {streamingStats.domainsPerSecond.toFixed(1)}/sec
                   </span>
                   <Badge 
-                    variant={streamingStats.connectionStatus === 'connected' ? 'default' : 'destructive'}
-                    className="text-xs"
+                    color={streamingStats.connectionStatus === 'connected' ? 'success' : 'error'}
+                    size="sm"
                   >
                     {streamingStats.connectionStatus}
                   </Badge>
@@ -333,7 +341,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           {/* Phase-centric architecture: detailed configuration stored in phase records */}
             {campaign.currentPhase === 'discovery' && (
             <div className="pt-4 border-t">
-              <div className="text-xs text-muted-foreground mb-2">Current Phase</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Current Phase</div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="flex justify-between">
                   <span>Phase:</span>
@@ -342,8 +350,8 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -351,22 +359,22 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
   return (
     <div className={cn('space-y-4', className)}>
       {/* Main Progress Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Activity className="h-5 w-5" />
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 dark:text-white/90">
+            <ActivityIcon className="h-5 w-5" />
             Campaign Progress
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </h3>
+        </div>
+        <div className="p-5 space-y-4">
           {/* Progress Bar */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progress</span>
+              <span className="text-gray-500 dark:text-gray-400">Progress</span>
               <span className="font-medium">{stats.progressPercentage.toFixed(1)}%</span>
             </div>
-            <Progress value={stats.progressPercentage} className="h-2" />
-            <div className="flex justify-between text-xs text-muted-foreground">
+            <ProgressBar value={stats.progressPercentage} className="h-2" />
+            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
               <span>
                 {Number(stats.processedItems).toLocaleString()} / {Number(stats.targetItems).toLocaleString()}
               </span>
@@ -379,91 +387,91 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <CheckCircleIcon className="h-4 w-4 text-green-500" />
                 Successful
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold text-green-600">
                   {Number(stats.successfulItems).toLocaleString()}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   ({stats.successRate.toFixed(1)}%)
                 </span>
               </div>
             </div>
 
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <XCircle className="h-4 w-4 text-red-500" />
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <XCircleIcon className="h-4 w-4 text-red-500" />
                 Failed
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold text-red-600">
                   {Number(stats.failedItems).toLocaleString()}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   ({stats.failureRate.toFixed(1)}%)
                 </span>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Detailed Statistics */}
       {showDetailedStats && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Target className="h-4 w-4" />
+          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-800">
+              <h4 className="flex items-center gap-2 text-sm font-medium text-gray-800 dark:text-white/90">
+                <TargetIcon className="h-4 w-4" />
                 Total Items
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
+              </h4>
+            </div>
+            <div className="p-4">
+              <div className="text-2xl font-bold text-gray-800 dark:text-white">
                 {Number(stats.targetItems).toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Items to process
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Clock className="h-4 w-4" />
+          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-800">
+              <h4 className="flex items-center gap-2 text-sm font-medium text-gray-800 dark:text-white/90">
+                <ClockIcon className="h-4 w-4" />
                 Processed
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
+              </h4>
+            </div>
+            <div className="p-4">
+              <div className="text-2xl font-bold text-gray-800 dark:text-white">
                 {Number(stats.processedItems).toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Items completed
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <TrendingUp className="h-4 w-4" />
+          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-800">
+              <h4 className="flex items-center gap-2 text-sm font-medium text-gray-800 dark:text-white/90">
+                <TrendingUpIcon className="h-4 w-4" />
                 Success Rate
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
+              </h4>
+            </div>
+            <div className="p-4">
+              <div className="text-2xl font-bold text-gray-800 dark:text-white">
                 {stats.successRate.toFixed(1)}%
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Of processed items
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
     </div>

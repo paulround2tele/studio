@@ -4,9 +4,8 @@
  */
 
 import React from 'react';
-import { BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { BarChart3Icon, TrendingUpIcon, TrendingDownIcon } from '@/icons';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 
 export interface HistogramBin {
@@ -107,20 +106,20 @@ export function Histogram({
   
   if (bins.length === 0) {
     return (
-      <Card className={cn("", className)}>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-gray-600" />
+      <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <BarChart3Icon className="w-5 h-5 text-gray-600" />
             {title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="px-6 pb-6">
           <div className="text-center py-8">
-            <BarChart3 className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+            <BarChart3Icon className="w-8 h-8 mx-auto mb-2 text-gray-400" />
             <p className="text-sm text-gray-500">No distribution data available</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -135,35 +134,33 @@ export function Histogram({
   }));
 
   return (
-    <Card className={cn("", className)}>
-      <CardHeader>
+    <div className={cn("rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]", className)}>
+      <div className="p-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-gray-600" />
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <BarChart3Icon className="w-5 h-5 text-gray-600" />
             {title}
-          </CardTitle>
+          </h3>
           {showStats && (
             <div className="flex gap-2">
-              <Badge variant="outline" className="text-xs">
+              <Badge color="light" size="sm">
                 {stats.total} total
               </Badge>
               {stats.positive > 0 && (
-                <Badge variant="secondary" className="text-xs text-green-700 bg-green-100 dark:bg-green-900/30">
-                  <TrendingUp className="w-3 h-3 mr-1" />
+                <Badge color="success" size="sm" startIcon={<TrendingUpIcon className="w-3 h-3" />}>
                   {stats.positiveRate.toFixed(1)}%
                 </Badge>
               )}
               {stats.negative > 0 && (
-                <Badge variant="secondary" className="text-xs text-red-700 bg-red-100 dark:bg-red-900/30">
-                  <TrendingDown className="w-3 h-3 mr-1" />
+                <Badge color="error" size="sm" startIcon={<TrendingDownIcon className="w-3 h-3" />}>
                   {stats.negativeRate.toFixed(1)}%
                 </Badge>
               )}
             </div>
           )}
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="px-6 pb-6">
         {orientation === 'horizontal' ? (
           <div className="space-y-3">
             {binsWithPercentages.map((bin, index) => {
@@ -258,8 +255,8 @@ export function Histogram({
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

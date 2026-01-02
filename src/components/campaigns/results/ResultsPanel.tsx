@@ -17,9 +17,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { cn } from '@/lib/utils';
 import {
   useGetCampaignDomainsQuery,
@@ -128,12 +126,12 @@ const DomainListRow: React.FC<DomainListRowProps> = ({
         </p>
         <div className="flex gap-1 mt-1">
           {domain.dnsStatus && (
-            <Badge variant="outline" className={cn('text-xs', getStatusColor(domain.dnsStatus))}>
+            <Badge size="sm" className={cn(getStatusColor(domain.dnsStatus))}>
               DNS: {domain.dnsStatus}
             </Badge>
           )}
           {domain.httpStatus && (
-            <Badge variant="outline" className={cn('text-xs', getStatusColor(domain.httpStatus))}>
+            <Badge size="sm" className={cn(getStatusColor(domain.httpStatus))}>
               HTTP: {domain.httpStatus}
             </Badge>
           )}
@@ -146,7 +144,7 @@ const DomainListRow: React.FC<DomainListRowProps> = ({
           </span>
         )}
         {domain.rejectionReason && (
-          <Badge variant="outline" className={cn('text-xs', getRejectionColor(domain.rejectionReason))}>
+          <Badge size="sm" className={cn(getRejectionColor(domain.rejectionReason))}>
             {domain.rejectionReason}
           </Badge>
         )}
@@ -212,60 +210,59 @@ const ScoreBreakdownPanel: React.FC<ScoreBreakdownPanelProps> = ({
 
   if (!selectedDomain) {
     return (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="text-base">Score Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
+      <div className="h-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="p-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-semibold">Score Breakdown</h3>
+        </div>
+        <div className="p-5">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Select a domain to view its score breakdown
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (isLoading) {
     return (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="text-base">Score Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-4 w-2/3" />
-          <Skeleton className="h-4 w-1/2" />
-        </CardContent>
-      </Card>
+      <div className="h-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="p-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-semibold">Score Breakdown</h3>
+        </div>
+        <div className="p-5 space-y-3">
+          <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="text-base">Score Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="h-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="p-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-semibold">Score Breakdown</h3>
+        </div>
+        <div className="p-5">
           <p className="text-sm text-red-500">Failed to load score breakdown</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   const breakdown: DomainScoreBreakdownResponse | undefined = data;
 
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-2">
+    <div className="h-full rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="p-5 pb-2 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Score Breakdown</CardTitle>
+          <h3 className="text-base font-semibold">Score Breakdown</h3>
           {breakdown?.state && (
             <Badge
-              variant="outline"
+              size="sm"
               className={cn(
-                'text-xs',
                 breakdown.state === 'complete'
                   ? 'bg-green-100 text-green-800'
                   : breakdown.state === 'partial'
@@ -277,14 +274,14 @@ const ScoreBreakdownPanel: React.FC<ScoreBreakdownPanelProps> = ({
             </Badge>
           )}
         </div>
-        <p className="font-mono text-sm text-muted-foreground truncate">
+        <p className="font-mono text-sm text-gray-500 dark:text-gray-400 truncate">
           {breakdown?.domain}
         </p>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="p-5">
         {/* Overall Score */}
         {breakdown?.overallScore !== undefined && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Overall Score</span>
               <span className="text-2xl font-bold tabular-nums">
@@ -303,7 +300,7 @@ const ScoreBreakdownPanel: React.FC<ScoreBreakdownPanelProps> = ({
 
         {/* Component Scores */}
         <div className="space-y-1">
-          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+          <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
             Components
           </h4>
           {breakdown?.components && (
@@ -326,8 +323,8 @@ const ScoreBreakdownPanel: React.FC<ScoreBreakdownPanelProps> = ({
 
         {/* Evidence (if available) */}
         {breakdown?.evidence && (
-          <div className="mt-4 pt-4 border-t">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
               Evidence
             </h4>
             <div className="space-y-1 text-sm">
@@ -360,8 +357,8 @@ const ScoreBreakdownPanel: React.FC<ScoreBreakdownPanelProps> = ({
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
@@ -378,44 +375,43 @@ const RejectionSummaryPanel: React.FC<RejectionSummaryPanelProps> = ({ campaignI
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Rejection Summary</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-        </CardContent>
-      </Card>
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="p-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-semibold">Rejection Summary</h3>
+        </div>
+        <div className="p-5 space-y-2">
+          <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Rejection Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="p-5 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-base font-semibold">Rejection Summary</h3>
+        </div>
+        <div className="p-5">
           <p className="text-sm text-red-500">Failed to load rejection summary</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   const summary: RejectionSummaryResponse | undefined = data;
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
+    <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="p-5 pb-2 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Rejection Summary</CardTitle>
+          <h3 className="text-base font-semibold">Rejection Summary</h3>
           {summary?.balanced !== undefined && (
             <Badge
-              variant="outline"
+              size="sm"
               className={cn(
-                'text-xs',
                 summary.balanced
                   ? 'bg-green-100 text-green-800'
                   : 'bg-red-100 text-red-800'
@@ -425,28 +421,28 @@ const RejectionSummaryPanel: React.FC<RejectionSummaryPanelProps> = ({ campaignI
             </Badge>
           )}
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="p-5">
         {/* Totals */}
         {summary?.totals && (
           <div className="grid grid-cols-3 gap-2 mb-4">
-            <div className="p-2 bg-gray-50 rounded text-center">
+            <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
               <div className="text-lg font-bold tabular-nums">
                 {summary.totals.analyzed ?? 0}
               </div>
-              <div className="text-xs text-muted-foreground">Analyzed</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Analyzed</div>
             </div>
-            <div className="p-2 bg-emerald-50 rounded text-center">
+            <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded text-center">
               <div className="text-lg font-bold tabular-nums text-emerald-600">
                 {summary.totals.qualified ?? 0}
               </div>
-              <div className="text-xs text-muted-foreground">Qualified</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Qualified</div>
             </div>
-            <div className="p-2 bg-red-50 rounded text-center">
+            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
               <div className="text-lg font-bold tabular-nums text-red-600">
                 {summary.totals.rejected ?? 0}
               </div>
-              <div className="text-xs text-muted-foreground">Rejected</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Rejected</div>
             </div>
           </div>
         )}
@@ -454,7 +450,7 @@ const RejectionSummaryPanel: React.FC<RejectionSummaryPanelProps> = ({ campaignI
         {/* Counts by reason */}
         {summary?.counts && (
           <div className="space-y-2">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               By Reason
             </h4>
             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -502,8 +498,8 @@ const RejectionSummaryPanel: React.FC<RejectionSummaryPanelProps> = ({ campaignI
         {summary?.auditNote && (
           <p className="mt-3 text-xs text-amber-600">{summary.auditNote}</p>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
@@ -595,28 +591,28 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
     >
       {/* Left: Domain List */}
       <div className="w-1/2 flex flex-col">
-        <Card className="flex-1 flex flex-col overflow-hidden">
-          <CardHeader className="pb-2 flex-shrink-0">
+        <div className="flex-1 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+          <div className="p-5 pb-2 flex-shrink-0 border-b border-gray-100 dark:border-gray-800">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Domains</CardTitle>
-              <span className="text-sm text-muted-foreground tabular-nums">
+              <h3 className="text-base font-semibold">Domains</h3>
+              <span className="text-sm text-gray-500 dark:text-gray-400 tabular-nums">
                 {domains.length} loaded
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Use ↑↓ or j/k to navigate, Enter to select
             </p>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden p-0">
+          </div>
+          <div className="flex-1 overflow-hidden p-0">
             {domainsLoading ? (
               <div className="p-4 space-y-2">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
+                <div className="h-12 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                <div className="h-12 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                <div className="h-12 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                <div className="h-12 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
               </div>
             ) : domains.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
+              <div className="p-4 text-center text-gray-500 dark:text-gray-400">
                 No domains found
               </div>
             ) : (
@@ -643,8 +639,8 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Right: Score Breakdown + Rejection Summary */}

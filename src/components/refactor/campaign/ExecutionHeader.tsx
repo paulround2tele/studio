@@ -16,9 +16,9 @@
 'use client';
 
 import React from 'react';
-import { Wifi, WifiOff } from 'lucide-react';
+import { WifiIcon, WifiOffIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ta/ui/badge/Badge';
 import { ControlDock } from './ControlDock';
 import type { ControlState, ExecutionStatus } from '@/hooks/useControlState';
 
@@ -147,17 +147,17 @@ export function ExecutionHeader({
               {phaseLabel}
             </h2>
             <Badge
-              variant="secondary"
+              color="light"
+              size="sm"
               className={cn(
                 "font-semibold px-3 py-1 text-sm shadow-sm",
                 statusConfig.color,
                 statusConfig.bgColor
               )}
-              aria-label={`Status: ${statusConfig.label}`}
+              startIcon={status === 'running' ? (
+                <span className={cn("w-2.5 h-2.5 rounded-full animate-pulse", statusConfig.pulseColor)} aria-hidden="true" />
+              ) : undefined}
             >
-              {status === 'running' && (
-                <span className={cn("w-2.5 h-2.5 rounded-full mr-2 animate-pulse", statusConfig.pulseColor)} aria-hidden="true" />
-              )}
               {statusConfig.label}
             </Badge>
           </div>
@@ -169,9 +169,9 @@ export function ExecutionHeader({
             aria-label={`Connection: ${sseStatusLabel}`}
           >
             {isConnected ? (
-              <Wifi className="w-4 h-4 text-emerald-500" aria-hidden="true" />
+              <WifiIcon className="w-4 h-4 text-emerald-500" aria-hidden="true" />
             ) : (
-              <WifiOff className="w-4 h-4 text-gray-400" aria-hidden="true" />
+              <WifiOffIcon className="w-4 h-4 text-gray-400" aria-hidden="true" />
             )}
             <div className={cn("w-2 h-2 rounded-full", sseStatusColor)} aria-hidden="true" />
             <span>{sseStatusLabel}</span>

@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { X, AlertTriangle, Info, Zap, ChevronDown, ChevronUp, Brain } from 'lucide-react';
+import { CloseIcon, WarningTriangleIcon, InfoIcon, ZapIcon, ChevronDownIcon, ChevronUpIcon, BrainIcon } from '@/icons';
 import { cn } from '@/lib/utils';
 import type { Recommendation } from '@/types/campaignMetrics';
 import type { EnhancedRecommendation } from '@/services/campaignMetrics/recommendationsV3Pipeline';
@@ -16,17 +16,17 @@ interface RecommendationPanelProps {
 
 const severityConfig = {
   info: {
-    icon: Info,
+    icon: InfoIcon,
     className: 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300',
     iconClassName: 'text-blue-600 dark:text-blue-400'
   },
   warn: {
-    icon: AlertTriangle,
+    icon: WarningTriangleIcon,
     className: 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-700 dark:text-yellow-300',
     iconClassName: 'text-yellow-600 dark:text-yellow-400'
   },
   action: {
-    icon: Zap,
+    icon: ZapIcon,
     className: 'bg-orange-50 border-orange-200 text-orange-800 dark:bg-orange-900/20 dark:border-orange-700 dark:text-orange-300',
     iconClassName: 'text-orange-600 dark:text-orange-400'
   }
@@ -65,7 +65,7 @@ export function RecommendationPanel({ recommendations, className }: Recommendati
     <div className={cn("space-y-3", className)}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-blue-600" />
+          <ZapIcon className="w-5 h-5 text-blue-600" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Recommendations
           </h3>
@@ -82,7 +82,7 @@ export function RecommendationPanel({ recommendations, className }: Recommendati
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         >
-          {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+          {isCollapsed ? <ChevronDownIcon className="w-4 h-4" /> : <ChevronUpIcon className="w-4 h-4" />}
         </button>
       </div>
       
@@ -113,7 +113,7 @@ export function RecommendationPanel({ recommendations, className }: Recommendati
                     </h4>
                     {hasExplanation && enhanced.explanation && (
                       <div className="flex items-center gap-1">
-                        <Brain className="w-3 h-3 opacity-60" />
+                        <BrainIcon className="w-3 h-3 opacity-60" />
                         <span className="text-xs opacity-60">
                           {Math.round(enhanced.explanation.confidence * 100)}%
                         </span>
@@ -125,7 +125,7 @@ export function RecommendationPanel({ recommendations, className }: Recommendati
                       className="p-1 rounded-md hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                       aria-label="Dismiss recommendation"
                     >
-                      <X className="w-4 h-4" />
+                      <CloseIcon className="w-4 h-4" />
                     </button>
                   </div>
                   
@@ -146,12 +146,12 @@ export function RecommendationPanel({ recommendations, className }: Recommendati
                       >
                         {isExpanded ? (
                           <>
-                            <ChevronUp className="w-3 h-3" />
+                            <ChevronUpIcon className="w-3 h-3" />
                             Hide explanation
                           </>
                         ) : (
                           <>
-                            <ChevronDown className="w-3 h-3" />
+                            <ChevronDownIcon className="w-3 h-3" />
                             Show explanation
                           </>
                         )}

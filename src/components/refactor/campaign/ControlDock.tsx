@@ -13,9 +13,9 @@
 'use client';
 
 import React from 'react';
-import { Loader2, Pause, Play, Square, RotateCcw, RefreshCw, ChevronDown } from 'lucide-react';
+import { LoaderIcon, PauseIcon, PlayIcon, SquareIcon, RotateCcwIcon, RefreshIcon, ChevronDownIcon } from '@/icons';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ta/ui/button/Button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,7 +58,7 @@ interface ButtonConfig {
   description?: string; // Optional descriptive text shown below label
   icon: React.ReactNode;
   show: (c: ControlState) => boolean;
-  variant: 'default' | 'outline' | 'destructive' | 'secondary';
+  variant: 'primary' | 'outline';
   primary: boolean;
 }
 
@@ -67,7 +67,7 @@ const BUTTON_CONFIGS: ButtonConfig[] = [
     id: 'pause',
     label: 'Pause',
     loadingLabel: 'Pausing…',
-    icon: <Pause className="w-4 h-4" />,
+    icon: <PauseIcon className="w-4 h-4" />,
     show: (c) => c.canPause,
     variant: 'outline',
     primary: true,
@@ -76,18 +76,18 @@ const BUTTON_CONFIGS: ButtonConfig[] = [
     id: 'resume',
     label: 'Resume',
     loadingLabel: 'Resuming…',
-    icon: <Play className="w-4 h-4" />,
+    icon: <PlayIcon className="w-4 h-4" />,
     show: (c) => c.canResume,
-    variant: 'default',
+    variant: 'primary',
     primary: true,
   },
   {
     id: 'stop',
     label: 'Stop',
     loadingLabel: 'Stopping…',
-    icon: <Square className="w-4 h-4" />,
+    icon: <SquareIcon className="w-4 h-4" />,
     show: (c) => c.canStop,
-    variant: 'destructive',
+    variant: 'outline',
     primary: true,
   },
   {
@@ -95,18 +95,18 @@ const BUTTON_CONFIGS: ButtonConfig[] = [
     label: 'Re-run Validations',
     loadingLabel: 'Re-running…',
     description: 'Discovery is preserved.',
-    icon: <RotateCcw className="w-4 h-4" />,
+    icon: <RotateCcwIcon className="w-4 h-4" />,
     show: (c) => c.canRestart && c.isIdle,
-    variant: 'secondary',
+    variant: 'outline',
     primary: false,
   },
   {
     id: 'retry',
     label: 'Retry Failed Phases',
     loadingLabel: 'Retrying…',
-    icon: <RefreshCw className="w-4 h-4" />,
+    icon: <RefreshIcon className="w-4 h-4" />,
     show: (c) => c.hasFailedPhases && c.isIdle,
-    variant: 'secondary',
+    variant: 'outline',
     primary: false,
   },
 ];
@@ -172,7 +172,7 @@ export function ControlDock({
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <LoaderIcon className="w-4 h-4 mr-2 animate-spin" />
                 {btn.loadingLabel}
               </>
             ) : (
@@ -196,7 +196,7 @@ export function ControlDock({
               className="min-w-[120px]"
             >
               More Actions
-              <ChevronDown className="w-4 h-4 ml-2" />
+              <ChevronDownIcon className="w-4 h-4 ml-2" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -213,7 +213,7 @@ export function ControlDock({
                 >
                   <div className="flex items-center gap-2">
                     {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <LoaderIcon className="w-4 h-4 animate-spin" />
                     ) : (
                       btn.icon
                     )}

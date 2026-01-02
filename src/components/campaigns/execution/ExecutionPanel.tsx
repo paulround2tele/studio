@@ -26,13 +26,13 @@ import { useCampaignSSE } from '@/hooks/useCampaignSSE';
 import type { CampaignPhasesStatusResponse } from '@/lib/api-client/models/campaign-phases-status-response';
 import type { CampaignPhasesStatusResponsePhasesInner } from '@/lib/api-client/models/campaign-phases-status-response-phases-inner';
 import {
-  CheckCircle2,
-  XCircle,
-  PauseCircle,
-  Circle,
-  AlertTriangle,
-  Loader2,
-} from 'lucide-react';
+  CheckCircleIcon,
+  XCircleIcon,
+  PauseCircleIcon,
+  CircleIcon,
+  WarningTriangleIcon,
+  LoaderIcon,
+} from '@/icons';
 
 // ============================================================================
 // Types
@@ -151,57 +151,57 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
           label: '—',
           variant: 'outline' as const,
           className: 'bg-gray-50 text-gray-500 border-gray-200',
-          icon: Circle,
+          icon: CircleIcon,
         };
       case 'ready':
         return {
           label: 'Ready',
           variant: 'outline' as const,
           className: 'bg-blue-50 text-blue-600 border-blue-200',
-          icon: Circle,
+          icon: CircleIcon,
         };
       case 'configured':
         return {
           label: 'Cfg',
           variant: 'outline' as const,
           className: 'bg-indigo-50 text-indigo-600 border-indigo-200',
-          icon: Circle,
+          icon: CircleIcon,
         };
       case 'in_progress':
         return {
           label: 'Run',
           variant: 'outline' as const,
           className: 'bg-amber-50 text-amber-700 border-amber-200',
-          icon: Loader2,
-          iconClassName: 'animate-spin',
+          icon: LoaderIcon,
+          iconClassName: '',
         };
       case 'paused':
         return {
           label: 'Pause',
           variant: 'outline' as const,
           className: 'bg-orange-50 text-orange-600 border-orange-200',
-          icon: PauseCircle,
+          icon: PauseCircleIcon,
         };
       case 'completed':
         return {
           label: 'Done',
           variant: 'outline' as const,
           className: 'bg-green-50 text-green-700 border-green-200',
-          icon: CheckCircle2,
+          icon: CheckCircleIcon,
         };
       case 'failed':
         return {
           label: 'Fail',
           variant: 'outline' as const,
           className: 'bg-red-50 text-red-700 border-red-200',
-          icon: XCircle,
+          icon: XCircleIcon,
         };
       default:
         return {
           label: status,
           variant: 'outline' as const,
           className: 'bg-gray-50 text-gray-600 border-gray-200',
-          icon: Circle,
+          icon: CircleIcon,
         };
     }
   }, [status]);
@@ -303,7 +303,7 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, isActive }) => {
       {/* Error Message - compact */}
       {phase.status === 'failed' && phase.errorMessage && (
         <div className="mt-1 px-1.5 py-1 rounded bg-red-50 border border-red-100 flex items-center gap-1.5">
-          <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />
+          <WarningTriangleIcon className="h-3 w-3 text-red-500 flex-shrink-0" />
           <span className="text-[10px] text-red-700 truncate" title={phase.errorMessage}>
             {phase.errorMessage}
           </span>
@@ -348,19 +348,19 @@ const ProgressHeader: React.FC<ProgressHeaderProps> = ({ status }) => {
         {/* TailAdmin migration: Badge -> inline Tailwind span */}
         {overallState === 'running' && (
           <span className="inline-flex items-center rounded border bg-amber-50 text-amber-700 border-amber-200 h-4 px-1 text-[10px]">
-            <Loader2 className="h-2.5 w-2.5 mr-0.5 animate-spin" />
+            <LoaderIcon className="h-2.5 w-2.5 mr-0.5" />
             Running
           </span>
         )}
         {overallState === 'completed' && (
           <span className="inline-flex items-center rounded border bg-green-50 text-green-700 border-green-200 h-4 px-1 text-[10px]">
-            <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
+            <CheckCircleIcon className="h-2.5 w-2.5 mr-0.5" />
             Done
           </span>
         )}
         {overallState === 'failed' && (
           <span className="inline-flex items-center rounded border bg-red-50 text-red-700 border-red-200 h-4 px-1 text-[10px]">
-            <XCircle className="h-2.5 w-2.5 mr-0.5" />
+            <XCircleIcon className="h-2.5 w-2.5 mr-0.5" />
             Failed
           </span>
         )}
@@ -464,7 +464,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
     return (
       <div className={cn('border rounded p-2', className)}>
         <div className="flex items-center gap-1.5 text-red-500">
-          <AlertTriangle className="h-3.5 w-3.5" />
+          <WarningTriangleIcon className="h-3.5 w-3.5" />
           <span className="text-xs">Failed to load status</span>
         </div>
       </div>
@@ -501,7 +501,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
         {/* Campaign-level error - compact */}
         {statusData.errorMessage && (
           <div className="px-2 py-1.5 rounded bg-red-50 border border-red-200 flex items-center gap-1.5">
-            <XCircle className="h-3 w-3 text-red-500 flex-shrink-0" />
+            <XCircleIcon className="h-3 w-3 text-red-500 flex-shrink-0" />
             <span className="text-[10px] text-red-700 truncate" title={statusData.errorMessage}>
               {statusData.errorMessage}
             </span>

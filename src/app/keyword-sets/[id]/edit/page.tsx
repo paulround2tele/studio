@@ -4,24 +4,24 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, ArrowLeft, Plus, Trash2 } from 'lucide-react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+
+// TailAdmin components
+import PageBreadcrumb from '@/components/ta/common/PageBreadCrumb';
+import Button from '@/components/ta/ui/button/Button';
+import Input from '@/components/ta/form/input/InputField';
+import Label from '@/components/ta/form/Label';
+import Checkbox from '@/components/ta/form/input/Checkbox';
+import Alert from '@/components/ta/ui/alert/Alert';
+import Select from '@/components/ta/form/Select';
+import { Modal } from '@/components/ta/ui/modal';
+
+// Local form adapter
+import FormButton from '@/components/form/FormButton';
+
+// TailAdmin Icons
+import { ArrowLeftIcon, PlusIcon, TrashBinIcon, LoaderIcon } from '@/icons';
+
+// API
 import { KeywordSetsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import type { KeywordSetResponse, UpdateKeywordSetRequest } from '@/lib/api-client/models';
@@ -53,6 +53,11 @@ const DEFAULT_RULE: KeywordRuleForm = {
   contextChars: 0,
 };
 
+const RULE_TYPE_OPTIONS = [
+  { value: KeywordRuleType.string, label: 'Contains string' },
+  { value: KeywordRuleType.regex, label: 'Regex' },
+];
+
 const mapRules = (rules?: KeywordRuleDTO[]): KeywordRuleForm[] => {
   if (!Array.isArray(rules) || rules.length === 0) {
     return [{ ...DEFAULT_RULE }];
@@ -72,7 +77,7 @@ export default function EditKeywordSetPage() {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -189,190 +194,285 @@ export default function EditKeywordSetPage() {
       setErrorMessage(e instanceof Error ? e.message : 'Failed to delete keyword set');
     } finally {
       setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
+      setIsDeleteModalOpen(false);
     }
   }, [keywordSetId, router]);
 
   if (isPageLoading) {
-    return <div className="flex justify-center p-6"><Loader2 className="h-4 w-4 animate-spin" /></div>;
+    return (
+      <div className="flex justify-center items-center min-h-[200px]">
+        <LoaderIcon className="h-6 w-6 animate-spin text-gray-500" />
+      </div>
+    );
   }
 
   const disableActions = isSubmitting || isPageLoading || isDeleting;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <>
+      <PageBreadcrumb pageTitle="Edit Keyword Set" />
+      
+      <div className="space-y-6">
+        {/* Header with back and delete */}
         <div className="flex flex-wrap items-center gap-4">
-          <Link href="/keyword-sets"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Back</Button></Link>
-          <h1 className="text-3xl font-bold">Edit Keyword Set</h1>
-          <div className="ml-auto flex gap-2">
-            <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={disableActions}>
-              Delete Set
+          <Link href="/keyword-sets">
+            <Button variant="outline" startIcon={<ArrowLeftIcon className="h-4 w-4" />}>
+              Back
             </Button>
+          </Link>
+          <div className="ml-auto">
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(true)}
+              disabled={disableActions}
+              className="inline-flex items-center gap-2 rounded-lg bg-error-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-error-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <TrashBinIcon className="h-4 w-4" />
+              Delete Set
+            </button>
           </div>
         </div>
-        {successMessage && (<Alert><AlertDescription>{successMessage}</AlertDescription></Alert>)}
-        {errorMessage && (<Alert variant="destructive"><AlertDescription>{errorMessage}</AlertDescription></Alert>)}
-        <Card className="max-w-3xl">
-          <CardHeader>
-            <CardTitle>Keyword Set Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="e.g. SaaS Keywords" {...form.register('name', { required: true })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input id="description" placeholder="Short summary" {...form.register('description')} />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="enabled" checked={form.watch('isEnabled')} onCheckedChange={v => form.setValue('isEnabled', !!v)} />
-                <Label htmlFor="enabled">Enabled</Label>
-              </div>
-              <div className="relative space-y-4 pt-2">
-                <div className="sticky top-0 z-10 flex flex-wrap items-start justify-between gap-2 rounded-md border border-border/40 bg-background/90 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/75">
-                  <div>
-                    <p className="text-lg font-semibold">Keyword Rules</p>
-                    <p className="text-sm text-muted-foreground">Build and organize the patterns associated with this set.</p>
-                  </div>
-                  <Button
-                    type="button"
-                    onClick={handleAddRule}
+
+        {/* Alerts */}
+        {successMessage && (
+          <Alert variant="success" title="Success" message={successMessage} />
+        )}
+        {errorMessage && (
+          <Alert variant="error" title="Error" message={errorMessage} />
+        )}
+
+        {/* Main form card */}
+        <div className="max-w-3xl rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">
+            Keyword Set Information
+          </h3>
+          
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Name field */}
+            <div>
+              <Label>Name <span className="text-error-500">*</span></Label>
+              <Controller
+                control={form.control}
+                name="name"
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <Input
+                    type="text"
+                    placeholder="e.g. SaaS Keywords"
+                    defaultValue={field.value}
+                    onChange={field.onChange}
                     disabled={disableActions}
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> Add Rule
-                  </Button>
-                </div>
-                {fields.length === 0 && (
-                  <div className="rounded border border-dashed p-4 text-sm text-muted-foreground">
-                    No rules yet. Add at least one pattern to match.
-                  </div>
+                  />
                 )}
-                <div className="space-y-3">
-                  {fields.map((field, index) => {
-                    const patternId = `rule-${field.id}-pattern`;
-                    const categoryId = `rule-${field.id}-category`;
-                    const contextId = `rule-${field.id}-context`;
-                    const checkboxId = `rule-${field.id}-case`;
-                    return (
-                      <div key={field.id} className="space-y-4 rounded-md border p-4">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium">Rule {index + 1}</p>
-                          <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} aria-label="Remove rule" disabled={disableActions}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <div className="space-y-2">
-                            <Label htmlFor={patternId}>Pattern</Label>
+              />
+            </div>
+
+            {/* Description field */}
+            <div>
+              <Label>Description</Label>
+              <Controller
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <Input
+                    type="text"
+                    placeholder="Short summary"
+                    defaultValue={field.value}
+                    onChange={field.onChange}
+                    disabled={disableActions}
+                  />
+                )}
+              />
+            </div>
+
+            {/* Enabled checkbox */}
+            <div className="flex items-center gap-3">
+              <Controller
+                control={form.control}
+                name="isEnabled"
+                render={({ field }) => (
+                  <Checkbox
+                    checked={!!field.value}
+                    onChange={(checked) => field.onChange(checked)}
+                    label="Enabled"
+                    disabled={disableActions}
+                  />
+                )}
+              />
+            </div>
+
+            {/* Rules section */}
+            <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-lg font-semibold text-gray-800 dark:text-white/90">Keyword Rules</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Build and organize the patterns associated with this set.</p>
+                </div>
+                <FormButton
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddRule}
+                  disabled={disableActions}
+                  startIcon={<PlusIcon className="h-4 w-4" />}
+                >
+                  Add Rule
+                </FormButton>
+              </div>
+
+              {fields.length === 0 && (
+                <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 p-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                  No rules yet. Add at least one pattern to match.
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {fields.map((field, index) => (
+                  <div key={field.id} className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-gray-800 dark:text-white/90">Rule {index + 1}</p>
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        disabled={disableActions}
+                        className="p-2 text-gray-400 hover:text-error-500 disabled:opacity-50 transition-colors"
+                        aria-label="Remove rule"
+                      >
+                        <TrashBinIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <Label>Pattern <span className="text-error-500">*</span></Label>
+                        <Controller
+                          control={form.control}
+                          name={`rules.${index}.pattern` as const}
+                          rules={{ required: true }}
+                          render={({ field: patternField }) => (
                             <Input
-                              id={patternId}
+                              type="text"
                               placeholder="Keyword or regex"
                               disabled={disableActions}
-                              {...form.register(`rules.${index}.pattern` as const, { required: true })}
+                              defaultValue={patternField.value}
+                              onChange={patternField.onChange}
                             />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Rule Type</Label>
-                            <Controller
-                              control={form.control}
-                              name={`rules.${index}.ruleType` as const}
-                              render={({ field: selectField }) => (
-                                <Select value={selectField.value} onValueChange={selectField.onChange} disabled={disableActions}>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select type" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value={KeywordRuleType.string}>Contains string</SelectItem>
-                                    <SelectItem value={KeywordRuleType.regex}>Regex</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              )}
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <Label>Rule Type</Label>
+                        <Controller
+                          control={form.control}
+                          name={`rules.${index}.ruleType` as const}
+                          render={({ field: selectField }) => (
+                            <Select
+                              options={RULE_TYPE_OPTIONS}
+                              defaultValue={selectField.value}
+                              onChange={selectField.onChange}
+                              placeholder="Select type"
                             />
-                          </div>
-                        </div>
-                        <div className="grid gap-4 sm:grid-cols-3">
-                          <div className="space-y-2">
-                            <Label htmlFor={categoryId}>Category</Label>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <Label>Category</Label>
+                        <Controller
+                          control={form.control}
+                          name={`rules.${index}.category` as const}
+                          render={({ field: categoryField }) => (
                             <Input
-                              id={categoryId}
+                              type="text"
                               placeholder="Optional category"
                               disabled={disableActions}
-                              {...form.register(`rules.${index}.category` as const)}
+                              defaultValue={categoryField.value}
+                              onChange={categoryField.onChange}
                             />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={contextId}>Context Characters</Label>
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <Label>Context Characters</Label>
+                        <Controller
+                          control={form.control}
+                          name={`rules.${index}.contextChars` as const}
+                          render={({ field: contextField }) => (
                             <Input
-                              id={contextId}
                               type="number"
-                              min={0}
                               placeholder="0"
                               disabled={disableActions}
-                              {...form.register(`rules.${index}.contextChars` as const, { valueAsNumber: true, min: 0 })}
+                              defaultValue={contextField.value}
+                              onChange={(e) => contextField.onChange(Number(e.target.value) || 0)}
+                              min="0"
                             />
-                          </div>
-                          <div className="flex items-center space-x-2 pt-6 sm:pt-0">
-                            <Controller
-                              control={form.control}
-                              name={`rules.${index}.isCaseSensitive` as const}
-                              render={({ field: checkboxField }) => (
-                                <Checkbox
-                                  id={checkboxId}
-                                  checked={!!checkboxField.value}
-                                  onCheckedChange={val => checkboxField.onChange(!!val)}
-                                  disabled={disableActions}
-                                />
-                              )}
-                            />
-                            <Label htmlFor={checkboxId}>Case sensitive</Label>
-                          </div>
-                        </div>
+                          )}
+                        />
                       </div>
-                    );
-                  })}
-                </div>
-                {fields.length > 0 && (
-                  <div className="sticky bottom-4 z-10 flex justify-end">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handleAddRule}
-                      disabled={disableActions}
-                      className="shadow-lg"
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> Add Another Rule
-                    </Button>
+                      <div className="flex items-end pb-2">
+                        <Controller
+                          control={form.control}
+                          name={`rules.${index}.isCaseSensitive` as const}
+                          render={({ field: checkboxField }) => (
+                            <Checkbox
+                              checked={!!checkboxField.value}
+                              onChange={(val) => checkboxField.onChange(val)}
+                              label="Case sensitive"
+                              disabled={disableActions}
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
-              <Button type="submit" disabled={disableActions}>
-                {(isSubmitting || isDeleting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save Changes
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete keyword set?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. Any campaign referencing this set will stop receiving updates from it.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-    </div>
+            </div>
+
+            {/* Submit button */}
+            <div className="pt-4">
+              <FormButton type="submit" disabled={disableActions}>
+                {isSubmitting && <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </FormButton>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
+        <div className="p-6 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-error-50 dark:bg-error-500/10">
+            <TrashBinIcon className="h-6 w-6 text-error-500" />
+          </div>
+          <h3 className="mb-2 text-lg font-semibold text-gray-800 dark:text-white/90">
+            Delete keyword set?
+          </h3>
+          <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+            This action cannot be undone. Any campaign referencing this set will stop receiving updates from it.
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="inline-flex items-center gap-2 rounded-lg bg-error-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-error-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isDeleting && <LoaderIcon className="h-4 w-4 animate-spin" />}
+              Delete
+            </button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }
