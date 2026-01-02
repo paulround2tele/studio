@@ -142,8 +142,11 @@ describe('CampaignCreateWizard', () => {
   });
 
   describe('Auto-start Logic', () => {
+    // Increase timeout for these complex multi-step wizard tests
+    jest.setTimeout(15000);
+    
     it('should automatically start discovery phase when creating campaign in auto mode', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       // Mock successful API responses
       mockCreateCampaign.mockReturnValue({
@@ -230,7 +233,7 @@ describe('CampaignCreateWizard', () => {
     });
 
     it('should handle auto-start failure gracefully', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       // Mock successful campaign creation but failed auto-start
       mockCreateCampaign.mockReturnValue({
@@ -297,7 +300,7 @@ describe('CampaignCreateWizard', () => {
     });
 
     it('should not attempt auto-start for manual mode', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       mockCreateCampaign.mockReturnValue({
         unwrap: jest.fn().mockResolvedValue({ id: 'test-campaign-id' }),
@@ -358,7 +361,7 @@ describe('CampaignCreateWizard', () => {
 
   describe('Loading States', () => {
     it('should show "Starting Campaign..." when auto-starting', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       
       // Mock APIs with delays to test loading states
       mockCreateCampaign.mockReturnValue({

@@ -46,7 +46,6 @@ jobs:
 
       - name: Run unit tests with coverage
         run: npm run test:coverage
-        continue-on-error: true  # TEMPORARY: TailAdmin migration broke 186 tests, will fix in follow-up PR
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

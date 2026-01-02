@@ -179,6 +179,7 @@ export const DomainDrawerHeader = React.memo(function DomainDrawerHeader({
         <Badge 
           color={dnsConfig.color}
           size="sm"
+          data-testid="domain-drawer-dns-status"
         >
           DNS: {dnsConfig.label}
         </Badge>
@@ -186,6 +187,7 @@ export const DomainDrawerHeader = React.memo(function DomainDrawerHeader({
         <Badge 
           color={httpConfig.color}
           size="sm"
+          data-testid="domain-drawer-http-status"
         >
           HTTP: {httpConfig.label}
         </Badge>
@@ -194,6 +196,7 @@ export const DomainDrawerHeader = React.memo(function DomainDrawerHeader({
           <Badge 
             color={leadConfig.color}
             size="sm"
+            data-testid="domain-drawer-lead-status"
           >
             Lead: {leadConfig.label}
           </Badge>

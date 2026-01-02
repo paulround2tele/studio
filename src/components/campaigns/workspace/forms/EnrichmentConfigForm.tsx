@@ -34,9 +34,9 @@ export const ENRICHMENT_DEFAULT_VALUES: EnrichmentConfigFormValues = {
 };
 
 const clamp = (value: number, min: number, max: number): number => {
-  if (!Number.isFinite(value)) return min;
-  if (value < min) return min;
-  if (value > max) return max;
+  if (Number.isNaN(value)) return min;
+  if (value === Number.NEGATIVE_INFINITY || value < min) return min;
+  if (value === Number.POSITIVE_INFINITY || value > max) return max;
   return value;
 };
 

@@ -137,6 +137,7 @@ export function DomainsGrid({
               size="sm" 
               onClick={actions.refresh}
               startIcon={<RefreshIcon className="h-4 w-4" />}
+              data-testid="domains-grid-retry"
             >
               Retry
             </Button>

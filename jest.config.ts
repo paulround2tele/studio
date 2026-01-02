@@ -15,6 +15,8 @@ const config: Config = {
   moduleNameMapper: {
     // Handle module aliases (this will be automatically configured by nextJest)
     '^@/(.*)$': '<rootDir>/src/$1',
+    // Mock SVG files as React components
+    '\\.svg$': '<rootDir>/__mocks__/svgMock.tsx',
   },
   collectCoverage: true,
   coverageReporters: ["json", "lcov", "text", "clover"],

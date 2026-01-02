@@ -171,7 +171,7 @@ function SkeletonCell({ className }: { className?: string }) {
 
 function SkeletonRow({ enableSelection }: { enableSelection: boolean }) {
   return (
-    <TableRow>
+    <TableRow data-testid="domains-grid-row-skeleton">
       {enableSelection && (
         <TableCell className="w-10 px-4 py-3">
           <SkeletonCell className="h-4 w-4" />
@@ -218,6 +218,8 @@ export const DomainsGridRow = memo(function DomainsGridRow({
         'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
         isSelected && 'bg-brand-50 dark:bg-brand-900/20'
       )}
+      data-testid="domains-grid-row"
+      onClick={onClick}
     >
       {/* Selection Checkbox */}
       {enableSelection && (
@@ -249,7 +251,7 @@ export const DomainsGridRow = memo(function DomainsGridRow({
       </TableCell>
 
       {/* DNS Status */}
-      <TableCell className="text-center px-4 py-3">
+      <TableCell className="text-center px-4 py-3" data-testid="domains-grid-cell-dns">
         <StatusBadge status={domain.dnsStatus} type="dns" />
       </TableCell>
 
@@ -259,7 +261,7 @@ export const DomainsGridRow = memo(function DomainsGridRow({
       </TableCell>
 
       {/* Richness Score */}
-      <TableCell className="text-center px-4 py-3">
+      <TableCell className="text-center px-4 py-3" data-testid="domains-grid-cell-richness">
         <RichnessDisplay score={domain.features?.richness?.score} />
       </TableCell>
 

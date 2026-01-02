@@ -1,4 +1,4 @@
-import React from "react";
+import React, { HTMLAttributes } from "react";
 
 type BadgeVariant = "light" | "solid";
 type BadgeSize = "sm" | "md";
@@ -11,14 +11,13 @@ type BadgeColor =
   | "light"
   | "dark";
 
-interface BadgeProps {
+interface BadgeProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'color'> {
   variant?: BadgeVariant; // Light or solid variant
   size?: BadgeSize; // Badge size
   color?: BadgeColor; // Badge color
   startIcon?: React.ReactNode; // Icon at the start
   endIcon?: React.ReactNode; // Icon at the end
   children: React.ReactNode; // Badge content
-  className?: string; // Additional CSS classes
 }
 
 const Badge: React.FC<BadgeProps> = ({
@@ -29,6 +28,7 @@ const Badge: React.FC<BadgeProps> = ({
   endIcon,
   children,
   className = "",
+  ...rest
 }) => {
   const baseStyles =
     "inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium";
@@ -70,7 +70,7 @@ const Badge: React.FC<BadgeProps> = ({
   const colorStyles = variants[variant][color];
 
   return (
-    <span className={`${baseStyles} ${sizeClass} ${colorStyles} ${className}`}>
+    <span className={`${baseStyles} ${sizeClass} ${colorStyles} ${className}`} {...rest}>
       {startIcon && <span className="mr-1">{startIcon}</span>}
       {children}
       {endIcon && <span className="ml-1">{endIcon}</span>}

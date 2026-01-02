@@ -54,6 +54,7 @@ export function DomainsGridEmptyState({
           variant="outline" 
           onClick={onClearFilters}
           startIcon={<FileSearchIcon className="h-4 w-4" />}
+          data-testid="domains-grid-clear-filters"
         >
           Clear Filters
         </Button>

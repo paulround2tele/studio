@@ -1,20 +1,20 @@
-import PlusIcon from "./plus.svg";
-import CloseIcon from "./close.svg";
+import _PlusIcon from "./plus.svg";
+import _CloseIcon from "./close.svg";
 import BoxIcon from "./box.svg";
-import CheckCircleIcon from "./check-circle.svg";
+import _CheckCircleIcon from "./check-circle.svg";
 import AlertIcon from "./alert.svg";
-import InfoIcon from "./info.svg";
+import _InfoIcon from "./info.svg";
 import ErrorIcon from "./info-hexa.svg";
 import BoltIcon from "./bolt.svg";
-import ArrowUpIcon from "./arrow-up.svg";
-import ArrowDownIcon from "./arrow-down.svg";
+import _ArrowUpIcon from "./arrow-up.svg";
+import _ArrowDownIcon from "./arrow-down.svg";
 import FolderIcon from "./folder.svg";
 import VideoIcon from "./videos.svg";
 import AudioIcon from "./audio.svg";
 import GridIcon from "./grid.svg";
 import FileIcon from "./file.svg";
-import DownloadIcon from "./download.svg";
-import ArrowRightIcon from "./arrow-right.svg";
+import _DownloadIcon from "./download.svg";
+import _ArrowRightIcon from "./arrow-right.svg";
 import GroupIcon from "./group.svg";
 import BoxIconLine from "./box-line.svg";
 import ShootingStarIcon from "./shooting-star.svg";
@@ -23,20 +23,20 @@ import TrashBinIcon from "./trash.svg";
 import AngleUpIcon from "./angle-up.svg";
 import AngleDownIcon from "./angle-down.svg";
 import PencilIcon from "./pencil.svg";
-import CheckLineIcon from "./check-line.svg";
+import _CheckLineIcon from "./check-line.svg";
 import CloseLineIcon from "./close-line.svg";
-import ChevronDownIcon from "./chevron-down.svg";
-import ChevronUpIcon from "./chevron-up.svg";
+import _ChevronDownIcon from "./chevron-down.svg";
+import _ChevronUpIcon from "./chevron-up.svg";
 import PaperPlaneIcon from "./paper-plane.svg";
 import LockIcon from "./lock.svg";
 import EnvelopeIcon from "./envelope.svg";
 import UserIcon from "./user-line.svg";
-import CalenderIcon from "./calender-line.svg";
+import _CalenderIcon from "./calender-line.svg";
 import EyeIcon from "./eye.svg";
 import EyeCloseIcon from "./eye-close.svg";
 import TimeIcon from "./time.svg";
-import CopyIcon from "./copy.svg";
-import ChevronLeftIcon from "./chevron-left.svg";
+import _CopyIcon from "./copy.svg";
+import _ChevronLeftIcon from "./chevron-left.svg";
 import UserCircleIcon from "./user-circle.svg";
 import TaskIcon from "./task-icon.svg";
 import ListIcon from "./list.svg";
@@ -140,6 +140,13 @@ const RefreshIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   </svg>
 );
 
+// Inline React component to replace SVG import for Jest compatibility
+const ChevronLeftIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12.7083 5L7.5 10.2083L12.7083 15.4167" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 const ArrowLeftIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M19 12H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -223,10 +230,100 @@ const WarningTriangleIcon = ({ className = "w-6 h-6" }: { className?: string }) 
   </svg>
 );
 
+// Inline React component versions to ensure Jest compatibility
+const ChevronDownIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const ChevronUpIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.8333 12.7083L10.6249 7.5L5.41658 12.7083" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+// CloseIcon as inline React component for Jest compatibility
+const CloseIconComponent = ({ className = "w-6 h-6", ...rest }: React.ComponentPropsWithoutRef<"svg">) => (
+  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...rest}>
+    <path fillRule="evenodd" clipRule="evenodd" d="M6.04289 16.5418C5.65237 16.9323 5.65237 17.5655 6.04289 17.956C6.43342 18.3465 7.06658 18.3465 7.45711 17.956L11.9987 13.4144L16.5408 17.9565C16.9313 18.347 17.5645 18.347 17.955 17.9565C18.3455 17.566 18.3455 16.9328 17.955 16.5423L13.4129 12.0002L17.955 7.45808C18.3455 7.06756 18.3455 6.43439 17.955 6.04387C17.5645 5.65335 16.9313 5.65335 16.5408 6.04387L11.9987 10.586L7.45711 6.04439C7.06658 5.65386 6.43342 5.65386 6.04289 6.04439C5.65237 6.43491 5.65237 7.06808 6.04289 7.4586L10.5845 12.0002L6.04289 16.5418Z" fill="currentColor"/>
+  </svg>
+);
+
+// InfoIcon as inline React component for Jest compatibility
+const InfoIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" clipRule="evenodd" d="M3.5 12C3.5 7.30558 7.30558 3.5 12 3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5C7.30558 20.5 3.5 16.6944 3.5 12ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM10.9991 7.52507C10.9991 8.07736 11.4468 8.52507 11.9991 8.52507H12.0001C12.5524 8.52507 13.0001 8.07736 13.0001 7.52507C13.0001 6.97279 12.5524 6.52507 12.0001 6.52507H11.9991C11.4468 6.52507 10.9991 6.97279 10.9991 7.52507ZM12.0001 17.3714C11.5859 17.3714 11.2501 17.0356 11.2501 16.6214V10.9449C11.2501 10.5307 11.5859 10.1949 12.0001 10.1949C12.4143 10.1949 12.7501 10.5307 12.7501 10.9449V16.6214C12.7501 17.0356 12.4143 17.3714 12.0001 17.3714Z" fill="currentColor"/>
+  </svg>
+);
+
+// CheckCircleIcon as inline React component for Jest compatibility
+const CheckCircleIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" clipRule="evenodd" d="M3.55078 12C3.55078 7.33417 7.3332 3.55176 11.999 3.55176C16.6649 3.55176 20.4473 7.33417 20.4473 12C20.4473 16.6659 16.6649 20.4483 11.999 20.4483C7.3332 20.4483 3.55078 16.6659 3.55078 12ZM11.999 2.05176C6.50477 2.05176 2.05078 6.50574 2.05078 12C2.05078 17.4943 6.50477 21.9483 11.999 21.9483C17.4933 21.9483 21.9473 17.4943 21.9473 12C21.9473 6.50574 17.4933 2.05176 11.999 2.05176ZM15.5126 10.6333C15.8055 10.3405 15.8055 9.86558 15.5126 9.57269C15.2197 9.27979 14.7448 9.27979 14.4519 9.57269L11.1883 12.8364L9.54616 11.1942C9.25327 10.9014 8.7784 10.9014 8.4855 11.1942C8.19261 11.4871 8.19261 11.962 8.4855 12.2549L10.6579 14.4273C10.7986 14.568 10.9894 14.647 11.1883 14.647C11.3872 14.647 11.578 14.568 11.7186 14.4273L15.5126 10.6333Z" fill="currentColor"/>
+  </svg>
+);
+
 const ClockIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
     <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+// CheckLineIcon as inline React component for Jest compatibility
+const CheckLineIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M13.4017 4.35986L6.12166 11.6399L2.59833 8.11657" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+// CopyIcon as inline React component for Jest compatibility
+const CopyIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" clipRule="evenodd" d="M6.58822 4.58398C6.58822 4.30784 6.81207 4.08398 7.08822 4.08398H15.4154C15.6915 4.08398 15.9154 4.30784 15.9154 4.58398L15.9154 12.9128C15.9154 13.189 15.6916 13.4128 15.4154 13.4128H7.08821C6.81207 13.4128 6.58822 13.189 6.58822 12.9128V4.58398ZM7.08822 2.58398C5.98365 2.58398 5.08822 3.47942 5.08822 4.58398V5.09416H4.58496C3.48039 5.09416 2.58496 5.98959 2.58496 7.09416V15.4161C2.58496 16.5207 3.48039 17.4161 4.58496 17.4161H12.9069C14.0115 17.4161 14.9069 16.5207 14.9069 15.4161L14.9069 14.9128H15.4154C16.52 14.9128 17.4154 14.0174 17.4154 12.9128L17.4154 4.58398C17.4154 3.47941 16.52 2.58398 15.4154 2.58398H7.08822ZM13.4069 14.9128H7.08821C5.98364 14.9128 5.08822 14.0174 5.08822 12.9128V6.59416H4.58496C4.30882 6.59416 4.08496 6.81801 4.08496 7.09416V15.4161C4.08496 15.6922 4.30882 15.9161 4.58496 15.9161H12.9069C13.183 15.9161 13.4069 15.6922 13.4069 15.4161L13.4069 14.9128Z" fill="currentColor"/>
+  </svg>
+);
+
+// ArrowUpIcon as inline React component for Jest compatibility
+const ArrowUpIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} width="13" height="12" viewBox="0 0 13 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" clipRule="evenodd" d="M6.06462 1.62393C6.20193 1.47072 6.40135 1.37432 6.62329 1.37432C6.6236 1.37432 6.62391 1.37432 6.62422 1.37432C6.81631 1.37415 7.00845 1.44731 7.15505 1.5938L10.1551 4.5918C10.4481 4.88459 10.4483 5.35946 10.1555 5.65246C9.86273 5.94546 9.38785 5.94562 9.09486 5.65283L7.37329 3.93247L7.37329 10.125C7.37329 10.5392 7.03751 10.875 6.62329 10.875C6.20908 10.875 5.87329 10.5392 5.87329 10.125L5.87329 3.93578L4.15516 5.65281C3.86218 5.94561 3.3873 5.94546 3.0945 5.65248C2.8017 5.35949 2.80185 4.88462 3.09484 4.59182L6.06462 1.62393Z" fill="currentColor"/>
+  </svg>
+);
+
+// ArrowDownIcon as inline React component for Jest compatibility
+const ArrowDownIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" clipRule="evenodd" d="M5.31462 10.3761C5.45194 10.5293 5.65136 10.6257 5.87329 10.6257C5.8736 10.6257 5.8739 10.6257 5.87421 10.6257C6.0663 10.6259 6.25845 10.5527 6.40505 10.4062L9.40514 7.4082C9.69814 7.11541 9.69831 6.64054 9.40552 6.34754C9.11273 6.05454 8.63785 6.05438 8.34486 6.34717L6.62329 8.06753L6.62329 1.875C6.62329 1.46079 6.28751 1.125 5.87329 1.125C5.45908 1.125 5.12329 1.46079 5.12329 1.875L5.12329 8.06422L3.40516 6.34719C3.11218 6.05439 2.6373 6.05454 2.3445 6.34752C2.0517 6.64051 2.05185 7.11538 2.34484 7.40818L5.31462 10.3761Z" fill="currentColor"/>
+  </svg>
+);
+
+// ArrowRightIcon as inline React component for Jest compatibility
+const ArrowRightIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" clipRule="evenodd" d="M17.4175 9.9986C17.4178 10.1909 17.3446 10.3832 17.198 10.53L12.2013 15.5301C11.9085 15.8231 11.4337 15.8233 11.1407 15.5305C10.8477 15.2377 10.8475 14.7629 11.1403 14.4699L14.8604 10.7472L3.33301 10.7472C2.91879 10.7472 2.58301 10.4114 2.58301 9.99715C2.58301 9.58294 2.91879 9.24715 3.33301 9.24715L14.8549 9.24715L11.1403 5.53016C10.8475 5.23717 10.8477 4.7623 11.1407 4.4695C11.4336 4.1767 11.9085 4.17685 12.2013 4.46984L17.1588 9.43049C17.3173 9.568 17.4175 9.77087 17.4175 9.99715C17.4175 9.99763 17.4175 9.99812 17.4175 9.9986Z" fill="currentColor"/>
+  </svg>
+);
+
+// CalenderIcon as inline React component for Jest compatibility
+const CalenderIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path fillRule="evenodd" clipRule="evenodd" d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z" fill="currentColor"/>
+  </svg>
+);
+
+// DownloadIcon as inline React component for Jest compatibility
+const DownloadIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" clipRule="evenodd" d="M12.6686 16.75C12.4526 16.75 12.2579 16.6587 12.1211 16.5126L7.5115 11.9059C7.21851 11.6131 7.21836 11.1382 7.51116 10.8452C7.80396 10.5523 8.27883 10.5521 8.57182 10.8449L11.9186 14.1896V4C11.9186 3.58579 12.2544 3.25 12.6686 3.25C13.0828 3.25 13.4186 3.58579 13.4186 4V14.1854L16.7615 10.8449C17.0545 10.5521 17.5294 10.5523 17.8222 10.8453C18.115 11.1383 18.1148 11.6131 17.8218 11.9059L13.2469 16.4776C13.1093 16.644 12.9013 16.75 12.6686 16.75ZM5.41663 16C5.41663 15.5858 5.08084 15.25 4.66663 15.25C4.25241 15.25 3.91663 15.5858 3.91663 16V18.5C3.91663 19.7426 4.92399 20.75 6.16663 20.75H19.1675C20.4101 20.75 21.4175 19.7426 21.4175 18.5V16C21.4175 15.5858 21.0817 15.25 20.6675 15.25C20.2533 15.25 19.9175 15.5858 19.9175 16V18.5C19.9175 18.9142 19.5817 19.25 19.1675 19.25H6.16663C5.75241 19.25 5.41663 18.9142 5.41663 18.5V16Z" fill="currentColor"/>
+  </svg>
+);
+
+// PlusIcon as inline React component for Jest compatibility
+const PlusIconComponent = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" clipRule="evenodd" d="M5.25012 3C5.25012 2.58579 5.58591 2.25 6.00012 2.25C6.41433 2.25 6.75012 2.58579 6.75012 3V5.25012L9.00034 5.25012C9.41455 5.25012 9.75034 5.58591 9.75034 6.00012C9.75034 6.41433 9.41455 6.75012 9.00034 6.75012H6.75012V9.00034C6.75012 9.41455 6.41433 9.75034 6.00012 9.75034C5.58591 9.75034 5.25012 9.41455 5.25012 9.00034L5.25012 6.75012H3C2.58579 6.75012 2.25 6.41433 2.25 6.00012C2.25 5.58591 2.58579 5.25012 3 5.25012H5.25012V3Z" fill="currentColor"/>
   </svg>
 );
 
@@ -812,7 +909,7 @@ const CircleSlashIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 );
 
 export {
-  DownloadIcon,
+  DownloadIconComponent as DownloadIcon,
   BellIcon,
   MoreDotIcon,
   FileIcon,
@@ -820,17 +917,17 @@ export {
   AudioIcon,
   VideoIcon,
   BoltIcon,
-  PlusIcon,
+  PlusIconComponent as PlusIcon,
   BoxIcon,
-  CloseIcon,
-  CheckCircleIcon,
+  CloseIconComponent as CloseIcon,
+  CheckCircleIconComponent as CheckCircleIcon,
   AlertIcon,
-  InfoIcon,
+  InfoIconComponent as InfoIcon,
   ErrorIcon,
-  ArrowUpIcon,
+  ArrowUpIconComponent as ArrowUpIcon,
   FolderIcon,
-  ArrowDownIcon,
-  ArrowRightIcon,
+  ArrowDownIconComponent as ArrowDownIcon,
+  ArrowRightIconComponent as ArrowRightIcon,
   GroupIcon,
   BoxIconLine,
   ShootingStarIcon,
@@ -839,19 +936,19 @@ export {
   AngleUpIcon,
   AngleDownIcon,
   PencilIcon,
-  CheckLineIcon,
+  CheckLineIconComponent as CheckLineIcon,
   CloseLineIcon,
-  ChevronDownIcon,
+  ChevronDownIconComponent as ChevronDownIcon,
   PaperPlaneIcon,
   EnvelopeIcon,
   LockIcon,
   UserIcon,
-  CalenderIcon,
+  CalenderIconComponent as CalenderIcon,
   EyeIcon,
   EyeCloseIcon,
   TimeIcon,
-  CopyIcon,
-  ChevronLeftIcon,
+  CopyIconComponent as CopyIcon,
+  ChevronLeftIconComponent as ChevronLeftIcon,
   UserCircleIcon,
   ListIcon,
   TableIcon,
@@ -863,7 +960,7 @@ export {
   DocsIcon,
   MailIcon,
   HorizontaLDots,
-  ChevronUpIcon,
+  ChevronUpIconComponent as ChevronUpIcon,
   ChatIcon,
   // New TailAdmin-style icons (inline SVG components)
   GlobeIcon,

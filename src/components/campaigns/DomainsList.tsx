@@ -226,7 +226,7 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
               <div className="flex items-center gap-1" data-testid="campaign-domains-infinite-toggle">
                 <Switch label="Infinite" defaultChecked={infinite} onChange={(v)=>api.toggleInfinite(v)} data-testid="campaign-domains-infinite-switch" />
               </div>
-              <div className="flex items-center gap-1" data-testid="campaign-domains-warnings-filter">
+              <div className="flex items-center gap-1" data-testid="campaign-domains-warnings-filter-wrapper">
                 <span className="text-xs" id="warnings-filter-label">Warnings</span>
                 <SelectAdapter
                   options={warningsFilterOptions}

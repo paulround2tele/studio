@@ -1,15 +1,11 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, ButtonHTMLAttributes } from "react";
 
-interface ButtonProps {
+interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'size'> {
   children?: ReactNode; // Button text or content (optional for icon-only buttons)
   size?: "sm" | "md"; // Button size
   variant?: "primary" | "outline" | "success" | "warning" | "error" | "info"; // Button variant
   startIcon?: ReactNode; // Icon before the text
   endIcon?: ReactNode; // Icon after the text
-  onClick?: () => void; // Click handler
-  disabled?: boolean; // Disabled state
-  className?: string; // Additional CSS classes
-  type?: "button" | "submit" | "reset"; // Button type
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -22,6 +18,7 @@ const Button: React.FC<ButtonProps> = ({
   className = "",
   disabled = false,
   type = "button",
+  ...rest
 }) => {
   // Size Classes
   const sizeClasses = {
@@ -55,6 +52,7 @@ const Button: React.FC<ButtonProps> = ({
       }`}
       onClick={onClick}
       disabled={disabled}
+      {...rest}
     >
       {startIcon && <span className="flex items-center">{startIcon}</span>}
       {children}
