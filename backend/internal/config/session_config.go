@@ -77,24 +77,27 @@ func GetDefaultSessionSettings() *SessionSettings {
 		CookiePath:     CookiePath,
 		CookieDomain:   "", // Empty domain for maximum compatibility
 		CookieSecure:   false, // Must be false for localhost HTTP
-		CookieHttpOnly: false, // Allow JavaScript access for debugging
+		CookieHttpOnly: true, // Enable HttpOnly for security
 		CookieSameSite: "Lax", // Lax works better for localhost cross-origin
 		CookieMaxAge:   CookieMaxAge,
 
-		// CSRF Protection - ALL DISABLED
-		RequireOriginValidation: false,
-		RequireCustomHeader:     false,
+		// CSRF Protection - ENABLED for security
+		RequireOriginValidation: true,
+		RequireCustomHeader:     true,
 		AllowedOrigins: []string{
-			"*", // Allow all origins
+			"http://localhost:3000",
+			"http://localhost:3001",
+			"http://127.0.0.1:3000",
+			"http://127.0.0.1:3001",
 		},
-		CustomHeaderName:  "",
-		CustomHeaderValue: "",
+		CustomHeaderName:  "X-Requested-With",
+		CustomHeaderValue: "XMLHttpRequest",
 
-		// Rate limiting - VERY RELAXED
-		RateLimitEnabled:      false, // Disabled completely
-		RateLimitWindow:       60 * time.Minute,
-		MaxLoginAttempts:      1000, // Essentially unlimited
-		MaxSessionValidations: 10000, // Very high limit
+		// Rate limiting - ENABLED
+		RateLimitEnabled:      true,
+		RateLimitWindow:       1 * time.Minute,
+		MaxLoginAttempts:      5, // 5 attempts per minute
+		MaxSessionValidations: 1000, // High limit for normal usage
 	}
 }
 
@@ -107,11 +110,23 @@ func GetProductionSessionSettings() *SessionSettings {
 	settings.RequireUAMatch = false      // Still disabled for production flexibility
 	settings.EnableFingerprinting = true // Enhanced security for production
 	settings.CookieSecure = true         // Always HTTPS in production
+	settings.CookieHttpOnly = true       // Always HttpOnly in production
 	settings.AllowedOrigins = []string{
 		"https://domainflow.app",
 		"https://app.domainflow.com",
 		"https://studio.domainflow.com",
 	}
+	
+	// Enable CSRF protection in production
+	settings.RequireOriginValidation = true
+	settings.RequireCustomHeader = true
+	settings.CustomHeaderName = "X-Requested-With"
+	settings.CustomHeaderValue = "XMLHttpRequest"
+	
+	// Enable rate limiting in production
+	settings.RateLimitEnabled = true
+	settings.RateLimitWindow = 1 * time.Minute
+	settings.MaxLoginAttempts = 5
 
 	return settings
 }

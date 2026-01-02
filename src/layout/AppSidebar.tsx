@@ -6,6 +6,7 @@ import { useSidebar } from "@/contexts/SidebarContext";
 import { useCachedAuth } from "@/lib/hooks/useCachedAuth";
 import { ChevronDownIcon, GridIcon, HorizontaLDots } from "@/icons";
 import { LogOut, Target, Users, Settings, Zap, Database } from "lucide-react";
+import { DomainFlowLogo } from "@/components/common/DomainFlowLogo";
 
 type NavItem = {
   name: string;
@@ -268,9 +269,7 @@ const AppSidebar: React.FC = () => {
       >
         <Link href="/dashboard" className="flex items-center gap-2">
           {isExpanded || isHovered || isMobileOpen ? (
-            <span className="text-xl font-bold text-gray-900 dark:text-white">
-              DomainFlow
-            </span>
+            <DomainFlowLogo size={24} className="text-gray-900 dark:text-white" />
           ) : (
             <span className="text-xl font-bold text-gray-900 dark:text-white">
               DF

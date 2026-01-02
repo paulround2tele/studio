@@ -15,6 +15,7 @@ import (
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 	"github.com/fntelecomllc/studio/backend/internal/config"
+	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -53,10 +54,34 @@ func startChiServer() {
 			// Only attempt if session service is available
 			if deps.Session != nil {
 				if c, err := r.Cookie(config.SessionCookieName); err == nil {
-					ip := clientIP(r)
-					if sd, verr := deps.Session.ValidateSession(c.Value, ip); verr == nil {
-						ctx = context.WithValue(ctx, "user_id", sd.UserID.String())
-						ctx = context.WithValue(ctx, "session_id", sd.ID)
+					// Verify the signed cookie and extract session ID
+					sessionID, valid := services.VerifySessionCookie(c.Value)
+					if valid {
+						ip := clientIP(r)
+						if sd, verr := deps.Session.ValidateSession(sessionID, ip); verr == nil {
+							ctx = context.WithValue(ctx, "user_id", sd.UserID.String())
+							ctx = context.WithValue(ctx, "session_id", sd.ID)
+							
+							// Sliding session expiration: extend if within 6 hours of expiry
+							if services.ShouldExtendSession(sd.ExpiresAt) {
+								if newExpiry, extended := deps.Session.ExtendSessionWithSliding(sd.ID, sd.ExpiresAt); extended {
+									// Re-issue signed cookie with updated Max-Age
+									newMaxAge := int(time.Until(newExpiry).Seconds())
+									if newMaxAge > 0 {
+										signedCookie := services.SignSessionCookie(sd.ID)
+										http.SetCookie(w, &http.Cookie{
+											Name:     config.SessionCookieName,
+											Value:    signedCookie,
+											Path:     config.CookiePath,
+											HttpOnly: config.CookieHttpOnly,
+											Secure:   config.CookieSecure,
+											SameSite: sameSiteFromString(config.CookieSameSite),
+											MaxAge:   newMaxAge,
+										})
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -97,9 +122,11 @@ func startChiServer() {
 				if v, ok := resp.(gen.AuthLogin200JSONResponse); ok {
 					token := v.Token
 					if token != "" {
+						// Sign the session cookie for security
+						signedCookie := services.SignSessionCookie(token)
 						http.SetCookie(w, &http.Cookie{
 							Name:     config.SessionCookieName,
-							Value:    token,
+							Value:    signedCookie,
 							Path:     config.CookiePath,
 							HttpOnly: config.CookieHttpOnly,
 							Secure:   config.CookieSecure,
@@ -113,9 +140,50 @@ func startChiServer() {
 		}
 	}
 
+	// Post-response middleware: clear session cookie on AuthLogout (both success and 401)
+	authLogoutCookie := func(next gen.StrictHandlerFunc, operationID string) gen.StrictHandlerFunc {
+		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, req interface{}) (interface{}, error) {
+			resp, err := next(ctx, w, r, req)
+			if operationID == "AuthLogout" {
+				// Clear cookies on both successful logout (204) and unauthorized (401)
+				// The 401 case handles when the session was already invalidated but the cookie is still present
+				shouldClearCookies := false
+				if _, ok := resp.(gen.AuthLogout204Response); ok {
+					shouldClearCookies = true
+				}
+				if _, ok := resp.(gen.AuthLogout401JSONResponse); ok {
+					shouldClearCookies = true
+				}
+				if shouldClearCookies {
+					// Clear the session cookie by setting MaxAge to -1
+					http.SetCookie(w, &http.Cookie{
+						Name:     config.SessionCookieName,
+						Value:    "",
+						Path:     config.CookiePath,
+						HttpOnly: config.CookieHttpOnly,
+						Secure:   config.CookieSecure,
+						SameSite: sameSiteFromString(config.CookieSameSite),
+						MaxAge:   -1, // Immediately expire the cookie
+					})
+					// Also clear the auth_presence cookie
+					http.SetCookie(w, &http.Cookie{
+						Name:     "auth_presence",
+						Value:    "",
+						Path:     config.CookiePath,
+						HttpOnly: false, // auth_presence is readable by JS
+						Secure:   config.CookieSecure,
+						SameSite: sameSiteFromString(config.CookieSameSite),
+						MaxAge:   -1, // Immediately expire the cookie
+					})
+				}
+			}
+			return resp, err
+		}
+	}
+
 	networkLogger := newNetworkLogHandler(deps)
 	strict := &strictHandlers{deps: deps, networkLogger: networkLogger}
-	handler := gen.NewStrictHandlerWithOptions(strict, []gen.StrictMiddlewareFunc{authCtx, authLoginCookie}, opts)
+	handler := gen.NewStrictHandlerWithOptions(strict, []gen.StrictMiddlewareFunc{authCtx, authLoginCookie, authLogoutCookie}, opts)
 	baseHandler := gen.HandlerWithOptions(handler, gen.ChiServerOptions{BaseURL: "/api/v2"})
 
 	// CORS middleware to allow frontend at localhost:3000 to call API with credentials

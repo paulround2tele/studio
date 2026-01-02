@@ -522,3 +522,46 @@ func LogSessionEvent(
 ) {
 	GlobalAuthLogger.LogSessionEvent(operation, userID, sessionID, ipAddress, userAgent, success, sessionExpiry, details)
 }
+
+// LogAuthEvent is a convenience function for logging authentication events
+// eventType: LOGIN_SUCCESS, LOGIN_FAILURE, LOGOUT, SESSION_EXPIRED, SESSION_EXTENDED, RATE_LIMIT_EXCEEDED, etc.
+// status: SUCCESS, FAILURE, WARNING
+func LogAuthEvent(
+	eventType string,
+	status string,
+	userID *uuid.UUID,
+	sessionID *string,
+	ipAddress, userAgent string,
+	details map[string]interface{},
+) {
+	level := LogLevelInfo
+	if status == "FAILURE" {
+		level = LogLevelWarn
+	}
+	if status == "WARNING" {
+		level = LogLevelWarn
+	}
+	
+	success := status == "SUCCESS"
+	
+	if details == nil {
+		details = make(map[string]interface{})
+	}
+	details["event_status"] = status
+	
+	GlobalAuthLogger.LogAuthOperation(
+		level,
+		CategoryAuth,
+		eventType,
+		userID,
+		sessionID,
+		ipAddress,
+		userAgent,
+		"",
+		nil,
+		&success,
+		"",
+		"",
+		details,
+	)
+}

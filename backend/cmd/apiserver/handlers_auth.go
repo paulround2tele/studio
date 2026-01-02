@@ -8,6 +8,7 @@ import (
 	"time"
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
+	"github.com/fntelecomllc/studio/backend/internal/logging"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	"golang.org/x/crypto/bcrypt"
@@ -15,12 +16,17 @@ import (
 
 // AuthLogin verifies credentials, creates a session, and returns a SessionResponse.
 func (h *strictHandlers) AuthLogin(ctx context.Context, r gen.AuthLoginRequestObject) (gen.AuthLoginResponseObject, error) {
+	startTime := time.Now()
+	clientIP, _ := ctx.Value("client_ip").(string)
+	
 	if h.deps == nil || h.deps.DB == nil || h.deps.Session == nil {
 		return gen.AuthLogin500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "authentication not available", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil || strings.TrimSpace(string(r.Body.Email)) == "" || strings.TrimSpace(r.Body.Password) == "" {
 		return gen.AuthLogin400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "email and password required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
+
+	attemptedEmail := string(r.Body.Email)
 
 	// Lookup user by email
 	var (
@@ -34,31 +40,50 @@ func (h *strictHandlers) AuthLogin(ctx context.Context, r gen.AuthLoginRequestOb
 		lastName     string
 	)
 	q := `SELECT id, email, is_active, is_locked, locked_until, password_hash, first_name, last_name FROM auth.users WHERE LOWER(email) = LOWER($1) LIMIT 1`
-	if err := h.deps.DB.QueryRowxContext(ctx, q, string(r.Body.Email)).Scan(&id, &email, &isActive, &isLocked, &lockedUntil, &passwordHash, &firstName, &lastName); err != nil {
+	if err := h.deps.DB.QueryRowxContext(ctx, q, attemptedEmail).Scan(&id, &email, &isActive, &isLocked, &lockedUntil, &passwordHash, &firstName, &lastName); err != nil {
 		if err == sql.ErrNoRows {
+			// Log failed login - user not found
+			logAuthEvent("LOGIN_FAILURE", nil, clientIP, "user_not_found", map[string]interface{}{
+				"attempted_email": attemptedEmail,
+				"duration_ms":     time.Since(startTime).Milliseconds(),
+			})
 			return gen.AuthLogin401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "invalid credentials", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 		return gen.AuthLogin500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to query user", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
 	if !isActive {
+		logAuthEvent("LOGIN_FAILURE", &id, clientIP, "account_disabled", nil)
 		return gen.AuthLogin401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "account disabled", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if isLocked {
 		if lockedUntil.Valid && lockedUntil.Time.After(time.Now()) {
+			logAuthEvent("LOGIN_FAILURE", &id, clientIP, "account_locked", map[string]interface{}{
+				"locked_until": lockedUntil.Time.Format(time.RFC3339),
+			})
 			return gen.AuthLogin401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "account locked", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(r.Body.Password)); err != nil {
+		logAuthEvent("LOGIN_FAILURE", &id, clientIP, "invalid_password", nil)
 		return gen.AuthLogin401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "invalid credentials", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
 	// Create session (client IP/UA may not be available here; use empty strings)
-	sd, err := h.deps.Session.CreateSession(id, "", "")
+	sd, err := h.deps.Session.CreateSession(id, clientIP, "")
 	if err != nil {
+		logAuthEvent("LOGIN_FAILURE", &id, clientIP, "session_creation_failed", map[string]interface{}{
+			"error": err.Error(),
+		})
 		return gen.AuthLogin500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create session", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
+
+	// Log successful login
+	logAuthEvent("LOGIN_SUCCESS", &id, clientIP, "", map[string]interface{}{
+		"session_id":  sd.ID,
+		"duration_ms": time.Since(startTime).Milliseconds(),
+	})
 
 	// Map user to API response
 	username := deriveUsername(email, firstName, lastName)
@@ -67,8 +92,27 @@ func (h *strictHandlers) AuthLogin(ctx context.Context, r gen.AuthLoginRequestOb
 	return gen.AuthLogin200JSONResponse(data), nil
 }
 
+// logAuthEvent logs an authentication event to the audit log
+func logAuthEvent(eventType string, userID *uuid.UUID, ipAddress, reason string, details map[string]interface{}) {
+	status := "SUCCESS"
+	if strings.Contains(eventType, "FAILURE") {
+		status = "FAILURE"
+	}
+	
+	if details == nil {
+		details = make(map[string]interface{})
+	}
+	if reason != "" {
+		details["reason"] = reason
+	}
+	
+	logging.LogAuthEvent(eventType, status, userID, nil, ipAddress, "", details)
+}
+
 // AuthLogout invalidates the current session.
 func (h *strictHandlers) AuthLogout(ctx context.Context, r gen.AuthLogoutRequestObject) (gen.AuthLogoutResponseObject, error) {
+	clientIP, _ := ctx.Value("client_ip").(string)
+	
 	if h.deps == nil || h.deps.Session == nil {
 		return gen.AuthLogout500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "session service unavailable", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
@@ -80,7 +124,24 @@ func (h *strictHandlers) AuthLogout(ctx context.Context, r gen.AuthLogoutRequest
 	if sid == "" {
 		return gen.AuthLogout401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "unauthorized", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
+	
+	// Get user ID for audit logging
+	var userID *uuid.UUID
+	if uidVal := ctx.Value("user_id"); uidVal != nil {
+		if uidStr, ok := uidVal.(string); ok {
+			if uid, err := uuid.Parse(uidStr); err == nil {
+				userID = &uid
+			}
+		}
+	}
+	
 	_ = h.deps.Session.InvalidateSession(sid)
+	
+	// Log successful logout
+	logAuthEvent("LOGOUT", userID, clientIP, "", map[string]interface{}{
+		"session_id": sid,
+	})
+	
 	return gen.AuthLogout204Response{}, nil
 }
 

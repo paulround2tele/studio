@@ -2,10 +2,14 @@ package services
 
 import (
 	"context"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -369,6 +373,121 @@ func (s *SessionService) GetMetrics() *SessionMetrics {
 		CleanupCount:   s.inMemoryStore.metrics.CleanupCount,
 		SecurityEvents: s.inMemoryStore.metrics.SecurityEvents,
 	}
+}
+
+// getSessionSecret retrieves the session signing secret from environment or config.
+// Falls back to a default for development only.
+func getSessionSecret() string {
+	// Try environment variable first (recommended for production)
+	if secret := os.Getenv("SESSION_SIGNING_SECRET"); secret != "" {
+		return secret
+	}
+	// Fallback to AUTH_SESSION_SECRET for compatibility
+	if secret := os.Getenv("AUTH_SESSION_SECRET"); secret != "" {
+		return secret
+	}
+	// Development-only fallback (never use in production!)
+	return "dev-only-session-secret-change-in-production"
+}
+
+// SignSessionCookie creates a signed session cookie value.
+// Format: {sessionID}.{base64(hmac-sha256(sessionID, secret))}
+func SignSessionCookie(sessionID string) string {
+	secret := getSessionSecret()
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(sessionID))
+	signature := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+	return sessionID + "." + signature
+}
+
+// VerifySessionCookie verifies a signed session cookie and returns the session ID.
+// Returns the sessionID and true if valid, or empty string and false if invalid.
+func VerifySessionCookie(cookieValue string) (string, bool) {
+	// Split into sessionID and signature
+	parts := strings.SplitN(cookieValue, ".", 2)
+	if len(parts) != 2 {
+		return "", false
+	}
+
+	sessionID := parts[0]
+	providedSignature := parts[1]
+
+	// Validate session ID format (should be hex string of expected length)
+	if sessionID == "" || len(sessionID) < 32 {
+		return "", false
+	}
+
+	// Compute expected signature
+	secret := getSessionSecret()
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(sessionID))
+	expectedSignature := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+
+	// Constant-time comparison to prevent timing attacks
+	if !hmac.Equal([]byte(providedSignature), []byte(expectedSignature)) {
+		return "", false
+	}
+
+	return sessionID, true
+}
+
+// ExtendSessionWithSliding extends a session using sliding window expiration.
+// Uses atomic UPDATE to prevent race conditions.
+// Returns the new expiry time and whether the extension was successful.
+func (s *SessionService) ExtendSessionWithSliding(sessionID string, currentExpiresAt time.Time) (time.Time, bool) {
+	// Calculate new expiry (24 hours from now)
+	newExpiry := time.Now().Add(24 * time.Hour)
+
+	// Atomic UPDATE with version check to prevent race conditions
+	query := `
+		UPDATE auth.sessions 
+		SET expires_at = $1
+		WHERE id = $2 AND expires_at = $3
+		RETURNING expires_at`
+
+	var returnedExpiry time.Time
+	err := s.db.QueryRow(query, newExpiry, sessionID, currentExpiresAt).Scan(&returnedExpiry)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Another request already extended - load current value
+			var currentExpiry time.Time
+			loadErr := s.db.QueryRow("SELECT expires_at FROM auth.sessions WHERE id = $1", sessionID).Scan(&currentExpiry)
+			if loadErr == nil {
+				return currentExpiry, false
+			}
+		}
+		return time.Time{}, false
+	}
+
+	// Update in-memory cache
+	if sessionInterface, exists := s.inMemoryStore.sessions.Load(sessionID); exists {
+		session := sessionInterface.(*SessionData)
+		session.ExpiresAt = returnedExpiry
+		s.inMemoryStore.sessions.Store(sessionID, session)
+	}
+
+	// Log session extension
+	logging.LogSessionEvent(
+		"session_extended",
+		nil,
+		&sessionID,
+		"",
+		"",
+		true,
+		&returnedExpiry,
+		map[string]interface{}{
+			"previous_expiry": currentExpiresAt.Format(time.RFC3339),
+			"new_expiry":      returnedExpiry.Format(time.RFC3339),
+		},
+	)
+
+	return returnedExpiry, true
+}
+
+// ShouldExtendSession checks if a session should be extended (within 6 hours of expiry)
+func ShouldExtendSession(expiresAt time.Time) bool {
+	timeUntilExpiry := time.Until(expiresAt)
+	return timeUntilExpiry > 0 && timeUntilExpiry < 6*time.Hour
 }
 
 // Private methods

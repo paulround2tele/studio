@@ -50,6 +50,7 @@
     "dist",
     "coverage",
     "scripts",
+    "undefined",
     "src/stories/**",
     "e2e/**",
     "playwright-tests/**",
